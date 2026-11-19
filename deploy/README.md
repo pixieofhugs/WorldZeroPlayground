@@ -114,9 +114,7 @@ approval gate: the `prod` job in `deploy.yml` pauses until you click.
 ## 4. DNS
 
 Five **A** records, all pointing at the server's IPv4: `@`, `www`, `api`, `dev`,
-`api.dev`. Drop TTL to **600** on the records currently pointing at Render
-*before* cutover day, and delete Render's CNAMEs as you add the A records.
-Let's Encrypt issues per-hostname over HTTP-01, so `api.dev` being two levels
+`api.dev`. Let's Encrypt issues per-hostname over HTTP-01, so `api.dev` being two levels
 deep needs no wildcard and no DNS challenge.
 
 ## 5. First boot
@@ -170,56 +168,10 @@ running resolve to the same digest. The frontend is rebuilt from the same
 commit, because Vite inlines `VITE_API_URL` into the bundle
 (`frontend/src/api/baseUrl.ts`) and the dev bundle points at the dev API.
 
-## 7. Moving prod's data off Render
+## 7. History
 
-Do this last, with the app still live on Render, then flip DNS.
-
-```bash
-pg_dump --no-owner --no-acl -Fc "<render-external-db-url>" -f wz.dump
-```
-
-Render's disk is not downloadable from the dashboard, so media goes through the
-service's shell. Confirm the service id with `render services` first:
-
-```bash
-render ssh srv-xxxxx "tar czf - -C /app media" > media.tgz
-```
-
-```bash
-scp wz.dump media.tgz deploy@<server-ip>:/tmp/
-```
-
-On the server, with the prod stack up:
-
-```bash
-cd /srv/worldzero/prod && docker compose cp /tmp/wz.dump db:/tmp/wz.dump
-```
-
-```bash
-docker compose exec db pg_restore -U worldzero -d worldzero --clean --if-exists /tmp/wz.dump
-```
-
-```bash
-docker compose cp /tmp/media.tgz backend:/tmp/ && docker compose exec backend tar xzf /tmp/media.tgz -C /app
-```
-
-```bash
-docker compose restart backend
-```
-
-The restart re-runs `alembic upgrade head` against the restored data, which is
-what you want — the dump carries Render's schema version, not necessarily the
-image's.
-
-Verify before touching DNS, from your machine, bypassing DNS entirely:
-
-```bash
-curl -sI --resolve api.worldzero.org:443:<server-ip> https://api.worldzero.org/health
-```
-
-Then repoint the A records, watch for a few minutes, and only afterwards set
-`autoDeploy: false` in `render.yaml` and suspend the Render services. **Keep the
-Render database a week** before deleting it.
+Prod was moved here from Render in October 2026 and launched seeded (#3042).
+Render is deleted; nothing in this repo deploys to it.
 
 ## 8. Backups
 

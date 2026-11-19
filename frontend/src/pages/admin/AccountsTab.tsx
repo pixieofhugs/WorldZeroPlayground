@@ -8,7 +8,7 @@ import {
   banCharacter,
 } from "../../api/admin";
 import type {
-  AccountSummary,
+  AccountPage,
   AccountDetail,
   CharacterStatus,
 } from "../../api/admin";
@@ -16,6 +16,7 @@ import { extractError } from "../../utils/errors";
 import { formatTimestamp } from "../../utils/dates";
 import { useAuth } from "../../auth/AuthContext";
 import AdminRosterSection from "./AdminRosterSection";
+import ModerateConfirm from "./ModerateConfirm";
 
 /** Two backend enums, one `accounts.status.*` namespace (#1610). The account
  *  enum is not on the wire schema, so it is stated here. */
@@ -40,22 +41,29 @@ export function statusLabel(
   return known ? t(`accounts.status.${known}`) : status;
 }
 
-export default function AccountsTab() {
+export default function AccountsTab({ initialSearch = "" }: { initialSearch?: string }) {
   const { t } = useTranslation(["admin", "common"]);
   const { user } = useAuth();
-  const [accounts, setAccounts] = useState<AccountSummary[]>([]);
-  const [searchEmail, setSearchEmail] = useState("");
+  const [page, setPage] = useState<AccountPage | null>(null);
+  const accounts = page?.items ?? [];
+  const [searchText, setSearchText] = useState(initialSearch);
+  const [offset, setOffset] = useState(0);
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [detail, setDetail] = useState<AccountDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [confirm, setConfirm] = useState<
+    | { kind: "suspend"; accountId: number; email: string }
+    | { kind: "ban"; characterId: number; name: string; username: string }
+    | null
+  >(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const refresh = (email?: string) => {
+  const refresh = (search: string = searchText, from: number = offset) => {
     setError(null);
-    getAccounts(email || undefined)
-      .then(setAccounts)
+    getAccounts(search || undefined, from)
+      .then(setPage)
       .catch((err) => setError(extractError(err, t("accounts.loadError"))))
       .finally(() => setLoading(false));
   };
@@ -65,11 +73,19 @@ export default function AccountsTab() {
   }, []);
 
   const handleSearch = (value: string) => {
-    setSearchEmail(value);
+    setSearchText(value);
+    setOffset(0);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      refresh(value);
+      refresh(value, 0);
     }, 300);
+  };
+
+  const goToOffset = (next: number) => {
+    setOffset(next);
+    setExpandedId(null);
+    setDetail(null);
+    refresh(searchText, next);
   };
 
   const handleExpand = async (accountId: number) => {
@@ -87,30 +103,25 @@ export default function AccountsTab() {
     }
   };
 
-  const handleSuspend = async (accountId: number, suspended: boolean) => {
-    setActionError(null);
-    try {
-      await suspendAccount(accountId, suspended);
-      refresh(searchEmail);
-      if (expandedId === accountId) {
-        const d = await getAccountDetail(accountId);
-        setDetail(d);
-      }
-    } catch (err) {
-      setActionError(extractError(err, t("accounts.suspendError")));
-    }
+  const applySuspend = async (accountId: number, suspended: boolean) => {
+    await suspendAccount(accountId, suspended);
+    setConfirm(null);
+    refresh();
+    if (expandedId === accountId) setDetail(await getAccountDetail(accountId));
   };
 
-  const handleBan = async (characterId: number, banned: boolean) => {
+  const applyBan = async (characterId: number, banned: boolean) => {
+    await banCharacter(characterId, banned);
+    setConfirm(null);
+    if (expandedId) setDetail(await getAccountDetail(expandedId));
+  };
+
+  const undo = async (apply: () => Promise<void>, fallback: string) => {
     setActionError(null);
     try {
-      await banCharacter(characterId, banned);
-      if (expandedId) {
-        const d = await getAccountDetail(expandedId);
-        setDetail(d);
-      }
+      await apply();
     } catch (err) {
-      setActionError(extractError(err, t("accounts.banError")));
+      setActionError(extractError(err, fallback));
     }
   };
 
@@ -130,7 +141,7 @@ export default function AccountsTab() {
       <input
         type="text"
         placeholder={t("accounts.searchPlaceholder")}
-        value={searchEmail}
+        value={searchText}
         onChange={(e) => handleSearch(e.target.value)}
         className="border-2 border-border bg-card px-3 py-2 font-body content-text focus:outline-hidden focus:border-ink w-full mb-4"
       />
@@ -170,13 +181,24 @@ export default function AccountsTab() {
                     &middot; {t("accounts.idLabel", { id: account.id })} &middot;{" "}
                     {formatTimestamp(account.created_at)}
                   </p>
+                  {account.matched_characters.map((character) => (
+                    <p key={character.id} className="font-body text-xs">
+                      {character.display_name} (@{character.username})
+                    </p>
+                  ))}
                 </button>
                 <button
                   onClick={() =>
-                    void handleSuspend(
-                      account.id,
-                      account.status !== "suspended",
-                    )
+                    account.status === "suspended"
+                      ? void undo(
+                          () => applySuspend(account.id, false),
+                          t("accounts.suspendError"),
+                        )
+                      : setConfirm({
+                          kind: "suspend",
+                          accountId: account.id,
+                          email: account.email,
+                        })
                   }
                   className="btn-outline text-xs shrink-0"
                   style={
@@ -196,6 +218,19 @@ export default function AccountsTab() {
                     : t("accounts.suspend")}
                 </button>
               </div>
+
+              {confirm?.kind === "suspend" && confirm.accountId === account.id && (
+                <div className="mt-3">
+                  <ModerateConfirm
+                    heading={t("accounts.suspendConfirm.heading")}
+                    lead={t("accounts.suspendConfirm.lead", { email: confirm.email })}
+                    confirmLabel={t("accounts.suspendConfirm.submit")}
+                    errorFallback={t("accounts.suspendError")}
+                    run={() => applySuspend(confirm.accountId, true)}
+                    onCancel={() => setConfirm(null)}
+                  />
+                </div>
+              )}
 
               {expandedId === account.id && detail && (
                 <div className="mt-3 ml-4 border-l-2 border-border pl-4">
@@ -242,10 +277,17 @@ export default function AccountsTab() {
                           </div>
                           <button
                             onClick={() =>
-                              void handleBan(
-                                character.id,
-                                character.status !== "banned",
-                              )
+                              character.status === "banned"
+                                ? void undo(
+                                    () => applyBan(character.id, false),
+                                    t("accounts.banError"),
+                                  )
+                                : setConfirm({
+                                    kind: "ban",
+                                    characterId: character.id,
+                                    name: character.display_name,
+                                    username: character.username,
+                                  })
                             }
                             // `text-xs` is admin's density; no inline size (#1783).
                             className
@@ -271,10 +313,53 @@ export default function AccountsTab() {
                       ))}
                     </div>
                   )}
+                  {confirm?.kind === "ban" && (
+                    <div className="mt-3">
+                      <ModerateConfirm
+                        heading={t("accounts.banConfirm.heading", { name: confirm.name })}
+                        lead={t("accounts.banConfirm.lead", {
+                          name: confirm.name,
+                          username: confirm.username,
+                        })}
+                        confirmLabel={t("accounts.banConfirm.submit")}
+                        errorFallback={t("accounts.banError")}
+                        run={() => applyBan(confirm.characterId, true)}
+                        onCancel={() => setConfirm(null)}
+                      />
+                    </div>
+                  )}
                 </div>
               )}
             </div>
           ))}
+        </div>
+      )}
+
+      {page && page.total > page.limit && (
+        <div className="flex items-center gap-4 mt-4 font-body text-xs">
+          <button
+            type="button"
+            className="btn-outline text-xs"
+            disabled={offset === 0}
+            onClick={() => goToOffset(Math.max(0, offset - page.limit))}
+          >
+            {t("accounts.prev")}
+          </button>
+          <span className="text-muted">
+            {t("accounts.pageRange", {
+              from: offset + 1,
+              to: offset + accounts.length,
+              total: page.total,
+            })}
+          </span>
+          <button
+            type="button"
+            className="btn-outline text-xs"
+            disabled={offset + page.limit >= page.total}
+            onClick={() => goToOffset(offset + page.limit)}
+          >
+            {t("accounts.next")}
+          </button>
         </div>
       )}
     </div>

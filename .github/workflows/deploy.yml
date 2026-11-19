@@ -1,8 +1,7 @@
 # main -> dev, a v* tag -> prod. One box, two stacks, one gate.
 #
-# The gate is the whole point of this file. `render.yaml` deployed every push to
-# main straight to worldzero.org with nothing checking whether the tests had
-# passed, which is why prod was where things got tested. Here:
+# The gate is the whole point of this file: nothing reaches worldzero.org
+# without Test and the dev smoke having passed. Here:
 #
 #   merge to main -> Test runs -> (green only) build + deploy dev -> smoke dev
 #   tag v1.2.3    -> verify that commit's Test AND dev smoke were green
