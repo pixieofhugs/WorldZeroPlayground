@@ -4023,6 +4023,11 @@ export interface components {
         OverviewStats: {
             /** Accounts */
             accounts: number;
+            /**
+             * Active Accounts
+             * @default 0
+             */
+            active_accounts: number;
             /** Active Tasks */
             active_tasks: number;
             /** Characters */

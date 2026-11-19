@@ -262,6 +262,17 @@ async def game_overview(session: AsyncSession) -> OverviewStats:
             Account.status == AccountStatus.suspended
         )
     )
+    active_accounts_result = await session.execute(
+        select(func.count()).select_from(Account).where(
+            Account.status == AccountStatus.active,
+            select(Character.id)
+            .where(
+                Character.account_id == Account.id,
+                Character.status != CharacterStatus.banned,
+            )
+            .exists(),
+        )
+    )
 
     return OverviewStats(
         accounts=account_count_result.scalar_one(),
@@ -271,6 +282,7 @@ async def game_overview(session: AsyncSession) -> OverviewStats:
         votes=vote_count_result.scalar_one(),
         flagged_praxis=flagged_count_result.scalar_one(),
         suspended_accounts=suspended_count_result.scalar_one(),
+        active_accounts=active_accounts_result.scalar_one(),
     )
 
 

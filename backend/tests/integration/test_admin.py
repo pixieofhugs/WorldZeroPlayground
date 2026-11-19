@@ -6,8 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from errors import ErrorCode
 from faction_slugs import CROSS_FACTION_SLUG
-from models.account import Account
-from models.character import Character
+from models.account import Account, AccountStatus
+from models.character import Character, CharacterStatus
 from models.character_stats import CharacterStats
 from models.contact import ContactMessage
 from models.era import Era
@@ -922,3 +922,32 @@ async def test_proposal_notes_over_the_cap_are_rejected(
         headers=auth_headers2,
     )
     assert resp.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_overview_active_accounts_counts_accounts_not_characters(
+    client: AsyncClient,
+    account: Account,
+    era,
+    some_faction,
+    auth_headers: dict,
+    db_session: AsyncSession,
+):
+    await make_admin(db_session, account)
+    two_lives = await make_account(db_session, "two@example.com")
+    await make_character(db_session, era, username="first", account=two_lives)
+    await make_character(db_session, era, username="second", account=two_lives)
+    await make_character(
+        db_session,
+        era,
+        username="banned",
+        status=CharacterStatus.banned,
+    )
+    suspended = await make_character(db_session, era, username="sus")
+    suspended_account = await db_session.get(Account, suspended.account_id)
+    suspended_account.status = AccountStatus.suspended
+    await db_session.commit()
+
+    stats = (await client.get("/admin/overview", headers=auth_headers)).json()
+    assert stats["characters"] == 4
+    assert stats["active_accounts"] == 1

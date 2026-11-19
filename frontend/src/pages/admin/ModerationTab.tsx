@@ -10,7 +10,7 @@ import { Link } from 'react-router-dom'
 import {
   getFlaggedPraxes,
   getFlaggedComments,
-  getAdminCharacters,
+  getOverview,
   getMessages,
   moderatePraxis,
   moderateComment,
@@ -165,7 +165,7 @@ export default function ModerationTab() {
   const { t } = useTranslation(['admin', 'common'])
   const [flaggedPraxes, setFlaggedPraxes] = useState<FlaggedPraxisOut[]>([])
   const [flaggedComments, setFlaggedComments] = useState<FlaggedCommentOut[]>([])
-  const [activeMembers, setActiveMembers] = useState<number | null>(null)
+  const [activeAccounts, setActiveAccounts] = useState<number | null>(null)
   const [messages, setMessages] = useState<ContactMessageOut[]>([])
   const [showArchived, setShowArchived] = useState(false)
   const [typeFilter, setTypeFilter] = useState<QueueFilter>('all')
@@ -184,13 +184,13 @@ export default function ModerationTab() {
     Promise.all([
       getFlaggedPraxes(),
       getFlaggedComments(),
-      getAdminCharacters('active'),
+      getOverview(),
       getMessages(showArchived),
     ])
-      .then(([praxes, comments, characters, messageRows]) => {
+      .then(([praxes, comments, overview, messageRows]) => {
         setFlaggedPraxes(praxes)
         setFlaggedComments(comments)
-        setActiveMembers(characters.length)
+        setActiveAccounts(overview.active_accounts)
         setMessages(messageRows)
       })
       .catch((err) => setError(extractError(err, t('moderation.loadError'))))
@@ -288,8 +288,8 @@ export default function ModerationTab() {
           <p className="label-caption">{t('moderation.stats.openReports')}</p>
         </div>
         <div className="card px-5 py-3" style={{ minWidth: 140 }}>
-          <p className="font-display text-2xl font-bold">{activeMembers ?? '—'}</p>
-          <p className="label-caption">{t('moderation.stats.activeMembers')}</p>
+          <p className="font-display text-2xl font-bold">{activeAccounts ?? '—'}</p>
+          <p className="label-caption">{t('moderation.stats.activeAccounts')}</p>
         </div>
       </div>
 

@@ -95,6 +95,8 @@ class OverviewStats(WireModel):
     votes: int
     flagged_praxis: int = 0
     suspended_accounts: int = 0
+    # Not suspended or deleted, with at least one non-banned character.
+    active_accounts: int = 0
 
 
 class CharacterStatsPatch(WireModel):

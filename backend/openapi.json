@@ -4734,6 +4734,11 @@
             "title": "Accounts",
             "type": "integer"
           },
+          "active_accounts": {
+            "default": 0,
+            "title": "Active Accounts",
+            "type": "integer"
+          },
           "active_tasks": {
             "title": "Active Tasks",
             "type": "integer"
@@ -4768,7 +4773,8 @@
           "praxis",
           "votes",
           "flagged_praxis",
-          "suspended_accounts"
+          "suspended_accounts",
+          "active_accounts"
         ],
         "title": "OverviewStats",
         "type": "object"

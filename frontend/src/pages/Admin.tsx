@@ -65,11 +65,6 @@ export default function Admin() {
     <div className="py-8">
       <PageTitle title={t('title')} />
 
-      <CopySheetPicker />
-      <Link to="/admin/level-ups" className="btn-outline text-xs self-start inline-block mb-6">
-        {t('levelUpSheet.button')}
-      </Link>
-
       <div
         className="flex gap-6 mb-6"
         style={{ borderBottom: '2px solid var(--color-border)' }}
@@ -98,6 +93,14 @@ export default function Admin() {
         ))}
       </div>
 
+      {activeTab === 'overview' && (
+        <>
+          <CopySheetPicker />
+          <Link to="/admin/level-ups" className="btn-outline text-xs self-start inline-block mb-6">
+            {t('levelUpSheet.button')}
+          </Link>
+        </>
+      )}
       {activeTab === 'moderation' && <ModerationTab />}
       {activeTab === 'praxis' && <PraxisTab />}
       {activeTab === 'tasks' && <TasksTab />}
