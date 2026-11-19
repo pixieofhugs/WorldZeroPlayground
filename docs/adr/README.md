@@ -4,7 +4,7 @@
      script instead. backend/tests/test_adr_index.py fails if this file
      is out of step with docs/adr/. -->
 
-96 records, of which **89 still state a rule**.
+96 records, of which **88 still state a rule**.
 
 | Status | Meaning |
 |---|---|
@@ -60,7 +60,7 @@
 | [0043](0043-vote-budget-is-recomputed-on-read.md) | Vote budget is recomputed on read; only `votes_spent_this_era` is stored | Accepted | — |
 | [0044](0044-characterstats-is-a-per-era-star-schema-split.md) | `CharacterStats` is a per-era star-schema split off `Character` | Accepted | — |
 | [0045](0045-pragmatic-ddd-posture.md) | Pragmatic DDD: implicit aggregates, anemic models, no repository layer, HTTPException in services | Accepted | — |
-| [0046](0046-albescent-is-frozen-new-surfaces-fall-through-to-na.md) | Albescent is frozen: new surfaces fall through to NA | Amended | [ADR-0048](0048-albescent-unfreezes-per-surface-as-designs-land.md) |
+| [0046](0046-albescent-is-frozen-new-surfaces-fall-through-to-na.md) | Albescent is frozen: new surfaces fall through to NA | Superseded | [ADR-0048](0048-albescent-unfreezes-per-surface-as-designs-land.md) |
 | [0047](0047-praxis-card-shows-computed-total-not-merit.md) | The praxis card shows the computed total, not Merit | Superseded | [ADR-0053](0053-a-praxis-has-one-number-merit-is-retired.md), [ADR-0076](0076-a-base-only-score-reads-as-a-bare-total.md) |
 | [0048](0048-albescent-unfreezes-per-surface-as-designs-land.md) | Albescent unfreezes one surface at a time, as designs land | Amended | [ADR-0083](0083-albescent-is-one-ornament-vocabulary-over-na-not-a-skin-per-surface.md) |
 | [0049](0049-the-score-stamp-is-a-manifest-surface.md) | The score stamp is a manifest surface, not a themed component | Amended | [ADR-0053](0053-a-praxis-has-one-number-merit-is-retired.md), [ADR-0076](0076-a-base-only-score-reads-as-a-bare-total.md) |
