@@ -1,6 +1,7 @@
 import { useState, type ReactElement } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useFormFactor } from '../../../hooks/useFormFactor'
+import { useModal } from '../../../hooks/useModal'
 import { drawAtRoot } from '../drawAtRoot'
 import { toggleOption, type FilterFacet } from './filterState'
 
@@ -16,8 +17,7 @@ const CHECK_GLYPH = '✓'
  * ponytail: CSS block still named `filter-factions__*`; renaming to
  * `filter-options__*` is a pure stylesheet change.
  *
- * Dismissal: trigger, Done, Escape; no click-outside listener. Escape still
- * bubbles from the portalled sheet (React tree, #1591).
+ * Dismissal: trigger, Done, Escape (`useModal`); no click-outside listener.
  *
  * An option-less facet draws nothing (#1567; hide unusable controls). A
  * selected value always keeps its row, so a deep link still renders a trigger.
@@ -33,9 +33,6 @@ export default function OptionPicker({ facet }: { facet: FilterFacet }) {
   return (
     <div
       className="filter-factions"
-      onKeyDown={(event) => {
-        if (event.key === 'Escape' && open) setOpen(false)
-      }}
     >
       <button
         type="button"
@@ -83,9 +80,11 @@ export function OptionOverlay({
 }): ReactElement {
   const { t } = useTranslation('common')
   const { label, options, selected, onChange, renderOrnament } = facet
+  const ref = useModal(onDone)
 
   const panel = (
     <div
+      ref={ref}
       className={isSheet ? 'filter-factions__sheet' : 'filter-factions__popover'}
       role="dialog"
       aria-label={label}
