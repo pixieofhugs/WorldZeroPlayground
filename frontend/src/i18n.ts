@@ -4,12 +4,10 @@ import { initReactI18next } from 'react-i18next'
 import { listCopyOverrides } from './api/copy'
 import { isCopyRecording, recordRenderedCopy } from './utils/copyRegistry'
 
-import admin from './locales/en/admin.json'
 import common from './locales/en/common.json'
 import errors from './locales/en/errors.json'
 import factions from './locales/en/factions.json'
 import feed from './locales/en/feed.json'
-import forms from './locales/en/forms.json'
 import home from './locales/en/home.json'
 import praxis from './locales/en/praxis.json'
 import progression from './locales/en/progression.json'
@@ -26,12 +24,10 @@ export const DEFAULT_NAMESPACE = 'common'
  */
 export const resources = {
   en: {
-    admin,
     common,
     errors,
     factions,
     feed,
-    forms,
     home,
     praxis,
     progression,
@@ -41,7 +37,9 @@ export const resources = {
   },
 } as const
 
-/** Shipped JSON of namespaces loaded with their route, for Revert (`shippedValue`). */
+/**
+ * `feed` is eager: the task and sigil cards read it with `i18n.t` from the welcome flow and the
+ * shell, which no route loader awaits. Shipped JSON of namespaces loaded with their route, for Revert (`shippedValue`). */
 export const lazyShipped: Record<string, unknown> = {}
 
 /** Only `/start` surfaces read `onboarding:`; keeping it out of the eager bundle holds the byte budget. */
@@ -49,6 +47,12 @@ export function registerNamespace(ns: string, json: object): void {
   lazyShipped[ns] = json
   // overwrite=false: a copy override already applied stays on top.
   i18n.addResourceBundle('en', ns, structuredClone(json), true, false)
+}
+
+export async function loadAppCopy(): Promise<void> {
+  const [admin, forms] = await Promise.all([import('./locales/en/admin.json'), import('./locales/en/forms.json')])
+  registerNamespace('admin', admin.default)
+  registerNamespace('forms', forms.default)
 }
 
 export async function loadOnboardingCopy(): Promise<void> {
@@ -103,6 +107,9 @@ i18n.use(initReactI18next).use(copyRegistry).init({
     throw new Error(`[i18n] missing copy key "${namespace}:${key}"`)
   },
 })
+
+// Suites read copy at collection time, before any route has loaded it. Constant-folded out of production builds.
+if (import.meta.env.MODE === 'test') await loadAppCopy()
 
 /**
  * Apply DB copy overrides over the shipped catalog. Non-blocking (called from

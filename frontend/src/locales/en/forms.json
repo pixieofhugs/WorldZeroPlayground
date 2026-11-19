@@ -244,7 +244,6 @@
       "nudgeSentAria": "You already nudged {{name}} today — you can nudge them again tomorrow",
       "nudgeDescription": "Sends one reminder to their feed. Once a day, and it is signed with your name.",
       "duelNudgeAria": "Nudge {{name}} to answer",
-      "nudgeFeedAction": "nudged you to submit your part of",
       "nudgeCrewAction": "Nudge the crew",
       "nudgeCrewDescription": "One reminder each to everyone who has not submitted. Once a day per person, signed with your name.",
       "nudgeCrewResult": "Nudged {{sent}} of {{total}}.",
