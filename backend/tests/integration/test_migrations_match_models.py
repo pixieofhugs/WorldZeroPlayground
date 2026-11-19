@@ -5,8 +5,8 @@ place the chain's result is checked. ``0002_squashed`` itself uses
 ``create_all``, so ``alembic check`` cannot see a model column with no revision;
 two extra checks cover that:
 
-* enum values: ``create_type=False`` (``alembic/env.py``) means migrations own
-  every ``CREATE TYPE``, so DB values are independent of the models.
+* enum values: a model enum's ``ck_<table>_<enum>`` CHECK is created by a
+  migration, so the DB's values are independent of the models.
 * ``alembic/schema_snapshot.txt`` (#2448): a committed baseline, diffed like
   ``api-schema`` (#1584). Refreshing it blindly turns the check off.
 
@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import difflib
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -77,21 +78,19 @@ def _report(label: str, result: "subprocess.CompletedProcess[str]") -> str:
 
 
 async def _enum_values_in_db(database: str) -> dict[str, set[str]]:
+    """Values each ``ck_<table>_<enum>`` CHECK admits, keyed by that name."""
     conn = await asyncpg.connect(_dsn(database))
     try:
         rows = await conn.fetch(
-            "SELECT t.typname, e.enumlabel FROM pg_type t"
-            " JOIN pg_enum e ON e.enumtypid = t.oid"
-            " JOIN pg_namespace n ON n.oid = t.typnamespace"
-            " WHERE n.nspname = 'public'"
+            "SELECT conname, pg_get_constraintdef(oid) AS definition FROM pg_constraint"
+            " WHERE contype = 'c' AND connamespace = 'public'::regnamespace"
         )
     finally:
         await conn.close()
-
-    found: dict[str, set[str]] = {}
-    for row in rows:
-        found.setdefault(row["typname"], set()).add(row["enumlabel"])
-    return found
+    return {
+        row["conname"]: set(re.findall(r"'([^']*)'::character varying", row["definition"]))
+        for row in rows
+    }
 
 
 def _enum_values_in_models() -> dict[str, set[str]]:
@@ -99,8 +98,8 @@ def _enum_values_in_models() -> dict[str, set[str]]:
     for table in Base.metadata.tables.values():
         for column in table.columns:
             type_ = column.type
-            if isinstance(type_, SAEnum) and type_.name and type_.native_enum:
-                declared.setdefault(type_.name, set()).update(type_.enums)
+            if isinstance(type_, SAEnum) and type_.name:
+                declared[f"ck_{table.name}_{type_.name}"] = set(type_.enums)
     return declared
 
 
@@ -149,20 +148,19 @@ async def test_migrations_match_models(migration_db: str) -> None:
         if values - in_db.get(name, set())
     }
     assert not missing, (
-        "Enum values the models can produce that the migrated database has no "
-        f"type member for: {missing}\n\n"
+        "Enum values the models can produce that the migrated database's CHECK "
+        f"rejects: {missing}\n\n"
         "The rest of the suite cannot see this: its create_all schema emits its "
-        "own CREATE TYPE. A deployed database will reject the value at INSERT. "
-        "Add it to a migration (0002_squashed's ENUMS builds fresh databases; a "
-        "deployed one needs ALTER TYPE ... ADD VALUE in a new revision)."
+        "own CHECK. A deployed database will reject the value at INSERT. "
+        "Widen the CHECK in a new revision."
     )
     unreachable = {
         name: sorted(values - in_models.get(name, set()))
         for name, values in in_db.items()
-        if values - in_models.get(name, set())
+        if name in in_models and values - in_models[name]
     }
     assert not unreachable, (
-        "Enum values the migrations create that no model declares — states the "
+        "Enum values the CHECKs admit that no model declares — states the "
         f"database accepts and the application cannot produce: {unreachable}\n\n"
         "Drop them from the migration, or add them to the Python enum."
     )

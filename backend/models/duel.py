@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING, Optional
 from sqlalchemy import (
     BigInteger,
     DateTime,
-    Enum,
     ForeignKey,
     Identity,
     Index,
@@ -14,7 +13,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from models.base import Base
+from models.base import Base, string_enum
 from models.mixins import CreatedAtMixin
 
 if TYPE_CHECKING:
@@ -61,7 +60,7 @@ class Duel(CreatedAtMixin, Base):
         BigInteger, ForeignKey("praxis.id"), nullable=True
     )
     status: Mapped[DuelStatus] = mapped_column(
-        Enum(DuelStatus, create_type=False),
+        string_enum(DuelStatus),
         nullable=False,
         server_default="pending",
     )

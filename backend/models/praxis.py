@@ -6,7 +6,6 @@ from sqlalchemy import (
     BigInteger,
     Boolean,
     DateTime,
-    Enum,
     ForeignKey,
     Identity,
     Index,
@@ -19,7 +18,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from models.base import Base
+from models.base import Base, string_enum
 from models.mixins import CreatedAtMixin, TimestampMixin
 
 if TYPE_CHECKING:
@@ -83,10 +82,10 @@ class Praxis(TimestampMixin, Base):
         BigInteger, ForeignKey("task.id"), nullable=False
     )
     type: Mapped[PraxisType] = mapped_column(
-        Enum(PraxisType, create_type=False), nullable=False
+        string_enum(PraxisType), nullable=False
     )
     status: Mapped[PraxisStatus] = mapped_column(
-        Enum(PraxisStatus, create_type=False),
+        string_enum(PraxisStatus),
         nullable=False,
         default=PraxisStatus.in_progress,
         server_default="in_progress",
@@ -94,7 +93,7 @@ class Praxis(TimestampMixin, Base):
     title: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     body_text: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     moderation_status: Mapped[ModerationStatus] = mapped_column(
-        Enum(ModerationStatus, create_type=False),
+        string_enum(ModerationStatus),
         nullable=False,
         default=ModerationStatus.visible,
         server_default="visible",
@@ -234,7 +233,7 @@ class MediaItem(CreatedAtMixin, Base):
         BigInteger, ForeignKey("praxis.id", ondelete="CASCADE"), nullable=False
     )
     type: Mapped[MediaType] = mapped_column(
-        Enum(MediaType, create_type=False), nullable=False
+        string_enum(MediaType), nullable=False
     )
     file_path: Mapped[str] = mapped_column(String, nullable=False)
     display_order: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
@@ -270,7 +269,7 @@ class PraxisInvite(CreatedAtMixin, Base):
         BigInteger, ForeignKey("character.id"), nullable=False
     )
     status: Mapped[PraxisInviteStatus] = mapped_column(
-        Enum(PraxisInviteStatus, create_type=False),
+        string_enum(PraxisInviteStatus),
         nullable=False,
         server_default="pending",
     )

@@ -3,7 +3,6 @@ from typing import TYPE_CHECKING, List
 
 from sqlalchemy import (
     BigInteger,
-    Enum,
     ForeignKey,
     Identity,
     Index,
@@ -16,7 +15,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from models.base import Base
+from models.base import Base, string_enum
 from models.mixins import CreatedAtMixin, TimestampMixin
 
 if TYPE_CHECKING:
@@ -60,7 +59,7 @@ class Account(TimestampMixin, Base):
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
     email: Mapped[str] = mapped_column(String, nullable=False)
     status: Mapped[AccountStatus] = mapped_column(
-        Enum(AccountStatus, create_type=False), nullable=False, default=AccountStatus.active
+        string_enum(AccountStatus), nullable=False, default=AccountStatus.active
     )
     # The "last carried life". use_alter breaks the DDL cycle with character.account_id.
     active_character_id: Mapped[int | None] = mapped_column(
