@@ -21,8 +21,8 @@ from services.character import (
     resolve_active_character,
 )
 from services.character_capabilities import compute_capabilities
-from services.vote import account_has_received_vote
 from services.era import get_current_era_row_safe, load_era_stats
+from services.vote import account_has_received_vote
 
 
 async def build_current_user(
