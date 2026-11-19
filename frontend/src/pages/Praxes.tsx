@@ -11,6 +11,8 @@ import MobilePraxisFeed from './praxes/MobilePraxisFeed'
 
 /** Praxis feed: one `usePraxes()` fetch (#644), desktop grid or mobile stream (#499). */
 export default function Praxes() {
+  const { t } = useTranslation('praxis')
+  useDocumentTitle(t('listPage.title'))
   const formFactor = useFormFactor()
   const state = usePraxes()
 
@@ -21,7 +23,6 @@ export default function Praxes() {
 
 function DesktopPraxes({ state }: { state: PraxesFeedState }) {
   const { t } = useTranslation('praxis')
-  useDocumentTitle(t('listPage.title'))
   const { t: tc } = useTranslation('common')
   const {
     items,

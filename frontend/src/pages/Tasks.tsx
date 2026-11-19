@@ -11,6 +11,7 @@ import ProposeTaskLink from './tasks/ProposeTaskLink'
 import MetataskSeal from '../components/metataskSeal/MetataskSeal'
 
 export default function Tasks() {
+  useDocumentTitle('Tasks')
   const state = useTasks()
   const formFactor = useFormFactor()
 
@@ -22,7 +23,6 @@ export default function Tasks() {
 
 function DesktopTasks({ state }: { state: TasksState }) {
   const { t } = useTranslation('tasks')
-  useDocumentTitle('Tasks')
   const { t: tc } = useTranslation('common')
   const {
     user,

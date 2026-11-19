@@ -26,6 +26,7 @@ const HIDDEN_SLUGS = new Set([NA_SLUG])
  * membership actions live on `/factions/:slug` (#347).
  */
 export default function Factions() {
+  useDocumentTitle('Factions')
   const formFactor = useFormFactor()
   // Above the switch (#1116): crossing 767px re-dresses, doesn't refetch.
   const state = useFactionsDirectory()
@@ -38,7 +39,6 @@ export default function Factions() {
 /** Exported for tests: the desktop grid over a controlled state. */
 export function DesktopFactions({ state }: { state: FactionsDirectoryState }) {
   const { t } = useTranslation('factions')
-  useDocumentTitle('Factions')
   const { user } = useAuth()
   const character = user?.character ?? null
   const navigate = useNavigate()
