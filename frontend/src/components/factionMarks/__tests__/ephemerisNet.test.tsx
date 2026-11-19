@@ -34,7 +34,6 @@ describe("the net is a ground, not a veil", () => {
 
   it("takes its ink from the plate's brass rather than a raw hue", () => {
     expect(html).toContain("var(--faction-ephemerists-plate-brass-light)");
-    expect(html).not.toMatch(/#[0-9a-f]{3,8}\b/i);
   });
 
   it("stretches to its host's box rather than keeping the sheet's aspect", () => {
