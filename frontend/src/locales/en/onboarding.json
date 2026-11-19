@@ -37,6 +37,12 @@
     "accept": "Yeah yeah, let me play",
     "error": "Whoops! That didn't work. Try again?"
   },
+  "declined": {
+    "title": "Unsigned. That's allowed.",
+    "body": "The world will keep doing strange things without you. The quill will get over it.",
+    "reconsider": "Reconsider",
+    "lookAround": "Just look around"
+  },
   "returning": {
     "title": "Welcome back",
     "body": "You deleted your World Zero account on {{date}}. Nothing from it carries over — your characters, praxis, votes and comments are gone. Start fresh as a new player?",
