@@ -15,13 +15,11 @@ where `<status>` is `Accepted`, `Reversed`, `Superseded by ADR-NNNN` or
 `Amended by ADR-NNNN` (the last two take a comma-separated list). Which clause
 moved goes in the body under `## Amendment`, never the status value.
 
-A newer record names what it changes in a header line (`**Amends:** ...` or
-`**Supersedes...` ...) and the older record's status must name it back. Targets
-are every `ADR-NNNN` in that line and its wrapped continuation (up to the next
-blank or `**` line). `Amends` is always "Amended by". `Supersedes` is "Superseded
-by" only when it is whole-record: the line says "in full" or "entirely", or the
-target follows the marker directly with no "only", "clause" or "for <surface>"
-qualifier. Anything else is "Amended by", and so is any ambiguous wording.
+A `**Amends:**` / `**Supersedes...**` header line names its targets (every
+`ADR-NNNN` up to the next blank or `**` line); each target's status must name
+it back. `Supersedes` means "Superseded by" only if whole-record: "in full",
+"entirely", or the target follows the marker with no "only" / "clause" /
+"for <surface>". Everything else, ambiguity included, is "Amended by".
 """
 
 from __future__ import annotations
@@ -70,7 +68,6 @@ _DIRECT = re.compile(r"\A\*\*Supersedes:?\*\*:? \**\[?ADR-\d{4}")
 
 
 def _changes(text: str) -> list[tuple[str, str]]:
-    """(target number, `Superseded`|`Amended`) for each header Amends/Supersedes line."""
     found: list[tuple[str, str]] = []
     for start in _CHANGE_LINE.finditer(text):
         lines = []
