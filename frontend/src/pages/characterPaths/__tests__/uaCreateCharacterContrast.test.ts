@@ -8,7 +8,7 @@
  * on the opaque `--faction-ua-panel` above the wash and are measured there.
  */
 import { describe, it, expect } from 'vitest'
-import { LOTUS } from '../archetypes/UaCreateCharacter'
+import { LOTUS } from '../../../components/factionMarks/uaAtoms'
 import {
   AA_NORMAL,
   compositeOver,
