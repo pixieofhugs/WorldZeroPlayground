@@ -15,7 +15,6 @@ import onboarding from '../../locales/en/onboarding.json'
 vi.mock('../../api/terms', () => ({ acceptTerms: () => Promise.resolve({}) }))
 vi.mock('../../api/auth', () => ({ loginWith: () => {} }))
 
-import IntroCard from '../onboarding/IntroCard'
 import AuthCard from '../onboarding/AuthCard'
 import TermsCard from '../onboarding/TermsCard'
 import { RING_CAPTION_MAX_CHARS } from '../onboarding/OnboardingCard'
@@ -33,7 +32,6 @@ const asRendered = (text: string): string =>
     .replace(/'/g, '&#x27;')
 
 const CARDS: Array<[string, React.ReactNode]> = [
-  ['intro', <IntroCard onContinue={() => {}} />],
   ['auth', <AuthCard />],
   ['terms', <TermsCard onAccepted={() => {}} />],
 ]
@@ -77,36 +75,18 @@ describe('every onboarding card', () => {
   }
 })
 
-describe('the intro card', () => {
-  it('carries all six things the pitch must land', () => {
-    const markup = render(<IntroCard onContinue={() => {}} />)
+describe('the seven beat lines', () => {
+  const lines = Object.values(onboarding.beats)
 
-    for (const slot of Object.values(onboarding.intro.paragraph)) {
-      expect(markup).toContain(asRendered(slot))
-    }
+  it('are seven, and none is empty', () => {
+    expect(lines).toHaveLength(7)
+    for (const line of lines) expect(line.trim()).not.toBe('')
   })
 
-  it('lands them in ONE paragraph, not three beats', () => {
-    const markup = render(<IntroCard onContinue={() => {}} />)
-
-    const pitch = /<p[^>]*data-testid="onboarding-pitch"[^>]*>([\s\S]*?)<\/p>/.exec(markup)?.[1]
-    for (const slot of Object.values(onboarding.intro.paragraph)) {
-      expect(pitch).toContain(asRendered(slot))
-    }
-    expect(markup.match(/<p[ >]/g)).toHaveLength(1)
-  })
-
-  it('says nothing about praxis, factions or signing up before auth', () => {
-    // Words only: style attributes are full of `--faction-default-*` tokens.
-    const words = render(<IntroCard onContinue={() => {}} />)
-      .replace(/<[^>]*>/g, ' ')
-      .toLowerCase()
-
-    // Factions are invitation-gated (ADR-0022), unreachable at level 0.
-    expect(words).not.toContain('praxis')
-    expect(words).not.toContain('faction')
-    // "Sign up" is reserved for claiming a task.
-    expect(words).not.toContain('sign up')
+  it('say nothing about praxis, factions or signing up before auth', () => {
+    const words = lines.join(' ').toLowerCase()
+    // Factions are invitation-gated (ADR-0022); "sign up" is reserved for claiming a task.
+    for (const banned of ['praxis', 'faction', 'sign up']) expect(words).not.toContain(banned)
   })
 })
 
@@ -213,7 +193,6 @@ describe('the arc a stranger actually reads', () => {
  (const shouted of [
       onboarding.card.stepCaption,
       onboarding.card.lookAround,
-      onboarding.intro.continue,
       onboarding.terms.accept,
     ]) {
       expect(shouted).not.toBe(shouted.toUpperCase())

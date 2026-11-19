@@ -47,6 +47,11 @@ paths = ["frontend/*", ".design-sync/*"]
 run = "npm --prefix frontend run --silent budget"
 
 [[check]]
+name = "onboarding-motion"
+paths = ["scripts/onboarding_motion.py", "frontend/src/pages/onboarding/motion/*"]
+run = "python3 scripts/onboarding_motion.py --check"
+
+[[check]]
 name = "comments"
 paths = ["backend/*", "frontend/*", "scripts/*"]
 run = "bros comments origin/main"

@@ -21,7 +21,7 @@ players voting. **Onboarding was never a rules problem. It is a legibility probl
 
 ## The arc
 
-    scan → intro → auth → terms → [ hand off ] → character creation → the task → level 1
+    scan → intro → terms → auth → [ hand off ] → character creation → the task → level 1
 
 Three net-new cards, then the flow **ends**. Everything after the hand-off is existing app,
 correctly sequenced. ([#1738](https://github.com/pixieofhugs/WorldZeroPlayground/issues/1738))
@@ -47,23 +47,39 @@ document says only what each slot must carry. Build with obvious placeholders �
 invent final copy, and never lift the throwaway wording from the prototype
 (`prototype/onboarding-flow`), which exists to be reacted to and is not a source.
 
-### What the intro must land — six things, in one paragraph
+### What the intro must land — six things, over a short run of beats
 
 ([#1735](https://github.com/pixieofhugs/WorldZeroPlayground/issues/1735))
 
 1. This is a game.
 2. The tasks happen in the real world, away from the screen.
 3. You photograph what you did, as proof.
-4. Other players rate that proof, and that is how you score.
+4. Other players rate that proof, and that is how you score. Voting is not part of
+   the pitch's promise: it unlocks only after another player has voted on your proof, not
+   at level 1 ([#3475](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3475)).
+   A beat that shows the player voting must not say they can do it from the start.
 5. It is free.
 6. A person made this; it is small and a bit silly.
 
-**Factions are cut** — invitation-gated (ADR-0022) and unreachable at level 0, so naming
-them pre-signup sells what the game cannot deliver for a long time.
+**Factions may be teased as flavour, never promised.** They stay invitation-gated
+(ADR-0022) and unreachable at level 0, so the intro may name the warring organizations
+(the last beat does, with a brawl) but must not offer them as something the player can
+reach or choose. Naming them as a destination would sell what the game cannot deliver for
+a long time.
 
-The frame, the ask and the whimsy are **one paragraph, not three beats** — the ordering
-question among them does not exist. The ask is **front-loaded, never buried**: the
-conversion cost is accepted deliberately.
+The intro is a **short sequence of beats** (seven, per the epic
+[#3457](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3457)), and together they
+land all six things above. The ask is **front-loaded, never buried**: the conversion cost
+is accepted deliberately.
+
+The spec still does not write the words. For the approved prototype only, its wording is
+the shipped default (#3457, standing rule 8), replacing the "never lift the prototype's
+wording" rule above for that prototype.
+
+*2026-11-18, [#3452](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3452):* was "one paragraph, not three beats" with factions cut. The owner
+approved the seven-beat prototype, so this section now describes a sequence and allows a
+faction tease. #3452 is the decision record. Knock-on from #3475: voting unlocks only
+after another player has voted on your proof; the era file and #3475 hold the rule.
 
 ### Vocabulary rules
 
@@ -140,12 +156,21 @@ arc**, which has exactly one destination.
   for their own safety and the legality of real-world actions. What it lacks is a version
   identifier, a statement of what agreeing binds you to, and any mention of the photographs
   the player is about to post publicly.
-- **Accepted after auth, before character creation.** Pre-auth acceptance was rejected on
-  what the record would be worth: with no identity yet, the server can bind the click only
-  to a browser session and must then trust a flag riding back through a redirect.
+- **Accepted before sign-in.** The contract comes after the intro and before the auth
+  card. Pre-auth acceptance was first rejected on what the record would be worth: with no
+  identity yet, the server can bind the click only to a browser session and must then trust
+  a flag riding back through a redirect. It stays honest this way: the click is held
+  client-side through the OAuth redirect (the same mechanism as *Authentication*), and the
+  consent row is written only once the account exists, so the server never records an
+  acceptance that has no identity behind it. If a new account arrives with no acceptance,
+  the player is sent back to the contract before character creation.
 - **Recorded as an append-only consent log** — one row per acceptance event, carrying the
   account, the version, and the time. Existing accounts have no rows, which is the honest
   record.
+
+*2026-11-18, [#3452](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3452):* was "accepted after auth, before character creation". The
+approved flow puts the contract before sign-in, and the owner accepts it. #3452 is the
+decision record.
 
 ## The hand-off
 
@@ -209,6 +234,13 @@ The existing **Field Stamp** pop-up, unchanged — it already fires at the right
 announces rank `trailhead` and its unlocks. No bespoke ending: by then the player has done a
 real thing in the world and photographed it, which does not need a surface congratulating
 them for it.
+
+Voting is not among the level-1 unlocks to promise. It unlocks only after another player
+has voted on your proof ([#3475](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3475)),
+so any beat that shows the first level-up must not imply the player can vote at level 1.
+The rule's values live in the era file and #3475, not here.
+
+*2026-11-18, [#3452](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3452):* added with the vote-unlock knock-on. #3452 is the decision record.
 
 ## Before this can ship
 

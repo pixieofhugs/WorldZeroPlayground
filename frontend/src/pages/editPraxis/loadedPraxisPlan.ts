@@ -1,4 +1,5 @@
 import type { PraxisOut } from "../../api/praxis";
+import { isViewerMember } from "../../utils/praxisMembership";
 
 /** Non-members bounce to the read page; members hydrate the draft (ADR-0013). */
 export type LoadedPraxisPlan =
@@ -9,10 +10,7 @@ export function planLoadedPraxis(
   loaded: PraxisOut,
   viewerId: number | null | undefined,
 ): LoadedPraxisPlan {
-  const isMember =
-    viewerId != null &&
-    loaded.members.some((member) => member.character_id === viewerId);
-  return isMember
+  return isViewerMember(loaded, viewerId)
     ? { kind: "edit", title: loaded.title ?? "", body: loaded.body_text ?? "" }
     : { kind: "redirect" };
 }

@@ -48,3 +48,11 @@ the move to a constrained vocabulary.
 
 Not yet built. Implementation tracked in #237 (moderator review screen + the flag-control
 change). The enum's home (`schemas` vs a shared constant) is a build decision.
+
+## Amendment (2026-11-18, #3427): built
+
+"Not yet built" is out of date. `FlagReason` shipped in `backend/models/flag.py`
+with its five values: `spam`, `harassment`, `nsfw`, `slop`, `other`. The
+vocabulary is a Python enum with no DB enum, and an empty stored `reason` still
+reads as `other`. How `other` is stored is under review in #3433; this record's
+`other` wording is left as written until that lands.

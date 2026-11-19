@@ -15,7 +15,7 @@ from errors import DETAIL_CONTEXT_PARAM, ErrorCode, raise_coded
 from game_config import CURRENT_ERA, EraConfig
 from models.character import Character
 from models.comment import MAX_COMMENT_BODY, Comment, CommentMention
-from models.flag import Flag, FlagReason, stored_flag_reason
+from models.flag import Flag, FlagReason
 from models.praxis import ModerationStatus, Praxis
 from models.task import Task, TaskStatus
 from schemas.comment import CommentAuthor, CommentMentionOut, CommentOut
@@ -278,7 +278,8 @@ async def flag_comment(
         Flag(
             comment_id=comment.id,
             flagged_by=flagged_by.id,
-            reason=stored_flag_reason(reason, reason_detail),
+            reason=reason.value,
+            reason_detail=reason_detail,
         )
     )
     await session.flush()

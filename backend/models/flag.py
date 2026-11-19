@@ -25,21 +25,6 @@ class FlagReason(enum.Enum):
     other = "other"
 
 
-def stored_flag_reason(reason: "FlagReason", reason_detail: Optional[str]) -> str:
-    """``other`` stores its free-text note; reads map non-enum text to ``other``."""
-    if reason is FlagReason.other and reason_detail and reason_detail.strip():
-        return reason_detail.strip()
-    return reason.value
-
-
-def normalize_flag_reason(raw: str) -> tuple["FlagReason", Optional[str]]:
-    """Non-enum text becomes ``other`` with the raw text as detail."""
-    try:
-        return FlagReason(raw), None
-    except ValueError:
-        return FlagReason.other, raw or None
-
-
 class Flag(CreatedAtMixin, Base):
     """Moderation flag on exactly one of a praxis or a comment (CHECK; ADR-0006)."""
 
@@ -63,7 +48,8 @@ class Flag(CreatedAtMixin, Base):
     flagged_by: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("character.id"), nullable=False
     )
-    reason: Mapped[str] = mapped_column(Text, nullable=False, server_default="")
+    reason: Mapped[str] = mapped_column(Text, nullable=False, server_default="other")
+    reason_detail: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     praxis: Mapped[Optional["Praxis"]] = relationship(
         "Praxis", back_populates="flags", lazy="raise"

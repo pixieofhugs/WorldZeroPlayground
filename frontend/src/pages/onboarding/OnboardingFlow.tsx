@@ -1,0 +1,250 @@
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react'
+import { useTranslation } from 'react-i18next'
+import { useAuth } from '../../auth/AuthContext'
+import AuthCard from './AuthCard'
+import TermsCard from './TermsCard'
+import Wisp from './Wisp'
+import { BEATS } from './beats'
+import { HoldNextContext } from './beats/holdNext'
+import { back, initialFlow, isBeat, next, skip, toSignIn, type Flow, type Step } from './flowSteps'
+import './flow.css'
+
+const TYPE_MS = 28
+const LEAVE_MS = 460
+const TITLE_DELAY_MS = 2800
+const TITLE_CHAR_MS = 84
+
+const CONFIDENCE: Record<string, number> = { title: 0.08, 1: 0.18, 2: 0.3, 3: 0.42, 4: 0.5, 5: 0.6, 6: 0.72, 7: 0.82 }
+
+const reducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+
+/** The title types itself after a pause; `instant` (reduced motion, or coming back) shows it whole. */
+function useTitleTyping(text: string, instant: boolean): string {
+  const [n, setN] = useState(instant ? text.length : 0)
+  useEffect(() => {
+    if (instant) return setN(text.length)
+    let id: ReturnType<typeof setInterval>
+    const start = setTimeout(() => {
+      id = setInterval(() => setN((c) => Math.min(text.length, c + 1)), TITLE_CHAR_MS)
+    }, TITLE_DELAY_MS)
+    return () => {
+      clearTimeout(start)
+      clearInterval(id)
+    }
+  }, [text, instant])
+  return text.slice(0, n)
+}
+
+function Title({ cameBack, onStart }: { cameBack: boolean; onStart: () => void }) {
+  const { t } = useTranslation('onboarding')
+  const welcome = t('flow.welcome')
+  const shown = useTitleTyping(welcome, cameBack || reducedMotion())
+  const delay = (s: number): CSSProperties => ({ animationDelay: `${s}s` })
+  return (
+    <main className={`ob-title ${cameBack ? 'ob-rew ob-quick' : ''}`}>
+      <div aria-hidden="true" className="ob-rail">
+        <div className="boing ob-level">
+          <span className="ob-cap">{t('flow.level')}</span>
+          <b>0</b>
+        </div>
+        <div className="ob-line">
+          <span className="ob-srule ob-draw" />
+          <span className="ob-sleeper">
+            <span className="drop" style={delay(1)}>
+              <span className="ob-wake ob-snz">
+                <Wisp size={52} confidence={CONFIDENCE.title} />
+                <i className="ob-sbub" />
+              </span>
+            </span>
+            <i className="ob-zz" style={delay(1.8)} />
+            <i className="ob-zz" style={{ ...delay(2.8), left: '84%' }} />
+            <i className="ob-zz" style={delay(3.25)} />
+            <i className="ob-bang" />
+          </span>
+        </div>
+        <div className="ob-ring">
+          <div className="ob-disc">
+            <b>?</b>
+            <span className="ob-cap">{t('flow.points')}</span>
+          </div>
+        </div>
+      </div>
+      <h1 className="ob-lora ob-h1" aria-label={welcome}>
+        <span aria-hidden="true">
+          {shown}
+          <span className="ob-caret" />
+        </span>
+      </h1>
+      <button type="button" className="boing ob-start" style={delay(4.3)} onClick={onStart} data-testid="onboarding-start">
+        {t('flow.start')}
+      </button>
+    </main>
+  )
+}
+
+export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boolean; onAccepted: () => void }) {
+  const { user, loading } = useAuth()
+  const { t } = useTranslation('onboarding')
+  const { t: tc } = useTranslation('common')
+  const [flow, setFlow] = useState<Flow>(() => initialFlow(resumed))
+  const [reveal, setReveal] = useState(0)
+  const [leaving, setLeaving] = useState(false)
+  const [cameFrom, setCameFrom] = useState<Step | null>(null)
+  const [held, setHeld] = useState<string | null>(null)
+  const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
+  useEffect(() => () => clearTimeout(timer.current), [])
+
+  const { step } = flow
+  const n = isBeat(step) ? step : null
+  const beat = n !== null
+  const line = beat ? t(`beats.${n}`) : ''
+  const done = reveal >= line.length
+  const target = flow.history[flow.history.length - 1]
+
+  useEffect(() => {
+    if (!beat || leaving || done) return
+    if (reducedMotion()) return setReveal(line.length)
+    const id = setTimeout(() => setReveal((r) => r + 1), TYPE_MS)
+    return () => clearTimeout(id)
+  }, [beat, leaving, done, reveal, line.length])
+
+  // Leaving un-types the line while the scene is yanked away.
+  useEffect(() => {
+    if (!leaving || !beat) return
+    const id = setInterval(() => setReveal((r) => Math.max(0, r - Math.ceil(line.length / 12))), TYPE_MS)
+    return () => clearInterval(id)
+  }, [leaving, beat, line.length])
+
+  const move = (to: (f: Flow) => Flow) => {
+    if (leaving) return
+    window.scrollTo(0, 0)
+    setFlow(to)
+    setReveal(0)
+    setCameFrom(null)
+  }
+
+  const goBack = () => {
+    if (leaving || !flow.history.length) return
+    const land = () => {
+      window.scrollTo(0, 0)
+      setFlow(back)
+      setReveal(Infinity)
+      setCameFrom(step)
+      setLeaving(false)
+    }
+    if (reducedMotion()) return land()
+    setLeaving(true)
+    timer.current = setTimeout(land, LEAVE_MS)
+  }
+
+  const advance = () => {
+    if (leaving) return
+    if (!done) setReveal(line.length)
+    else if (held === null) move(next)
+  }
+
+  const setHold = useCallback((label: string | null) => setHeld(label), [])
+
+  // Back plays on the whole screen except beat to beat, where only the stage swaps.
+  const toBeat = target !== undefined && isBeat(target)
+  const fromBeat = cameFrom !== null && isBeat(cameFrom)
+  const screenCls = leaving ? (toBeat && beat ? '' : 'ob-lv') : cameFrom !== null && !(beat && fromBeat) ? 'ob-rew' : ''
+  const stageCls = leaving ? (toBeat ? 'ob-lv' : '') : beat && fromBeat ? 'ob-rew' : ''
+  const cameBack = cameFrom !== null
+  const onBack = flow.history.length ? goBack : undefined
+
+  const Beat = n === null ? null : BEATS[n - 1]
+  const label = !done ? t('flow.finishLine') : n === 7 ? t('flow.toContract') : t('flow.next')
+
+  return (
+    <div className="onboarding-arc ob-root" data-theme="dark" style={{ ['--conf' as string]: CONFIDENCE[String(step)] ?? 1 }}>
+      <span aria-hidden="true" className="ob-aurora" style={{ animationDelay: step === 'title' && !cameBack ? '3.4s' : '0s' }} />
+      <header className="ob-header">
+        <span>
+          <span className={`ob-brand ob-cap ${step === 'title' ? '' : 'ob-brand-hide'}`}>
+            {t('flow.brand')} <i />
+          </span>
+        </span>
+        <span>
+          {beat && (
+            <button type="button" className="ob-ghost ob-cap ob-fwd2" onClick={() => move(skip)} data-testid="onboarding-skip">
+              {t('flow.skip')}
+            </button>
+          )}
+          {!user && (step === 'title' || beat) && (
+            <button type="button" className="ob-ghost ob-cap" onClick={() => move(toSignIn)} data-testid="onboarding-header-sign-in">
+              {t('flow.signIn')}
+            </button>
+          )}
+        </span>
+      </header>
+      {leaving && (
+        <span aria-hidden="true" className="ob-cap ob-rwd ob-rwd-arrow">
+          {t('flow.rewind')}
+        </span>
+      )}
+
+      {step === 'title' && <Title cameBack={cameBack} onStart={() => move(next)} />}
+
+      {Beat && n !== null && (
+        <main className={`ob-beat ${screenCls}`}>
+          <HoldNextContext.Provider value={setHold}>
+            <section aria-hidden="true" className={`ob-stage ${stageCls}`} key={step}>
+              <Beat confidence={CONFIDENCE[n]} />
+            </section>
+          </HoldNextContext.Provider>
+          <div className="ob-sheet ob-box">
+            <span className="ob-box-top">
+              <span className="ob-cap">{t('flow.stepOf', { n })}</span>
+              <span className="ob-hair" />
+              <span className="ob-pips" aria-hidden="true">
+                {[1, 2, 3, 4, 5, 6, 7].map((i) => (
+                  <i key={i} style={i <= n ? { background: `var(--faction-default-stop-${i})` } : undefined} />
+                ))}
+              </span>
+            </span>
+            <button type="button" className="ob-adv" onClick={advance} aria-label={label}>
+              <span aria-hidden="true" className="ob-lora ob-line-text">
+                {line.slice(0, reveal)}
+                <span className="ob-caret" />
+              </span>
+            </button>
+            <span className="ob-sr" aria-live="polite">
+              {line}
+            </span>
+            <span className="ob-box-nav">
+              {onBack ? (
+                <button type="button" className="ob-ghost ob-cap ob-bk ob-prev" onClick={onBack}>
+                  {t('flow.back')}
+                </button>
+              ) : (
+                <span />
+              )}
+              {done && held !== null ? (
+                <span className="ob-cap ob-hold">{held}</span>
+              ) : (
+                <button type="button" className="ob-ghost ob-cap ob-next ob-fwd" onClick={advance}>
+                  {label}
+                </button>
+              )}
+            </span>
+          </div>
+        </main>
+      )}
+
+      {step === 'signin' && <div className={screenCls}><AuthCard onBack={onBack} /></div>}
+
+      {step === 'contract' && (
+        <div className={screenCls}>
+          {loading ? (
+            <div className="page font-body text-muted">{tc('loading')}</div>
+          ) : !user ? (
+            <AuthCard onBack={onBack} />
+          ) : (
+            <TermsCard onAccepted={onAccepted} onBack={onBack} />
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
