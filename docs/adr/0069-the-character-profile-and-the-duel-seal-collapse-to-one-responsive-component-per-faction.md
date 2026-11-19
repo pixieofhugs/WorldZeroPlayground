@@ -1,6 +1,6 @@
 # ADR-0069 — The character profile and the duel seal collapse to one responsive component per faction
 
-**Status:** Accepted
+**Status:** Amended by ADR-0078
 **Date:** 2026-07-30
 
 **Relates to:** ADR-0056 (task cards), ADR-0058 (task detail), ADR-0063 (praxis
@@ -159,3 +159,7 @@ known ceiling rather than a second form-factor mechanism.
   — it was true when made — but this one supersedes its inventory.
 - The evaluation window is closed for both surfaces. A second profile or duel
   seal implementation reappearing is drift, not an experiment.
+
+## Amendment (2026-11-19, #3426)
+
+"Two `mobile*` component surfaces remain: `mobileFactionPage` and `mobileFieldDesk`" is out of date. ADR-0078 collapsed faction detail, so only `mobileFieldDesk` is left (`factions/manifest.ts`). The no-generalising rule applies to it unchanged.
