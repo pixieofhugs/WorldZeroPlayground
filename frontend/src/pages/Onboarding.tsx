@@ -4,6 +4,7 @@ import { useAuth } from '../auth/AuthContext'
 import { clearOnboardingHandoff, clearTermsAcceptance, onboardingHandoffPending } from '../utils/onboardingResume'
 import { resolveHandoffDestination } from '../utils/onboardingHandoff'
 import OnboardingFlow from './onboarding/OnboardingFlow'
+import { watchStageFit } from './onboarding/fitStage'
 
 /** `/start`: the QR code's arc (`docs/spec/SPEC-onboarding.md`), unguarded. The flow is `OnboardingFlow`; this page owns the hand-off and the one resume, the OAuth round trip (`utils/onboardingResume`), consumed on mount. */
 export default function Onboarding() {
@@ -18,6 +19,8 @@ export default function Onboarding() {
     // A cold open runs the full flow; a stale held click must not skip the contract.
     if (!resumed) clearTermsAcceptance()
   }, [resumed])
+
+  useEffect(watchStageFit, [])
 
   return (
     <OnboardingFlow

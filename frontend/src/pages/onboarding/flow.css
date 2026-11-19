@@ -1,5 +1,7 @@
 /* The flow's frame: header, title page, text box. Ported from .design-sync/onboarding-arc/src.html; ob- prefixed because this sheet stays loaded once /start has been visited. */
-.ob-root{position:relative;min-height:100vh;box-sizing:border-box;display:flex;flex-direction:column;overflow-x:clip;background:var(--color-bg-page);color:var(--faction-default-card-text);font-family:var(--font-body)}
+.ob-root{position:relative;min-height:100vh;box-sizing:border-box;display:flex;flex-direction:column;background:var(--color-bg-page);color:var(--faction-default-card-text);font-family:var(--font-body)}
+/* Stops sideways scroll from the aurora and beat 1's world without clipping at the root, which gave the world's soft mask hard edges. */
+html:has(.ob-root){overflow-x:hidden}
 .ob-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .ob-cap{font-family:var(--font-body);font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:var(--faction-default-card-muted)}
 .ob-lora{font-family:var(--font-display);font-weight:600;font-style:italic}
@@ -84,7 +86,9 @@
 
 /* beats: a stage above a text box that stays put */
 .ob-beat{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;gap:34px;padding:4px clamp(16px,4vw,40px) 26px;min-height:0}
-.ob-stage{position:relative;flex:1;min-height:330px;display:flex;align-items:center;justify-content:center}
+.ob-stage{position:relative;flex:1;min-height:calc(330px*var(--fit,1));display:flex;align-items:center;justify-content:center}
+.ob-stage{padding-bottom:var(--under,0px);box-sizing:border-box}
+.ob-stage>*{zoom:var(--fit,1)}
 .ob-sheet{box-sizing:border-box;border:3px solid transparent;border-radius:14px;background:linear-gradient(var(--faction-default-card-bg),var(--faction-default-card-bg)) padding-box,var(--faction-default-rainbow) border-box;box-shadow:0 12px 32px -14px var(--color-cast-shadow);color:var(--faction-default-card-text)}
 .ob-box{position:sticky;bottom:12px;z-index:5;width:100%;max-width:900px;align-self:center;padding:20px 24px 10px;display:flex;flex-direction:column;gap:10px}
 @media (max-width:767px) and (pointer:coarse){.ob-box{bottom:calc(12px + var(--tab-bar-clearance))}}
@@ -97,7 +101,7 @@
 .ob-box-nav{display:flex;justify-content:space-between;align-items:center;gap:12px}
 .ob-box-nav .ob-ghost:first-child{margin-left:-14px}
 .ob-box-nav .ob-ghost:last-child,.ob-box-nav .ob-hold{margin-right:-14px}
-.ob-hold{padding:0 14px}
+.ob-hold{padding:0 14px;white-space:nowrap}
 
 /* contract: the quill wants a signature */
 .ob-contract{display:flex;flex-direction:column}

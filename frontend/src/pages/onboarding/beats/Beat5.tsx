@@ -20,7 +20,6 @@ const SCORE_AFTER = 0.55
 const COUNT_AFTER = SCORE_AFTER + 0.2
 /** Back plays every judge at 1s, behind the card. */
 const QUICK_LAND = 1
-const VOTE_ROW_AT_MS = 3300
 
 const reducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
 
@@ -36,15 +35,6 @@ export default function Beat5({ confidence }: BeatProps) {
     const quick = root.current?.closest('.ob-rew') != null
     const ids = JUDGES.map((j, i) =>
       setTimeout(() => setJudged(i + 1), ((quick ? QUICK_LAND : j.land) + COUNT_AFTER) * 1000),
-    )
-    // The vote row sits low on a tall card: bring it out from behind the text box.
-    ids.push(
-      setTimeout(() => {
-        const row = root.current?.querySelector('button[aria-pressed]')
-        if (!row) return
-        const over = row.getBoundingClientRect().bottom - (window.innerHeight - 250)
-        if (over > 0) window.scrollBy({ top: over + 40, behavior: 'smooth' })
-      }, VOTE_ROW_AT_MS),
     )
     return () => ids.forEach(clearTimeout)
   }, [])
