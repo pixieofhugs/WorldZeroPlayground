@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from game_config import CURRENT_ERA
 from models.account import Account
+from models.era import Era
 from services.progression import HIDDEN_UNTIL_REVEALED_UNLOCK_KEY
 from services.scoring import sole_tie_taker_slug
 
@@ -172,3 +173,18 @@ async def test_hiding_the_rung_keeps_every_level_in_place(client: AsyncClient):
             for unlock in configured.unlocks
             if unlock.key != HIDDEN_UNTIL_REVEALED_UNLOCK_KEY
         ]
+
+
+@pytest.mark.asyncio
+async def test_era_id_follows_a_new_era_row_with_the_same_name(
+    client: AsyncClient, db_session: AsyncSession, era, account: Account
+):
+    before = (await client.get("/game-config")).json()["era_id"]
+    assert before == era.id
+
+    # A same-era reset / name-keeping switch (ADR-0091) appends a row.
+    db_session.add(Era(name=era.name, config_key=era.config_key, started_by=account.id))
+    await db_session.commit()
+
+    after = (await client.get("/game-config")).json()["era_id"]
+    assert after > before

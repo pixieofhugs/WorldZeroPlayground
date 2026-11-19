@@ -92,5 +92,6 @@ async def build_current_user(
         albescent_level_required=era.albescent_level_required,
         vote_level_required=era.vote_level_required,
         era_name=era.name,
+        era_id=era_row.id if era_row is not None else 0,
         **asdict(capabilities),
     )

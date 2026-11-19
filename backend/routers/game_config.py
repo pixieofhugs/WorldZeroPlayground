@@ -11,6 +11,7 @@ from schemas.game_config import (
     LevelProfileOut,
     LevelUnlockOut,
 )
+from services.era import get_current_era_row_safe
 from services.progression import visible_level_profiles
 
 router = APIRouter()
@@ -54,8 +55,11 @@ async def get_game_config(
         for profile in visible_level_profiles(account, is_admin=is_admin)
     ]
 
+    era_row = await get_current_era_row_safe(session)
+
     return GameConfigOut(
         era_name=CURRENT_ERA.name,
+        era_id=era_row.id if era_row is not None else 0,
         level_thresholds=list(CURRENT_ERA.level_thresholds),
         duel_level_required=CURRENT_ERA.duel_level_required,
         collab_auto_submit_days=CURRENT_ERA.collab_auto_submit_days,
