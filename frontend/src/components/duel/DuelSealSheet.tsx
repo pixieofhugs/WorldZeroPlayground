@@ -10,6 +10,7 @@
  */
 import type { CSSProperties, ReactNode } from 'react'
 import { drawAtRoot } from '../ui/drawAtRoot'
+import { useModal } from '../../hooks/useModal'
 import { useFormFactor } from '../../hooks/useFormFactor'
 
 /** Default desktop scrim; Snide, Singularity and WOW pass their own. */
@@ -39,12 +40,15 @@ export default function DuelSealSheet({
   children,
 }: DuelSealSheetProps) {
   const isMobile = useFormFactor() === 'mobile'
+  // No onClose: the seal is dismissed from its own buttons, never by Escape.
+  const ref = useModal()
 
   // Both branches draw at the root (#2244), or the phone's tab bar paints over the
   // action band. See `drawAtRoot`.
   if (isMobile) {
     return drawAtRoot(
       <div
+        ref={ref}
         data-testid="duel-seal-sheet"
         role="dialog"
         aria-modal="true"
@@ -62,6 +66,7 @@ export default function DuelSealSheet({
   return drawAtRoot(
     <div
       // Found by slot, not heading, for the nightly (#2453).
+      ref={ref}
       data-testid="duel-seal-sheet"
       role="dialog"
       aria-modal="true"

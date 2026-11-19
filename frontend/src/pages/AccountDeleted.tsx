@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { useTranslation } from 'react-i18next'
 import PageTitle from '../components/ui/PageTitle'
 
@@ -10,6 +11,7 @@ import PageTitle from '../components/ui/PageTitle'
  */
 export default function AccountDeleted() {
   const { t } = useTranslation('common')
+  useDocumentTitle(t('accountDeleted.title'))
   return (
     <div className="py-8 max-w-2xl" data-testid="account-deleted">
       <PageTitle title={t('accountDeleted.title')} />

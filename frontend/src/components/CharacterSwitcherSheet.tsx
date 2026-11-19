@@ -7,6 +7,7 @@ import type { CharacterOut } from '../api/auth'
 import { useFormFactor } from '../hooks/useFormFactor'
 import { factionCssVar, factionName } from '../utils/factions'
 import { mediaUrl } from '../utils/media'
+import { useModal } from '../hooks/useModal'
 import { drawAtRoot } from './ui/drawAtRoot'
 
 /**
@@ -43,6 +44,8 @@ export default function CharacterSwitcherSheet({
     void getMyCharacters().then(setLives).catch(() => setLives([]))
   }, [open])
 
+  const ref = useModal(onClose, open)
+
   if (!open) return null
 
   const enterLife = async (id: number) => {
@@ -61,7 +64,7 @@ export default function CharacterSwitcherSheet({
   }
 
   return drawAtRoot(
-    <div role="dialog" aria-modal="true" aria-label={t('fieldDesk.home.switcher.title')}>
+    <div ref={ref} role="dialog" aria-modal="true" aria-label={t('fieldDesk.home.switcher.title')}>
       <button type="button" aria-label={t('fieldDesk.home.switcher.close')} onClick={onClose} style={scrim} />
       <div style={{ ...sheet, paddingBottom: bottomRest(isMobile) }}>
         <span style={grab} />
