@@ -5,6 +5,7 @@ CRDT: the bug guarded is two clients each seeding and merging into two copies.
 """
 
 import asyncio
+import base64
 import io
 import linecache
 from contextlib import asynccontextmanager, suppress
@@ -12,6 +13,7 @@ from typing import Any, AsyncIterator, Callable
 
 import pytest
 import pytest_asyncio
+from fastapi import HTTPException
 from pycrdt import (
     Awareness,
     Doc,
@@ -260,11 +262,15 @@ class _Rooms:
         )
         return socket
 
-    async def submit(self, praxis_id: int, character_id: int) -> Any:
+    async def submit(
+        self, praxis_id: int, character_id: int, doc_state: str | None = None
+    ) -> Any:
         """Harness-only: holds the session lock, since a submit races room tasks
         on the one shared session (production uses separate sessions)."""
         async with self.sessions() as session:
-            return await submit_praxis(praxis_id, character_id, session)
+            return await submit_praxis(
+                praxis_id, character_id, session, doc_state=doc_state
+            )
 
     def room_doc(self, praxis_id: int) -> Doc | None:
         room = self.server.rooms.get(room_name_for(praxis_id))
@@ -1067,6 +1073,75 @@ async def test_publishing_discards_the_document_and_keeps_the_body(
         assert published.status == PraxisStatus.submitted
         assert await _stored_updates(rooms, collab.id) == []
         assert await _record(rooms, collab.id) == ("Collab Praxis", f"final {SEED_BODY}")
+
+
+async def test_a_submit_carries_edits_the_room_never_received(
+    db_session, active_task, character, account, monkeypatch
+) -> None:
+    """#3611: sockets give no ack, so the request itself carries the browser's doc."""
+    solo = Praxis(
+        task_id=active_task.id,
+        created_by_id=character.id,
+        type=PraxisType.solo,
+        status=PraxisStatus.in_progress,
+        title="Solo Praxis",
+        body_text=SEED_BODY,
+    )
+    db_session.add(solo)
+    await db_session.flush()
+    db_session.add(PraxisMember(praxis_id=solo.id, character_id=character.id))
+    await db_session.commit()
+
+    async with running_rooms(
+        db_session, monkeypatch, flush_debounce_seconds=30
+    ) as rooms:
+        socket = await rooms.open(solo.id, account.id)
+        async with client_doc(socket) as doc:
+            await _wait_for_body(doc, SEED_BODY, "the solo author")
+            doc.get(ROOM_BODY_KEY, type=Text).insert(0, "synced ")
+            await _wait_for_body(
+                rooms.room_doc(solo.id), f"synced {SEED_BODY}", "the room"
+            )
+            offline = Doc()
+            offline.apply_update(doc.get_update())
+            offline.get(ROOM_BODY_KEY, type=Text).insert(0, "OFFLINE ")
+            state = base64.b64encode(offline.get_update()).decode()
+
+            published = await rooms.submit(solo.id, character.id, doc_state=state)
+            # Resending the same state is a no-op merge, not duplicated text.
+            assert await _record(rooms, solo.id) == (
+                "Solo Praxis",
+                f"OFFLINE synced {SEED_BODY}",
+            )
+
+        assert published.status == PraxisStatus.submitted
+
+
+async def test_an_oversized_or_garbled_doc_state_is_refused(
+    db_session, active_task, character, monkeypatch
+) -> None:
+    solo = Praxis(
+        task_id=active_task.id,
+        created_by_id=character.id,
+        type=PraxisType.solo,
+        status=PraxisStatus.in_progress,
+        title="Solo Praxis",
+        body_text=SEED_BODY,
+    )
+    db_session.add(solo)
+    await db_session.flush()
+    db_session.add(PraxisMember(praxis_id=solo.id, character_id=character.id))
+    await db_session.commit()
+
+    big = base64.b64encode(bytes(praxis_room._MAX_CLIENT_UPDATE_BYTES + 1)).decode()
+    async with running_rooms(db_session, monkeypatch) as rooms:
+        # Opened outside the harness's session lock; a cold open would deadlock.
+        await rooms.server.get_room(room_name_for(solo.id))
+        for state, status in ((big, 413), ("not base64!", 422), ("AAEC", 422)):
+            with pytest.raises(HTTPException) as refused:
+                await rooms.submit(solo.id, character.id, doc_state=state)
+            assert refused.value.status_code == status
+            assert refused.value.detail["code"] == "PRAXIS_DOC_UPDATE_INVALID"
 
 
 async def test_a_solo_seal_flattens_the_live_room_into_the_record(

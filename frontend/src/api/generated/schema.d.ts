@@ -4670,6 +4670,14 @@ export interface components {
             /** Message */
             message: string;
         };
+        /**
+         * SubmitPraxisIn
+         * @description The browser's Yjs state, base64; merged into the room before the seal.
+         */
+        SubmitPraxisIn: {
+            /** Doc State */
+            doc_state: string;
+        };
         /** SuspendAction */
         SuspendAction: {
             /** Suspended */
@@ -8383,7 +8391,11 @@ export interface operations {
                 access_token?: string | null;
             };
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["SubmitPraxisIn"] | null;
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {

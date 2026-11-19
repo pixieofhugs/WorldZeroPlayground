@@ -37,7 +37,7 @@ import {
 import type { CharacterOut } from "../../api/characters";
 import { deriveCollabGate } from "../../components/collab/CollabRoster";
 import { deriveEditPraxisPhase } from "./editPraxisPhase";
-import { discardRoomStore, whenRoomFlushed } from "./roomStore";
+import { discardRoomStore, roomState } from "./roomStore";
 import { editNeedsProposalConfirm } from "./proposalGuard";
 import { planInitialLoad, loadPlannedPraxis } from "./initialLoadPlan";
 import { planLoadedPraxis } from "./loadedPraxisPlan";
@@ -83,7 +83,6 @@ export {
 } from "./editPraxisPhase";
 
 /** Covers y-websocket's reconnect backoff (up to 2.5 s) plus the sync round trip. */
-const FLUSH_WAIT_MS = 5000;
 
 export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   const navigate = useNavigate();
@@ -353,12 +352,8 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     setError("");
     try {
       const praxisId = parseInt(idParam, 10);
-      // Submit seals the server's document; offline edits it hasn't received die with it.
-      if (!(await whenRoomFlushed(praxisId, FLUSH_WAIT_MS))) {
-        setError(i18n.t("forms:editPraxis.errors.publishUnsent"));
-        return;
-      }
-      await submitPraxis(praxisId);
+      // The request carries the whole doc: sockets give no ack, and the seal destroys the server's copy (#3611).
+      await submitPraxis(praxisId, roomState(praxisId));
       // Publishing destroyed the server doc (ADR-0073 rule 7). Discard here, not
       // only in the effect below: a solo publish navigates away before it runs (#2381).
       discardRoomStore(praxisId);

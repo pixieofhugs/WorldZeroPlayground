@@ -20,6 +20,8 @@ ASGI WebSocket route in this app (``main.py``). Server-side rules:
    first.
 """
 
+import base64
+import binascii
 import logging
 import re
 from collections.abc import AsyncIterator, Callable
@@ -41,6 +43,7 @@ from starlette.routing import get_route_path
 
 from config import settings
 from db import AsyncSessionLocal
+from errors import ErrorCode, raise_coded
 from models.account import Account, AccountStatus
 from models.praxis import Praxis
 from models.praxis_room import PraxisRoomUpdate
@@ -60,6 +63,11 @@ ROOM_TITLE_KEY = "title"
 # Quiet time before copying into the praxis. Updates are already durable; this
 # only delays read surfaces.
 _FLUSH_DEBOUNCE_SECONDS = 2.0
+
+# Bound on the Yjs state a browser may send with a submit (decoded bytes).
+_MAX_CLIENT_UPDATE_BYTES = 2 * 1024 * 1024
+_INVALID_DRAFT = "That draft is not a valid document."
+_OVERSIZED_DRAFT = "That draft is too large."
 
 # Path below the ``main.py`` mount (``/rooms`` prefix belongs to the mount).
 _ROOM_PATH = re.compile(r"^/praxis/(?P<praxis_id>\d+)/?$")
@@ -503,6 +511,21 @@ class PraxisRoomServer(WebsocketServer):
                 )
             )
 
+    async def apply_client_update(self, praxis_id: int, update: bytes) -> None:
+        """Merge the browser's whole Yjs state into the room before it is sealed.
+
+        Through the live room, so its store and any connected peers see the same
+        document the seal reads. A merge is idempotent: what the room holds is a no-op.
+
+        ponytail: opens the room if none is running and leaves it open until the
+        seal discards it or a socket joins and leaves; a rejected submit strands it.
+        """
+        room = await self.get_room(room_name_for(praxis_id))
+        try:
+            room.ydoc.apply_update(update)
+        except Exception:
+            raise_coded(422, ErrorCode.praxis_doc_update_invalid, _INVALID_DRAFT)
+
     def revoke(self, praxis_id: int, character_id: int) -> None:
         """Door two: close every socket this character holds on this praxis."""
         for connection in list(self._connections):
@@ -632,6 +655,19 @@ PRAXIS_ROOM_APP = PraxisRoomASGIServer(PRAXIS_ROOM_SERVER)
 async def discard_room_document(praxis: Praxis, session: AsyncSession) -> None:
     """Flatten the document into the praxis, then destroy it; seal's txn (#1745)."""
     await PRAXIS_ROOM_SERVER.discard_document(praxis, session)
+
+
+async def merge_client_state(praxis_id: int, state_b64: str) -> None:
+    """Decode (bounded) the base64 Yjs state a submit carries, then merge it in."""
+    if len(state_b64) > _MAX_CLIENT_UPDATE_BYTES * 4 // 3 + 4:
+        raise_coded(413, ErrorCode.praxis_doc_update_invalid, _OVERSIZED_DRAFT)
+    try:
+        update = base64.b64decode(state_b64, validate=True)
+    except binascii.Error:
+        raise_coded(422, ErrorCode.praxis_doc_update_invalid, _INVALID_DRAFT)
+    if len(update) > _MAX_CLIENT_UPDATE_BYTES:
+        raise_coded(413, ErrorCode.praxis_doc_update_invalid, _OVERSIZED_DRAFT)
+    await PRAXIS_ROOM_SERVER.apply_client_update(praxis_id, update)
 
 
 def close_member_sockets(praxis_id: int, character_id: int) -> None:

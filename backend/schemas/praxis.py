@@ -56,6 +56,12 @@ class PraxisDoneUpdate(WireModel):
     is_done: bool
 
 
+class SubmitPraxisIn(WireModel):
+    """The browser's Yjs state, base64; merged into the room before the seal."""
+
+    doc_state: str
+
+
 class PraxisInviteOut(WireModel):
     id: int
     praxis_id: int

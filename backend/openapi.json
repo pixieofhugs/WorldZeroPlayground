@@ -6202,6 +6202,20 @@
         "title": "StartFreshOut",
         "type": "object"
       },
+      "SubmitPraxisIn": {
+        "description": "The browser's Yjs state, base64; merged into the room before the seal.",
+        "properties": {
+          "doc_state": {
+            "title": "Doc State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "doc_state"
+        ],
+        "title": "SubmitPraxisIn",
+        "type": "object"
+      },
       "SuspendAction": {
         "properties": {
           "suspended": {
@@ -13721,6 +13735,23 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/SubmitPraxisIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Data"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "content": {
