@@ -52,13 +52,13 @@ async def test_task_sync_propagates_new_era_task_on_seeded_db(
     character: Character,
     some_faction: Faction,
 ):
-    added, _ = await sync_era_tasks(
+    added = await sync_era_tasks(
         db_session, _era_with_tasks(_standard_task("Alpha Task")), character.id
     )
     assert added == 1
 
     v2 = _era_with_tasks(_standard_task("Alpha Task"), _standard_task("Beta Task"))
-    added_on_reseed, _ = await sync_era_tasks(db_session, v2, character.id)
+    added_on_reseed = await sync_era_tasks(db_session, v2, character.id)
 
     assert added_on_reseed == 1
 
@@ -361,3 +361,24 @@ async def test_duel_fixture_task_skipped_when_the_era_lacks_the_faction(
         )
     ).scalars().all()
     assert rows == []
+
+
+async def test_the_deploy_seeder_never_reactivates_a_retired_task(
+    db_session: AsyncSession,
+    era: Era,
+    character: Character,
+    some_faction: Faction,
+):
+    await sync_era_tasks(
+        db_session, _era_with_tasks(_standard_task("Alpha Task")), character.id
+    )
+    alpha = (await db_session.execute(select(Task))).scalars().one()
+    alpha.status = TaskStatus.retired
+    await db_session.flush()
+
+    added = await sync_era_tasks(
+        db_session, _era_with_tasks(_standard_task("Alpha Task")), character.id
+    )
+
+    assert added == 0
+    assert alpha.status == TaskStatus.retired

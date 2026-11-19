@@ -425,7 +425,7 @@ async def seed(env: str, yes: bool) -> None:
         pixie_char = await bootstrap_admin(session, era, pixie_acc)
 
         # Phase 3: era-config tasks (none in Era 1, #1398)
-        new_tasks, _ = await sync_era_tasks(session, era, pixie_char.id)
+        new_tasks = await sync_era_tasks(session, era, pixie_char.id)
         if new_tasks > 0:
             print(f"  >Tasks ({new_tasks} new from the era config)")
         else:

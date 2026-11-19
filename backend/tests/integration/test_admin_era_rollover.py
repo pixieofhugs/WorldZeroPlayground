@@ -442,7 +442,7 @@ async def test_an_era_roll_leaves_a_self_deleted_life_alone(
 # --- the incoming era's task list ---
 
 
-def _era_listing(monkeypatch, *titles: str):
+def _era_listing(monkeypatch, *titles: str, reactivate: tuple[str, ...] = ()):
     import dataclasses
 
     import services.admin_service as admin_service
@@ -450,6 +450,7 @@ def _era_listing(monkeypatch, *titles: str):
 
     listed = dataclasses.replace(
         era_config_for_key("era_2"),
+        reactivate_tasks=reactivate,
         tasks=tuple(
             TaskDef(
                 title=title,
@@ -481,7 +482,6 @@ async def test_the_roll_opens_the_new_era_with_its_task_list(
     from models.task import Task, TaskStatus
     from seed import ensure_onboarding_task
     from services.admin_service import roll_into_era
-    from services.era_tasks import sync_era_tasks
     from tests.integration.factories import make_task
 
     slug = real_faction_slugs(game_config.CURRENT_ERA)[0]
@@ -493,7 +493,7 @@ async def test_the_roll_opens_the_new_era_with_its_task_list(
     await make_task(
         db_session, character, title="Other", faction_slug=slug
     )
-    listed = _era_listing(monkeypatch, "Alpha", "Beta")
+    _era_listing(monkeypatch, "Beta", reactivate=("Alpha",))
 
     out = await roll_into_era("era_2", account, db_session)
 
@@ -503,9 +503,6 @@ async def test_the_roll_opens_the_new_era_with_its_task_list(
     assert active == {"Alpha", "Beta", "Introduce Yourself"}
     other = next(task for task in rows if task.title == "Other")
     assert other.status == TaskStatus.retired
-
-    again = await sync_era_tasks(db_session, listed, character.id, reactivate=True)
-    assert again == (0, 0)
 
 
 async def test_the_roll_refuses_new_tasks_when_the_operator_has_no_character(
@@ -527,3 +524,34 @@ async def test_the_roll_refuses_new_tasks_when_the_operator_has_no_character(
     assert caught.value.detail["code"] == "ERA_ROLL_NEEDS_CHARACTER"
     rows = (await db_session.execute(select(Era))).scalars().all()
     assert [row.config_key for row in rows] == [era.config_key]
+
+
+@pytest.mark.parametrize("twins", [0, 2])
+async def test_the_roll_refuses_a_reactivation_title_matching_not_one_task(
+    db_session: AsyncSession,
+    account: Account,
+    era: Era,
+    character: Character,
+    some_faction: Faction,
+    monkeypatch,
+    twins: int,
+):
+    from models.task import Task, TaskStatus
+    from services.admin_service import roll_into_era
+    from tests.integration.factories import make_task
+
+    slug = real_faction_slugs(game_config.CURRENT_ERA)[0]
+    await make_admin(db_session, account)
+    for _ in range(twins):
+        await make_task(db_session, character, title="Alpha", faction_slug=slug)
+    _era_listing(monkeypatch, reactivate=("Alpha",))
+
+    with pytest.raises(HTTPException) as caught:
+        await roll_into_era("era_2", account, db_session)
+
+    assert caught.value.status_code == 409
+    assert caught.value.detail["code"] == "ERA_REACTIVATE_AMBIGUOUS"
+    rows = (await db_session.execute(select(Era))).scalars().all()
+    assert [row.config_key for row in rows] == [era.config_key]
+    tasks = (await db_session.execute(select(Task))).scalars().all()
+    assert all(task.status == TaskStatus.active for task in tasks)

@@ -47,7 +47,7 @@ from schemas.admin import (
 from seed import upsert_era_factions
 from services.faction_service import refuse_hidden_faction
 from services.character import MOD_BANNED, record_level_reached
-from services.era_tasks import sync_era_tasks
+from services.era_tasks import sync_era_tasks, tasks_to_reactivate
 from services.duel import forfeit_settled_duels_for_character
 from services.praxis import moderate_praxis
 from services.era import (
@@ -812,8 +812,8 @@ async def roll_into_era(
 
     Delegates to the owners: new ``Era`` row (ADR-0042), roster mirror,
     ``apply_era_reset`` (incoming era's flags; freezes duels #824), the incoming
-    era's ``tasks`` (existing retired ones return, new ones are created; the
-    onboarding task is spared by the retirement, not relisted), then
+    era's ``reactivate_tasks`` (named retired ones return) and ``tasks`` (new ones
+    are created); the onboarding task is spared by the retirement, not relisted), then
     ``commit_and_bind_live_era``. ``operator`` is the ``Era.started_by_id`` audit.
 
     Refuses an unregistered key and the already-live era (a full destructive
@@ -838,6 +838,9 @@ async def roll_into_era(
             ErrorCode.era_already_live,
             f"{era_config.name} is already the live era.",
         )
+
+    # Before any write: a bad title refuses the whole roll.
+    to_reactivate = await tasks_to_reactivate(session, era_config)
 
     creator_id = (
         await session.execute(
@@ -873,9 +876,9 @@ async def roll_into_era(
 
     await apply_era_reset(characters, new_era_row, session, era=era_config)
 
-    tasks_created, tasks_reactivated = await sync_era_tasks(
-        session, era_config, creator_id, reactivate=True
-    )
+    for task in to_reactivate:
+        task.status = TaskStatus.active
+    tasks_created = await sync_era_tasks(session, era_config, creator_id)
 
     # Durable first, live second; see `commit_and_bind_live_era`.
     await commit_and_bind_live_era(session, era_config)
@@ -885,6 +888,6 @@ async def roll_into_era(
         config_key=era_config.config_key,
         name=era_config.name,
         characters_reset=len(characters),
-        tasks_reactivated=tasks_reactivated,
+        tasks_reactivated=len(to_reactivate),
         tasks_created=tasks_created,
     )
