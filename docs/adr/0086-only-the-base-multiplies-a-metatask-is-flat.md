@@ -6,8 +6,8 @@
 **Supersedes:** the **scoring formula** as recorded in **ADR-0014**
 (`(base + metatasks) × faction × duel + votes`) and restated as the payload
 invariant in **ADR-0053**. Neither record's decision is otherwise disturbed.
-**Relates to:** ADR-0051 (every praxis type earns metatask points), ADR-0052
-(a duel side's multiplier is live and provisional), ADR-0015 (metatask is its
+**Relates to:** ADR-0053 (every praxis type earns metatask points; a duel side's
+multiplier is live and provisional *[2026-11-18, #3425: these two rules were credited to ADR-0051 and ADR-0052, which hold neither]*), ADR-0015 (metatask is its
 own model), #1617 (the habit bonus left the parentheses first), #1578 (the
 `Decimal` arithmetic), #2633 (this ADR)
 
@@ -77,7 +77,7 @@ the player never saw would be a worse outcome than an off-by-one ladder.
 Per-praxis scores are derived at read time, so cards, detail pages and the
 composer correct themselves the moment the formula lands. `CharacterStats.score`
 is a per-era gather that is stale until something triggers a recalc, and
-`CharacterStats.all_time_score` is a `+= delta` accumulator that never
+`Character.all_time_score` is a `+= delta` accumulator that never
 self-corrects. `scripts/backfill_metatask_multiplier.py` counted the affected set
 and, with `--apply`, re-banked it **as a delta** through
 `recalculate_character_stats` — never as `SUM(score)`, which would undo the zero

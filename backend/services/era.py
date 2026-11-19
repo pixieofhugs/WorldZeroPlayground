@@ -374,19 +374,20 @@ async def apply_era_reset(
             .limit(1)
         )
         prev_stats = prev_result.scalar_one_or_none()
-        prev_all_time = prev_stats.all_time_score if prev_stats else 0
 
         new_stats = CharacterStats(
             character_id=character.id,
             era_id=new_era_row.id,
             score=0 if era.reset_score else (prev_stats.score if prev_stats else 0),
-            all_time_score=0 if era.reset_all_time_score else prev_all_time,
             level=0 if era.reset_level else (prev_stats.level if prev_stats else 0),
             votes_spent_this_era=0 if era.reset_vote_budget else (
                 prev_stats.votes_spent_this_era if prev_stats else 0
             ),
         )
         session.add(new_stats)
+
+        if era.reset_all_time_score:
+            character.all_time_score = 0
 
         if era.reset_faction:
             character.faction_slug = era.reset_faction_slug

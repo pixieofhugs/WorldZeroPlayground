@@ -58,7 +58,7 @@ The split between shared and bespoke is drawn at **logic vs. presentation**:
 
 `Default*` fall-through applies as everywhere else (ADR-0039): a slug with no
 registered `scoreStamp` renders the neutral default. `na`/unaffiliated has no
-manifest and keeps that behaviour.
+manifest and keeps that behaviour. *[2026-11-18, #3425: `DEFAULT_MANIFEST` now has `slug: 'na'` (`factions/default.ts`) and is registered in `factions/index.ts`; ADR-0084's #2530 amendment]*
 
 **Faction marks live in `components/factionMarks/`, and the requirement is that a
 mark is tintable from a token** — never that its colour is baked in. An `<img

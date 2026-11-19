@@ -62,7 +62,6 @@ async def test_accept_duel_at_duel_level_but_below_task_level_succeeds(
         character_id=opponent.id,
         era_id=era.id,
         score=0,
-        all_time_score=0,
         level=CURRENT_ERA.duel_level_required,
         votes_spent_this_era=0,
     )

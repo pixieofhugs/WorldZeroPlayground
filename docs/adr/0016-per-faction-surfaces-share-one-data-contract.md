@@ -47,7 +47,7 @@ archetype of that surface consumes it identically. Archetypes own only presentat
    per-archetype — *not* flattened into a fixed scaffold.
 4. **Faction-specific content is catalog copy, not a structural difference.** Faction-voiced
    text (flavor lines, vote-tier labels, at-cap messages) is a *slot* whose words come from
-   the copy catalog (ADR-0010) keyed by the **contextual faction** (§2), resolved by the
+   the copy catalog (ADR-0010 *[2026-11-18, #3425: superseded by ADR-0032, now `frontend/src/locales/en/*.json`]*) keyed by the **contextual faction** (§2), resolved by the
    control via `t()`. The slot is invariant; only the words differ.
 
 ### Enforcement
@@ -71,7 +71,7 @@ archetype of that surface consumes it identically. Archetypes own only presentat
   (#194), the comment archetype (ADR-0006), the activity-feed frame.
 - Complements **ADR-0002** (a page is a composition of surfaces) — this governs what each
   surface *is*; 0002 governs how surfaces compose into a page. And **ADR-0010** (copy
-  catalog) is the mechanism for slot #4.
+  catalog; superseded by ADR-0032, 2026-11-18, #3425) is the mechanism for slot #4.
 
 ## Alternatives considered
 
