@@ -1,6 +1,6 @@
 # Each faction's comment voice reuses its task-card atoms at full fidelity
 
-**Status:** Amended by ADR-0026, ADR-0093
+**Status:** Amended by ADR-0026, ADR-0083, ADR-0093
 **Date:** 2026-06-25
 
 ADR-0006 wired the comment system and explicitly deferred each faction's comment *voice*
@@ -18,12 +18,12 @@ surfaces share one data contract).
   the same character level as `TaskCardSNIDE` / `TaskCardSingularity` (real ransom collage,
   real terminal chrome, real marginalia). The laziness is *not reinventing* it: each comment
   archetype is the three invariant slots wearing the faction's **already-built** skin —
-  `SnideMasthead`, `ephemeristsAtoms`, the WoW `.exe` window tokens
+  `SnideMasthead`, `ephemeristsAtoms` *[2026-11-18, #3425: both gone]*, the WoW `.exe` window tokens
   (`--faction-wow-win-border` / `-title-from` / `-title-to` / `-body-bg` / `-dot` /
   `-notepad-*`), the Singularity scanline/bracket/sprocket bits, the shared `.snide-tape` /
   `.ht-dots` CSS — not new ornaments. New code per faction = comment layout, not decoration.
 
-- **Seven archetypes, including Albescent.** `COMMENT_COMPONENTS` keys
+- **Seven archetypes, including Albescent.** *[2026-11-18, #3425: `components/comments/voices/` now has eight voices, Coven included, dispatched through `surfaceMap('comment')`; `COMMENT_COMPONENTS`, `FACTION_ALIASES` and `pickVariant` are gone]* `COMMENT_COMPONENTS` keys
   `ua · everymen · wow · snide · ephemerists · singularity · albescent`, plus `DefaultComment`.
   Albescent is a **full faction** and gets a real comment component — *not* the
   `albescent → ua` alias. No change to `FACTION_ALIASES` is needed: `pickVariant` matches the
@@ -83,3 +83,7 @@ surfaces share one data contract).
 [ADR-0093](0093-comment-timestamps-read-the-same-for-every-faction.md) replaces the clause
 "The timestamp slot is a per-faction dialect" and its dialect strings. A comment's timestamp
 now reads the same for every faction. The rest of this record stands.
+
+## Amendment (2026-11-18, #3423)
+
+The Albescent comment is no longer a vellum letterhead. `--al-surface` and `--al-ink` do not exist: [ADR-0083](0083-albescent-is-one-ornament-vocabulary-over-na-not-a-skin-per-surface.md) purged the white aesthetic, and `AlbescentComment` renders `DefaultComment` plus a shared edge ring on `--faction-default-*` tokens. Albescent still has its own component (not the `albescent -> ua` alias, which is gone), so "Seven archetypes, including Albescent" now counts eight voices. The rest of the Albescent bullet is superseded; the other voices stand.

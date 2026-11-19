@@ -48,7 +48,7 @@ Enforced at the API layer, so every caller routes through one guard:
   `?status=in_progress` return the viewer's own drafts and nothing else.
 - **Comments** (`GET /praxes/{id}/comments`): same member-or-404 guard as
   detail.
-- **Frontend read page** (`/praxes/:id`): a member landing on the read view of
+- **Frontend read page** (`/praxes/:id` *[2026-11-18, #3425: the route is `/praxis/:id`, edit `/praxis/:id/edit`]*): a member landing on the read view of
   an `in_progress` praxis is redirected to `/praxes/:id/edit`. The public read
   view never renders a draft; the edit page is the only surface for in-progress
   work (it already owns the submit control). Non-members get the 404 from the
