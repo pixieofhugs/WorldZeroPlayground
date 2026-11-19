@@ -1,0 +1,21 @@
+.dhead{position:absolute;right:10px;bottom:calc(100% - 30px);z-index:-1;overflow:visible;animation:peek 9s cubic-bezier(.4,0,.3,1) 1.2s infinite both}
+@keyframes peek{0%,5%{transform:translateY(84px)}11%{transform:translateY(-8px)}14%{transform:translateY(3px)}17%,84%{transform:translateY(0)}88%{transform:translateY(-6px)}96%,100%{transform:translateY(84px)}}
+.dclaw{position:absolute;bottom:calc(100% - 8px);z-index:2;transform-origin:50% 100%;animation:claw 9s ease-out 1.2s infinite both}
+@keyframes claw{0%,6%{opacity:0;transform:translateY(14px) scale(.3)}9%{opacity:1;transform:translateY(-3px) scale(1.15)}11%,86%{opacity:1;transform:none}91%,100%{opacity:0;transform:translateY(14px) scale(.3)}}
+.dpup{animation:dpup 9s ease-in-out 1.2s infinite both}
+@keyframes dpup{0%,13%{transform:none}16%,22%{transform:translate(-2px,4px)}24%{transform:translate(0,-2px)}28%,40%{transform:translate(-4px,2px)}44%,60%{transform:translate(-5px,1px)}64%{transform:translate(-4.5px,2px)}72%,84%{transform:translate(0,-1px)}100%{transform:none}}
+.deye{transform-box:fill-box;transform-origin:center;animation:deye 9s linear 1.2s infinite both}
+@keyframes deye{0%,22%{transform:none}24%{transform:scale(1.3)}27%,61%{transform:none}62%{transform:scale(1,.1)}63.5%,72%{transform:none}75%,84%{transform:scale(1,.5)}87%,100%{transform:none}}
+.dbrow{animation:dbrow 9s ease-out 1.2s infinite both}
+@keyframes dbrow{0%,22%{transform:none}24%{transform:translateY(-5px)}28%,100%{transform:none}}
+.jaw{transform-origin:66px 46px;animation:jaw 9s ease-in-out 1.2s infinite both}
+@keyframes jaw{0%,42%{transform:none}45%,57%{transform:rotate(-18deg)}60%,64%{transform:none}66%,68%{transform:rotate(-22deg)}69.5%{transform:none}72%{transform:rotate(-7deg)}75%{transform:none}78%{transform:rotate(-7deg)}81%,100%{transform:none}}
+.fire{transform-box:fill-box;transform-origin:100% 50%;animation:fire 9s linear 1.2s infinite both}
+@keyframes fire{0%,44%{opacity:0;transform:scale(0)}46%{opacity:1;transform:scale(1.05,1)}48%{transform:scale(.85,1.2)}50%{transform:scale(1,.85)}52%{transform:scale(.9,1.15)}54%{transform:scale(1,.9)}56%{opacity:1;transform:scale(.95,1.1)}58.5%,100%{opacity:0;transform:scale(0)}}
+.lunge{transform-origin:90px 110px;animation:lunge 9s cubic-bezier(.4,0,.3,1) 1.2s infinite both}
+@keyframes lunge{0%,62%{transform:none}65.5%{transform:translate(7px,0) rotate(4deg)}68%,70%{transform:translate(-40px,2px) rotate(-5deg)}76%,100%{transform:none}}
+@keyframes smoke{0%{opacity:0;transform:scale(.4)}25%{opacity:.6}100%{opacity:0;transform:translate(var(--sx),-26px) scale(1.5)}}
+.smoke{transform-box:fill-box;transform-origin:center;animation:smoke 1.6s ease-out infinite}
+.dtail{position:absolute;left:22px;top:calc(100% - 10px);z-index:-1;overflow:visible;transform-origin:55px 0;animation:wag 1.1s ease-in-out infinite alternate}
+@keyframes wag{from{transform:rotate(-11deg)}to{transform:rotate(12deg)}}
+.dclaw.cl{right:82px}.dclaw.cr{right:2px}

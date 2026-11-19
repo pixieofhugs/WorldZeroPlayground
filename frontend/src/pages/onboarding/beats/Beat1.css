@@ -1,0 +1,84 @@
+.b1{position:relative;flex:none;width:440px;height:250px;--g:1.3;--ox:max(120px,calc((97vw / var(--g) - 440px) / 2));--oy:150px;--ob:130px;animation:b1grow 1.1s cubic-bezier(.3,1.3,.5,1) var(--sh) forwards}
+/* out of the phone, the world is bigger than the screen it broke out of */
+@keyframes b1grow{to{transform:scale(var(--g))}}
+@media (max-width:500px){.b1{zoom:.78;--g:1.12;--ox:60px}}
+.b1 .out{position:absolute;inset:calc(-1*var(--oy)) calc(-1*var(--ox)) calc(-1*var(--ob));-webkit-mask:radial-gradient(ellipse closest-side,#000 14%,rgba(0,0,0,.93) 36%,rgba(0,0,0,.74) 58%,rgba(0,0,0,.44) 76%,rgba(0,0,0,.17) 90%,transparent) 50% 64%/100% 100% no-repeat;mask:radial-gradient(ellipse closest-side,#000 14%,rgba(0,0,0,.93) 36%,rgba(0,0,0,.74) 58%,rgba(0,0,0,.44) 76%,rgba(0,0,0,.17) 90%,transparent) 50% 64%/100% 100% no-repeat;animation:b1open 2.9s linear var(--sh) both,b1breathe 6.3s ease-in-out calc(var(--sh) + 2.9s) infinite alternate}
+/* not a wipe: a first gasp of outside, a held breath, then it keeps coming; afterwards the edge never quite sits still */
+@keyframes b1open{0%{-webkit-mask-size:0% 0%;mask-size:0% 0%;animation-timing-function:cubic-bezier(.2,.8,.3,1)}13%{-webkit-mask-size:44% 50%;mask-size:44% 50%;animation-timing-function:ease-in-out}25%{-webkit-mask-size:36% 41%;mask-size:36% 41%;animation-timing-function:cubic-bezier(.3,.1,.25,1)}82%{-webkit-mask-size:103% 104%;mask-size:103% 104%;animation-timing-function:ease-in-out}100%{-webkit-mask-size:100% 100%;mask-size:100% 100%}}
+@keyframes b1breathe{from{-webkit-mask-size:100% 100%;mask-size:100% 100%}to{-webkit-mask-size:107% 109%;mask-size:107% 109%}}
+.b1 .outin{position:absolute;left:var(--ox);top:var(--oy);width:440px;height:250px}
+.b1 .sky{z-index:-2;position:absolute;inset:0;background-image:var(--faction-default-aurora);filter:blur(18px) saturate(1.1);opacity:.75}
+.b1 .sun{position:absolute;right:46px;top:22px;width:48px;height:48px;animation:b1-rise 1.5s cubic-bezier(.3,.7,.4,1) calc(var(--sh) + .15s) both}
+@keyframes b1-rise{0%{transform:translateY(190px) scale(.8)}70%{transform:translateY(-6px) scale(1.06)}100%{transform:none}}
+.b1 .rays{transform-box:fill-box;transform-origin:center;animation:b1-spin 9s linear infinite}
+@keyframes b1-spin{to{transform:rotate(360deg)}}
+.b1 .cloud{position:absolute;height:16px;border-radius:10px;background:var(--faction-default-card-text,#f0e6d0);opacity:.75;animation:b1-drift 12s ease-in-out infinite alternate}
+.b1 .cloud::before{content:"";position:absolute;left:22%;bottom:40%;width:46%;height:150%;border-radius:50%;background:inherit}
+@keyframes b1-drift{to{transform:translateX(46px)}}
+.b1 .bird{position:absolute;left:-30px;top:44px;animation:b1-fly 9s linear calc(var(--sh) + 1s) infinite both}
+@keyframes b1-fly{from{transform:translateX(0)}to{transform:translateX(500px) translateY(-20px)}}
+.b1 .bird svg{animation:b1-glide 1.3s ease-in-out infinite alternate}
+@keyframes b1-glide{from{translate:0 -5px}to{translate:0 6px}}
+.b1 .flap{transform-box:fill-box;transform-origin:center;animation:b1-flap .3s ease-in-out infinite alternate}
+@keyframes b1-flap{to{transform:scaleY(.3)}}
+/* the phone: a dull feed that flicks along by itself, a camera dot, a home bar */
+.b1 .scr{position:absolute;z-index:1;left:29px;top:23px;width:382px;height:204px;border-radius:19px;overflow:hidden;background:var(--faction-default-card-bg,#1c1b24);animation:b1jolt var(--t) linear both,b1gone .18s ease-out var(--sh) forwards}
+@keyframes b1gone{to{opacity:0}}
+.b1 .feed{position:absolute;inset:0 0 -68px 0;opacity:.34;--m:var(--faction-default-card-muted,#9b9080);animation:b1-feed 1.5s cubic-bezier(.3,.9,.3,1) infinite;background:
+  radial-gradient(circle at 60px 23px,var(--m) 10px,transparent 11px) 0 0/100% 68px,
+  linear-gradient(transparent 13px,var(--m) 13px 20px,transparent 20px) 82px 0/34% 68px repeat-y,
+  linear-gradient(transparent 27px,var(--m) 27px 32px,transparent 32px) 82px 0/56% 68px repeat-y,
+  linear-gradient(transparent 44px,var(--m) 44px 49px,transparent 49px) 50px 0/70% 68px repeat-y,
+  linear-gradient(transparent 54px,var(--m) 54px 55px,transparent 55px) 50px 0/78% 68px repeat-y}
+@keyframes b1-feed{0%,35%{transform:none}100%{transform:translateY(-68px)}}
+.b1 .cam{position:absolute;left:12px;top:50%;width:9px;height:9px;margin-top:-5px;border-radius:50%;background:var(--faction-default-on-fill,#14110b);box-shadow:0 0 0 1.5px color-mix(in srgb,var(--faction-default-card-muted,#9b9080) 40%,transparent)}
+.b1 .hbar{position:absolute;left:50%;bottom:5px;width:96px;height:4px;margin-left:-48px;border-radius:2px;background:var(--faction-default-card-muted,#9b9080);opacity:.6}
+.b1 .gls{position:absolute;z-index:4;left:0;top:0;overflow:visible;pointer-events:none;animation:b1jolt var(--t) linear both}
+.b1 .sheen{fill:color-mix(in srgb,#fff 9%,transparent);animation:b1gone .1s linear var(--sh) forwards}
+.b1 .ck{fill:none;stroke:var(--faction-default-card-text,#f0e6d0);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1;animation:b1-ckdraw .14s ease-out forwards,b1gone .01s linear forwards}
+.b1 .ck2{stroke-width:1.1;animation-duration:.2s,.01s}
+@keyframes b1-ckdraw{to{stroke-dashoffset:0}}
+.b1 .shard{fill:color-mix(in srgb,var(--faction-default-card-text,#f0e6d0) 13%,transparent);stroke:color-mix(in srgb,var(--faction-default-card-text,#f0e6d0) 70%,transparent);stroke-width:1;stroke-linejoin:round;opacity:0;transform-box:fill-box;transform-origin:center;animation:b1-shard .85s cubic-bezier(.15,.7,.4,1) forwards}
+@keyframes b1-shard{0%{opacity:1;transform:none}30%{opacity:1;transform:translate(var(--dx),var(--dy)) rotate(calc(var(--dr) * .45));animation-timing-function:cubic-bezier(.45,0,.9,.55)}70%{opacity:.8}100%{opacity:0;transform:translate(calc(var(--dx) * 1.4),calc(var(--dy) + 170px)) rotate(var(--dr)) scale(.55)}}
+/* a notification drops in and buzzes: come back! */
+.b1 .ntf{position:absolute;left:50%;top:8px;width:150px;height:30px;margin-left:-75px;border-radius:15px;background:var(--faction-default-card-text,#f0e6d0);box-shadow:0 3px 9px rgba(0,0,0,.55);opacity:0;transform-origin:50% 0;animation:b1-ntf .9s cubic-bezier(.3,.7,.4,1) var(--nt) forwards}
+.b1 .ntf::before{content:"";position:absolute;left:8px;top:7px;width:16px;height:16px;border-radius:50%;background:var(--faction-default-stop-1)}
+.b1 .ntf::after{content:"";position:absolute;left:33px;top:8px;width:78px;height:5px;border-radius:3px;background:var(--faction-default-on-fill,#14110b);opacity:.75;box-shadow:0 9px 0 color-mix(in srgb,var(--faction-default-on-fill,#14110b) 45%,transparent)}
+@keyframes b1-ntf{0%{opacity:1;transform:translateY(-46px)}30%{opacity:1;transform:translateY(3px) scale(1.04,.92)}42%{transform:none}52%{transform:rotate(-3.5deg)}62%{transform:rotate(3.5deg)}72%{transform:rotate(-2.5deg)}82%{transform:rotate(1.5deg)}100%{opacity:1;transform:none}}
+.b1 .bez{position:absolute;z-index:5;left:20px;top:14px;width:400px;height:222px;box-sizing:border-box;border:9px solid var(--faction-default-on-fill,#14110b);border-radius:28px;box-shadow:0 0 0 1.5px color-mix(in srgb,var(--faction-default-card-muted,#9b9080) 55%,transparent),inset 0 0 0 1px color-mix(in srgb,#fff 16%,transparent);pointer-events:none;animation:b1jolt var(--t) linear both,b1-bezdrop .9s linear var(--sh) forwards}
+@keyframes b1-bezdrop{0%{transform:none;animation-timing-function:ease-out}16%{transform:translateY(-10px) rotate(-2deg) scale(1.03);animation-timing-function:cubic-bezier(.5,0,.9,.5)}100%{opacity:0;transform:translateY(330px) rotate(-19deg)}}
+.b1 .bez i{position:absolute;top:-14px;left:270px;width:36px;height:4px;border-radius:3px 3px 0 0;background:var(--faction-default-card-muted,#9b9080);opacity:.7}
+.b1 .bez i + i{left:316px;width:18px}
+.b1 .burst{position:absolute;z-index:6;left:150px;top:118px;width:140px;height:140px;border-radius:50%;background:radial-gradient(var(--faction-default-card-text,#f0e6d0),transparent 70%);opacity:0;pointer-events:none;animation:b1-burst .9s ease-out var(--sh) both}
+@keyframes b1-burst{0%{opacity:0;transform:scale(.3)}16%{opacity:.95;transform:scale(2.2)}100%{opacity:0;transform:scale(3.6)}}
+.b1 .b1x, .b1 .b1y, .b1 .b1s{display:block;animation-duration:var(--t);animation-timing-function:linear;animation-fill-mode:both}
+.b1 .b1x{position:absolute;left:0;bottom:18px;z-index:2;animation-name:b1x}
+.b1 .b1y{transform-origin:50% 58%;animation-name:b1y}
+.b1 .b1s{transform-origin:50% 100%;animation-name:b1s}
+.b1 .b1c{display:block;transform-origin:50% 100%;animation:b1-chase 3.4s linear var(--t) infinite}
+@keyframes b1-chase{0%,6%{transform:none}10%{transform:scale(1.14,.84);animation-timing-function:cubic-bezier(.33,.67,.67,1)}19%{transform:translate(-14px,-30px) rotate(-7deg) scale(.92,1.1);animation-timing-function:cubic-bezier(.33,0,.67,.33)}28%{transform:translate(-28px,0) scale(1.2,.8)}32%{transform:translate(-28px,0);animation-timing-function:cubic-bezier(.33,.67,.67,1)}41%{transform:translate(-45px,-38px) rotate(-9deg) scale(.9,1.12);animation-timing-function:cubic-bezier(.33,0,.67,.33)}50%{transform:translate(-60px,0) scale(1.24,.78)}55%,66%{transform:translate(-60px,0)}70%{transform:translate(-60px,0) scale(1.12,.86);animation-timing-function:cubic-bezier(.33,.67,.67,1)}80%{transform:translate(-30px,-34px) rotate(8deg) scale(.92,1.1);animation-timing-function:cubic-bezier(.33,0,.67,.33)}90%{transform:scale(1.2,.8)}95%{transform:scale(.97,1.04)}100%{transform:none}}
+.b1 .b1f{display:block;animation:b1dim var(--t) linear both}
+.b1 .b1f .eyes{animation:b1eyes var(--t) ease-in-out both,blink2 9.7s var(--t) infinite}
+.b1 .b1f .lids{animation:b1lids var(--t) linear both}
+.b1 .b1f .mpup{animation:b1look var(--t) ease-in-out,glance 11.3s ease-in-out var(--t) infinite}
+.b1 .b1f .blush{animation:b1blush var(--t) ease-out both}
+.b1 .flw{position:absolute;bottom:16px;z-index:1}
+.b1 .bfly{position:absolute;left:0;bottom:0;z-index:3;opacity:0;animation:b1-bfly 3.4s ease-in-out var(--t) infinite,b1-fadein .5s calc(var(--t) - .4s) forwards}
+@keyframes b1-bfly{0%,100%{transform:translate(388px,-112px)}22%{transform:translate(352px,-96px) rotate(-8deg)}40%{transform:translate(318px,-124px)}58%{transform:translate(286px,-98px) rotate(-12deg)}78%{transform:translate(336px,-138px) rotate(6deg)}}
+@keyframes b1-fadein{to{opacity:1}}
+.b1 .wing{transform-box:fill-box;transform-origin:50% 50%;animation:b1-wing .14s ease-in-out infinite alternate}
+@keyframes b1-wing{to{transform:scaleX(.25)}}
+/* Reduced motion: the settled frame. shared.css shortens every animation to .01s; these must not show, or must sit at their end pose. */
+@media (prefers-reduced-motion: reduce){
+.onboarding-arc .b1 :is(.shard,.ck,.sheen,.scr,.bez,.burst){display:none}
+.onboarding-arc .b1 .bfly{opacity:1;transform:translate(388px,-112px)}
+.onboarding-arc .b1 .b1x{transform:translateX(308px)}
+.onboarding-arc .b1{transform:scale(var(--g))}
+}
+.b1 .sv{display:block;overflow:visible}
+.b1 .hills{position:absolute;left:0;bottom:var(--ob);display:block}
+.b1 .hill1{fill:color-mix(in srgb,var(--faction-default-stop-4) 45%,var(--faction-default-card-bg))}
+.b1 .hill2{fill:color-mix(in srgb,var(--faction-default-stop-4) 75%,var(--faction-default-card-bg))}
+.b1 .ground{position:absolute;left:0;right:0;bottom:0;height:calc(var(--ob) + 1px);background:color-mix(in srgb,var(--faction-default-stop-4) 75%,var(--faction-default-card-bg))}
+.b1 .c1{left:40px;top:52px;width:64px}
+.b1 .c2{left:190px;top:30px;width:46px;animation-duration:16s}
