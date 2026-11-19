@@ -20,6 +20,7 @@ from models.praxis import ModerationStatus, Praxis
 from models.task import Task, TaskStatus
 from schemas.comment import CommentAuthor, CommentMentionOut, CommentOut
 from services.era import get_current_era_row, get_or_create_stats
+from services.mod_log import log_mod_action
 from services.era_gates import may_comment
 from services.praxis import account_already_flagged, can_view_praxis
 
@@ -294,7 +295,11 @@ async def flag_comment(
 
 
 async def moderate_comment(
-    comment_id: int, new_status: str, session: AsyncSession
+    comment_id: int,
+    new_status: str,
+    session: AsyncSession,
+    *,
+    actor_id: Optional[int] = None,
 ) -> Comment:
     """Admin moderation: hidden (reversible hold) / deleted (tombstone) / visible."""
     comment = await get_comment(comment_id, session)
@@ -305,6 +310,10 @@ async def moderate_comment(
             status_code=422, detail=f"Invalid moderation status: {new_status}"
         )
     await session.flush()
+    if actor_id is not None:
+        await log_mod_action(
+            session, actor_id, f"comment_{new_status}", "comment", comment_id
+        )
     return await get_comment(comment_id, session)
 
 

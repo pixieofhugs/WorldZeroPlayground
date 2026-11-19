@@ -87,6 +87,7 @@ from services.signup_eligibility import (
     meets_task_level,
 )
 from services.vote import void_account_vote_on_join
+from services.mod_log import log_mod_action
 
 
 def _require_member(praxis: Praxis, character_id: int, action: str) -> None:
@@ -1317,6 +1318,8 @@ async def moderate_praxis(
     admin_note: Optional[str],
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
+    *,
+    actor_id: Optional[int] = None,
 ) -> Praxis:
     """Admin moderation: update moderation_status and admin_note.
 
@@ -1333,6 +1336,10 @@ async def moderate_praxis(
         raise HTTPException(status_code=422, detail=f"Invalid moderation status: {new_status}")
 
     praxis.moderation_status = mod_enum
+    if actor_id is not None:
+        await log_mod_action(
+            session, actor_id, f"praxis_{mod_enum.value}", "praxis", praxis_id
+        )
 
     if mod_enum == ModerationStatus.flagged:
         praxis.flagged_at = datetime.now(timezone.utc)

@@ -35,6 +35,8 @@ from schemas.admin import (
     EraRollOut,
     FlaggedCommentOut,
     FlaggedPraxisOut,
+    ModActionOut,
+    ModActionPage,
     ModerationAction,
     OverviewStats,
     SuspendAction,
@@ -45,6 +47,7 @@ from schemas.admin import (
 from schemas.task import TaskOut
 from schemas.praxis import PraxisCardOut, PraxisOut
 from schemas.comment import CommentModerationIn, CommentOut
+from services.mod_log import list_mod_actions
 from services.praxis import PraxisEraScope, list_praxes, moderate_praxis
 from services.praxis_out import build_praxis_cards, build_praxis_out, crowned_praxis_ids
 from services.comment import build_comment_out, list_flagged_comments, moderate_comment
@@ -147,6 +150,38 @@ async def admin_get_account(
     return await get_account_detail(account_id, session)
 
 
+@router.get("/mod-log", response_model=ModActionPage)
+async def admin_mod_log(
+    target_type: str | None = None,
+    target_id: int | None = None,
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    _: Account = Depends(require_admin),
+    session: AsyncSession = Depends(get_db, scope="function"),
+) -> ModActionPage:
+    rows, total = await list_mod_actions(
+        session, offset, limit, target_type, target_id
+    )
+    return ModActionPage(
+        items=[
+            ModActionOut(
+                id=action.id,
+                actor_account_id=action.actor_account_id,
+                actor_name=name,
+                action=action.action,
+                target_type=action.target_type,
+                target_id=action.target_id,
+                detail=action.detail,
+                created_at=action.created_at,
+            )
+            for action, name in rows
+        ],
+        total=total,
+        limit=limit,
+        offset=offset,
+    )
+
+
 # Owner-only admin roster (#3258)
 
 
@@ -218,10 +253,12 @@ async def admin_patch_character_stats(
 async def admin_suspend_account(
     account_id: int,
     data: SuspendAction,
-    _: Account = Depends(require_admin),
+    admin: Account = Depends(require_admin),
     session: AsyncSession = Depends(get_db, scope="function"),
 ) -> SuspendActionOut:
-    account = await suspend_account(account_id, data.suspended, session)
+    account = await suspend_account(
+        account_id, data.suspended, session, actor_id=admin.id
+    )
     return SuspendActionOut(account_id=account.id, status=account.status.value)
 
 
@@ -337,14 +374,16 @@ async def admin_list_flagged_praxes(
 async def admin_moderate_praxis(
     praxis_id: int,
     data: ModerationAction,
-    _: Account = Depends(require_admin),
+    admin: Account = Depends(require_admin),
     session: AsyncSession = Depends(get_db, scope="function"),
     viewer: Optional[Character] = Depends(get_current_character_optional),
 ):
     """Rule on a praxis and return it as the moderator sees it."""
     # `usePraxisDetail.handleModerate` reuses this response, so viewer fields
     # must be the moderator's (#1974).
-    praxis = await moderate_praxis(praxis_id, data.status, data.admin_note, session)
+    praxis = await moderate_praxis(
+        praxis_id, data.status, data.admin_note, session, actor_id=admin.id
+    )
     return await build_praxis_out(praxis, session, viewer=viewer)
 
 
@@ -371,10 +410,10 @@ async def admin_list_flagged_comments(
 async def admin_moderate_comment(
     comment_id: int,
     data: CommentModerationIn,
-    _: Account = Depends(require_admin),
+    admin: Account = Depends(require_admin),
     session: AsyncSession = Depends(get_db, scope="function"),
 ):
-    comment = await moderate_comment(comment_id, data.status, session)
+    comment = await moderate_comment(comment_id, data.status, session, actor_id=admin.id)
     return build_comment_out(comment)
 
 
@@ -393,11 +432,13 @@ async def admin_patch_task(
 async def admin_update_task_status(
     task_id: int,
     data: TaskStatusAction,
-    _: Account = Depends(require_admin),
+    admin: Account = Depends(require_admin),
     session: AsyncSession = Depends(get_db, scope="function"),
 ):
     new_status = TaskStatus(data.status)
-    task = await update_task_status(task_id, new_status, session)
+    task = await update_task_status(
+        task_id, new_status, session, actor_id=admin.id
+    )
     return await build_task_out(task, session)
 
 
@@ -457,13 +498,13 @@ async def list_pending_tasks(
 async def ban_character(
     character_id: int,
     data: BanAction,
-    _: Account = Depends(require_admin),
+    admin: Account = Depends(require_admin),
     session: AsyncSession = Depends(get_db, scope="function"),
 ) -> BanActionOut:
     character = await session.get(Character, character_id)
     if character is None:
         raise HTTPException(status_code=404, detail="Character not found.")
-    await apply_ban(character, data.banned, session)
+    await apply_ban(character, data.banned, session, actor_id=admin.id)
     return BanActionOut(character_id=character_id, banned=data.banned)
 
 
@@ -473,7 +514,7 @@ async def ban_character(
 )
 async def remove_flagged_praxes(
     character_id: int,
-    _: Account = Depends(require_admin),
+    admin: Account = Depends(require_admin),
     session: AsyncSession = Depends(get_db, scope="function"),
 ) -> RemoveFlaggedOut:
     if await session.get(Character, character_id) is None:
@@ -481,7 +522,9 @@ async def remove_flagged_praxes(
             404, ErrorCode.character_not_found, "Character not found."
         )
     return RemoveFlaggedOut(
-        removed=await remove_flagged_praxes_by_author(character_id, session)
+        removed=await remove_flagged_praxes_by_author(
+            character_id, session, actor_id=admin.id
+        )
     )
 
 

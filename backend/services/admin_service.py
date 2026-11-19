@@ -48,6 +48,7 @@ from seed import upsert_era_factions
 from services.faction_service import refuse_hidden_faction
 from services.character import record_level_reached
 from services.duel import forfeit_settled_duels_for_character
+from services.mod_log import log_mod_action
 from services.praxis import moderate_praxis
 from services.era import (
     apply_era_reset,
@@ -398,7 +399,7 @@ async def authors_for_moderation(
 
 
 async def remove_flagged_praxes_by_author(
-    character_id: int, session: AsyncSession
+    character_id: int, session: AsyncSession, actor_id: int
 ) -> int:
     """Hide every open-flagged praxis by one author (the single remove, in bulk)."""
     result = await session.execute(
@@ -410,6 +411,10 @@ async def remove_flagged_praxes_by_author(
     praxis_ids = list(result.scalars())
     for praxis_id in praxis_ids:
         await moderate_praxis(praxis_id, ModerationStatus.hidden.value, None, session)
+    await log_mod_action(
+        session, actor_id, "remove_flagged", "character", character_id,
+        str(len(praxis_ids)),
+    )
     return len(praxis_ids)
 
 
@@ -418,6 +423,8 @@ async def apply_ban(
     banned: bool,
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
+    *,
+    actor_id: int,
 ) -> None:
     """Ban or un-ban a character on behalf of a moderator (#1577).
 
@@ -441,6 +448,9 @@ async def apply_ban(
         character.status = CharacterStatus.active
 
     await session.flush()
+    await log_mod_action(
+        session, actor_id, "ban" if banned else "unban", "character", character.id
+    )
 
 
 async def set_character_stats(
@@ -524,6 +534,10 @@ async def assign_or_revoke_role(
         await session.delete(account_role)
         await session.flush()
 
+    await log_mod_action(
+        session, admin_account_id, f"role_{action}", "account", account_id, role_name
+    )
+
 
 async def _admin_row(account_id: int, session: AsyncSession) -> Optional[AdminRow]:
     """The account's lowest-id character as an :class:`AdminRow`, or None."""
@@ -600,12 +614,17 @@ async def suspend_account(
     account_id: int,
     suspended: bool,
     session: AsyncSession,
+    *,
+    actor_id: int,
 ) -> Account:
     account = await session.get(Account, account_id)
     if account is None:
         raise HTTPException(status_code=404, detail="Account not found.")
     account.status = AccountStatus.suspended if suspended else AccountStatus.active
     await session.flush()
+    await log_mod_action(
+        session, actor_id, "suspend" if suspended else "unsuspend", "account", account_id
+    )
     await session.refresh(account)
     return account
 
@@ -641,6 +660,8 @@ async def update_task_status(
     task_id: int,
     new_status: TaskStatus,
     session: AsyncSession,
+    *,
+    actor_id: int,
 ) -> Task:
     """Admin task status change.
 
@@ -662,6 +683,9 @@ async def update_task_status(
 
     task.status = new_status
     await session.flush()
+    await log_mod_action(
+        session, actor_id, "task_status", "task", task_id, new_status.value
+    )
     await session.refresh(task)
     return task
 
@@ -760,6 +784,7 @@ async def delete_unreferenced_task(
     await _refuse_if_undeletable(task, session)
     task.status = TaskStatus.deleted
     await session.flush()
+    await log_mod_action(session, admin_account_id, "task_delete", "task", task_id)
     logger.info(
         "Admin account %s soft-deleted task %s (%r).",
         admin_account_id,
