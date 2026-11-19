@@ -157,7 +157,7 @@ async def test_identity_is_blanked_across_account_character_praxis_and_comment(
     assert character.avatar_url == ""
 
     await db_session.refresh(praxis)
-    assert praxis.title is None
+    assert praxis.title == ""
     assert praxis.body_text == REMOVED_BODY_MARKER
 
     await db_session.refresh(comment)

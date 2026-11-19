@@ -3,7 +3,6 @@ import enum
 from sqlalchemy import (
     BigInteger,
     CheckConstraint,
-    Enum,
     ForeignKey,
     Identity,
     Index,
@@ -11,7 +10,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
-from models.base import Base
+from models.base import Base, string_enum
 from models.mixins import TimestampMixin
 
 
@@ -38,5 +37,5 @@ class Relationship(TimestampMixin, Base):
         BigInteger, ForeignKey("character.id"), nullable=False
     )
     type: Mapped[RelationshipType] = mapped_column(
-        Enum(RelationshipType, create_type=False), nullable=False
+        string_enum(RelationshipType), nullable=False
     )

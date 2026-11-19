@@ -3,8 +3,8 @@
 #
 # One entry point for the local stack. Every subcommand that touches the app
 # runs INSIDE the backend container, so nothing here needs a Python venv, an
-# activated shell, or a working `npm` — which is what makes it behave the same
-# from the main checkout and from any git worktree.
+# activated shell, or a working `npm`. Tests run on your tree, but the live
+# backend serves whichever checkout last ran `wz up`.
 #
 #   scripts/wz up                      bring up a migrated, seeded world
 #   scripts/wz reset                   throw it away and build a fresh one

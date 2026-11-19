@@ -364,7 +364,7 @@ export default function DefaultPraxisDetail({
     <>
       {sectionHead(t('detail.sections.writeUp'))}
       <MarkdownPreview
-        source={praxis.body_text ?? ''}
+        source={praxis.body_text}
         className="font-body markdown-preview content-text"
         style={{ lineHeight: 1.85, color: 'var(--na-praxis-detail-ink)' }}
       />
