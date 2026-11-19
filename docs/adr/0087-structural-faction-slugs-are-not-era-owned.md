@@ -1,6 +1,6 @@
 # ADR-0087 — Structural faction slugs are not era-owned; a dropped faction is retired, not deleted
 
-**Status:** Accepted
+**Status:** Amended by ADR-0097
 **Date:** 2026-08-25
 
 **Amends:** [ADR-0042](0042-era-as-ruleset-config-owns-rules-db-owns-history.md) — the
@@ -137,3 +137,7 @@ teaching it a third state. Genuinely the smaller change, and it would also have 
 archive. Rejected because the filter is a live seam for a rule we may want (hiding a faction
 mid-era *should* be able to pull its tasks), and losing it to solve a different problem is a
 trade we would have to undo.
+
+## Amendment (2026-11-19, #3435)
+
+`albescent` is no longer a slug every era must list: an era names its secret faction, or none, in `secret_faction_slug` ([ADR-0097](0097-secret-faction-state-is-per-account-and-per-faction-slug.md)). `na` stays structural.

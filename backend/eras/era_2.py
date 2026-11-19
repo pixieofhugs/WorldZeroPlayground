@@ -127,7 +127,8 @@ ERA_2 = EraConfig(
     second_character_level_required=4,
     # Knowingly accepted: the coverage half of the Albescent unlock covers only
     # three factions here, so it's far cheaper than in Era 1.
-    albescent_level_required=8,
+    secret_faction_slug="albescent",
+    secret_faction_join_level=8,
     invitation_point_threshold=50,   # ADR-0022
     invitation_task_threshold=2,
     reset_score=True,

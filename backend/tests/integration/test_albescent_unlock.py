@@ -1,7 +1,7 @@
 """#2399: one life earns Albescent, its siblings take it, the earner never can.
 
 * Earn: :func:`character_earns_albescent` is same-character: one life at
-``era.albescent_level_required`` covering every joinable faction (letters UNION
+``era.secret_faction_join_level`` covering every joinable faction (letters UNION
 current faction UNION :class:`FactionDefectionHistory`).
 * Stamp: the account column is sticky and monotonic; ``can_start_as_albescent``
 reads it, so the unlock survives an era reset.
@@ -35,6 +35,7 @@ from services.character import (
 )
 from services.character_stats import recalculate_character_stats
 from services.faction_service import defect_to_faction
+from tests.stamps import stamp, stamped
 
 
 def _joinable_faction_slugs(era: EraConfig = CURRENT_ERA) -> list[str]:
@@ -139,7 +140,7 @@ async def _cover_everything(
 async def test_one_life_at_the_level_covering_everything_earns(
     db_session: AsyncSession, account: Account, character: Character, era: Era
 ):
-    await _set_level(db_session, character, era, CURRENT_ERA.albescent_level_required)
+    await _set_level(db_session, character, era, CURRENT_ERA.secret_faction_join_level)
     await _cover_everything(db_session, character, era)
 
     assert await character_earns_albescent(character, era.id, db_session) is True
@@ -150,7 +151,7 @@ async def test_coverage_without_the_level_does_not_earn(
     db_session: AsyncSession, account: Account, character: Character, era: Era
 ):
     await _set_level(
-        db_session, character, era, CURRENT_ERA.albescent_level_required - 1
+        db_session, character, era, CURRENT_ERA.secret_faction_join_level - 1
     )
     await _cover_everything(db_session, character, era)
 
@@ -161,7 +162,7 @@ async def test_coverage_without_the_level_does_not_earn(
 async def test_the_level_without_full_coverage_does_not_earn(
     db_session: AsyncSession, account: Account, character: Character, era: Era
 ):
-    await _set_level(db_session, character, era, CURRENT_ERA.albescent_level_required)
+    await _set_level(db_session, character, era, CURRENT_ERA.secret_faction_join_level)
     for slug in _joinable_faction_slugs()[:-1]:
         await _give_letter(db_session, character, era, slug)
 
@@ -173,7 +174,7 @@ async def test_level_on_one_life_and_coverage_on_another_does_not_earn(
     db_session: AsyncSession, account: Account, character: Character, era: Era
 ):
     """Level and coverage must be on ONE life (#2399; ADR-0021 allowed split)."""
-    await _set_level(db_session, character, era, CURRENT_ERA.albescent_level_required)
+    await _set_level(db_session, character, era, CURRENT_ERA.secret_faction_join_level)
     coverer = await _make_character(db_session, account, era, "coverer", level=1)
     await _cover_everything(db_session, coverer, era)
 
@@ -193,7 +194,7 @@ async def test_a_banned_life_never_earns(
         account,
         era,
         "banned",
-        level=CURRENT_ERA.albescent_level_required,
+        level=CURRENT_ERA.secret_faction_join_level,
         status=CharacterStatus.banned,
     )
     await _cover_everything(db_session, banned, era)
@@ -208,7 +209,7 @@ async def test_earn_honours_the_era_argument_not_the_singleton(
     await _set_level(db_session, character, era, 1)
     await _cover_everything(db_session, character, era)
 
-    lenient = replace(CURRENT_ERA, albescent_level_required=1)
+    lenient = replace(CURRENT_ERA, secret_faction_join_level=1)
     assert await character_earns_albescent(character, era.id, db_session) is False
     assert await character_earns_albescent(character, era.id, db_session, lenient) is True
 
@@ -223,7 +224,7 @@ async def test_the_read_is_the_column_not_a_live_recomputation(
     """Unstamped coverage does not open the door: after an era reset there is
     nothing left to derive the unlock from.
     """
-    await _set_level(db_session, character, era, CURRENT_ERA.albescent_level_required)
+    await _set_level(db_session, character, era, CURRENT_ERA.secret_faction_join_level)
     await _cover_everything(db_session, character, era)
 
     assert await can_start_as_albescent(account.id, db_session) is False
@@ -237,7 +238,7 @@ async def test_the_read_is_the_column_not_a_live_recomputation(
 async def test_the_stamp_is_monotonic(
     db_session: AsyncSession, account: Account, character: Character, era: Era
 ):
-    await _set_level(db_session, character, era, CURRENT_ERA.albescent_level_required)
+    await _set_level(db_session, character, era, CURRENT_ERA.secret_faction_join_level)
     await _cover_everything(db_session, character, era)
     assert await stamp_albescent_unlock(character, era.id, db_session) is True
     await db_session.commit()
@@ -291,19 +292,19 @@ async def test_recalculate_character_stats_stamps_the_unlock(
     await db_session.commit()
 
     # Bar at level 1; the era's level_thresholds still decide the level.
-    cheap = replace(CURRENT_ERA, albescent_level_required=1)
+    cheap = replace(CURRENT_ERA, secret_faction_join_level=1)
     await recalculate_character_stats(character.id, db_session, cheap, era_row=era)
     await db_session.commit()
 
     await db_session.refresh(account)
-    assert account.albescent_unlocked is True
+    assert stamped(account, "unlocked") is True
 
 
 @pytest.mark.asyncio
 async def test_no_backfill_a_fresh_account_starts_locked(
     db_session: AsyncSession, account: Account, era: Era
 ):
-    assert account.albescent_unlocked is False
+    assert stamped(account, "unlocked") is False
     assert await can_start_as_albescent(account.id, db_session) is False
 
 
@@ -315,7 +316,7 @@ async def test_a_low_level_sibling_takes_albescent(
     db_session: AsyncSession, account: Account, character: Character, era: Era
 ):
     """Ungated by the taker's own progress: the account already paid."""
-    account.albescent_unlocked = True
+    stamp(account, "unlocked", True)
     await db_session.commit()
     await _seed_faction(db_session, "albescent")
     sibling = await _make_character(db_session, account, era, "sibling", level=0)
@@ -328,10 +329,10 @@ async def test_a_low_level_sibling_takes_albescent(
 async def test_the_earner_at_the_ceiling_is_refused(
     db_session: AsyncSession, account: Account, character: Character, era: Era
 ):
-    account.albescent_unlocked = True
+    stamp(account, "unlocked", True)
     await db_session.commit()
     await _seed_faction(db_session, "albescent")
-    await _set_level(db_session, character, era, CURRENT_ERA.albescent_level_required)
+    await _set_level(db_session, character, era, CURRENT_ERA.secret_faction_join_level)
 
     with pytest.raises(Exception) as excinfo:
         await defect_to_faction(character, "albescent", db_session)
@@ -345,11 +346,11 @@ async def test_the_earner_at_the_ceiling_is_refused(
 async def test_one_level_below_the_ceiling_still_walks_in(
     db_session: AsyncSession, account: Account, character: Character, era: Era
 ):
-    account.albescent_unlocked = True
+    stamp(account, "unlocked", True)
     await db_session.commit()
     await _seed_faction(db_session, "albescent")
     await _set_level(
-        db_session, character, era, CURRENT_ERA.albescent_level_required - 1
+        db_session, character, era, CURRENT_ERA.secret_faction_join_level - 1
     )
 
     joined = await defect_to_faction(character, "albescent", db_session)
@@ -380,7 +381,7 @@ async def test_creation_pool_offers_albescent_once_unlocked(
         account.id, db_session
     )
 
-    account.albescent_unlocked = True
+    stamp(account, "unlocked", True)
     await db_session.commit()
 
     assert "albescent" in await get_account_invited_faction_slugs(

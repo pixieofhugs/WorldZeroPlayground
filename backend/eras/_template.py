@@ -181,7 +181,10 @@ ERA_N = EraConfig(
     collab_invite_bypasses_task_bank=False,
 
     second_character_level_required=4,
-    albescent_level_required=8,
+    # None for an era with no secret faction (ADR-0097); else a key of `factions`.
+    secret_faction_slug=None,
+    secret_faction_join_level=8,
+    secret_faction_glimpse_level=6,
     invitation_point_threshold=50,   # ADR-0022
     invitation_task_threshold=2,
     # starting_faction_slug / reset_faction_slug: OMIT — pinned to `na` (ADR-0087).
