@@ -513,7 +513,7 @@ class PraxisRoomServer(WebsocketServer):
     async def apply_client_update(self, praxis_id: int, update: bytes) -> None:
         """Merge the browser's whole Yjs state into the live room; a repeat is a no-op.
 
-        ponytail: opens a room if none runs; a rejected submit strands it until a socket joins.
+        ponytail: opens a room if none runs; a rejected submit strands it.
         """
         room = await self.get_room(room_name_for(praxis_id))
         try:
