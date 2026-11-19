@@ -1,8 +1,12 @@
-.b6w{position:relative;z-index:1;width:min(100%,420px)}
-.b6w .ob-sheet{padding:24px}
+.b6w{position:relative;z-index:1;width:min(100%,420px);container-type:inline-size}
+.b6w .ob-sheet{display:block;padding:24px}
+/* the scene is drawn 300px wide: shrink it where the app's gutters leave less than that */
+@container (max-width:347px){.b6w .ob-sheet{padding:16px}.b6{zoom:.8}}
 .b6{position:relative;width:300px;height:196px;margin:0 auto 12px}
 .b6-ldg{position:absolute;box-sizing:border-box;border:2px solid var(--faction-default-on-fill);border-radius:9px 9px 14px 14px / 7px 7px 12px 12px;background:linear-gradient(color-mix(in srgb,var(--faction-default-stop-4) 80%,var(--faction-default-card-bg)) 0 5px,color-mix(in srgb,var(--faction-default-stop-4) 26%,var(--faction-default-card-bg)) 5px)}
 .b6-crd{position:absolute;z-index:1;width:20px;box-sizing:border-box;padding-top:4px;display:flex;justify-content:center;border:2px solid var(--faction-default-on-fill);border-radius:5px;background:var(--c);transform-origin:0 100%;filter:saturate(.12) brightness(.72);animation:b6wob .45s ease-out var(--tw),b6top .56s linear var(--tt) forwards}
+@keyframes b6wob{25%{transform:rotate(var(--w))}55%{transform:rotate(calc(var(--w) * -.35))}80%{transform:rotate(calc(var(--w) * .15))}}
+@keyframes b6top{0%{transform:none;filter:saturate(.12) brightness(.72);animation-timing-function:cubic-bezier(.55,0,.9,.45)}58%{transform:rotate(var(--th));filter:none;animation-timing-function:ease-out}72%{transform:rotate(calc(var(--th) - 7deg));animation-timing-function:ease-in}86%{transform:rotate(var(--th));animation-timing-function:ease-out}93%{transform:rotate(calc(var(--th) - 2deg))}100%{transform:rotate(var(--th));filter:none}}
 .b6x,.b6y,.b6s{display:block;animation-timing-function:linear;animation-fill-mode:both}
 .b6x{position:absolute;left:0;bottom:0;z-index:2;animation-name:b6x,b6brave}
 .b6y{animation-name:b6y}
