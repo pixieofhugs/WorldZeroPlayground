@@ -130,6 +130,18 @@ describe('the welcome flow for a screen reader', () => {
     expect((document.activeElement as HTMLElement).getAttribute('aria-label')).not.toBe(first)
   })
 
+  it('keyboard Enter on the line box lands focus on a new button carrying the next line', () => {
+    mount(null, false)
+    fireEvent.click(screen.getByTestId('onboarding-start'))
+    const box = document.activeElement as HTMLElement
+    fireEvent.click(box, { detail: 0 })
+    onBeat(2)
+    const next = document.activeElement as HTMLElement
+    expect(next).not.toBe(box)
+    expect(next.className).toContain('ob-adv')
+    expect(next.getAttribute('aria-label')).not.toBe(box.getAttribute('aria-label'))
+  })
+
   it('never drops focus to the body: contract takes its heading, Back returns to the beat line', () => {
     mount(null, false)
     fireEvent.click(screen.getByTestId('onboarding-start'))
