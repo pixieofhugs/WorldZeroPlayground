@@ -139,7 +139,7 @@ export default function FieldDesk() {
           </div>
         ))}
 
-      {/* Albescent invitation (#395, ADR-0021); no faction link (ADR-0027).
+      {/* Albescent invitation (#395, ADR-0080); no faction link (ADR-0027).
           Outside the roster gate. */}
       {lives !== null && (user?.can_start_as_albescent ?? false) && (
         <AlbescentInvitation

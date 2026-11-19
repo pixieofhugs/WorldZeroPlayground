@@ -181,7 +181,9 @@ async def test_task_with_a_praxis_is_refused_and_nothing_changes(
     async def author_points() -> tuple[int, int]:
         row = (
             await db_session.execute(
-                select(CharacterStats.score, CharacterStats.all_time_score).where(
+                select(CharacterStats.score, Character.all_time_score)
+                .join(Character, Character.id == CharacterStats.character_id)
+                .where(
                     CharacterStats.character_id == character.id,
                     CharacterStats.era_id == era.id,
                 )

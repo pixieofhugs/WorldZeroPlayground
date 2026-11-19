@@ -40,7 +40,6 @@ def _make_character(db_session: AsyncSession, era: Era, some_faction: Faction):
                 character_id=ch.id,
                 era_id=era.id,
                 score=0,
-                all_time_score=0,
                 level=0,
                 votes_spent_this_era=0,
             )

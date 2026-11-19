@@ -16,19 +16,20 @@ Collapse to a single dimension: `status`.
 
 - `in_progress` — being edited. Votes are preserved but do not count toward score.
 - `submitted` — sealed. Votes count toward score.
+- *[2026-11-18, #3425: `PraxisStatus.pending` now exists too, a collab-only state (ADR-0012) between the two.]*
 
 `is_withdrawn` is dropped from the model, schemas, and all service queries.
 
 The three operations `withdraw_praxis / reopen_praxis / resubmit_praxis` collapse into:
 
-- **"Back to editing"** (`POST /praxes/{id}/withdraw`) — sets `status=in_progress`, resets
+- **"Back to editing"** (`POST /praxes/{id}/withdraw` *[2026-11-18, #3425: now `/unsubmit`]*) — sets `status=in_progress`, resets
   member `has_submitted` flags, triggers score recalculation (pauses vote contribution).
 - **Submit** (`POST /praxes/{id}/submit`) — existing operation, unchanged.
 
 To abandon a task entirely, the character deletes the praxis.
 
 The dup-submission check (`can_submit_praxis_for_task`) and invitee-eligibility check
-(`_check_invitee_task_eligibility`) key on praxis *existence* for `(character, task)`, not
+(`_check_invitee_task_eligibility`) *[2026-11-18, #3425: both functions are gone]* key on praxis *existence* for `(character, task)`, not
 `is_withdrawn`. The Analog/Everymen Double Dipper carve-out is unchanged.
 
 `recalculate_character_stats` counts only `status=submitted` praxes' votes.

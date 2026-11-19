@@ -36,7 +36,7 @@ Scope: **collab only.** Solo publishes immediately; a duel is two `type=solo` pr
 (ADR-0011) that each submit independently. Neither uses the timeout.
 
 Naming: a member removing *their own* membership is **leave**; removing *someone else* is
-**kick**; taking the *whole praxis* out of scoring is **withdraw** (`is_withdrawn`). Three
+**kick**; taking the *whole praxis* out of scoring is **withdraw** (`is_withdrawn` *[2026-11-18, #3425: ADR-0007 dropped `is_withdrawn` from Praxis, only `Comment.is_withdrawn` remains, and "withdraw" now means withdraw a proposal, `services/praxis.py`]*). Three
 distinct removals, kept named apart.
 
 ## Consequences

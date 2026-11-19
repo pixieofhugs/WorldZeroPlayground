@@ -216,7 +216,6 @@ async def character(db_session: AsyncSession, account: Account, era: Era, some_f
         character_id=ch.id,
         era_id=era.id,
         score=0,
-        all_time_score=0,
         level=0,
         votes_spent_this_era=0,
     )
@@ -233,6 +232,7 @@ async def character2(db_session: AsyncSession, account2: Account, era: Era, some
         account_id=account2.id,
         username="othercharacter",
         peak_level=5,
+        all_time_score=500,
         display_name="Other Character",
         faction_slug=DEFAULT_FACTION_SLUG,
     )
@@ -243,7 +243,6 @@ async def character2(db_session: AsyncSession, account2: Account, era: Era, some
         character_id=ch.id,
         era_id=era.id,
         score=500,
-        all_time_score=500,
         level=5,
         votes_spent_this_era=0,
     )
@@ -279,7 +278,6 @@ async def character3(db_session: AsyncSession, account3: Account, era: Era, some
         character_id=ch.id,
         era_id=era.id,
         score=0,
-        all_time_score=0,
         level=0,
         votes_spent_this_era=0,
     )

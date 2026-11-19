@@ -6,7 +6,7 @@ from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from errors import ErrorCode
+from errors import ErrorCode, detail_code
 from faction_slugs import real_faction_slugs
 from game_config import CURRENT_ERA
 from models.account import Account
@@ -66,6 +66,43 @@ async def test_create_character(
     # ADR-0019; test_era_config pins the literal.
     assert data["faction_slug"] == CURRENT_ERA.starting_faction_slug
     assert "account_id" not in data
+
+
+@pytest.mark.asyncio
+async def test_create_character_refuses_a_case_variant_username(
+    client: AsyncClient,
+    character: Character,
+    account2: Account,
+    some_faction: Faction,
+    auth_headers2: dict,
+):
+    resp = await client.post(
+        "/characters",
+        json={"username": character.username.upper(), "display_name": "Other"},
+        headers=auth_headers2,
+    )
+    assert resp.status_code == 409
+    assert detail_code(resp.json()["detail"]) == ErrorCode.username_taken.value
+
+
+@pytest.mark.asyncio
+async def test_create_character_lost_race_on_username_is_409(
+    client: AsyncClient,
+    character: Character,
+    account2: Account,
+    some_faction: Faction,
+    auth_headers2: dict,
+    monkeypatch,
+):
+    async def stale_pick(display_name, session):
+        return character.username.upper()
+
+    monkeypatch.setattr("services.character._derive_unique_username", stale_pick)
+    resp = await client.post(
+        "/characters", json={"display_name": "Other"}, headers=auth_headers2
+    )
+    assert resp.status_code == 409
+    assert detail_code(resp.json()["detail"]) == ErrorCode.username_taken.value
 
 
 @pytest.mark.asyncio
@@ -229,6 +266,7 @@ async def _seed_scored_character(
         username=username,
         display_name=username.capitalize(),
         faction_slug=DEFAULT_FACTION_SLUG,
+        all_time_score=score,
     )
     db_session.add(ch)
     await db_session.flush()
@@ -237,7 +275,6 @@ async def _seed_scored_character(
             character_id=ch.id,
             era_id=era.id,
             score=score,
-            all_time_score=score,
             level=0,
             votes_spent_this_era=0,
         )
@@ -343,7 +380,6 @@ async def test_list_characters_excludes_own_account(
             character_id=alt.id,
             era_id=era.id,
             score=0,
-            all_time_score=0,
             level=0,
             votes_spent_this_era=0,
         )

@@ -9,7 +9,7 @@
 > not treat as live behaviour. (CONTEXT.md's "Task promotion" section is being
 > corrected to match.)
 
-**Relates to:** #455 (this feature); the level-privileges table in `SPEC-game-rules.md`
+**Relates to:** #455 (this feature); the level-privileges table in `SPEC-game-rules.md` *[2026-11-18, #3425: retired, ADR-0043]*
 (L5: "Vote to promote level-0 tasks"); ADR-0016 (per-faction surfaces share one data
 contract); ADR-0031 (backend emits keys, frontend catalog resolves)
 
@@ -17,10 +17,10 @@ contract); ADR-0031 (backend emits keys, frontend catalog resolves)
 
 A proposed task lands `pending` (`services/task.py::propose_task`, gated at
 `era.level_to_propose_task` = L3) and only an **admin** can flip it to `active`
-(`routers/admin.py::approve_task`). Approval is therefore a single-gatekeeper
+(`routers/admin.py::approve_task` *[2026-11-18, #3425: now `PUT /admin/tasks/{task_id}/status`]*). Approval is therefore a single-gatekeeper
 bottleneck. The level table has long promised a L5 unlock — "Vote to promote
 level-0 tasks" — but it was never built (the L5 `voyager` `LevelProfile` is
-whimsy-only, and `test_level_5_has_no_hard_gate_sense_only` asserts exactly that).
+whimsy-only, and `test_level_5_has_no_hard_gate_sense_only` asserts exactly that *[2026-11-18, #3425: that test no longer exists]*).
 
 "Level-0 task" and "promote" were undefined. This ADR pins them.
 
