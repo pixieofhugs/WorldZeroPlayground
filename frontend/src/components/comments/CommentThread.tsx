@@ -9,6 +9,7 @@ import {
   listComments,
 } from '../../api/comments'
 import { useAuth } from '../../auth/AuthContext'
+import { useCommentGate } from '../../hooks/useCommentGate'
 import FactionAvatar from '../avatar/FactionAvatar'
 import { resolveVariant } from '../../utils/factionDispatch'
 import { surfaceMap } from '../../factions'
@@ -323,6 +324,7 @@ export default function CommentThread({
 }) {
   const { t } = useTranslation(['praxis', 'common'])
   const { user } = useAuth()
+  const commentGate = useCommentGate()
   const [comments, setComments] = useState<CommentOut[]>(seed ?? [])
   const [loading, setLoading] = useState(seed == null)
   const [error, setError] = useState<string | null>(null)
@@ -392,11 +394,15 @@ export default function CommentThread({
           />
         ))}
       </div>
-      {/* Hide the composer below comment level (repo convention: hide, don't disable). */}
       {character && user?.can_comment && (
         <div style={{ marginTop: 'var(--space-xl)' }}>
           <CommentComposer character={character} onPost={handlePost} />
         </div>
+      )}
+      {character && commentGate != null && (
+        <p className="card-meta" style={{ marginTop: 'var(--space-xl)' }}>
+          {t('praxis:comments.levelGate', { level: commentGate })}
+        </p>
       )}
     </section>
   )
