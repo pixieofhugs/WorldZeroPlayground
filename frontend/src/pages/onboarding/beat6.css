@@ -1,0 +1,53 @@
+.b6w{position:relative;z-index:1;width:min(100%,420px);container-type:inline-size}
+.b6w .ob-sheet{display:block;padding:24px}
+/* the scene is drawn 300px wide: shrink it where the app's gutters leave less than that */
+@container (max-width:347px){.b6w .ob-sheet{padding:16px}.b6{zoom:.8}}
+.b6{position:relative;width:300px;height:196px;margin:0 auto 12px}
+.b6-ldg{position:absolute;box-sizing:border-box;border:2px solid var(--faction-default-on-fill);border-radius:9px 9px 14px 14px / 7px 7px 12px 12px;background:linear-gradient(color-mix(in srgb,var(--faction-default-stop-4) 80%,var(--faction-default-card-bg)) 0 5px,color-mix(in srgb,var(--faction-default-stop-4) 26%,var(--faction-default-card-bg)) 5px)}
+.b6-crd{position:absolute;z-index:1;width:20px;box-sizing:border-box;padding-top:4px;display:flex;justify-content:center;border:2px solid var(--faction-default-on-fill);border-radius:5px;background:var(--c);transform-origin:0 100%;filter:saturate(.12) brightness(.72);animation:b6wob .45s ease-out var(--tw),b6top .56s linear var(--tt) forwards}
+@keyframes b6wob{25%{transform:rotate(var(--w))}55%{transform:rotate(calc(var(--w) * -.35))}80%{transform:rotate(calc(var(--w) * .15))}}
+@keyframes b6top{0%{transform:none;filter:saturate(.12) brightness(.72);animation-timing-function:cubic-bezier(.55,0,.9,.45)}58%{transform:rotate(var(--th));filter:none;animation-timing-function:ease-out}72%{transform:rotate(calc(var(--th) - 7deg));animation-timing-function:ease-in}86%{transform:rotate(var(--th));animation-timing-function:ease-out}93%{transform:rotate(calc(var(--th) - 2deg))}100%{transform:rotate(var(--th));filter:none}}
+.b6x,.b6y,.b6s{display:block;animation-timing-function:linear;animation-fill-mode:both}
+.b6x{position:absolute;left:0;bottom:0;z-index:2;animation-name:b6x,b6brave}
+.b6y{animation-name:b6y}
+.b6s{transform-origin:50% 100%;animation-name:b6s}
+.b6s .mpup{animation:b6look linear both}
+.b6bang{position:absolute;left:50%;bottom:calc(100% + 1px);margin-left:-.16em;font:600 22px var(--font-display);color:var(--faction-default-card-text);opacity:0}
+.b6-flag{position:absolute;left:298px;bottom:127px;transform-origin:0 100%}
+.b6-flag svg{display:block;overflow:visible}
+@keyframes b6flut{from{transform:skewY(-9deg)}to{transform:skewY(8deg) scaleX(.86)}}
+.b6-flut{transform-box:fill-box;transform-origin:0 50%;animation:b6flut .42s ease-in-out infinite alternate}
+
+.b6-lvrow{display:flex;align-items:center;gap:16px}
+.b6-lv{display:flex;flex-direction:column;line-height:1}
+.b6-lv .ob-cap{margin-bottom:6px}
+.b6-num{display:block;height:1em;overflow:hidden;font-family:var(--font-display);font-weight:600;font-size:48px;line-height:1}
+@keyframes b6roll{to{transform:translateY(-1em)}}
+.b6-roll{display:flex;flex-direction:column;animation:b6roll .5s cubic-bezier(.5,0,.3,1.6) forwards}
+.b6-roll>span{height:1em}
+.b6-lvrow .ob-hair{flex:1}
+.ob-ring.b6-ring{width:92px;height:92px}
+.b6-ring .ob-disc b{font-size:26px}
+.b6-lines{margin:16px 0 0;font-family:var(--font-display);font-style:italic;font-weight:600;font-size:20px}
+.b6-lines+.b6-lines{margin-top:8px}
+
+.dhead.b6d{right:14px;bottom:calc(100% - 24px);animation:b6peek 1.1s cubic-bezier(.3,.7,.4,1) both,unhide .01s linear both}
+@keyframes b6peek{0%{transform:translateY(84px)}55%{transform:translateY(-8px)}78%{transform:translateY(3px)}100%{transform:none}}
+.b6t{position:absolute;left:34px;top:calc(100% - 10px);z-index:-1;animation:unhide .01s linear both}
+.dtail.b6wag{position:static;z-index:auto;display:block;transform-origin:55px 0;animation:b6tail .9s cubic-bezier(.3,.7,.4,1) both,b6wag 1.7s ease-in-out infinite alternate}
+@keyframes b6tail{from{transform:translateY(-54px)}to{transform:none}}
+@keyframes b6wag{from{rotate:-5deg}to{rotate:8deg}}
+@media (max-width:500px){.dhead.b6d{right:auto;left:14px;scale:-1 1}.b6t{left:auto;right:34px;scale:-.7 .7;transform-origin:50% 0}.b6w{margin-top:36px}}
+.calm .lunge,.calm .jaw,.calm .dbrow,.calm .dpup{animation:none}
+.calm .fire{display:none}
+.calm .dpup{transform:translate(-2px,4px)}
+.calm .deye{animation:blink 3.7s 1.4s infinite}
+
+@media (prefers-reduced-motion: reduce){
+.onboarding-arc .b6bang{display:none}
+.onboarding-arc .b6d,.onboarding-arc .b6wag{animation:none!important;opacity:1;transform:none}
+.onboarding-arc .b6x{transform:translateX(266px);--conf:1}
+.onboarding-arc .b6y{transform:translateY(-128px)}
+.onboarding-arc .b6-crd{transform:rotate(var(--th));filter:none}
+.onboarding-arc .b6-roll{transform:translateY(-1em)}
+}

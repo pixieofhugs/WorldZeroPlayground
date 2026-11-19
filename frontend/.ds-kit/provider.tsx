@@ -37,6 +37,7 @@ const MOCK_USER: CurrentUser = {
   },
   is_admin: false,
   is_owner: false,
+  has_accepted_terms: true,
   can_create_additional_character: true,
   can_start_as_albescent: false,
   albescent_revealed: false,

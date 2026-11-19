@@ -1,5 +1,5 @@
-/** `contract` is today's sequence (sign-in if no session, then terms); `signin` is the header's shortcut. */
-export type Step = 'title' | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 'contract' | 'signin'
+/** Title, beats, `contract` (or `declined`), then `signin` (skipped with a session), then the hand-off. */
+export type Step = 'title' | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 'contract' | 'declined' | 'signin' | 'returning'
 
 export const BEAT_COUNT = 7
 
@@ -18,12 +18,15 @@ const moveTo = (f: Flow, step: Step): Flow => ({ step, history: [...f.history, f
 export function next(f: Flow): Flow {
   if (f.step === 'title') return moveTo(f, 1)
   if (isBeat(f.step)) return moveTo(f, f.step === BEAT_COUNT ? 'contract' : ((f.step + 1) as Step))
+  if (f.step === 'contract') return moveTo(f, 'signin')
   return f
 }
 
+export const decline = (f: Flow): Flow => moveTo(f, 'declined')
+
 export const skip = (f: Flow): Flow => moveTo(f, 'contract')
 
-export const toSignIn = (f: Flow): Flow => moveTo(f, 'signin')
+export const toSignIn = (f: Flow): Flow => moveTo(f, 'returning')
 
 export function back(f: Flow): Flow {
   const prev = f.history[f.history.length - 1]

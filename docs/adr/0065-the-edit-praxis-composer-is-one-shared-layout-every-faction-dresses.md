@@ -1,6 +1,6 @@
 # ADR-0065 — The edit-praxis composer is one shared layout every faction dresses
 
-**Status:** Accepted
+**Status:** Amended by ADR-0083
 **Date:** 2026-07-29
 
 **Relates to:** #1179 (epic), #1180 (this ADR's issue)
@@ -198,3 +198,7 @@ at length, including in the amendment it wrote and withdrew the same day: a
 deliberately designed set of near-synonyms is still the catalog the neutral
 rule exists to delete. The composer's slots — title, body, mode, proof, submit
 — read identically on every skin.
+
+## Amendment (2026-11-18, #3423)
+
+§4's "There is no `AlbescentEditPraxis` today and none is added" is replaced by [ADR-0083](0083-albescent-is-one-ornament-vocabulary-over-na-not-a-skin-per-surface.md) (#2505): `AlbescentEditPraxis` exists and is registered in `factions/albescent.ts`. It is a wrapper with no paint of its own, so the intent (Albescent adds no composer skin) holds.
