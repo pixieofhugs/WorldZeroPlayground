@@ -1,5 +1,8 @@
-import { useEffect, type ReactNode } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
+import { pageTitleKey } from './layout/pageTitles'
 import { useAuth } from '../auth/AuthContext'
 import { useFormFactor } from '../hooks/useFormFactor'
 import { useSidebarCollapsed } from '../hooks/useSidebarCollapsed'
@@ -29,6 +32,18 @@ export default function Layout({ children }: { children: ReactNode }) {
   const isMobile = useFormFactor() === 'mobile'
   // Held here: `ShellContent` is called as a plain function by tests, so owns no hook (#1191).
   const { collapsed: sidebarCollapsed, toggle: toggleSidebar } = useSidebarCollapsed()
+
+  const { t } = useTranslation('common')
+  const titleKey = pageTitleKey(pathname)
+  useDocumentTitle(titleKey && t(`pageTitles.${titleKey}`))
+
+  // A page load resets focus for free; a router push doesn't. Pathname only, so a query or hash change keeps focus where it is.
+  const lastPath = useRef(pathname)
+  useEffect(() => {
+    if (lastPath.current === pathname) return
+    lastPath.current = pathname
+    document.getElementById('content')?.focus({ preventScroll: true })
+  }, [pathname])
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' })

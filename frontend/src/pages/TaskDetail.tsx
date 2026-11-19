@@ -1,3 +1,4 @@
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 /**
  * Task detail dispatcher (surface #10, SPEC-faction-ui-profile.md): loads via
  * `useTaskDetail(id)` and picks the archetype by `task.primary_faction_slug`.
@@ -18,6 +19,7 @@ export default function TaskDetail() {
   const { id } = useParams<{ id: string }>();
   const { t } = useTranslation(["tasks", "common"]);
   const state = useTaskDetail(id);
+  useDocumentTitle(state.task?.title ?? t("common:pageTitles.task"));
 
   if (state.loading)
     return <div className="py-8 font-body text-muted">{t("common:loading")}</div>;

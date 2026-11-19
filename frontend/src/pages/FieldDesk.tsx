@@ -1,3 +1,4 @@
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { useEffect, useState, type CSSProperties } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -43,6 +44,7 @@ const TILTS = [-2.5, 1.8, -1.2, 2.4, -2.0, 1.4]
 
 export default function FieldDesk() {
   const { t } = useTranslation('common')
+  useDocumentTitle(t('pageTitles.fieldDesk'))
   const { user, applyUser } = useAuth()
   const navigate = useNavigate()
   // `null` = not loaded yet, distinct from empty for the gate.

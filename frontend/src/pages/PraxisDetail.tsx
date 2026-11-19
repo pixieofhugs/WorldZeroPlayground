@@ -1,3 +1,4 @@
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 /**
  * Praxis detail dispatcher: loads via `usePraxisDetail(id)` and picks the
  * archetype by `praxis.task_faction_slug`; guards live here so archetypes can
@@ -15,6 +16,7 @@ export default function PraxisDetail() {
   const { t } = useTranslation(['praxis', 'common'])
   const { id } = useParams<{ id: string }>()
   const state = usePraxisDetail(id)
+  useDocumentTitle(state.praxis?.task_title ?? t('common:pageTitles.praxis'))
 
   if (state.loading) return <div className="py-8 font-body text-muted">{t('common:loading')}</div>
   if (state.fetchError) return (

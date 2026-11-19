@@ -1,12 +1,16 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { clearOnboardingHandoff, clearTermsAcceptance, onboardingHandoffPending } from '../utils/onboardingResume'
 import { resolveHandoffDestination } from '../utils/onboardingHandoff'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import OnboardingFlow from './onboarding/OnboardingFlow'
 
 /** `/start`: the QR code's arc (`docs/spec/SPEC-onboarding.md`), unguarded. The flow is `OnboardingFlow`; this page owns the hand-off and the one resume, the OAuth round trip (`utils/onboardingResume`), consumed on mount. */
 export default function Onboarding() {
   const navigate = useNavigate()
+  const { t } = useTranslation('common')
+  useDocumentTitle(t('pageTitles.welcome'))
 
   // Read once (not in render, which StrictMode double-invokes); cleared in the effect.
   const [resumed] = useState(onboardingHandoffPending)

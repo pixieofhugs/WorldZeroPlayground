@@ -63,7 +63,7 @@ export default function ShellContent({
             : ''
         }
       >
-        <main className="min-w-0 lg:col-start-2 lg:row-start-1">{children}</main>
+        <main id="content" tabIndex={-1} className="outline-none min-w-0 lg:col-start-2 lg:row-start-1">{children}</main>
         {showSidebar && (
           <SidebarColumn collapsed={sidebarCollapsed} onToggle={onToggleSidebar} />
         )}

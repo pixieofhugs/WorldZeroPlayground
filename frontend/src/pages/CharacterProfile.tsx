@@ -1,3 +1,4 @@
+import { useDocumentTitle } from "../hooks/useDocumentTitle"
 /**
  * CharacterProfile — the public player profile (#459, ADR-0033). Owns fetching
  * and relationship state; FactionProfileBody picks the skin by slug. No
@@ -72,6 +73,7 @@ export default function CharacterProfile() {
     [id],
   );
   const character = data?.[0] ?? null;
+  useDocumentTitle(character?.display_name ?? t("pageTitles.character"));
   const submissions = data?.[1] ?? [];
   const proposedTasks = data?.[2] ?? [];
   const [relationship, setRelationship] = useState<RelationshipListItem | null>(
