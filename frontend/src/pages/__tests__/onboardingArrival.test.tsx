@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import '../../i18n'
 import { AuthContext } from '../../auth/AuthContext'
 import type { CurrentUser } from '../../api/auth'
+import { acceptTerms } from '../../api/terms'
 import { createCharacter } from '../../api/characters'
 import { listTasks } from '../../api/tasks'
 import { makeTask } from '../onboarding/fixtures'
@@ -87,6 +88,28 @@ describe('character then arrival', () => {
     await waitFor(() => expect(screen.queryByText('King Biscuit has entered World Zero.')).toBeNull())
     expect(screen.queryByPlaceholderText(/name/i)).toBeNull()
     expect(vi.mocked(createCharacter)).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('consent is written once per mount', () => {
+  it('Back to the contract and Accept again does not write a second row', async () => {
+    vi.mocked(acceptTerms).mockClear()
+    render(
+      <MemoryRouter>
+        <AuthContext.Provider value={{ user: USER, loading: false, refetch: async () => {}, applyUser: () => {}, signOut: async () => {} }}>
+          <OnboardingFlow resumed={false} onAccepted={vi.fn()} />
+        </AuthContext.Provider>
+      </MemoryRouter>,
+    )
+    fireEvent.click(screen.getByTestId('onboarding-start'))
+    fireEvent.click(screen.getByTestId('onboarding-skip'))
+    fireEvent.click(screen.getByTestId('onboarding-accept-terms'))
+    await screen.findByPlaceholderText(/name/i)
+
+    fireEvent.click(screen.getByRole('button', { name: /back/i }))
+    fireEvent.click(await screen.findByTestId('onboarding-accept-terms'))
+    expect(await screen.findByPlaceholderText(/name/i)).toBeTruthy()
+    expect(vi.mocked(acceptTerms)).toHaveBeenCalledTimes(1)
   })
 })
 

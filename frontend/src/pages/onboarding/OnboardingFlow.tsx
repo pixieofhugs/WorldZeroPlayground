@@ -104,6 +104,8 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
   // After an OAuth round trip a held click is written once, before creation; a failure shows the contract again.
   const [recording, setRecording] = useState(() => resumed && termsAcceptanceHeld())
   const recordedOnce = useRef(false)
+  // Back from a later step re-mounts the contract; one mount writes one row.
+  const wrote = useRef(false)
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
   useEffect(() => () => clearTimeout(timer.current), [])
 
@@ -117,6 +119,7 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
     recordedOnce.current = true
     acceptTerms().then(
       async () => {
+        wrote.current = true
         clearTermsAcceptance()
         // Layout gates on `has_accepted_terms`; hand off only once it can see the row.
         await refetch()
@@ -302,7 +305,15 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
           ) : (
             <TermsCard
               // A session writes the row now; a guest holds the click through sign-in.
-              record={user ? acceptTerms : async () => void holdTermsAcceptance()}
+              record={
+                user
+                  ? async () => {
+                      if (wrote.current) return
+                      await acceptTerms()
+                      wrote.current = true
+                    }
+                  : async () => void holdTermsAcceptance()
+              }
               onAccepted={() => (user ? void refetch().then(handOff) : move(next))}
               onDecline={() => {
                 clearTermsAcceptance()
