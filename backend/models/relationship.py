@@ -12,11 +12,6 @@ class RelationshipType(enum.Enum):
     foe = "foe"
 
 
-class RelationshipStatus(enum.Enum):
-    active = "active"
-    blocked = "blocked"
-
-
 class Relationship(TimestampMixin, Base):
     __tablename__ = "relationship"
     __table_args__ = (UniqueConstraint("from_character_id", "to_character_id"),)
@@ -30,7 +25,4 @@ class Relationship(TimestampMixin, Base):
     )
     type: Mapped[RelationshipType] = mapped_column(
         Enum(RelationshipType, create_type=False), nullable=False
-    )
-    status: Mapped[RelationshipStatus] = mapped_column(
-        Enum(RelationshipStatus, create_type=False), nullable=False
     )

@@ -24,7 +24,7 @@ async def test_create_relationship(
     assert data["from_character_id"] == character.id
     assert data["to_character_id"] == character2.id
     assert data["type"] == kind
-    assert data["status"] == "active"
+    assert "status" not in data
 
 
 @pytest.mark.asyncio
@@ -182,4 +182,3 @@ async def test_a_block_produces_no_label_for_either_party(
             r for r in listing.json() if r["to_character_id"] == counterpart
         )
         assert match["display_status"] == "Mutual Friends"
-        assert match["status"] == "active"

@@ -256,14 +256,13 @@ async def test_types_intersects_with_the_filter_rather_than_replacing_it(
 ):
     """``filter=friends&types=friend_signup`` is friend signups only."""
     from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
-    from models.relationship import Relationship, RelationshipStatus, RelationshipType
+    from models.relationship import Relationship, RelationshipType
 
     db_session.add(
         Relationship(
             from_character_id=character.id,
             to_character_id=character2.id,
             type=RelationshipType.friend,
-            status=RelationshipStatus.active,
         )
     )
     # friend_completion
@@ -511,7 +510,7 @@ async def test_friend_signup_carries_the_task_level(
     Presence matters too: an undeclared key drops the whole item (#1402).
     """
     from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
-    from models.relationship import Relationship, RelationshipStatus, RelationshipType
+    from models.relationship import Relationship, RelationshipType
 
     active_task.level_required = 3
     db_session.add(
@@ -519,7 +518,6 @@ async def test_friend_signup_carries_the_task_level(
             from_character_id=character.id,
             to_character_id=character2.id,
             type=RelationshipType.friend,
-            status=RelationshipStatus.active,
         )
     )
     mine = Praxis(

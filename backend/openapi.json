@@ -5870,10 +5870,6 @@
             "title": "Id",
             "type": "integer"
           },
-          "status": {
-            "title": "Status",
-            "type": "string"
-          },
           "to_avatar_url": {
             "title": "To Avatar Url",
             "type": "string"
@@ -5900,7 +5896,6 @@
           "from_character_id",
           "to_character_id",
           "type",
-          "status",
           "created_at",
           "to_display_name",
           "to_avatar_url",
@@ -13651,22 +13646,6 @@
                 }
               ],
               "title": "Type"
-            }
-          },
-          {
-            "in": "query",
-            "name": "status",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Status"
             }
           },
           {

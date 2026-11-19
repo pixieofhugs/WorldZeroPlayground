@@ -35,7 +35,7 @@ from models.faction_defection_history import FactionDefectionHistory
 from models.feed_dismissal import FeedDismissal
 from models.invitation_letter import InvitationLetter
 from models.nudge import Nudge
-from models.relationship import Relationship, RelationshipStatus, RelationshipType
+from models.relationship import Relationship, RelationshipType
 from models.duel import Duel, DuelStatus
 from models.praxis import ModerationStatus, Praxis, PraxisInvite, PraxisInviteStatus, PraxisMember, PraxisStatus, PraxisType
 from services.block_service import blocked_counterpart_ids
@@ -223,7 +223,6 @@ async def _get_related_ids(
         select(Relationship.to_character_id).where(
             Relationship.from_character_id == character_id,
             Relationship.type == rel_type,
-            Relationship.status == RelationshipStatus.active,
             Relationship.to_character_id.not_in(blocked_counterpart_ids(character_id)),
         )
     )

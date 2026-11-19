@@ -2,7 +2,7 @@ import { apiGet, apiPost, apiDelete } from './client'
 import type { components } from './generated/schema'
 
 /**
- * ponytail (#1400): `type`/`status` are narrower than the schema's bare `str`
+ * ponytail (#1400): `type` is narrower than the schema's bare `str`
  * (only these values are written), so reads cast. Upgrade: a backend
  * `StrEnum`, then drop the casts.
  */
@@ -11,8 +11,6 @@ export interface RelationshipListItem {
   from_character_id: number
   to_character_id: number
   type: 'friend' | 'foe'
-  /** Dormant since ADR-0077: always `active` (blocks are their own record). */
-  status: 'active'
   created_at: string
   to_display_name: string
   to_avatar_url: string
@@ -22,7 +20,6 @@ export interface RelationshipListItem {
 }
 
 interface RelationshipFilters {
-  status?: string
   type?: string
 }
 

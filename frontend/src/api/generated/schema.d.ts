@@ -4501,8 +4501,6 @@ export interface components {
             from_character_id: number;
             /** Id */
             id: number;
-            /** Status */
-            status: string;
             /** To Avatar Url */
             to_avatar_url: string;
             /** To Character Id */
@@ -8335,7 +8333,6 @@ export interface operations {
         parameters: {
             query?: {
                 type?: string | null;
-                status?: string | null;
             };
             header?: never;
             path?: never;
