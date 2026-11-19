@@ -30,7 +30,7 @@ export default function Arrival({ name, task, onBack }: { name: string; task: Ta
   const away = config && firstLevelAway(config.level_profiles, config.level_thresholds, task.point_value)
   const delay = (s: number) => ({ animationDelay: `${s}s` })
   return (
-    <main className="ar-arrival">
+    <section className="ar-arrival">
       {CONFETTI.map((style, i) => (
         <span key={i} aria-hidden="true" className="ar-conf" style={style} />
       ))}
@@ -61,6 +61,6 @@ export default function Arrival({ name, task, onBack }: { name: string; task: Ta
           </button>
         </span>
       )}
-    </main>
+    </section>
   )
 }

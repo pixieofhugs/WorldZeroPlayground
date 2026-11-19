@@ -100,8 +100,8 @@ async def test_suspended_accounts_existing_token_is_refused(
         f"/praxes/{praxis_solo.id}/vote", json={"value": 3}, headers=auth_headers2
     )
 
-    assert me.status_code == 401
-    assert vote.status_code == 401
+    assert me.status_code == 403
+    assert vote.status_code == 403
     assert await db_session.scalar(select(func.count()).select_from(Vote)) == 0
 
 

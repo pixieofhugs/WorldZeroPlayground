@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import TaskCard from '../components/taskCard/TaskCard'
 import PageTitle from '../components/ui/PageTitle'
 import { extractError } from '../utils/errors'
@@ -10,6 +11,7 @@ import ProposeTaskLink from './tasks/ProposeTaskLink'
 import MetataskSeal from '../components/metataskSeal/MetataskSeal'
 
 export default function Tasks() {
+  useDocumentTitle('Tasks')
   const state = useTasks()
   const formFactor = useFormFactor()
 

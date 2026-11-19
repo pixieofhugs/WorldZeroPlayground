@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 import { ApiError } from '../api/apiError'
 import { getMe, logout, type CurrentUser } from '../api/auth'
 import { dropAllCaches } from '../utils/cacheEpoch'
+import { extractErrorCode } from '../utils/errors'
 import { setAlbescentGlimpsed, setAlbescentRevealed } from '../utils/factions'
 
 interface AuthState {
@@ -61,7 +62,7 @@ export function runSignOut(
 }
 
 /**
- * The `/auth/me` wiring behind `refetch()`. ONLY A 401 MEANS SIGNED OUT (#3134):
+ * The `/auth/me` wiring behind `refetch()`. ONLY A 401 (or a suspended 403) MEANS SIGNED OUT (#3134):
  * a network error or 5xx leaves viewer, Albescent flags and hint untouched, so a
  * blip after a save doesn't eject the player. Never rejects; callers await it bare.
  */
@@ -76,7 +77,10 @@ export function runSessionProbe(
       adoptViewer(await whoAmI())
       rememberSession(true)
     } catch (error) {
-      if (error instanceof ApiError && error.status === 401) {
+      if (
+        error instanceof ApiError &&
+        (error.status === 401 || extractErrorCode(error) === 'ACCOUNT_SUSPENDED')
+      ) {
         adoptViewer(null)
         rememberSession(false)
       }

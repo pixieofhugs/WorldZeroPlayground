@@ -26,6 +26,11 @@ describe('needsCharacterRedirect', () => {
     }
   })
 
+  it('does not send a creation-banned account to the create form', () => {
+    expect(characterRedirectTarget(false, true, false, true, '/tasks', false, true)).toBeNull()
+    expect(characterRedirectTarget(false, true, false, false, '/tasks', false, true)).toBe('/start')
+  })
+
   it('does not bounce a character-less account away from /start', () => {
     expect(needsCharacterRedirect(false, true, false, '/start')).toBe(false)
     expect(needsCharacterRedirect(false, true, false, '/start/again')).toBe(false)

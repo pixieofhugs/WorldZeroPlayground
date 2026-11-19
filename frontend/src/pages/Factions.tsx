@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { useTranslation } from 'react-i18next'
 import PageTitle from '../components/ui/PageTitle'
 import FactionSelectCard from '../components/selectCard/FactionSelectCard'
@@ -25,6 +26,7 @@ const HIDDEN_SLUGS = new Set([NA_SLUG])
  * membership actions live on `/factions/:slug` (#347).
  */
 export default function Factions() {
+  useDocumentTitle('Factions')
   const formFactor = useFormFactor()
   // Above the switch (#1116): crossing 767px re-dresses, doesn't refetch.
   const state = useFactionsDirectory()

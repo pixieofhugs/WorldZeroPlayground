@@ -12,7 +12,7 @@ export default function AuthCard({ onBack }: { onBack?: () => void }) {
   const { t } = useTranslation('onboarding')
 
   return (
-    <main className="ob-login">
+    <section className="ob-login">
       <section className="ob-sheet toss ob-auth" aria-labelledby="ob-auth-title">
         <span aria-hidden="true" className="boing ob-auth-mascot">
           <span className="dnA">
@@ -48,6 +48,6 @@ export default function AuthCard({ onBack }: { onBack?: () => void }) {
           </Link>
         </span>
       </section>
-    </main>
+    </section>
   )
 }

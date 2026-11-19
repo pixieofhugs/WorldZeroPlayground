@@ -29,6 +29,8 @@ class CurrentUser(WireModel):
     # eligibility flags have their own rules (see character_capabilities).
     can_create_additional_character: bool = False
     can_start_as_albescent: bool = False
+    # A moderator ban on one of the account's lives blocks creating any (#3507).
+    character_creation_banned: bool = False
     # Sticky (ADR-0027): any life on the account ever joined Albescent.
     albescent_revealed: bool = False
     # Sticky (#2770): any life reached `era.secret_faction_glimpse_level`; gates

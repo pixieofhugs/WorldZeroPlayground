@@ -19,6 +19,7 @@ const BASE_VIEWER: CurrentUser = {
   is_owner: false,
   has_accepted_terms: true,
   can_create_additional_character: false,
+  character_creation_banned: false,
   can_start_as_albescent: false,
   albescent_revealed: false,
   albescent_glimpsed: false,

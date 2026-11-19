@@ -4,11 +4,15 @@
  * own loading state). `''`/`na`/unknown resolve to the `na` kit, never UA
  * (#796). Archetypes handle form factor themselves.
  */
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
+import { useTranslation } from 'react-i18next'
 import { useEditCharacter } from './characterPaths/useEditCharacter'
 import { resolveVariant } from '../utils/factionDispatch'
 import { surfaceMap } from '../factions'
 
 export default function EditCharacter() {
+  const { t } = useTranslation('forms')
+  useDocumentTitle(t('editCharacter.heading'))
   const state = useEditCharacter()
   const Archetype = resolveVariant(
     surfaceMap('editCharacter'),

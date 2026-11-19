@@ -7,6 +7,7 @@
  * duel; `declined`/`pending`/`active` redirect to a side's praxis (ADR-0059,
  * #999). Dispatched on the TASK's faction: both sides share one ground.
  */
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { useTranslation } from 'react-i18next'
 import { Navigate, useParams } from 'react-router-dom'
 import { resolveVariant } from '../utils/factionDispatch'
@@ -16,6 +17,7 @@ import { readablePraxisId, readerMountsDuel } from './duelReader/reader'
 
 export default function DuelReader() {
   const { t } = useTranslation(['praxis', 'common'])
+  useDocumentTitle('Duel')
   const { id } = useParams<{ id: string }>()
   const state = useDuelReader(id)
 

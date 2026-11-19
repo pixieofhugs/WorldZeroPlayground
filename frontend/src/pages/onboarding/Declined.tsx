@@ -6,7 +6,7 @@ import Quill from './Quill'
 export default function Declined({ onReconsider }: { onReconsider?: () => void }) {
   const { t } = useTranslation('onboarding')
   return (
-    <main className="ob-declined">
+    <section className="ob-declined">
       <span aria-hidden="true" className="boing ob-dq">
         <span className="ob-dq-line" />
         <span className="ob-sulk">
@@ -26,6 +26,6 @@ export default function Declined({ onReconsider }: { onReconsider?: () => void }
           {t('declined.lookAround')}
         </Link>
       </nav>
-    </main>
+    </section>
   )
 }
