@@ -92,7 +92,7 @@ Python conventions live in `backend/CLAUDE.md`; frontend conventions in
 - Everything: `scripts/wz up` — postgres, migrations, seed, backend. Add
   `--full` to containerise the frontend too.
 - Frontend (normally): `npm run dev` from `/frontend`
-- Tests: `scripts/wz test --cov=. --cov-fail-under=92` — the gate is
+- Tests: `scripts/wz test --cov=. --cov-fail-under=96` — the gate is
   `.github/workflows/test.yml`; if that number and this one disagree, it wins
 - Fresh start: `scripts/wz reset`
 

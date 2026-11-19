@@ -30,6 +30,7 @@ class ErrorCode(str, enum.Enum):
     vote_budget_exhausted = "VOTE_BUDGET_EXHAUSTED"
     vote_level_too_low = "VOTE_LEVEL_TOO_LOW"
     vote_needs_received_vote = "VOTE_NEEDS_RECEIVED_VOTE"
+    vote_cast_in_closed_era = "VOTE_CAST_IN_CLOSED_ERA"
 
     # -- Level gates --------------------------------------------------------
     task_level_too_low = "TASK_LEVEL_TOO_LOW"
@@ -67,6 +68,7 @@ class ErrorCode(str, enum.Enum):
     # -- Media limits -------------------------------------------------------
     media_type_unsupported = "MEDIA_TYPE_UNSUPPORTED"
     media_too_large = "MEDIA_TOO_LARGE"
+    media_unreadable = "MEDIA_UNREADABLE"
     avatar_must_be_image = "AVATAR_MUST_BE_IMAGE"
     avatar_too_large = "AVATAR_TOO_LARGE"
 

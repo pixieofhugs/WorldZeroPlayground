@@ -179,8 +179,7 @@ def may_vote(
     is_admin: bool,
     era: EraConfig = CURRENT_ERA,
     *,
-    has_received_vote: bool = True,
+    has_received_vote: bool,
 ) -> bool:
-    """``vote_lock_reason`` is ``None``. The default means "rule not asked"; every
-    caller that knows the account passes the real answer."""
+    """``vote_lock_reason`` is ``None``. Required: omitting it switches the rule off."""
     return vote_lock_reason(peak_level, has_received_vote, is_admin, era) is None

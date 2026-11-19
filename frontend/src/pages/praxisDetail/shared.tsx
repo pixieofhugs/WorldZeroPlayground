@@ -583,7 +583,7 @@ export function PraxisFlagBlock({ state }: { state: PraxisDetailState }) {
             ))}
           </div>
           {/* A note for every reason (#570). The backend only persists it for
-              "other" (ADR-0037); storing it for all needs a reason_detail column. */}
+              "other": the FlagIn rule in schemas/comment.py (ADR-0037). */}
           {flagReason !== null && (
             <textarea
               className="border-2 border-border bg-card px-3 py-2 font-body content-text focus:outline-hidden focus:border-ink w-full resize-none"

@@ -12,6 +12,10 @@ WORKDIR /app
 # and stale bytecode written into a mount is a debugging trap.
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
+# Praxis uploads are stripped of location metadata with ffmpeg (services/media.py).
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
 
 
 # --- dev ------------------------------------------------------------------

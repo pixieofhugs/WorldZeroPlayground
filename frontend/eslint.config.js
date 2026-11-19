@@ -1228,4 +1228,21 @@ export default [
       'i18next/no-literal-string': 'off',
     },
   },
+  {
+    // The select-card blocks branch on no faction (ADR-0090); an import is the only way one could get in.
+    files: ['src/components/selectCard/selectCardBlocks.tsx'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['**/factions', '**/factions/**', '**/utils/factions', '**/auth/**', '**/hooks/**'],
+              message: 'selectCardBlocks must not read the faction, auth or a hook (ADR-0090).',
+            },
+          ],
+        },
+      ],
+    },
+  },
 ]

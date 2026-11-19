@@ -65,7 +65,8 @@ def assert_albescent_alone_bypasses_metatask_level(
     assert faction_bypasses_metatask_level(control, cfg) is False
     assert cfg.metatask_apply_level > 0
 
-    albescent = compute_capabilities(0, False, cfg, faction_slug="albescent")
-    other = compute_capabilities(0, False, cfg, faction_slug=control)
+    kw = {"has_received_vote": True}
+    albescent = compute_capabilities(0, False, cfg, faction_slug="albescent", **kw)
+    other = compute_capabilities(0, False, cfg, faction_slug=control, **kw)
     assert albescent.can_apply_metatask is True
     assert other.can_apply_metatask is False

@@ -197,6 +197,8 @@ describe("the Valley plate's tokens", () => {
     "--faction-ephemerists-plate-gold",
     "--faction-ephemerists-plate-brass-rule",
     "--faction-ephemerists-plate-band-quiet",
+    "--faction-ephemerists-plate-caption",
+    "--faction-ephemerists-plate-wash",
   ];
 
   it("names the whole plate family, and a render draws none outside it", () => {

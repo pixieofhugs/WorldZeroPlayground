@@ -1,8 +1,7 @@
 """Era-bounded score recalculation (#1345).
 
-``recalculate_character_stats`` sums only praxes sealed in
-``[era.started_at, next_era.started_at)`` of the row it writes. Votes credit the
-praxis's era; ``all_time_score`` is the lifetime sum across eras.
+``recalculate_character_stats`` sums the live era's praxes plus votes cast in it
+(ADR-0099); a closed era's row is frozen. ``all_time_score`` is the lifetime sum.
 """
 from dataclasses import replace
 from datetime import timedelta
@@ -27,10 +26,12 @@ from models.praxis import (
     PraxisType,
 )
 from models.task import Task, TaskStatus
+from models.vote import Vote
 from services.character_stats import recalculate_character_stats
-from services.era import apply_era_reset
+from services.era import apply_era_reset, get_or_create_stats
 from services.praxis import moderate_praxis
 from services.vote import cast_vote_on_praxis
+from services.vote_tally import tally_votes
 from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 # Off the fixtures' slug, never a named faction (#2708).
@@ -154,30 +155,35 @@ async def _seed_both_eras(
     return old
 
 
+async def _bank_closed_era(
+    db_session: AsyncSession, character: Character, prior_era: Era, score: int
+) -> None:
+    """A closed era's frozen standing, as the era roll left it."""
+    stats = await get_or_create_stats(db_session, character.id, prior_era.id)
+    stats.score = score
+    stats.level = 1
+    character.all_time_score += score
+    await db_session.commit()
+
+
 @pytest.mark.asyncio
-async def test_recalc_sums_only_the_era_whose_row_it_writes(
+async def test_recalc_sums_only_the_live_era_and_never_touches_a_closed_one(
     db_session: AsyncSession,
     character: Character,
     prior_era: Era,
     current_era: Era,
     some_faction: Faction,
 ):
-    """Both bounds: lower (live recalc) and upper (prior recalc)."""
     await _seed_both_eras(db_session, character, prior_era, current_era)
+    await _bank_closed_era(db_session, character, prior_era, 777)
 
     await recalculate_character_stats(character.id, db_session)
-    await db_session.commit()
-
-    current_stats = await _stats(db_session, character, current_era)
-    assert current_stats.score == round(CURRENT_ERA_POINTS * OWN_TASK_MODIFIER)
-
     await recalculate_character_stats(character.id, db_session, era_row=prior_era)
     await db_session.commit()
 
-    prior_stats = await _stats(db_session, character, prior_era)
-    assert prior_stats.score == round(PRIOR_ERA_POINTS * OWN_TASK_MODIFIER)
     current_stats = await _stats(db_session, character, current_era)
     assert current_stats.score == round(CURRENT_ERA_POINTS * OWN_TASK_MODIFIER)
+    assert (await _stats(db_session, character, prior_era)).score == 777
 
 
 @pytest.mark.asyncio
@@ -257,22 +263,19 @@ async def test_all_time_score_is_the_lifetime_sum_across_eras(
     some_faction: Faction,
 ):
     await _seed_both_eras(db_session, character, prior_era, current_era)
+    await _bank_closed_era(db_session, character, prior_era, 777)
 
     await recalculate_character_stats(character.id, db_session)
-    await recalculate_character_stats(character.id, db_session, era_row=prior_era)
     await db_session.commit()
 
     current_stats = await _stats(db_session, character, current_era)
-    expected = round(PRIOR_ERA_POINTS * OWN_TASK_MODIFIER) + round(
-        CURRENT_ERA_POINTS * OWN_TASK_MODIFIER
-    )
     life = await _life(db_session, character)
-    assert life == expected
+    assert life == 777 + round(CURRENT_ERA_POINTS * OWN_TASK_MODIFIER)
     assert life > current_stats.score
 
 
 @pytest.mark.asyncio
-async def test_vote_on_past_era_praxis_credits_that_era_not_this_one(
+async def test_vote_on_past_era_praxis_credits_the_era_it_is_cast_in(
     db_session: AsyncSession,
     character: Character,
     character2: Character,
@@ -280,51 +283,41 @@ async def test_vote_on_past_era_praxis_credits_that_era_not_this_one(
     current_era: Era,
     some_faction: Faction,
 ):
-    """Moves the closed era's row and lifetime, never today's ladder."""
+    """ADR-0099: the closed era's row is frozen; the live era takes the vote's value."""
     old = await _seed_both_eras(db_session, character, prior_era, current_era)
-
+    await _bank_closed_era(db_session, character, prior_era, 777)
     await recalculate_character_stats(character.id, db_session)
-    await recalculate_character_stats(character.id, db_session, era_row=prior_era)
     await db_session.commit()
 
-    before_current = await _stats(db_session, character, current_era)
-    before_score = before_current.score
-    before_level = before_current.level
+    before_current = (await _stats(db_session, character, current_era)).score
     before_all_time = await _life(db_session, character)
-    before_prior_score = (await _stats(db_session, character, prior_era)).score
 
     await cast_vote_on_praxis(character2, old.id, 5, db_session)
     await db_session.commit()
 
     prior_stats = await _stats(db_session, character, prior_era)
     current_stats = await _stats(db_session, character, current_era)
-
-    gain = prior_stats.score - before_prior_score
-    assert gain > 0, "the closed era's own row must record the vote"
-    assert current_stats.score == before_score
-    assert current_stats.level == before_level
+    assert prior_stats.score == 777 and prior_stats.level == 1
+    gain = current_stats.score - before_current
+    assert gain == 5
     assert await _life(db_session, character) == before_all_time + gain
 
 
 @pytest.mark.asyncio
-async def test_failing_a_past_era_praxis_debits_that_era(
+async def test_failing_a_closed_era_praxis_leaves_that_era_frozen(
     db_session: AsyncSession,
     character: Character,
+    character2: Character,
     prior_era: Era,
     current_era: Era,
     some_faction: Faction,
 ):
-    """#1373 must reach the closed era's row, as the vote path does."""
     old = await _seed_both_eras(db_session, character, prior_era, current_era)
-
+    await _bank_closed_era(db_session, character, prior_era, 777)
+    await cast_vote_on_praxis(character2, old.id, 5, db_session)
     await recalculate_character_stats(character.id, db_session)
-    await recalculate_character_stats(character.id, db_session, era_row=prior_era)
     await db_session.commit()
-
-    before_current = await _stats(db_session, character, current_era)
-    before_score = before_current.score
-    before_all_time = await _life(db_session, character)
-    before_prior_score = (await _stats(db_session, character, prior_era)).score
+    before_current = (await _stats(db_session, character, current_era)).score
 
     await moderate_praxis(
         old.id, ModerationStatus.failed.value, "Not actually done", db_session,
@@ -332,11 +325,38 @@ async def test_failing_a_past_era_praxis_debits_that_era(
     )
     await db_session.commit()
 
-    prior_stats = await _stats(db_session, character, prior_era)
-    current_stats = await _stats(db_session, character, current_era)
-    assert prior_stats.score == 0
-    assert current_stats.score == before_score
-    assert await _life(db_session, character) == before_all_time - before_prior_score
+    assert (await _stats(db_session, character, prior_era)).score == 777
+    after = (await _stats(db_session, character, current_era)).score
+    assert after == before_current - 5
+
+
+@pytest.mark.asyncio
+async def test_cast_response_tally_matches_the_closed_era_card(
+    db_session: AsyncSession,
+    character: Character,
+    character2: Character,
+    character3: Character,
+    prior_era: Era,
+    current_era: Era,
+    some_faction: Faction,
+):
+    old = await _seed_both_eras(db_session, character, prior_era, current_era)
+    db_session.add(
+        Vote(
+            praxis_id=old.id,
+            voter_character_id=character3.id,
+            voter_account_id=character3.account_id,
+            value=3,
+            era_id=prior_era.id,
+        )
+    )
+    await db_session.commit()
+
+    cast = await cast_vote_on_praxis(character2, old.id, 5, db_session)
+
+    sealed = await tally_votes([old.id], db_session, cast_in="sealed")
+    assert cast.tally.points_from_votes == sealed[old.id].points_from_votes == 3
+    assert cast.tally.voter_count == 2
 
 
 @pytest.mark.asyncio

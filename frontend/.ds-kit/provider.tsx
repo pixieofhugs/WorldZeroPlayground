@@ -6,13 +6,16 @@
 //
 // ponytail: mobile factions directory previews in its offline state; fix by
 // having the harness stub globalThis.fetch BEFORE evaluating this bundle.
-import i18n from "../src/i18n";
+import i18n, { loadOnboardingCopy } from "../src/i18n";
 import type { ReactNode } from "react";
 import { MemoryRouter } from "react-router-dom";
 import { AuthContext, AuthProvider } from "../src/auth/AuthContext";
 import { ThemeProvider } from "../src/hooks/useTheme";
 import { MotionProvider } from "../src/hooks/useMotion";
 import type { CurrentUser } from "../src/api/auth";
+
+// Onboarding copy is lazy (#3514); the AuthCard/TermsCard previews need it.
+void loadOnboardingCopy();
 
 const MOCK_USER: CurrentUser = {
   account_id: 1,
