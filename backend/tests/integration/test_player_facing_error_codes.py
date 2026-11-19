@@ -13,12 +13,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from errors import DETAIL_CONTEXT_PARAM, ErrorCode
 from faction_slugs import UNAFFILIATED_FACTION_SLUG, real_faction_slugs
 from game_config import CURRENT_ERA
+from models.account import Account
 from models.character import Character
+from models.era import Era
+from models.faction import Faction
 from models.duel import Duel, DuelStatus
 from models.praxis import ModerationStatus, Praxis, PraxisStatus, PraxisType
 from models.task import Task, TaskStatus
 from services.character import ALBESCENT_FACTION_SLUG
-from tests.integration.factories import DEFAULT_FACTION_SLUG
+from tests.integration.factories import DEFAULT_FACTION_SLUG, make_character
 
 #: A live-era faction other than the fixtures' default, derived not named (#2708):
 #: naming one collides with the default if an era reorders its roster.
@@ -232,13 +235,23 @@ async def test_defecting_to_albescent_unqualified_is_coded(
     )
 
 
-# Comment 404s. ``character2`` is level 5, clearing era.comment_level_required.
+# Comment 404s. The commenter is built at era.comment_level_required.
 
 
 @pytest.mark.asyncio
 async def test_commenting_on_a_missing_praxis_and_task_are_coded_apart(
-    client: AsyncClient, character2: Character, auth_headers2: dict
+    client: AsyncClient,
+    db_session: AsyncSession,
+    era: Era,
+    account2: Account,
+    some_faction: Faction,
+    auth_headers2: dict,
 ):
+    await make_character(
+        db_session, era, username="commenter", account=account2,
+        level=CURRENT_ERA.comment_level_required,
+    )
+    await db_session.commit()
     on_praxis = await client.post(
         f"/praxes/{MISSING_ID}/comments",
         json={"body_text": "hello"},
