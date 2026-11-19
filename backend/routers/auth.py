@@ -431,7 +431,13 @@ async def dev_login(
         character = result.character
 
     invited_slugs = [slug for slug in (invited or "").split(",") if slug]
-    needs_character = faction is not None or invited_slugs or albescent or received_vote or draft_praxis
+    needs_character = (
+        faction is not None
+        or invited_slugs
+        or albescent
+        or received_vote
+        or draft_praxis
+    )
     if character is None and needs_character:
         raise HTTPException(
             status_code=400,
@@ -473,7 +479,9 @@ async def dev_login(
     if received_vote:
         await seed_received_vote(character, session)
 
-    draft_praxis_id = await seed_draft_praxis(character, session) if draft_praxis else None
+    draft_praxis_id = None
+    if draft_praxis:
+        draft_praxis_id = await seed_draft_praxis(character, session)
 
     jwt_token = create_jwt(account.id)
     response.set_cookie(

@@ -89,7 +89,9 @@ async def seed_draft_praxis(character: Character, session: AsyncSession) -> int:
     )
     if existing is not None:
         return existing
-    task = await session.scalar(select(Task).order_by(Task.level_required, Task.id).limit(1))
+    task = await session.scalar(
+        select(Task).order_by(Task.level_required, Task.id).limit(1)
+    )
     if task is None:
         raise_coded(400, ErrorCode.task_not_found, "draft_praxis needs a task.")
     praxis = Praxis(
