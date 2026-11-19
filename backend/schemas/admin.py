@@ -84,6 +84,7 @@ class FlaggedPraxisOut(PraxisOut):
     author_username: str
     author_status: str
     author_account_status: str
+    author_flagged_count: int
 
 
 class FlaggedCommentOut(CommentOut):
@@ -167,6 +168,10 @@ class SuspendActionOut(WireModel):
 
     account_id: int
     status: str
+
+
+class RemoveFlaggedOut(WireModel):
+    removed: int
 
 
 class BanActionOut(WireModel):

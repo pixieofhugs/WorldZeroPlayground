@@ -24,6 +24,7 @@ from schemas.admin import (
     AdminTaskPatch,
     BanAction,
     BanActionOut,
+    RemoveFlaggedOut,
     CharacterStatsPatch,
     CharacterStatsOut,
     CharacterSummary,
@@ -55,6 +56,7 @@ from services.admin_service import (
     archive_message,
     authors_for_moderation,
     delete_unreferenced_task,
+    remove_flagged_praxes_by_author,
     find_admin_accounts,
     grant_admin,
     list_admins,
@@ -322,6 +324,7 @@ async def admin_list_flagged_praxes(
             flags=flags_by_praxis.get(praxis.id, []),
             author_account_id=authors[praxis.created_by_id].account_id,
             author_username=authors[praxis.created_by_id].username,
+            author_flagged_count=authors[praxis.created_by_id].flagged_count,
             author_status=authors[praxis.created_by_id].character_status,
             author_account_status=authors[praxis.created_by_id].account_status,
         )
@@ -461,6 +464,22 @@ async def ban_character(
         raise HTTPException(status_code=404, detail="Character not found.")
     await apply_ban(character, data.banned, session)
     return BanActionOut(character_id=character_id, banned=data.banned)
+
+
+@router.post(
+    "/characters/{character_id}/praxes/remove-flagged",
+    response_model=RemoveFlaggedOut,
+)
+async def remove_flagged_praxes(
+    character_id: int,
+    _: Account = Depends(require_admin),
+    session: AsyncSession = Depends(get_db, scope="function"),
+) -> RemoveFlaggedOut:
+    if await session.get(Character, character_id) is None:
+        raise HTTPException(status_code=404, detail="Character not found.")
+    return RemoveFlaggedOut(
+        removed=await remove_flagged_praxes_by_author(character_id, session)
+    )
 
 
 @router.post("/tasks/import-csv", response_model=TaskImportResult, status_code=201)

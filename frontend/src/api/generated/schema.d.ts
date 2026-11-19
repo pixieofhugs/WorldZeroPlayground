@@ -250,6 +250,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/characters/{character_id}/praxes/remove-flagged": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Remove Flagged Praxes */
+        post: operations["remove_flagged_praxes_admin_characters__character_id__praxes_remove_flagged_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/characters/{character_id}/stats": {
         parameters: {
             query?: never;
@@ -3345,6 +3362,8 @@ export interface components {
             author_account_id: number;
             /** Author Account Status */
             author_account_status: string;
+            /** Author Flagged Count */
+            author_flagged_count: number;
             /** Author Status */
             author_status: string;
             /** Author Username */
@@ -4550,6 +4569,11 @@ export interface components {
          * @enum {string}
          */
         RelationshipTypeEnum: "friend" | "foe";
+        /** RemoveFlaggedOut */
+        RemoveFlaggedOut: {
+            /** Removed */
+            removed: number;
+        };
         /**
          * ReturningPlayerOut
          * @description What the consent gate may know (``GET /auth/returning-player``).
@@ -5467,6 +5491,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BanActionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_flagged_praxes_admin_characters__character_id__praxes_remove_flagged_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                character_id: number;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RemoveFlaggedOut"];
                 };
             };
             /** @description Validation Error */

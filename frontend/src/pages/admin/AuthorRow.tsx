@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import type { FlaggedPraxisOut } from "../../api/admin";
 import ModerateConfirm from "./ModerateConfirm";
 
-export type AuthorAction = "ban" | "suspend";
+export type AuthorAction = "ban" | "suspend" | "removeAll";
 
 const dangerButton = { borderColor: "var(--color-danger-ring)", color: "var(--color-danger)" };
 const successButton = { borderColor: "var(--color-success)", color: "var(--color-success)" };
@@ -29,9 +29,10 @@ export default function AuthorRow({
   const banned = praxis.author_status === "banned";
   const suspended = praxis.author_account_status === "suspended";
   const name = praxis.created_by_display_name;
+  const count = praxis.author_flagged_count;
   const undo = (kind: AuthorAction) => void onModerate(praxis, kind, false).catch(() => {});
   return (
-    <div className="flex flex-col gap-2" style={{ marginTop: "var(--space-sm)" }}>
+    <div className="flex flex-col gap-2 mt-2">
       <div className="flex items-center gap-2 flex-wrap">
         {banned && <span className="label-caption danger-text">{t("moderation.queue.author.banned")}</span>}
         {suspended && <span className="label-caption danger-text">{t("moderation.queue.author.suspended")}</span>}
@@ -51,10 +52,19 @@ export default function AuthorRow({
         >
           {suspended ? t("moderation.queue.author.unsuspend") : t("moderation.queue.author.suspend")}
         </button>
+        {praxis.author_flagged_count > 1 && (
+          <button
+            type="button"
+            className="btn-outline text-xs"
+            style={dangerButton}
+            onClick={() => onAsk("removeAll")}
+          >
+            {t("moderation.queue.author.removeAll", { count: praxis.author_flagged_count })}
+          </button>
+        )}
         <button
           type="button"
-          className="label-caption"
-          style={{ background: "none", border: "none", cursor: "pointer" }}
+          className="label-caption cursor-pointer bg-transparent border-0"
           onClick={() => onViewAccount(praxis.author_username)}
         >
           {t("moderation.queue.author.viewAccount")}
@@ -62,12 +72,13 @@ export default function AuthorRow({
       </div>
       {confirming && (
         <ModerateConfirm
-          heading={t(`moderation.queue.author.${confirming}Confirm.heading`, { name })}
+          heading={t(`moderation.queue.author.${confirming}Confirm.heading`, { name, count })}
           lead={t(`moderation.queue.author.${confirming}Confirm.lead`, {
             name,
             username: praxis.author_username,
+            count,
           })}
-          confirmLabel={t(`moderation.queue.author.${confirming}Confirm.submit`)}
+          confirmLabel={t(`moderation.queue.author.${confirming}Confirm.submit`, { count })}
           errorFallback={t("moderation.actionError")}
           run={() => onModerate(praxis, confirming, true)}
           onCancel={onCancel}

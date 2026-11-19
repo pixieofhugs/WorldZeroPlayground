@@ -14,6 +14,7 @@ import {
   getMessages,
   moderatePraxis,
   banCharacter,
+  removeFlaggedPraxes,
   suspendAccount,
   moderateComment,
   archiveMessage,
@@ -243,11 +244,16 @@ export default function ModerationTab({ onViewAccount }: { onViewAccount: (searc
     setActionError(null)
     const name = praxis.created_by_display_name
     try {
-      if (kind === 'ban') await banCharacter(praxis.created_by_id, on)
-      else await suspendAccount(praxis.author_account_id, on)
-      logAction(
-        t(`moderation.log.${on ? '' : 'un'}${kind === 'ban' ? 'banned' : 'suspended'}Author`, { name }),
-      )
+      if (kind === 'removeAll') {
+        const count = await removeFlaggedPraxes(praxis.created_by_id)
+        logAction(t('moderation.log.removedAllAuthor', { name, count }))
+      } else {
+        if (kind === 'ban') await banCharacter(praxis.created_by_id, on)
+        else await suspendAccount(praxis.author_account_id, on)
+        logAction(
+          t(`moderation.log.${on ? '' : 'un'}${kind === 'ban' ? 'banned' : 'suspended'}Author`, { name }),
+        )
+      }
       setConfirming(null)
       refresh()
     } catch (err) {

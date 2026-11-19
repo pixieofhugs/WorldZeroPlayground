@@ -3077,6 +3077,10 @@
             "title": "Author Account Status",
             "type": "string"
           },
+          "author_flagged_count": {
+            "title": "Author Flagged Count",
+            "type": "integer"
+          },
           "author_status": {
             "title": "Author Status",
             "type": "string"
@@ -3354,7 +3358,8 @@
           "author_account_id",
           "author_username",
           "author_status",
-          "author_account_status"
+          "author_account_status",
+          "author_flagged_count"
         ],
         "title": "FlaggedPraxisOut",
         "type": "object"
@@ -5991,6 +5996,19 @@
         "title": "RelationshipTypeEnum",
         "type": "string"
       },
+      "RemoveFlaggedOut": {
+        "properties": {
+          "removed": {
+            "title": "Removed",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "removed"
+        ],
+        "title": "RemoveFlaggedOut",
+        "type": "object"
+      },
       "ReturningPlayerOut": {
         "description": "What the consent gate may know (``GET /auth/returning-player``).\n\nThe caller is authenticated as nobody, so keep this to one field. A date, not\na timestamp: truncated in ``ReturningPlayerConsentRequired``.",
         "properties": {
@@ -7951,6 +7969,69 @@
           }
         ],
         "summary": "Ban Character",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/characters/{character_id}/praxes/remove-flagged": {
+      "post": {
+        "operationId": "remove_flagged_praxes_admin_characters__character_id__praxes_remove_flagged_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "character_id",
+            "required": true,
+            "schema": {
+              "title": "Character Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RemoveFlaggedOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Remove Flagged Praxes",
         "tags": [
           "admin"
         ]

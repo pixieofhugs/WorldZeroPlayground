@@ -48,6 +48,7 @@ from seed import upsert_era_factions
 from services.faction_service import refuse_hidden_faction
 from services.character import record_level_reached
 from services.duel import forfeit_settled_duels_for_character
+from services.praxis import moderate_praxis
 from services.era import (
     apply_era_reset,
     commit_and_bind_live_era,
@@ -343,6 +344,7 @@ class PraxisAuthorModeration:
     username: str
     character_status: str
     account_status: str
+    flagged_count: int
 
 
 async def authors_for_moderation(
@@ -362,15 +364,44 @@ async def authors_for_moderation(
         .join(Account, Account.id == Character.account_id)
         .where(Character.id.in_(character_ids))
     )
+    flagged_counts = dict(
+        (
+            await session.execute(
+                select(Praxis.created_by_id, func.count())
+                .where(
+                    Praxis.created_by_id.in_(character_ids),
+                    Praxis.moderation_status == ModerationStatus.flagged,
+                )
+                .group_by(Praxis.created_by_id)
+            )
+        ).all()
+    )
     return {
         character_id: PraxisAuthorModeration(
             account_id=account_id,
             username=username,
             character_status=character_status.value,
             account_status=account_status.value,
+            flagged_count=flagged_counts.get(character_id, 0),
         )
         for character_id, account_id, username, character_status, account_status in result.all()
     }
+
+
+async def remove_flagged_praxes_by_author(
+    character_id: int, session: AsyncSession
+) -> int:
+    """Hide every open-flagged praxis by one author (the single remove, in bulk)."""
+    result = await session.execute(
+        select(Praxis.id).where(
+            Praxis.created_by_id == character_id,
+            Praxis.moderation_status == ModerationStatus.flagged,
+        )
+    )
+    praxis_ids = list(result.scalars())
+    for praxis_id in praxis_ids:
+        await moderate_praxis(praxis_id, ModerationStatus.hidden.value, None, session)
+    return len(praxis_ids)
 
 
 async def apply_ban(

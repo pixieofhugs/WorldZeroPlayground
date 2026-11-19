@@ -55,6 +55,16 @@
     "suspendError": "Could not update account.",
     "banError": "Could not update character.",
     "searchPlaceholder": "Search by email, username or character name…",
+    "suspendConfirm": {
+      "heading": "Suspend this account?",
+      "lead": "{{email}} will be suspended, with every character on it. You can unsuspend it later.",
+      "submit": "confirm — suspend account"
+    },
+    "banConfirm": {
+      "heading": "Ban {{name}}?",
+      "lead": "{{name}} (@{{username}}) will be banned. You can unban them later.",
+      "submit": "confirm — ban character"
+    },
     "prev": "← previous",
     "next": "next →",
     "pageRange": "{{from}}–{{to}} of {{total}}",
@@ -210,6 +220,7 @@
     "reportedByOne": "reported by {{name}}",
     "reportedByMany": "reported by {{count}} members",
     "log": {
+      "removedAllAuthor": "Removed {{count}} flagged posts by {{name}}",
       "bannedAuthor": "Banned {{name}}",
       "unbannedAuthor": "Unbanned {{name}}",
       "suspendedAuthor": "Suspended the account of {{name}}",
@@ -248,6 +259,12 @@
         "suspend": "suspend account",
         "unsuspend": "unsuspend account",
         "viewAccount": "view account →",
+        "removeAll": "remove all {{count}} flagged by this author",
+        "removeAllConfirm": {
+          "heading": "Remove {{count}} flagged posts by {{name}}?",
+          "lead": "Every post by {{name}} (@{{username}}) with an open flag is removed. Their unflagged posts are untouched.",
+          "submit": "confirm — remove {{count}} posts"
+        },
         "banConfirm": {
           "heading": "Ban {{name}}?",
           "lead": "{{name}} (@{{username}}) will be banned. You can unban them later.",

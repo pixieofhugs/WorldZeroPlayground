@@ -19,6 +19,7 @@ from tests.integration.factories import (
     make_account,
     make_admin,
     make_character,
+    make_task,
 )
 
 
@@ -142,6 +143,7 @@ async def test_admin_list_flagged_praxes(
     assert row["flags"][0]["flagged_by_name"] == character2.display_name
     # The card moderates its author through the existing ban/suspend routes.
     assert row["author_account_id"] == character.account_id
+    assert row["author_flagged_count"] == 1
     assert row["author_username"] == character.username
     assert row["author_status"] == "active"
     assert row["author_account_status"] == "active"
@@ -956,3 +958,50 @@ async def test_overview_active_accounts_counts_accounts_not_characters(
     stats = (await client.get("/admin/overview", headers=auth_headers)).json()
     assert stats["characters"] == 4
     assert stats["active_accounts"] == 1
+
+
+@pytest.mark.asyncio
+async def test_remove_flagged_hides_only_the_authors_flagged_posts(
+    client: AsyncClient,
+    account: Account,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+    db_session: AsyncSession,
+):
+    await make_admin(db_session, account)
+    ids = []
+    for title in ("one", "two", "unflagged"):
+        task = await make_task(db_session, character, title=title, commit=True)
+        created = await client.post(
+            "/praxes",
+            json={"task_id": task.id, "title": title},
+            headers=auth_headers,
+        )
+        ids.append(created.json()["id"])
+    for praxis_id in ids[:2]:
+        flagged = await client.post(
+            f"/praxes/{praxis_id}/flag", json={"reason": "spam"}, headers=auth_headers2
+        )
+        assert flagged.status_code == 200, flagged.text
+
+    resp = await client.post(
+        f"/admin/characters/{character.id}/praxes/remove-flagged",
+        headers=auth_headers,
+    )
+    assert resp.status_code == 200
+    assert resp.json() == {"removed": 2}
+    states = {
+        praxis.id: praxis.moderation_status.value
+        for praxis in (
+            await db_session.execute(select(Praxis).where(Praxis.id.in_(ids)))
+        ).scalars()
+    }
+    assert [states[i] for i in ids] == ["hidden", "hidden", "visible"]
+
+    missing = await client.post(
+        "/admin/characters/999999/praxes/remove-flagged", headers=auth_headers
+    )
+    assert missing.status_code == 404
