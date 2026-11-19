@@ -64,7 +64,6 @@ ROOM_TITLE_KEY = "title"
 # only delays read surfaces.
 _FLUSH_DEBOUNCE_SECONDS = 2.0
 
-# Bound on the Yjs state a browser may send with a submit (decoded bytes).
 _MAX_CLIENT_UPDATE_BYTES = 2 * 1024 * 1024
 _INVALID_DRAFT = "That draft is not a valid document."
 _OVERSIZED_DRAFT = "That draft is too large."
@@ -512,13 +511,9 @@ class PraxisRoomServer(WebsocketServer):
             )
 
     async def apply_client_update(self, praxis_id: int, update: bytes) -> None:
-        """Merge the browser's whole Yjs state into the room before it is sealed.
+        """Merge the browser's whole Yjs state into the live room; a repeat is a no-op.
 
-        Through the live room, so its store and any connected peers see the same
-        document the seal reads. A merge is idempotent: what the room holds is a no-op.
-
-        ponytail: opens the room if none is running and leaves it open until the
-        seal discards it or a socket joins and leaves; a rejected submit strands it.
+        ponytail: opens a room if none runs; a rejected submit strands it until a socket cycles it.
         """
         room = await self.get_room(room_name_for(praxis_id))
         try:
@@ -658,7 +653,7 @@ async def discard_room_document(praxis: Praxis, session: AsyncSession) -> None:
 
 
 async def merge_client_state(praxis_id: int, state_b64: str) -> None:
-    """Decode (bounded) the base64 Yjs state a submit carries, then merge it in."""
+    """Bound and decode a submit's base64 Yjs state, then merge it."""
     if len(state_b64) > _MAX_CLIENT_UPDATE_BYTES * 4 // 3 + 4:
         raise_coded(413, ErrorCode.praxis_doc_update_invalid, _OVERSIZED_DRAFT)
     try:
