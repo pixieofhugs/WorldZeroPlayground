@@ -50,7 +50,6 @@ async def test_cli_token_refused_for_a_wrong_secret(
     assert "access_token" not in resp.text
 
 
-@pytest.mark.xfail(strict=True, reason="#3366")
 @pytest.mark.asyncio
 async def test_cli_token_non_ascii_header_is_a_403_not_a_500(
     client: AsyncClient, account: Account, db_session: AsyncSession, monkeypatch
