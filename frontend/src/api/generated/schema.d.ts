@@ -4556,7 +4556,7 @@ export interface components {
         };
         /**
          * RingRecipient
-         * @description One account an account's votes went to (admin-only; ``account_id`` links the walk).
+         * @description One account an account's votes went to (admin-only).
          */
         RingRecipient: {
             /** Account Id */
