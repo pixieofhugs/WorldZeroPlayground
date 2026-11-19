@@ -36,8 +36,7 @@ export function VoteRingView({
                 <button
                   type="button"
                   onClick={() => onWalk(r.account_id)}
-                  className="font-body text-sm font-bold underline"
-                  style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                  className="font-body text-sm font-bold underline bg-transparent border-0 p-0 cursor-pointer"
                   aria-label={`${t("accounts.ring.walk")}: ${r.display_name}`}
                 >
                   {r.display_name}
@@ -50,7 +49,7 @@ export function VoteRingView({
                   })}
                 </span>
                 {r.reciprocal && (
-                  <span className="font-body text-xs" style={{ color: "var(--color-danger)", fontWeight: 700 }}>
+                  <span className="font-body text-xs font-bold danger-text">
                     {t("accounts.ring.reciprocal")}
                   </span>
                 )}
