@@ -19,8 +19,11 @@ image is the `dev` stage of `backend/Dockerfile`: the CI dependency superset,
 with the **whole repo** bind-mounted at `/repo`, `/repo/backend` as the working
 directory, and `uvicorn --reload` on top. The whole repo, not just `backend/`,
 because backend tests reach out of their own tree by relative path. **There
-is no venv anywhere in this path**, which is the whole point — it behaves
-identically from the main checkout and from every git worktree.
+is no venv anywhere in this path**, which is the whole point. Tests run on
+your own tree from any worktree, but the live API on :8000 serves **one**
+checkout: whichever last ran `wz up` (compose pins `name: worldzero`). To show a
+worktree's backend, run `wz up` there, then re-run it from the main checkout
+afterwards.
 
 The frontend is deliberately outside the default stack. Run `npm run dev` on the
 host for reliable HMR, or `scripts/wz up --full` to put Vite in a container too
@@ -29,7 +32,8 @@ when you have no `npm` (a fresh machine, or a worktree with no install).
 | | |
 |---|---|
 | API | `http://localhost:8000`, OpenAPI at `/docs` |
-| Frontend | `http://localhost:5173` |
+| Frontend | `http://localhost:5173` (`strictPort`: a second server errors instead of drifting to :5174) |
+| Spare origin | `http://localhost:3000` — the only other origin the backend's CORS allows |
 | Postgres | `localhost:5432`, `worldzero` / `worldzero` |
 
 `ENVIRONMENT=development` here and **only** here. Both deployed environments set
@@ -116,7 +120,9 @@ admin deletes it. Test fixtures live beside the suite that needs them.
 
 `scripts/wz psql` for the database, `scripts/wz logs backend` for the app,
 `scripts/wz shell` for a shell in the container. `scripts/wz test` runs pytest
-inside the container — no venv, and it creates `worldzero_test` if it is missing.
+inside the container — no venv. It creates its test DB if missing: `worldzero_test`
+in the main checkout, `wz_<worktree-dir>_test` in a worktree. A second `wz test` on
+the same DB exits at once with "another wz test is using ...".
 
 In a **worktree**, `wz test` runs in a throwaway container that mounts *that*
 worktree, as your user. The running stack mounts whichever checkout ran

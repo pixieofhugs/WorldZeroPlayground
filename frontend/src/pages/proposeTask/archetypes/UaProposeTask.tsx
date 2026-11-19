@@ -46,16 +46,11 @@ import {
 import { UaBand } from '../../../components/cardMasthead/factionBands'
 import { Lotus } from '../../../components/factionMarks'
 import { UaSigil } from '../../../components/sigil/UaSigil'
-import { UA_DISPLAY, UA_TEXT } from '../../../components/factionMarks/uaAtoms'
+import { LOTUS, UA_DISPLAY, UA_TEXT } from '../../../components/factionMarks/uaAtoms'
 import {
   UNAFFILIATED_FACTION_SLUG,
   type ProposeTaskState,
 } from '../useProposeTask'
-
-export const LOTUS = {
-  color: 'var(--faction-ua-card-lotus)',
-  opacity: 'var(--faction-ua-card-lotus-opacity)',
-} as const
 
 const SLUG = 'ua'
 

@@ -41,6 +41,11 @@ exec_in_backend() {
 require_running() {
     if [ -z "$($DC ps -q backend 2>/dev/null)" ]; then
         echo "The backend container is not running. Start it with: scripts/wz up" >&2
+        if [ -f .git ]; then
+            # The stack is shared: `wz up` here would rebind it to this worktree for every checkout.
+            main=$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")
+            echo "From this worktree, start it on the main checkout instead: (cd $main && scripts/wz up)" >&2
+        fi
         exit 1
     fi
 }
@@ -240,6 +245,10 @@ cmd_test() {
         WZ_TEST_DB=${TEST_DATABASE_URL##*/}; WZ_TEST_DB=${WZ_TEST_DB%%\?*}
     fi
     export WZ_TEST_DB
+    # fd 9 holds the lock until this script exits, across cmd_test's early returns.
+    command -v flock >/dev/null || { echo 'wz test needs flock (util-linux) to guard the test DB.' >&2; exit 1; }
+    exec 9>"/tmp/wz-$WZ_TEST_DB.lock"
+    flock -n 9 || { echo "another wz test is using $WZ_TEST_DB; wait, or set TEST_DATABASE_URL" >&2; exit 1; }
     # The integration suite expects the DB to exist already.
     # </dev/null on BOTH, per exec_in_backend's docblock: an unguarded `exec`
     # anywhere in this function eats the caller's remaining input, and the

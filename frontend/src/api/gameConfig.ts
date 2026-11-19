@@ -32,6 +32,7 @@ export interface LevelProfile {
 
 export interface GameConfigOut {
   era_name: string
+  era_id: number
   level_thresholds: number[]
   duel_level_required: number
   collab_auto_submit_days: number
@@ -45,6 +46,6 @@ export interface GameConfigOut {
 export async function getGameConfig(): Promise<GameConfigOut> {
   const { data } = await apiGet('/game-config')
   // Era stamp: a mismatch drops the whole cache (ADR-0072).
-  noteEraStamp(data.era_name)
+  noteEraStamp(data.era_id)
   return data as GameConfigOut
 }

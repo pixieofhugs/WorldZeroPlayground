@@ -2,9 +2,14 @@
 vote-points; all ties crowned, including all-zero."""
 import pytest
 from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.character import Character
+from models.era import Era
+from models.faction import Faction
 from models.task import Task
+from services.praxis_out import crowned_praxis_ids
+from tests.integration.factories import make_duel
 
 
 async def _create_and_submit_praxis(
@@ -130,3 +135,17 @@ async def test_in_progress_praxis_neither_competes_nor_wears_the_crown(
     # The draft's member sees both cards (ADR-0024).
     crowns = await _crown_by_id(client, active_task.id, headers=auth_headers)
     assert crowns == {draft_id: False, submitted_id: True}
+
+
+@pytest.mark.asyncio
+async def test_crown_follows_displayed_score_not_raw_votes(
+    db_session: AsyncSession, era: Era, some_faction: Faction
+):
+    """A forfeiting duelist with more raw stars loses the crown to the duel winner."""
+    duel, challenger, opponent = await make_duel(
+        db_session, era, label="crown", forfeiter="challenger",
+        challenger_votes=5, opponent_votes=1, commit=True,
+    )
+    assert await crowned_praxis_ids([duel.task_id], db_session) == {
+        duel.opponent_praxis_id
+    }
