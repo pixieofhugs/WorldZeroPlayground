@@ -83,3 +83,10 @@ the invitation does **not** reveal; only *having had a member character* does.
 - Composes with #232 (first-class identity), #394 (the placeholder wall), and is
   blocked by #395 (join-eligibility enforcement, so an ineligible join can't
   wrongly trip the reveal).
+
+## Amendment (2026-11-18, #3423)
+
+Two clauses above no longer hold as written, both owned by [ADR-0082](0082-albescent-is-redacted-not-hidden.md):
+
+- **The early game re-hides.** ADR-0082 restores this ADR's hiding posture below `albescent_glimpse_level` (6 in `ERA_1`): the row is not drawn and leaves no trace (`is_albescent_glimpsed`, `services/albescent_reveal.py`). The amendment block's "no longer describe the code" is true only from the glimpse level up.
+- **The reveal is monotonic for players, not for admins.** `is_admin` (#2400) also reveals, and is not sticky: an admin who loses the role loses the reveal. The reveal now also follows `albescent_unlocked` (#2518), so it is no longer set only at the join site.

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 
-import { needsCharacterRedirect } from '../characterOnboardingGate'
+import { characterRedirectTarget, needsCharacterRedirect } from '../characterOnboardingGate'
 
 /**
  * #2849: a signed-in, character-less account had no route that didn't bounce
@@ -26,6 +26,11 @@ describe('needsCharacterRedirect', () => {
     }
   })
 
+  it('does not bounce a character-less account away from /start', () => {
+    expect(needsCharacterRedirect(false, true, false, '/start')).toBe(false)
+    expect(needsCharacterRedirect(false, true, false, '/start/again')).toBe(false)
+  })
+
   it('never bounces a character-less account while still loading', () => {
     expect(needsCharacterRedirect(true, true, false, '/tasks')).toBe(false)
   })
@@ -37,5 +42,32 @@ describe('needsCharacterRedirect', () => {
   it('never bounces an account that already has a character', () => {
     expect(needsCharacterRedirect(false, true, true, '/tasks')).toBe(false)
     expect(needsCharacterRedirect(false, true, true, '/settings')).toBe(false)
+  })
+})
+
+/** #3468: the contract comes before creation, and `/start` must be reachable to show it. */
+describe('characterRedirectTarget', () => {
+  it('sends an account with no acceptance to the contract, /characters/create included', () => {
+    for (const pathname of ['/', '/tasks', '/characters/create']) {
+      expect(characterRedirectTarget(false, true, false, false, pathname)).toBe('/start')
+    }
+  })
+
+  it('lets an account with no acceptance reach the contract, its again card and sign-out', () => {
+    for (const pathname of ['/start', '/start/again', '/settings']) {
+      expect(characterRedirectTarget(false, true, false, false, pathname)).toBeNull()
+    }
+  })
+
+  it('sends an accepted, character-less account to creation, and lets it reach /start', () => {
+    expect(characterRedirectTarget(false, true, false, true, '/tasks')).toBe('/characters/create')
+    expect(characterRedirectTarget(false, true, false, true, '/start')).toBeNull()
+    expect(characterRedirectTarget(false, true, false, true, '/characters/create')).toBeNull()
+  })
+
+  it('never fires while loading, signed out, or with a character', () => {
+    expect(characterRedirectTarget(true, true, false, false, '/tasks')).toBeNull()
+    expect(characterRedirectTarget(false, false, false, false, '/tasks')).toBeNull()
+    expect(characterRedirectTarget(false, true, true, false, '/tasks')).toBeNull()
   })
 })

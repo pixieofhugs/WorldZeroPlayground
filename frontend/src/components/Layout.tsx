@@ -10,7 +10,8 @@ import InvitationWatcher from './InvitationWatcher'
 import TheArray from './TheArray'
 import NavBar from './NavBar'
 import { flushPendingCasts } from './vote/pendingCasts'
-import { needsCharacterRedirect } from './layout/characterOnboardingGate'
+import { characterRedirectTarget } from './layout/characterOnboardingGate'
+import { markOnboardingHandoff } from '../utils/onboardingResume'
 import MobileHeader from './layout/MobileHeader'
 import MobileTabBar from './layout/MobileTabBar'
 import ShellContent from './layout/ShellContent'
@@ -39,9 +40,17 @@ export default function Layout({ children }: { children: ReactNode }) {
   }, [pathname])
 
   useEffect(() => {
-    if (needsCharacterRedirect(loading, Boolean(user), Boolean(user?.character), pathname)) {
-      navigate('/characters/create')
-    }
+    const target = characterRedirectTarget(
+      loading,
+      Boolean(user),
+      Boolean(user?.character),
+      Boolean(user?.has_accepted_terms),
+      pathname,
+    )
+    if (!target) return
+    // Landing at the contract is the flow's resume mark.
+    if (target === '/start') markOnboardingHandoff()
+    navigate(target)
   }, [user, loading, pathname, navigate])
 
   return (

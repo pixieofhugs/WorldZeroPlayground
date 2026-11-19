@@ -1,0 +1,25 @@
+/* The login step and the sign-in view. dnA/keyw are hand-written in the prototype (build.py does not compute them): one 2.4s clock, mirrored steps, the key twirls on the last beat. */
+.dnA{display:inline-block;transform-origin:50% 100%;animation:dnA 2.4s linear infinite}
+@keyframes dnA{0%,100%{transform:none}5%{transform:scale(1.1,.9)}13%{transform:translate(-6px,-10px) rotate(-10deg) scale(.96,1.06)}23%{transform:translate(-3px,0) rotate(-4deg) scale(1.1,.9)}30%{transform:scale(1.08,.92)}38%{transform:translate(6px,-10px) rotate(10deg) scale(.96,1.06)}48%{transform:translate(3px,0) rotate(4deg) scale(1.1,.9)}55%{transform:scale(1.08,.92)}63%{transform:translate(-6px,-10px) rotate(-10deg) scale(.96,1.06)}73%{transform:translate(-3px,0) rotate(-4deg) scale(1.12,.86)}84%{transform:translateY(-20px) scale(.92,1.12)}95%{transform:scale(1.16,.84)}}
+.keyw{display:block;margin-bottom:4px;transform-origin:50% 100%;animation:keyw 2.4s linear infinite}
+@keyframes keyw{0%{transform:none}5%{transform:scale(1.1,.9)}13%{transform:translate(6px,-10px) rotate(14deg)}23%{transform:translate(3px,0) rotate(5deg) scale(1.1,.9)}30%{transform:scale(1.08,.92)}38%{transform:translate(-6px,-10px) rotate(-14deg)}48%{transform:translate(-3px,0) rotate(-5deg) scale(1.1,.9)}55%{transform:scale(1.08,.92)}63%{transform:translate(6px,-10px) rotate(14deg)}73%{transform:translate(3px,0) rotate(5deg) scale(1.12,.86)}84%{transform:translateY(-24px) rotate(200deg)}95%{transform:rotate(360deg) scale(1.14,.86)}100%{transform:rotate(360deg)}}
+
+.ob-login,.ob-welcome{position:relative;z-index:1;flex:1;min-height:calc(100svh - 62px);display:flex;align-items:center;justify-content:center;padding:var(--space-sm)}
+.ob-auth{position:relative;width:min(100%,560px);padding:28px;display:flex;flex-direction:column;gap:14px;box-sizing:border-box}
+.ob-auth-mascot{position:absolute;bottom:calc(100% - 2px);right:30px;display:flex;align-items:flex-end;gap:3px;animation-delay:.7s}
+.ob-auth h1{margin:0;font-size:32px}
+.ob-auth p{margin:0;font-size:16px;line-height:1.6}
+.ob-auth-actions{display:flex;flex-wrap:wrap;gap:var(--space-md)}
+.ob-auth-nav,.ob-welcome-opts{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.ob-auth-nav .ob-ghost:first-child{margin-left:-14px}
+.ob-auth-nav .ob-ghost:last-child{margin-right:-14px;display:inline-flex;align-items:center;text-decoration:none}
+.ob-welcome{flex-direction:column;gap:24px;text-align:center}
+.ob-welcome h1{margin:0;font-size:clamp(40px,7vw,84px);white-space:nowrap}
+.ob-welcome-box{width:min(100%,460px);padding:22px;display:flex;flex-direction:column;gap:var(--space-md);animation-delay:1.4s}
+.ob-restart{animation-delay:1.8s}
+.ob-restart::before{content:"↺ "}
+@media (prefers-reduced-motion: reduce){
+  .onboarding-arc :is(.dnA,.keyw){animation:none}
+  .onboarding-arc .keyw{transform:none}
+}
+.ob-auth-mascot svg{overflow:visible}

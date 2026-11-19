@@ -375,14 +375,18 @@ function Column({
               {t('detail.vote.prompt')}
             </p>
             {/* Dispatched on the TASK's faction (ADR-0039). */}
-            <VoteUI
-              factionSlug={praxis.task_faction_slug}
-              praxisId={praxis.id}
-              currentValue={praxis.viewer_vote ?? undefined}
-              points={praxis.points_from_votes}
-              totalVotes={praxis.voter_count}
-              viewerCanVote={praxis.viewer_can_vote}
-            />
+            <div className="duel-vote-slot">
+              <div className="duel-vote-slot-fit">
+                <VoteUI
+                  factionSlug={praxis.task_faction_slug}
+                  praxisId={praxis.id}
+                  currentValue={praxis.viewer_vote ?? undefined}
+                  points={praxis.points_from_votes}
+                  totalVotes={praxis.voter_count}
+                  viewerCanVote={praxis.viewer_can_vote}
+                />
+              </div>
+            </div>
           </section>
         )}
         {/* Hidden on the viewer's own entry: "Read their praxis" would be wrong. */}

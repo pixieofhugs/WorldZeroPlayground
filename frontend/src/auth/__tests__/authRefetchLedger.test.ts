@@ -41,6 +41,12 @@ const LEDGER: LedgerEntry[] = [
     why: 'POST /auth/returning-player mints a brand-new account and sets the cookie; the body is an acknowledgement, so /auth/me is the only way to learn who that is (#2162).',
   },
   {
+    file: 'pages/onboarding/OnboardingFlow.tsx',
+    calls: 2,
+    verdict: 'identity-changed',
+    why: 'POST /terms/acceptance returns the row, not a CurrentUser; Layout gates on has_accepted_terms (#3468).',
+  },
+  {
     file: 'pages/characterPaths/useCreateCharacter.ts',
     calls: 1,
     verdict: 'identity-changed',
@@ -108,8 +114,8 @@ describe('the useAuth().refetch() inventory matches the ledger', () => {
 
   it('totals the count this sweep reports', () => {
     const total = [...measured.values()].reduce((sum, calls) => sum + calls, 0)
-    expect(total).toBe(9)
-    expect(measured.size).toBe(6)
+    expect(total).toBe(11)
+    expect(measured.size).toBe(7)
   })
 
   it('leaves only identity reloads', () => {

@@ -5,6 +5,7 @@ from typing import Optional
 
 from fastapi import HTTPException
 from sqlalchemy import case, func, or_, select, union
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import Select, false as sa_false
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -54,7 +55,7 @@ def build_character_out(
         status=character.status.value,
         created_at=character.created_at,
         score=stats.score if stats else 0,
-        all_time_score=stats.all_time_score if stats else 0,
+        all_time_score=character.all_time_score,
         level=stats.level if stats else 0,
         badges=badges or [],
         invitations=invitations or [],
@@ -334,7 +335,7 @@ async def _derive_unique_username(display_name: str, session: AsyncSession) -> s
     suffix = 2
     # ponytail: serial probe; UNIQUE constraint backstops concurrent creates.
     while await session.scalar(
-        select(Character.id).where(Character.username == candidate)
+        select(Character.id).where(func.lower(Character.username) == candidate)
     ) is not None:
         candidate = f"{base}{suffix}"
         suffix += 1
@@ -466,6 +467,12 @@ async def create_character(
         starting_faction_slug = requested_faction_slug
 
     explicit_username = (data.username or "").strip() or None
+    if explicit_username and await session.scalar(
+        select(Character.id).where(
+            func.lower(Character.username) == explicit_username.lower()
+        )
+    ):
+        raise_coded(409, ErrorCode.username_taken, "That username is already taken.")
     username = explicit_username or await _derive_unique_username(display_name, session)
 
     character = Character(
@@ -478,8 +485,14 @@ async def create_character(
         location=data.location or "",
         faction_slug=starting_faction_slug,
     )
-    session.add(character)
-    await session.flush()
+    try:
+        session.add(character)
+        await session.flush()
+    except IntegrityError as exc:
+        if "uq_character_username_lower" not in str(exc.orig):
+            raise
+        await session.rollback()
+        raise_coded(409, ErrorCode.username_taken, "That username is already taken.")
 
     stats = await get_or_create_stats(
         session,

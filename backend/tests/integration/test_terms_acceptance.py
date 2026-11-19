@@ -50,7 +50,7 @@ async def test_accepting_writes_a_row_carrying_account_version_and_time(
 async def test_accepting_twice_writes_two_rows(
     client, db_session, account, auth_headers
 ):
-    """A re-scan shows the terms again; hence no terms flag on ``CurrentUser``."""
+    """A re-scan shows the terms again, so each acceptance is its own event."""
     first = await client.post(_URL, headers=auth_headers)
     second = await client.post(_URL, headers=auth_headers)
 
@@ -78,3 +78,24 @@ async def test_the_log_is_per_account(
 
     assert len(await _rows_for(db_session, account)) == 1
     assert len(await _rows_for(db_session, account2)) == 1
+
+
+async def _me_accepted(client, headers) -> bool:
+    response = await client.get("/auth/me", headers=headers)
+    assert response.status_code == 200
+    return response.json()["has_accepted_terms"]
+
+
+async def test_auth_me_reports_acceptance_of_the_current_version_only(
+    client, db_session, account, account2, auth_headers, auth_headers2
+):
+    assert await _me_accepted(client, auth_headers) is False
+
+    db_session.add(TermsAcceptance(account_id=account.id, version="v0-old"))
+    await db_session.commit()
+    assert await _me_accepted(client, auth_headers) is False
+
+    await client.post(_URL, headers=auth_headers)
+    assert await _me_accepted(client, auth_headers) is True
+    # Per account: the other one never accepted.
+    assert await _me_accepted(client, auth_headers2) is False

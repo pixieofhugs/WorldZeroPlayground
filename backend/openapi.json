@@ -1858,6 +1858,11 @@
             "title": "Era Name",
             "type": "string"
           },
+          "has_accepted_terms": {
+            "default": false,
+            "title": "Has Accepted Terms",
+            "type": "boolean"
+          },
           "is_admin": {
             "default": false,
             "title": "Is Admin",
@@ -1921,6 +1926,7 @@
           "character",
           "is_admin",
           "is_owner",
+          "has_accepted_terms",
           "can_create_additional_character",
           "can_start_as_albescent",
           "albescent_revealed",
