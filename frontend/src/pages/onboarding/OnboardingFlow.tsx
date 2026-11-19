@@ -5,7 +5,7 @@ import { useAuth } from '../../auth/AuthContext'
 import { acceptTerms } from '../../api/terms'
 import type { TaskOut } from '../../api/tasks'
 import { resolveHandoffTask } from '../../utils/onboardingHandoff'
-import { clearTermsAcceptance, holdTermsAcceptance, termsAcceptanceHeld } from '../../utils/onboardingResume'
+import { clearTermsAcceptance, holdTermsAcceptance, markTitleSeen, termsAcceptanceHeld, titleSeen } from '../../utils/onboardingResume'
 import Wisp from './Wisp'
 import { BEATS } from './beats'
 import { HoldNextContext } from './beats/holdNext'
@@ -29,23 +29,6 @@ const START_DELAY_S = 0.8
 const VOTE_BEAT = 5
 
 const CONFIDENCE: Record<string, number> = { title: 0.08, 1: 0.18, 2: 0.3, 3: 0.42, 4: 0.5, 5: 0.6, 6: 0.72, 7: 0.82 }
-
-const SEEN_KEY = 'wz-onboarding-title-seen'
-// Storage can throw (blocked, private mode): then the visitor gets the full version.
-const titleSeen = () => {
-  try {
-    return localStorage.getItem(SEEN_KEY) === '1'
-  } catch {
-    return false
-  }
-}
-const markTitleSeen = () => {
-  try {
-    localStorage.setItem(SEEN_KEY, '1')
-  } catch {
-    // full version next time too
-  }
-}
 
 const reducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
 
