@@ -75,6 +75,7 @@ export function PraxisBody({
   muted,
   paper,
   titleStyle,
+  stampStyle,
   showCrown,
   eyebrow,
   voteRule,
@@ -91,6 +92,8 @@ export function PraxisBody({
   /** The frame's paper colour — inner disc of the Task Crown (ADR-0028). */
   paper?: string;
   titleStyle?: CSSProperties;
+  /** The host's gap above the stamp: a travelling stamp owns no outer spacing (#2655). */
+  stampStyle?: CSSProperties;
   showCrown?: boolean;
   /** Running head inside the left column, stopping at the stamp (#841). */
   eyebrow?: ReactNode;
@@ -147,7 +150,13 @@ export function PraxisBody({
           <PraxisExcerpt praxis={praxis} style={{ color: muted }} fonts={fonts} />
         </div>
         {/* Dispatched per-faction stamp (ADR-0047, ADR-0049, ADR-0053). */}
-        <ScoreStamp praxis={praxis} showCrown={showCrown} />
+        {stampStyle ? (
+          <div style={stampStyle}>
+            <ScoreStamp praxis={praxis} showCrown={showCrown} />
+          </div>
+        ) : (
+          <ScoreStamp praxis={praxis} showCrown={showCrown} />
+        )}
       </div>
       {/* Applied-metatask seals (#932), dispatched on each ISSUING faction. */}
       <MetataskSeal metatasks={praxis.applied_metatasks ?? []} />

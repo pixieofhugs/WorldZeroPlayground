@@ -97,6 +97,9 @@ export function EphemeristsPraxisCard({ praxis, adminProps, showCrown }: Archety
             color: INK,
             marginTop: "var(--space-lg)",
           }}
+          // Leaf `--space-sm` + this = 24px, the title's top and S.N.I.D.E.'s
+          // clearance (#2820).
+          stampStyle={{ flex: "none", paddingTop: "var(--space-lg)" }}
           fonts={{ display: DECO, body: READING }}
           mediaEmptyStyle={{
             borderRadius: 0,
