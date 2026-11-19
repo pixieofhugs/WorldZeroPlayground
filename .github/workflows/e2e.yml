@@ -35,9 +35,10 @@ on:
 permissions:
   contents: read
 
-# Overlapping red runs on main would each open a nightly-red issue.
+# Overlapping red full-suite runs on main would each open a nightly-red issue;
+# every other run (PRs, partial dispatches) gets its own group so none is dropped.
 concurrency:
-  group: e2e-${{ github.ref }}
+  group: ${{ (github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && inputs.spec == '' && inputs.grep == '') && 'e2e-main-alarm' || format('e2e-{0}', github.run_id) }}
   cancel-in-progress: false
 
 jobs:
