@@ -88,6 +88,8 @@ wording" rule above for that prototype. That wording lives in
 *2026-11-18, [#3457](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3457):* the reviewed prototype wording is the shipped default; ownership of
 the strings is unchanged.
 
+- **The revision must mention the deleted-account record** ([#3451](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3451)): per ADR-0081, a salted hash of the sign-in ID is kept for a limited time. Wording is the owner's, still owed.
+
 *2026-11-18, [#3452](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3452):* was "one paragraph, not three beats" with factions cut. The owner
 approved the seven-beat prototype, so this section now describes a sequence and allows a
 faction tease. #3452 is the decision record. Knock-on from #3475: voting unlocks only
