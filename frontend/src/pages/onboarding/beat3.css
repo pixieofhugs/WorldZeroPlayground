@@ -1,0 +1,40 @@
+.chef{position:absolute;right:176px;bottom:100%;z-index:2;transform-origin:50% 100%;animation:chef 9s cubic-bezier(.4,0,.5,1) 1.2s infinite both}
+@keyframes chef{0%,22%{opacity:0;transform:translateX(-70px)}24%{opacity:1;transform:translateX(-70px)}27%{transform:translate(-48px,-16px)}30%{transform:translate(-26px,0) scale(1.15,.85)}33%{transform:translate(-12px,-12px)}36%{transform:scale(1.12,.88)}38%,68.5%{opacity:1;transform:none}70.5%{transform:translateY(-12px) scale(.9,1.15)}72.5%,80%{transform:scale(.55,.5)}86%{transform:scale(.85,.82)}90%{opacity:1;transform:translateX(-30px)}96%,100%{opacity:0;transform:translateX(-70px)}}
+.stick{position:absolute;left:80%;bottom:38%;width:40px;height:3px;border-radius:2px;background:var(--faction-default-card-muted);transform-origin:0 50%;transform:rotate(-14deg)}
+.mallow{position:absolute;right:-6px;top:-5px;width:14px;height:12px;border-radius:4px;background:var(--faction-default-card-text);animation:mallow 9s linear 1.2s infinite both}
+@keyframes mallow{0%,46%{background:var(--faction-default-card-text);transform:none}57%,67.5%{background:color-mix(in srgb,var(--faction-default-stop-3) 60%,var(--faction-default-on-fill));transform:none}68.5%,100%{background:color-mix(in srgb,var(--faction-default-stop-3) 60%,var(--faction-default-on-fill));transform:scale(0)}}
+.pbang{position:absolute;left:50%;bottom:104%;margin-left:-.2em;font:600 24px var(--font-display,Lora,serif);opacity:0;animation:pbang 9s linear 1.2s infinite both}
+@keyframes pbang{0%,69.5%{opacity:0;transform:scale(0)}71.5%{opacity:1;transform:scale(1.5) rotate(-8deg)}73.5%,79%{opacity:1;transform:none}82%,100%{opacity:0;transform:none}}
+/* the cool stick: pops up, gets shades, spins, poses; a dog wants it; it dives */
+.stk{position:absolute;left:30px;bottom:calc(100% - 24px);z-index:-1;transform-origin:50% 100%;animation:stk 9s cubic-bezier(.4,0,.3,1) 1.2s infinite both}
+@keyframes stk{0%,4%{transform:translateY(96px)}9%{transform:translateY(-10px)}12%{transform:translateY(2px) scale(1.06,.94)}15%,31%{transform:none}34.5%{transform:translateY(-48px)}38%{transform:scale(1.14,.86)}41%,61%{transform:rotate(-9deg)}63%{transform:translateY(-10px) rotate(4deg)}65%,67%{transform:none}71%,89%{transform:translateY(96px)}92.5%{transform:translateY(46px)}95.5%{transform:translateY(46px)}98%,100%{transform:translateY(96px)}}
+.stkspin{display:block;transform-origin:50% 55%;animation:stkspin 9s cubic-bezier(.5,0,.4,1) 1.2s infinite both}
+@keyframes stkspin{0%,31%{transform:none}38%,100%{transform:rotate(360deg)}}
+.shd{transform-box:fill-box;transform-origin:50% 50%;animation:shd 9s cubic-bezier(.3,.7,.4,1) 1.2s infinite both}
+@keyframes shd{0%,18%{opacity:0;transform:translateY(-70px)}19%{opacity:1;transform:translateY(-70px)}23%{transform:translateY(2px) scale(1.15,.8)}26%{transform:translateY(-4px)}28%,62%{opacity:1;transform:none}64.5%,96%{opacity:1;transform:translateY(7px) rotate(-6deg)}97%,100%{opacity:0;transform:translateY(-70px)}}
+.glint{transform-box:fill-box;transform-origin:center;opacity:0;animation:glint 9s ease-out 1.2s infinite both}
+@keyframes glint{0%,28%{opacity:0;transform:scale(0)}30%{opacity:1;transform:scale(1.4) rotate(45deg)}33%,49%{opacity:0;transform:scale(0)}51%{opacity:1;transform:scale(1.2) rotate(45deg)}54%,100%{opacity:0;transform:scale(0)}}
+.spup{animation:spup 9s ease-in-out 1.2s infinite both}
+@keyframes spup{0%,13%{transform:none}15%,17%{transform:translateX(-2px)}19%,21%{transform:translateX(2px)}23%,62%{transform:none}63%,96%{transform:translate(1.5px,-1px)}100%{transform:none}}
+.seye{transform-box:fill-box;transform-origin:center;animation:seye 9s cubic-bezier(.3,1.8,.5,1) 1.2s infinite both}
+@keyframes seye{0%,62%{transform:none}64%,96%{transform:scale(1.45)}100%{transform:none}}
+.sbang{position:absolute;left:36px;bottom:calc(100% + 60px);font:600 24px var(--font-display,Lora,serif);opacity:0;animation:sbang 9s linear 1.2s infinite both}
+@keyframes sbang{0%,62%{opacity:0;transform:scale(0)}64%{opacity:1;transform:scale(1.5) rotate(-8deg)}66%,69%{opacity:1;transform:none}71%,100%{opacity:0;transform:none}}
+.dog{position:absolute;right:24px;bottom:calc(100% - 28px);z-index:-1;transform-origin:50% 100%;animation:dog 9s cubic-bezier(.4,0,.3,1) 1.2s infinite both}
+@keyframes dog{0%,49%{transform:translateY(80px)}54%{transform:translateY(-8px)}57%{transform:none}59%{transform:translateY(-3px) rotate(-4deg)}61%{transform:none}63%{transform:translateX(8px) rotate(6deg)}67%{transform:translate(-110px,-14px) rotate(-12deg)}70%,74%{transform:translateX(-120px) rotate(-4deg)}78%,84%{transform:translateX(-120px) rotate(12deg)}88%{transform:translate(-60px,20px)}92%,100%{transform:translateY(80px)}}
+.djaw{transform-box:fill-box;transform-origin:90% 10%;animation:djaw 9s linear 1.2s infinite both}
+@keyframes djaw{0%,65%{transform:none}67%{transform:rotate(26deg)}70%{transform:none}71.5%{transform:rotate(18deg)}73%,100%{transform:none}}
+.dear{transform-box:fill-box;transform-origin:50% 0;animation:dear 9s ease-in-out 1.2s infinite both}
+@keyframes dear{0%,52%{transform:none}55%{transform:rotate(-24deg)}58%{transform:rotate(10deg)}61%,66%{transform:none}68%,72%{transform:rotate(-40deg)}76%,100%{transform:none}}
+.dq{position:absolute;left:4px;top:-28px;font:600 24px var(--font-display,Lora,serif);opacity:0;animation:dq 9s linear 1.2s infinite both}
+@keyframes dq{0%,75%{opacity:0;transform:scale(0)}77%{opacity:1;transform:scale(1.4) rotate(10deg)}79%,85%{opacity:1;transform:rotate(-6deg)}87%,100%{opacity:0}}
+.b3-row{width:100%;box-sizing:border-box;display:flex;gap:40px;align-items:flex-start;justify-content:center;flex-wrap:wrap;padding-top:92px}
+.b3-card{max-width:100%;position:relative;z-index:1;animation-delay:.1s}
+.b3-card.b3-second{animation-delay:.45s}
+.b3-col{position:relative}
+@media (max-width:859px){.b3-col{display:none}}
+@media (prefers-reduced-motion: reduce){
+.onboarding-arc :is(.dhead,.dclaw,.chef,.mallow,.stk,.shd,.dog){animation:none!important;opacity:1;transform:none}
+.onboarding-arc :is(.fire,.pbang,.sbang,.dq){display:none}
+}
+.b3-svg{display:block;overflow:visible}
