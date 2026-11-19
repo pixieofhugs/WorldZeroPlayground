@@ -134,11 +134,11 @@ describe('the era epoch outranks the TTL', () => {
     const cache = createKeyedResourceCache<string[]>(AMBIENT_TTL_MS, epoch)
     const fetchPage = vi.fn(() => Promise.resolve(['task']))
 
-    epoch.noteEraStamp('Era One')
+    epoch.noteEraStamp(1)
     await loadPage(fetchPage, 50, 50, ['standard'], { cache, viewer: VIEWER })
     expect(fetchPage).toHaveBeenCalledTimes(1)
 
-    epoch.noteEraStamp('Era Two')
+    epoch.noteEraStamp(2)
     await loadPage(fetchPage, 50, 50, ['standard'], { cache, viewer: VIEWER })
     expect(fetchPage).toHaveBeenCalledTimes(2)
   })
@@ -151,9 +151,9 @@ describe('the era epoch outranks the TTL', () => {
       () => new Promise<string[]>((resolve) => { release = resolve }),
     )
 
-    epoch.noteEraStamp('Era One')
+    epoch.noteEraStamp(1)
     const inFlight = loadPage(fetchPage, 50, 50, ['standard'], { cache, viewer: VIEWER })
-    epoch.noteEraStamp('Era Two')
+    epoch.noteEraStamp(2)
     release(['old-era-task'])
     await inFlight
 

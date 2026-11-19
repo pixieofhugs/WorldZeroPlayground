@@ -1,6 +1,6 @@
 /** #348: owner actions are membership-gated, mirroring `_require_member` (ADR-0013). */
 import { describe, it, expect } from "vitest";
-import { isViewerMember } from "../usePraxisDetail";
+import { isViewerMember } from "../../../utils/praxisMembership";
 import type { PraxisOut, PraxisMemberOut } from "../../../api/praxis";
 import { aMember, aPraxis } from "../../../test/fixtures";
 

@@ -186,7 +186,12 @@ async def test_invited_factions_account_pooled(
 
 @pytest.mark.asyncio
 async def test_auth_me_surfaces_gate_copy_fields(
-    client: AsyncClient, character: Character, era: Era, auth_headers: dict
+    client: AsyncClient,
+    db_session: AsyncSession,
+    account: Account,
+    character: Character,
+    era: Era,
+    auth_headers: dict,
 ):
     from game_config import CURRENT_ERA
 
@@ -194,6 +199,13 @@ async def test_auth_me_surfaces_gate_copy_fields(
     data = resp.json()
     assert data["second_character_level_required"] == CURRENT_ERA.second_character_level_required
     assert data["era_name"] == CURRENT_ERA.name
+    assert data["era_id"] == era.id
+
+    # A same-name rollover appends a row; the id must move with it.
+    db_session.add(Era(name=era.name, config_key=era.config_key, started_by=account.id))
+    await db_session.commit()
+    resp = await client.get("/auth/me", headers=auth_headers)
+    assert resp.json()["era_id"] > era.id
 
 
 @pytest.mark.asyncio

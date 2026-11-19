@@ -7,6 +7,8 @@
  * by default and disarming clears it. No React here (frontend/CLAUDE.md).
  */
 
+import { paragraphsOf } from './paragraphs'
+
 /** Namespace file + dotted key. */
 export interface CopyTarget {
   ns: string
@@ -19,11 +21,19 @@ const EDITOR_KEY_PREFIX = 'copyEdit.'
 
 let recording = false
 const byRenderedValue = new Map<string, CopyTarget[]>()
+/** Same, keyed with edge glyphs stripped: `{t('seeMore')} →` renders "See more →". */
+const byBareValue = new Map<string, CopyTarget[]>()
+
+const EDGE_GLYPHS = /^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu
+const bare = (text: string) => text.replace(EDGE_GLYPHS, '')
+const HAS_WORDS = /[\p{L}\p{N}]/u
 
 /** Disarming drops the index; it is only a cache. */
 export function setCopyRecording(on: boolean): void {
   recording = on
-  if (!on) byRenderedValue.clear()
+  if (on) return
+  byRenderedValue.clear()
+  byBareValue.clear()
 }
 
 export function isCopyRecording(): boolean {
@@ -40,16 +50,17 @@ export function recordRenderedCopy(value: string, target: CopyTarget): void {
   if (target.ns === EDITOR_NS && target.key.startsWith(EDITOR_KEY_PREFIX)) return
   const text = value.trim()
   if (!text) return
-  // Faction bodies draw one <p> per paragraph: index each under the same target.
-  const paragraphs = text.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean)
-  for (const entry of new Set([text, ...paragraphs])) {
-    const found = byRenderedValue.get(entry)
-    if (!found) {
-      byRenderedValue.set(entry, [target])
-    } else if (!has(found, target)) {
-      found.push(target)
-    }
+  for (const entry of new Set([text, ...paragraphsOf(text)])) {
+    add(byRenderedValue, entry, target)
+    const stripped = bare(entry)
+    if (stripped) add(byBareValue, stripped, target)
   }
+}
+
+function add(index: Map<string, CopyTarget[]>, entry: string, target: CopyTarget): void {
+  const found = index.get(entry)
+  if (!found) index.set(entry, [target])
+  else if (!has(found, target)) found.push(target)
 }
 
 export function recordedCopyTargets(): CopyTarget[] {
@@ -58,7 +69,10 @@ export function recordedCopyTargets(): CopyTarget[] {
 
 export function copyTargetsForText(text: string | null | undefined): CopyTarget[] {
   if (!text) return []
-  return byRenderedValue.get(text.trim()) ?? []
+  const exact = byRenderedValue.get(text.trim())
+  if (exact) return exact
+  const stripped = bare(text)
+  return stripped ? (byBareValue.get(stripped) ?? []) : []
 }
 
 /** Cap on the upward walk, so a miss cannot match an ancestor that merely contains the string. */
@@ -71,25 +85,35 @@ function childrenOf(el: Element): Element[] {
 /**
  * The node, then its direct children, then the same for a few ancestors. The
  * child pass is needed: a click on a button's padding targets the button, whose
- * text includes icon glyphs. Sibling candidates are pooled, never silently picked.
+ * text includes icon glyphs. It only counts when the rest of the element is
+ * glyphs: otherwise a player's task title would borrow its "in progress" badge's key.
  */
-export function copyTargetsForElement(start: Element | null): CopyTarget[] {
+export function copyMatchForElement(
+  start: Element | null,
+): { el: Element; targets: CopyTarget[] } | null {
   let el = start
   for (let hops = 0; el && hops <= COPY_ANCESTOR_LIMIT; hops += 1) {
     const own = copyTargetsForText(el.textContent)
-    if (own.length > 0) return own
+    if (own.length > 0) return { el, targets: own }
 
     const fromChildren: CopyTarget[] = []
+    let rest = el.textContent ?? ''
     for (const child of childrenOf(el)) {
-      for (const candidate of copyTargetsForText(child.textContent)) {
+      const found = copyTargetsForText(child.textContent)
+      if (found.length > 0) rest = rest.replace(child.textContent ?? '', '')
+      for (const candidate of found) {
         if (!has(fromChildren, candidate)) fromChildren.push(candidate)
       }
     }
-    if (fromChildren.length > 0) return fromChildren
+    if (fromChildren.length > 0 && !HAS_WORDS.test(rest)) return { el, targets: fromChildren }
 
     el = el.parentElement
   }
-  return []
+  return null
+}
+
+export function copyTargetsForElement(start: Element | null): CopyTarget[] {
+  return copyMatchForElement(start)?.targets ?? []
 }
 
 /**
