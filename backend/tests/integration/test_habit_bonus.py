@@ -22,7 +22,7 @@ from models.praxis import ModerationStatus, Praxis, PraxisMember, PraxisStatus
 from models.task import Task, TaskStatus
 from services.character_stats import recalculate_character_stats
 from services.praxis_out import author_contributions_for
-from tests.integration.factories import DEFAULT_FACTION_SLUG
+from tests.integration.factories import DEFAULT_FACTION_SLUG, make_character
 
 #: Found by the perk, never by name (#2708): a named lookup KeyErrors at import.
 HABIT_BONUS_SLUG = next(
@@ -311,7 +311,7 @@ async def test_a_collab_stamps_each_member_against_their_own_history(
     client: AsyncClient,
     db_session: AsyncSession,
     character: Character,
-    character2: Character,
+    account2: Account,
     active_task: Task,
     era: Era,
     auth_headers: dict,
@@ -322,6 +322,11 @@ async def test_a_collab_stamps_each_member_against_their_own_history(
     ``character2`` authors because level-0 ``character`` can't clear the collab
     level gate; invitees bypass it (#1511).
     """
+    character2 = await make_character(
+        db_session, era, username="collabauthor", account=account2,
+        level=CURRENT_ERA.collaboration_level_required,
+    )
+    await db_session.commit()
     warm_up_id = await _seal_solo(client, active_task, auth_headers2, "Warm Up")
     await _backdate(db_session, warm_up_id, days=1)
 

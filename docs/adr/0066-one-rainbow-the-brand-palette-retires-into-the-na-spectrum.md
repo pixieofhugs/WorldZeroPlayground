@@ -104,3 +104,12 @@ identical hexes in light and dark, and now take the brightened dark stops.
   token out of the **built** stylesheet in both themes and diffing against the
   previous build — which proves the *values* moved as intended and proves nothing
   at all about legibility. Both themes owe a human eyeball.
+
+## Amendment (2026-11-18, #3424)
+
+**There are four deliberate exceptions, not three, and "no crown-owned rainbow token"
+is no longer true.** #2134 added `--fdl-ring`: the Task Crown rim takes the dark
+stops in both themes and has no dark override (`01-base-tokens.css`, `03-faction-chrome-1.css`).
+"Brand chrome flips with the theme" holds for everything else in the spectrum. The
+crown ring is the one place the rainbow is pinned to the bright cut. ADR-0054's
+amendment records the crown side.

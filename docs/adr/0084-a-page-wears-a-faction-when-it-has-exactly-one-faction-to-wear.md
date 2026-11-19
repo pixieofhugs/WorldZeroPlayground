@@ -315,3 +315,16 @@ does"*. The ruling is untouched: still no ruling either way, still tracked in
 The body above is preserved as written, including both readings of the seam, so
 that a reader meeting a `pickVariant(map, slug, Default)` call in old history or
 an old design brief can still find out what it was.
+
+## Amendment (2026-11-18, #3427): `EditCharacter` and `ProposeTask` dress; ten dispatch sites
+
+Two open questions in §5 are answered. `pages/EditCharacter.tsx`
+(`surfaceMap('editCharacter')`) and `pages/ProposeTask.tsx`
+(`surfaceMap("proposeTask")`) now call `resolveVariant`, and #2537 and #2538 are
+closed. Read "no ruling either way" as superseded for both. §6's reason for the
+`Tasks`, `Praxes`, `Updates`, `Leaderboard` and `Factions` exceptions is untouched.
+
+The §1 table lists seven dispatching pages; there are now **ten**. `DuelReader`
+(`surfaceMap('duelReader')`, resolved from the duel's task faction),
+`EditCharacter` and `ProposeTask` join it, each dressed for the one faction the
+page resolves to.

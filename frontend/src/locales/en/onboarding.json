@@ -3,17 +3,29 @@
     "stepCaption": "Step",
     "lookAround": "I just want to look around"
   },
-  "intro": {
-    "title": "What is World Zero?",
-    "paragraph": {
-      "game": "World Zero is a game you play in real life.",
-      "character": "Like many games, you will start by creating a character. This character doesn't need to be you.",
-      "tasks": "Like in many games, you will have a variety of tasks you can complete (such as \"slay a dragon\" or \"collect high fives\").",
-      "proof": "Complete them and post proof (in the form of photos, videos or audio) in order to get points.",
-      "levels": "When you get enough points, you can level up and have access to more interesting, more difficult tasks, and vote to give points to tasks others have completed well.",
-      "ahead": "Along the way there will be warring organizations, mysteries and most likely character development. World Zero will always be free and have no ads."
-    },
-    "continue": "I'm in"
+  "flow": {
+    "brand": "World Zero",
+    "welcome": "Welcome, player.",
+    "level": "Level",
+    "points": "pts",
+    "start": "Start",
+    "back": "Back",
+    "next": "Next",
+    "finishLine": "Skip text",
+    "toContract": "To the contract",
+    "skip": "Skip",
+    "rewind": "rewind",
+    "signIn": "Sign in",
+    "stepOf": "{{n}} / 7"
+  },
+  "beats": {
+    "1": "World Zero is a game you play in real life.",
+    "2": "Like many games, you will start by creating a character. This character doesn’t need to be you.",
+    "3": "Like in many games, you will have a variety of tasks you can complete (such as “slay a dragon” or “find a cool stick”).",
+    "4": "Complete them and post proof (in the form of photos, videos or audio) in order to get points.",
+    "5": "Other players vote on the proof you post. The more they like it, the more points you get.",
+    "6": "When you get enough points, you can level up and have access to more interesting, more difficult tasks, and vote to give points to tasks others have completed well.",
+    "7": "Along the way there will be warring organizations, mysteries and most likely character development. World Zero will always be free and have no ads."
   },
   "auth": {
     "title": "Login Logistics",
@@ -24,9 +36,6 @@
     "body": "You understand and agree to the following",
     "accept": "Yeah yeah, let me play",
     "error": "Whoops! That didn't work. Try again?"
-  },
-  "mark": {
-    "label": "Start here"
   },
   "returning": {
     "title": "Welcome back",

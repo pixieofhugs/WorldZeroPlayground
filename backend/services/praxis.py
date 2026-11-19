@@ -26,7 +26,7 @@ from models.account import Account
 from models.character import Character
 from models.character_stats import CharacterStats
 from models.duel import DuelStatus
-from models.flag import Flag, FlagReason, stored_flag_reason
+from models.flag import Flag, FlagReason
 from models.praxis import (
     MediaItem,
     ModerationStatus,
@@ -979,7 +979,8 @@ async def flag_praxis(
     flag = Flag(
         praxis_id=praxis.id,
         flagged_by=flagged_by.id,
-        reason=stored_flag_reason(reason, reason_detail),
+        reason=reason.value,
+        reason_detail=reason_detail,
     )
     session.add(flag)
     await session.flush()
@@ -1029,12 +1030,11 @@ async def invite_to_praxis(
     existing_result = await session.execute(
         select(PraxisInvite).where(
             PraxisInvite.praxis_id == praxis_id,
-            PraxisInvite.inviter_id == inviter_id,
             PraxisInvite.invitee_id == invitee_id,
             PraxisInvite.status == PraxisInviteStatus.pending,
         )
     )
-    if existing_result.scalar_one_or_none() is not None:
+    if existing_result.first() is not None:
         raise_coded(
             409,
             ErrorCode.invite_already_pending,

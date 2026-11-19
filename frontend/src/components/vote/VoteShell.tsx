@@ -104,7 +104,8 @@ export function gateTreatment(slug: string | null | undefined): GateTreatment {
 export function VoteLoginGate({
   factionSlug,
   levelRequired,
-}: { factionSlug?: string | null; levelRequired?: number } = {}) {
+  needsReceivedVote,
+}: { factionSlug?: string | null; levelRequired?: number; needsReceivedVote?: boolean } = {}) {
   const { t } = useTranslation('votes')
   const contextSlug = useContext(VoteFactionContext)
   const treatment = gateTreatment(factionSlug ?? contextSlug)
@@ -131,9 +132,11 @@ export function VoteLoginGate({
       }}
     >
       {treatment.prefix}
-      {levelRequired === undefined
-        ? t('chrome.loginGate')
-        : t('chrome.levelGate', { level: levelRequired })}
+      {needsReceivedVote
+        ? t('chrome.receivedVoteGate')
+        : levelRequired === undefined
+          ? t('chrome.loginGate')
+          : t('chrome.levelGate', { level: levelRequired })}
     </p>
   )
 }

@@ -20,7 +20,7 @@ test.describe('star vote', () => {
 
   test.beforeAll(async ({ browser }) => {
     author = await loginPlayer(scenarioFor(browser), 'va', AUTHOR_LEVEL)
-    voter = await loginPlayer(scenarioFor(browser), 'vb', VOTER_LEVEL)
+    voter = await loginPlayer(scenarioFor(browser), 'vb', VOTER_LEVEL, { receivedVote: true })
     const tasks = selectDistinctTasks(await fetchTasks(author), 2)
     praxes = []
     for (const [index, task] of tasks.entries()) {

@@ -14,13 +14,12 @@ from models.era import Era
 from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.task import TaskStatus
 from seed import upsert_era_factions
-from services.character_capabilities import compute_capabilities
 from services.character_stats import recalculate_character_stats
 from services.habit_bonus import faction_habit_bonus_points
-from services.meta_task import faction_bypasses_metatask_level
 from services.praxis import evaluate_signup
 from services.praxis_scoring import compute_contributions
 from tests.integration.eras._shared import (
+    assert_albescent_alone_bypasses_metatask_level,
     rejoin_after_defection,
     signup_on_task_already_held,
     signup_one_level_up,
@@ -250,14 +249,7 @@ async def test_only_an_always_rejoinable_faction_reopens_after_a_defection(
 
 def test_albescent_applies_a_metatask_below_the_level_gate():
     """Stated by Era 2's config, not inherited (#1871)."""
-    assert faction_bypasses_metatask_level("albescent", ERA_2) is True
-    assert faction_bypasses_metatask_level("snide", ERA_2) is False
-    assert ERA_2.metatask_apply_level > 0
-
-    albescent = compute_capabilities(0, False, ERA_2, faction_slug="albescent")
-    snide = compute_capabilities(0, False, ERA_2, faction_slug="snide")
-    assert albescent.can_apply_metatask is True
-    assert snide.can_apply_metatask is False
+    assert_albescent_alone_bypasses_metatask_level(ERA_2, "snide")
 
 
 # Era 1 rules that lose their subject here

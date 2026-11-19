@@ -6,6 +6,7 @@ only release a SAVEPOINT.
 """
 import os
 
+import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import event
@@ -34,6 +35,14 @@ from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 # Level-0 fixture voters have a past peak at the vote level (#3102).
 CURRENT_ERA_VOTE_LEVEL: int = CURRENT_ERA.vote_level_required
+
+
+@pytest.fixture(autouse=True)
+def received_vote_rule_off(request, restore_live_era):
+    """Fixture voters have no received vote; only tests that opt in via
+    ``received_vote_rule`` see the rule. ``restore_live_era`` undoes the flip."""
+    if request.node.get_closest_marker("received_vote_rule") is None:
+        object.__setattr__(CURRENT_ERA, "vote_requires_received_vote", False)
 
 
 def _derive_test_db_url(dev_url: str) -> str:

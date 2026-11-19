@@ -778,11 +778,28 @@ const noRawStyleValues = {
         schema: [],
       },
       create(context) {
-        // ponytail: an identifier (even a file-level const) counts as dynamic; resolve it if the legacy list must drain faster.
+        // A module-scope `const` with a static initialiser is static; a prop, param or `let` is not.
+        const staticConst = (id) => {
+          for (let scope = context.sourceCode.getScope(id); scope; scope = scope.upper) {
+            const v = scope.set.get(id.name)
+            if (!v) continue
+            const def = v.defs[0]
+            return (
+              scope.type === 'module'
+              && def?.type === 'Variable'
+              && def.parent.kind === 'const'
+              && def.node.id.type === 'Identifier'
+              && !!def.node.init
+              && isStatic(def.node.init)
+            )
+          }
+          return false
+        }
         const isStatic = (n) =>
           n.type === 'Literal'
           || (n.type === 'TemplateLiteral' && n.expressions.length === 0)
           || (n.type === 'UnaryExpression' && isStatic(n.argument))
+          || (n.type === 'Identifier' && staticConst(n))
         return {
           JSXAttribute(node) {
             if (node.name.name !== 'style') return
