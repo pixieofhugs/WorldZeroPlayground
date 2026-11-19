@@ -35,7 +35,10 @@ from services.activity_feed import (
 #: pre-fetch round trips, one fetch per registry source, one badge UNION. Change
 #: it only with the reason in the PR body. A new registry source is +1, not +2.
 #: The metatask gate (#2280) is a round trip, not SQL, so the rule lives once.
-EXPECTED_FEED_LOAD_STATEMENTS = 23
+#: ADR-0070 (#3456): answered requests join the stream, so +3 fetches (collab,
+#: duel, letter; awaiting_submission has no answered state). The answered
+#: badges ride the existing UNION, so no extra badge statement or session.
+EXPECTED_FEED_LOAD_STATEMENTS = 26
 
 #: One ``UNION ALL`` over the fetch fan-out's windowed Selects (#1532).
 EXPECTED_BADGE_COUNT_STATEMENTS = 1
