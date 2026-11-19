@@ -56,8 +56,8 @@ async function publishCollab(casts: [boolean, boolean]) {
     type: 'collab',
     status: 'in_progress',
     members: [
-      aMember({ id: 1, character_id: 3, has_submitted: casts[0] }),
-      aMember({ id: 2, character_id: 4, has_submitted: casts[1] }),
+      aMember({ id: 1, character_id: 3, has_approved: casts[0] }),
+      aMember({ id: 2, character_id: 4, has_approved: casts[1] }),
     ],
   })
   const { result } = renderHook(() => useEditPraxis('1'), { wrapper })

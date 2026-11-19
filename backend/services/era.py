@@ -53,7 +53,7 @@ async def rebind_live_era(session: AsyncSession) -> EraConfig:
     app start-up and ``seed.py``. Rollovers use the commit-first path.
 
     Total over the row (the DB call can still raise), since start-up must not
-    crash: no row (fresh DB; don't invent one, ``started_by`` is not-null) or an
+    crash: no row (fresh DB; don't invent one, ``started_by_id`` is not-null) or an
     unknown ``config_key`` (deploy mistake, warned) both fall back to the
     compile-time era.
     """

@@ -32,7 +32,7 @@ async def test_admin_list_pending_tasks(
         point_value=5,
         level_required=0,
         status=TaskStatus.pending,
-        created_by=character.id,
+        created_by_id=character.id,
     )
     db_session.add(task)
     await db_session.commit()
@@ -59,7 +59,7 @@ async def test_admin_can_move_task_freely_between_states(
         point_value=5,
         level_required=0,
         status=TaskStatus.pending,
-        created_by=character.id,
+        created_by_id=character.id,
     )
     db_session.add(task)
     await db_session.commit()
@@ -493,7 +493,7 @@ async def test_admin_edit_pending_task(
         point_value=5,
         level_required=0,
         status=TaskStatus.pending,
-        created_by=character.id,
+        created_by_id=character.id,
     )
     db_session.add(task)
     await db_session.commit()
@@ -525,7 +525,7 @@ async def test_admin_edit_task_faction(
         point_value=5,
         level_required=0,
         status=TaskStatus.pending,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=CROSS_FACTION_SLUG,
     )
     db_session.add(task)
@@ -567,7 +567,7 @@ async def test_admin_edit_task_unknown_faction_rejected(
         point_value=5,
         level_required=0,
         status=TaskStatus.pending,
-        created_by=character.id,
+        created_by_id=character.id,
     )
     db_session.add(task)
     await db_session.commit()
@@ -690,7 +690,7 @@ async def test_admin_era_reset_zeros_votes_spent_this_era(
     new_era_row = EraModel(
         name=CURRENT_ERA.name,
         config_key=CURRENT_ERA.config_key,
-        started_by=account.id,
+        started_by_id=account.id,
     )
     db_session.add(new_era_row)
     await db_session.flush()
@@ -748,7 +748,7 @@ async def test_admin_era_reset_preserves_votes_spent_without_flag(
     new_era_row = EraModel(
         name=CURRENT_ERA.name,
         config_key=CURRENT_ERA.config_key,
-        started_by=account.id,
+        started_by_id=account.id,
     )
     db_session.add(new_era_row)
     await db_session.flush()

@@ -166,13 +166,12 @@ describe('useTaskDetail asks for relationships once', () => {
     expect(listRelationships).toHaveBeenCalledTimes(1)
   })
 
-  it('still separates friends from foes, active only', async () => {
+  it('still separates friends from foes', async () => {
     auth.user = { character: { id: 3 } }
-    const edge = (to: number, type: string, status: string) => ({ to_character_id: to, type, status })
+    const edge = (to: number, type: string) => ({ to_character_id: to, type })
     vi.mocked(listRelationships).mockReset().mockResolvedValue([
-      edge(1, 'friend', 'active'),
-      edge(2, 'foe', 'active'),
-      edge(3, 'foe', 'pending'),
+      edge(1, 'friend'),
+      edge(2, 'foe'),
     ] as never)
     const { result } = renderHook(() => useTaskDetail('5'), { wrapper: router })
     await settle()

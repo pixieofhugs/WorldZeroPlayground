@@ -29,7 +29,9 @@ and running a branch executes its code on the machine that holds `backend/.env`.
   change without its migration or its regenerated `openapi.json` / `schema.d.ts`.
 - **Spec** — the PR does something other than what its issue asked.
 - **Repo rules** — the "Do NOT" list in `CLAUDE.md`, and `backend/CLAUDE.md` or
-  `frontend/CLAUDE.md` for the side the diff touches.
+  `frontend/CLAUDE.md` for the side the diff touches. A PR that changes a rule an ADR states must amend that ADR in the same PR
+  (an `## Amendment` section plus a status line), or link the issue that does; otherwise it is a
+  FOLLOW-UP.
 - **Over-engineering** — an abstraction with one caller, a new dependency, a
   re-implementation of something the repo already has.
 - **Tests** — non-trivial logic with no check behind it, or a test that cannot fail.

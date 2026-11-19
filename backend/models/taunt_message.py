@@ -1,6 +1,6 @@
 import enum
 
-from sqlalchemy import BigInteger, Enum, ForeignKey, Identity, String
+from sqlalchemy import BigInteger, Enum, ForeignKey, Identity, Index, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from models.base import Base
@@ -15,6 +15,7 @@ class TauntTriggerType(enum.Enum):
 
 class TauntMessage(CreatedAtMixin, Base):
     __tablename__ = "taunt_message"
+    __table_args__ = (Index("ix_taunt_message_to_character_id", "to_character_id"),)
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
     from_character_id: Mapped[int] = mapped_column(

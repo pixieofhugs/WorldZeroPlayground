@@ -35,7 +35,7 @@ from models.faction_defection_history import FactionDefectionHistory
 from models.feed_dismissal import FeedDismissal
 from models.invitation_letter import InvitationLetter
 from models.nudge import Nudge
-from models.relationship import Relationship, RelationshipStatus, RelationshipType
+from models.relationship import Relationship, RelationshipType
 from models.duel import Duel, DuelStatus
 from models.praxis import ModerationStatus, Praxis, PraxisInvite, PraxisInviteStatus, PraxisMember, PraxisStatus, PraxisType
 from services.block_service import blocked_counterpart_ids
@@ -223,7 +223,6 @@ async def _get_related_ids(
         select(Relationship.to_character_id).where(
             Relationship.from_character_id == character_id,
             Relationship.type == rel_type,
-            Relationship.status == RelationshipStatus.active,
             Relationship.to_character_id.not_in(blocked_counterpart_ids(character_id)),
         )
     )
@@ -850,14 +849,14 @@ def _collaborator_submitted_query(ctx: FeedContext) -> Select:
     """A collaborator submitted their part of a collab the viewer is also in (#571).
 
     Ordered by submitted_at. The viewer's own member row is joined (#2284) to
-    carry ``viewer_has_submitted`` so the CTA can drop; not a predicate, since
+    carry ``viewer_has_approved`` so the CTA can drop; not a predicate, since
     the news stands either way. Unique ``(praxis_id, character_id)`` keeps it 1:1.
     """
     viewer_member = aliased(PraxisMember)
     query = (
         select(
             PraxisMember.id,
-            PraxisMember.submitted_at,
+            PraxisMember.approved_at,
             PraxisMember.praxis_id,
             Character.id.label("character_id"),
             Character.display_name,
@@ -866,7 +865,7 @@ def _collaborator_submitted_query(ctx: FeedContext) -> Select:
             Task.title.label("task_title"),
             Task.point_value.label("task_point_value"),
             Task.primary_faction_slug.label("task_faction_slug"),
-            viewer_member.has_submitted.label("viewer_has_submitted"),
+            viewer_member.has_approved.label("viewer_has_approved"),
         )
         .join(Praxis, PraxisMember.praxis_id == Praxis.id)
         .join(Character, PraxisMember.character_id == Character.id)
@@ -879,22 +878,22 @@ def _collaborator_submitted_query(ctx: FeedContext) -> Select:
             ),
         )
         .where(
-            PraxisMember.has_submitted.is_(True),
-            PraxisMember.submitted_at.is_not(None),
+            PraxisMember.has_approved.is_(True),
+            PraxisMember.approved_at.is_not(None),
             PraxisMember.character_id != ctx.character_id,
             Praxis.type == PraxisType.collab,
         )
     )
     if ctx.before is not None:
-        query = query.where(PraxisMember.submitted_at < ctx.before)
-    return query.order_by(PraxisMember.submitted_at.desc()).limit(SUB_QUERY_LIMIT)
+        query = query.where(PraxisMember.approved_at < ctx.before)
+    return query.order_by(PraxisMember.approved_at.desc()).limit(SUB_QUERY_LIMIT)
 
 
 def _collaborator_submitted_item(row: Any) -> ActivityFeedItemDC:
     return ActivityFeedItemDC(
         type=FEED_ITEM_TYPE_COLLABORATOR_SUBMITTED,
         item_key=build_item_key(FEED_ITEM_TYPE_COLLABORATOR_SUBMITTED, row.id),
-        timestamp=row.submitted_at,
+        timestamp=row.approved_at,
         actor_display_name=row.display_name,
         actor_faction_slug=row.faction_slug,
         actor_avatar_url=row.avatar_url,
@@ -905,7 +904,7 @@ def _collaborator_submitted_item(row: Any) -> ActivityFeedItemDC:
             task_title=row.task_title,
             task_point_value=row.task_point_value,
             task_faction_slug=row.task_faction_slug,
-            viewer_has_submitted=row.viewer_has_submitted,
+            viewer_has_approved=row.viewer_has_approved,
         ),
     )
 
@@ -935,7 +934,7 @@ def _awaiting_submission_query(ctx: FeedContext) -> Select:
         .join(Task, Praxis.task_id == Task.id)
         .where(
             PraxisMember.character_id == ctx.character_id,
-            PraxisMember.has_submitted.is_(False),
+            PraxisMember.has_approved.is_(False),
             Praxis.status.in_([PraxisStatus.in_progress, PraxisStatus.pending]),
             select(other_member.id)
             .where(
@@ -1010,7 +1009,7 @@ def _nudge_query(ctx: FeedContext) -> Select:
         )
         .where(
             Nudge.to_character_id == ctx.character_id,
-            PraxisMember.has_submitted.is_(False),
+            PraxisMember.has_approved.is_(False),
             Praxis.status.in_([PraxisStatus.in_progress, PraxisStatus.pending]),
         )
     )

@@ -177,10 +177,10 @@ const SAMPLE_MEMBERS: PraxisMemberOut[] = [
     character_display_name: 'Ada Reed',
     character_avatar_url: '',
     // Approval and Done are orthogonal (ADR-0079): one of each.
-    has_submitted: true,
+    has_approved: true,
     is_done: true,
     joined_at: EARLIER,
-    submitted_at: NOW,
+    approved_at: NOW,
     nudged_at: null,
   },
   {
@@ -189,10 +189,10 @@ const SAMPLE_MEMBERS: PraxisMemberOut[] = [
     character_id: 12,
     character_display_name: 'Sam Okafor',
     character_avatar_url: '',
-    has_submitted: false,
+    has_approved: false,
     is_done: false,
     joined_at: EARLIER,
-    submitted_at: null,
+    approved_at: null,
     nudged_at: null,
   },
 ]

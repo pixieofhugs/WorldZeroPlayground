@@ -32,7 +32,7 @@ async def dressed_viewer(
     db_session.add(role)
     await db_session.flush()
     db_session.add(
-        AccountRole(account_id=account.id, role_id=role.id, granted_by=account.id)
+        AccountRole(account_id=account.id, role_id=role.id, granted_by_id=account.id)
     )
 
     stats = await db_session.scalar(

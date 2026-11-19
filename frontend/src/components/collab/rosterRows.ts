@@ -2,8 +2,8 @@
  * The roster's row model (#1416): `members[]` and `invites[]` merged into one
  * ordered list, four states:
  *
- *   filed    — a `members[]` row with has_submitted === true
- *   accepted — a `members[]` row with has_submitted === false
+ *   filed    — a `members[]` row with has_approved === true
+ *   accepted — a `members[]` row with has_approved === false
  *   invited  — an `invites[]` row with status === 'pending'
  *   declined — an `invites[]` row with status === 'declined'
  *
@@ -57,7 +57,7 @@ export function buildRosterRows(
     ...members.map(
       (member): RosterRow => ({
         key: `m-${member.id}`,
-        state: member.has_submitted ? 'filed' : 'accepted',
+        state: member.has_approved ? 'filed' : 'accepted',
         name: member.character_display_name,
         avatarUrl: member.character_avatar_url,
         member,

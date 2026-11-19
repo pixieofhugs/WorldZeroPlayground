@@ -60,7 +60,7 @@ def _authorize_collab(
             status_code=403,
             detail="Only a member of this collaboration can nudge.",
         )
-    if not sender.has_submitted:
+    if not sender.has_approved:
         raise HTTPException(
             status_code=403,
             detail="File your own part before nudging anyone else.",
@@ -182,7 +182,7 @@ def _refuse(
         return HTTPException(
             status_code=403, detail="That player is not part of this praxis."
         )
-    if recipient.has_submitted:
+    if recipient.has_approved:
         return HTTPException(
             status_code=422, detail="That player has already filed their part."
         )
@@ -225,7 +225,7 @@ async def _send_nudges(
         else [
             character_id
             for character_id, member in members.items()
-            if not member.has_submitted and character_id != from_character_id
+            if not member.has_approved and character_id != from_character_id
         ]
     )
 
