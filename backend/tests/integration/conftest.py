@@ -19,7 +19,7 @@ from sqlalchemy.pool import NullPool
 
 import models  # noqa: F401 — registers all models on Base.metadata for create_all
 from config import settings
-from db import get_db, get_session_factory
+from db import get_db
 from game_config import CURRENT_ERA
 from main import app
 from models.account import Account
@@ -171,8 +171,7 @@ class _ReuseSessionContext:
 
 @pytest_asyncio.fixture
 async def client(db_session: AsyncSession):
-    """AsyncClient sharing ``db_session`` via ``get_db`` and ``get_session_factory``
-    overrides.
+    """AsyncClient sharing ``db_session`` via the ``get_db`` override.
 
     Commits on success like production, but never rolls back on error: that
     would expire objects the test body still holds.
@@ -182,11 +181,7 @@ async def client(db_session: AsyncSession):
         yield db_session
         await db_session.commit()
 
-    def _override_session_factory():
-        return lambda: _ReuseSessionContext(db_session)
-
     app.dependency_overrides[get_db] = _override_get_db
-    app.dependency_overrides[get_session_factory] = _override_session_factory
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
         yield c
     app.dependency_overrides.clear()
