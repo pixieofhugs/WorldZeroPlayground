@@ -21,7 +21,6 @@
   "models/character_block.py::I001": 1,
   "models/character_stats.py::E501": 1,
   "models/contact.py::E501": 1,
-  "models/duel.py::F401": 1,
   "models/era.py::E501": 1,
   "models/task.py::E501": 1,
   "models/task.py::I001": 1,
