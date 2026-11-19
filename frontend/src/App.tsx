@@ -1,12 +1,13 @@
-import { lazy, Suspense } from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { lazy, Suspense, useState } from 'react'
+import { Routes, Route, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import Layout from './components/Layout'
 import ProtectedRoute from './auth/ProtectedRoute'
 import { useAuth, hadSessionLastVisit } from './auth/AuthContext'
 import { useAdminMode } from './auth/AdminModeContext'
-import { loadOnboardingCopy } from './i18n'
+import { loadAppCopy, loadOnboardingCopy } from './i18n'
 import { onboardingHandoffPending } from './utils/onboardingResume'
+import LoginNotice from './components/LoginNotice'
 import { importAccountDeleted } from './pages/accountDeletedLoader'
 
 /**
@@ -17,50 +18,51 @@ import { importAccountDeleted } from './pages/accountDeletedLoader'
  * loader (#1483; `auth/__tests__/appProtectedRoutesWarm.test.tsx` renders
  * App over a path table). `import()` is memoised, so warming is idempotent.
  */
-const importHome = () => import('./pages/Home')
-const importFieldDesk = () => import('./pages/FieldDesk')
-const importEditPraxis = () => import('./pages/EditPraxis')
-const importEditCharacter = () => import('./pages/EditCharacter')
-const importUpdates = () => import('./pages/Updates')
-const importSettings = () => import('./pages/Settings')
-const importAdmin = () => import('./pages/Admin')
-const importFactionCopySheet = () => import('./pages/admin/FactionCopySheet')
-const importLevelUpCopySheet = () => import('./pages/admin/LevelUpCopySheet')
-const importCreateCharacter = () => import('./pages/CreateCharacter')
-const importProposeTask = () => import('./pages/ProposeTask')
+/** Admin, forms and feed copy ride with the routes that read them, not the entry chunk (#3557). */
+const withAppCopy = <T,>(page: Promise<T>) => Promise.all([page, loadAppCopy()]).then(([m]) => m)
+const importFieldDesk = () => withAppCopy(import('./pages/FieldDesk'))
+const importEditPraxis = () => withAppCopy(import('./pages/EditPraxis'))
+const importEditCharacter = () => withAppCopy(import('./pages/EditCharacter'))
+const importUpdates = () => withAppCopy(import('./pages/Updates'))
+const importSettings = () => withAppCopy(import('./pages/Settings'))
+const importAdmin = () => withAppCopy(import('./pages/Admin'))
+const importFactionCopySheet = () => withAppCopy(import('./pages/admin/FactionCopySheet'))
+const importLevelUpCopySheet = () => withAppCopy(import('./pages/admin/LevelUpCopySheet'))
+const importCreateCharacter = () => withAppCopy(import('./pages/CreateCharacter'))
+const importProposeTask = () => withAppCopy(import('./pages/ProposeTask'))
 
 const withOnboardingCopy = <T,>(page: Promise<T>) => Promise.all([page, loadOnboardingCopy()]).then(([m]) => m)
+const importOnboarding = () => withOnboardingCopy(import('./pages/Onboarding'))
 
-const Home = lazy(importHome)
 const FieldDesk = lazy(importFieldDesk)
-const Tasks = lazy(() => import('./pages/Tasks'))
-const TaskDetail = lazy(() => import('./pages/TaskDetail'))
-const PraxisDetail = lazy(() => import('./pages/PraxisDetail'))
-const DuelReader = lazy(() => import('./pages/DuelReader'))
+const Tasks = lazy(() => withAppCopy(import('./pages/Tasks')))
+const TaskDetail = lazy(() => withAppCopy(import('./pages/TaskDetail')))
+const PraxisDetail = lazy(() => withAppCopy(import('./pages/PraxisDetail')))
+const DuelReader = lazy(() => withAppCopy(import('./pages/DuelReader')))
 const EditPraxis = lazy(importEditPraxis)
-const CharacterProfile = lazy(() => import('./pages/CharacterProfile'))
-const Leaderboard = lazy(() => import('./pages/Leaderboard'))
-const Factions = lazy(() => import('./pages/Factions'))
-const FactionDetail = lazy(() => import('./pages/FactionDetail'))
-const AlbescentSecretPlaceholder = lazy(() => import('./pages/AlbescentSecretPlaceholder'))
+const CharacterProfile = lazy(() => withAppCopy(import('./pages/CharacterProfile')))
+const Leaderboard = lazy(() => withAppCopy(import('./pages/Leaderboard')))
+const Factions = lazy(() => withAppCopy(import('./pages/Factions')))
+const FactionDetail = lazy(() => withAppCopy(import('./pages/FactionDetail')))
+const AlbescentSecretPlaceholder = lazy(() => withAppCopy(import('./pages/AlbescentSecretPlaceholder')))
 const Updates = lazy(importUpdates)
-const Praxes = lazy(() => import('./pages/Praxes'))
+const Praxes = lazy(() => withAppCopy(import('./pages/Praxes')))
 const Settings = lazy(importSettings)
 const Admin = lazy(importAdmin)
 const FactionCopySheet = lazy(importFactionCopySheet)
 const LevelUpCopySheet = lazy(importLevelUpCopySheet)
 const CreateCharacter = lazy(importCreateCharacter)
 const EditCharacter = lazy(importEditCharacter)
-const About = lazy(() => import('./pages/About'))
-const Contact = lazy(() => import('./pages/Contact'))
+const About = lazy(() => withAppCopy(import('./pages/About')))
+const Contact = lazy(() => withAppCopy(import('./pages/Contact')))
 const ProposeTask = lazy(importProposeTask)
-const Disclaimer = lazy(() => import('./pages/Disclaimer'))
-const Attributions = lazy(() => import('./pages/Attributions'))
-const Donate = lazy(() => import('./pages/Donate'))
+const Disclaimer = lazy(() => withAppCopy(import('./pages/Disclaimer')))
+const Attributions = lazy(() => withAppCopy(import('./pages/Attributions')))
+const Donate = lazy(() => withAppCopy(import('./pages/Donate')))
 const AccountDeleted = lazy(importAccountDeleted)
-const Onboarding = lazy(() => withOnboardingCopy(import('./pages/Onboarding')))
+const Onboarding = lazy(importOnboarding)
 const ReturningCard = lazy(() => withOnboardingCopy(import('./pages/onboarding/ReturningCard')))
-const CopyEditor = lazy(() => import('./components/admin/CopyEditor'))
+const CopyEditor = lazy(() => withAppCopy(import('./components/admin/CopyEditor')))
 
 /** Gate lives outside the lazy component so ordinary visitors never fetch its chunk (load-time.md). */
 function CopyEditorMount() {
@@ -79,19 +81,30 @@ function PageLoading() {
   return <div className="page font-body text-muted">{t('loading')}</div>
 }
 
-/** `/`: FieldDesk when signed in, marketing Home otherwise. Exported for tests. */
+/** Decided once per mount: creating the character mid-flow must not swap the arrival page for the desk. A pending OAuth resume stays in the flow so the contract is recorded. */
+function Landing() {
+  const { user } = useAuth()
+  const [inFlow] = useState(() => !user?.character || onboardingHandoffPending())
+  if (!inFlow) return <FieldDesk />
+  return (
+    <>
+      {!user && <LoginNotice />}
+      <Onboarding />
+    </>
+  )
+}
+
+/** `/`: the welcome flow, except for a player with a character, who gets the desk. Exported for tests. */
 export function RootLanding() {
-  const { user, loading } = useAuth()
+  const { loading } = useAuth()
+  const { key } = useLocation()
   if (loading) {
     // Overlap the chunk with `/auth/me` (#1380). Warm ONE, picked by the stored
     // hint: warming both cost the signed-in viewer ~270ms on Slow 4G.
-    void (hadSessionLastVisit() ? importFieldDesk() : importHome())
+    void (hadSessionLastVisit() ? importFieldDesk() : importOnboarding())
     return <PageLoading />
   }
-  // OAuth always returns to `/`; resume onboarding if it was left for a
-  // provider (one-shot sessionStorage flag, `utils/onboardingResume`).
-  if (user && onboardingHandoffPending()) return <Navigate to="/start" replace />
-  return user ? <FieldDesk /> : <Home />
+  return <Landing key={key} />
 }
 
 /** Albescent secrecy gate (ADR-0027): real page only for accounts with sticky `albescent_revealed`. */

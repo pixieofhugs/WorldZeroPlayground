@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useModal } from '../hooks/useModal'
 import type { CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
@@ -220,6 +220,7 @@ function MobileLevelUpCard({
   continueText,
   onContinue,
   sealRing,
+  preview,
 }: {
   level: number
   rank: string
@@ -227,8 +228,10 @@ function MobileLevelUpCard({
   continueText: string
   onContinue: () => void
   sealRing: 'rainbow' | 'ink'
+  preview?: boolean
 }) {
   const { t } = useTranslation('progression')
+  const ref = useModal(onContinue, !preview)
   return (
     <div
       onClick={onContinue}
@@ -251,8 +254,10 @@ function MobileLevelUpCard({
     >
       <MobileConfetti />
       <div
+        ref={ref}
         role="dialog"
         aria-modal="true"
+        aria-label={`${t('popup.levelReached')} ${rank}`}
         data-form-factor="mobile"
         onClick={(e) => e.stopPropagation()}
         style={{
@@ -324,6 +329,8 @@ interface LevelUpPopupProps {
   continueLabel?: string
   sealRing?: 'rainbow' | 'ink'
   dimBackdrop?: boolean
+  /** An admin copy-sheet embed: no focus trap, Escape or focus steal. */
+  preview?: boolean
 }
 
 export default function LevelUpPopup({
@@ -334,22 +341,18 @@ export default function LevelUpPopup({
   continueLabel,
   sealRing = 'rainbow',
   dimBackdrop = true,
+  preview,
 }: LevelUpPopupProps) {
   const { t } = useTranslation('progression')
   const formFactor = useFormFactor()
   const continueText = continueLabel ?? t('popup.continue')
   const rank = tKey(t, `ranks.${rankKey}`)
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') onContinue()
-    }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [onContinue])
-
+  // The mobile card mounts its own; this one only guards the desktop card.
+  const ref = useModal(onContinue, formFactor !== 'mobile' && !preview)
   if (formFactor === 'mobile') {
     return (
       <MobileLevelUpCard
+        preview={preview}
         level={level}
         rank={rank}
         abilities={abilities}
@@ -362,8 +365,10 @@ export default function LevelUpPopup({
 
   const card = (
     <div
+      ref={ref}
       role="dialog"
       aria-modal="true"
+      aria-label={`${t('popup.levelReached')} ${rank}`}
       style={{
         width: 372,
         maxWidth: '100%',

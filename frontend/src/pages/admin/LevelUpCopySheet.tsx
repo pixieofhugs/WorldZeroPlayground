@@ -34,6 +34,7 @@ export default function LevelUpCopySheet() {
               abilities={profile.unlocks}
               onContinue={noop}
               dimBackdrop={false}
+              preview
             />
           </div>
         </section>

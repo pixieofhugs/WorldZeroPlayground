@@ -3,7 +3,6 @@
 // Regenerate with: node .design-sync/gen-barrel.mjs
 export { DSProvider } from "./provider";
 export { default as AccountSection } from "../src/pages/settings/sections/AccountSection";
-export { default as ActivityTicker } from "../src/components/ActivityTicker";
 export { default as AlbescentAvatar } from "../src/components/avatar/AlbescentAvatar";
 export { default as AlbescentBackdrop } from "../src/components/backdrop/AlbescentBackdrop";
 export { default as AlbescentComment } from "../src/components/comments/voices/AlbescentComment";

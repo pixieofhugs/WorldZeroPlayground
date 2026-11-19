@@ -42,8 +42,9 @@ async def get_vote_ring(account_id: int, session: AsyncSession) -> VoteRingOut:
     votes_by: dict[int, list[tuple[int, int]]] = defaultdict(list)
     names: dict[int, str] = {}
     for vote_id, value, recipient_id, name in rows:
-        votes_by[recipient_id].append((vote_id, value))
         names.setdefault(recipient_id, name)
+        if (vote_id, value) not in votes_by[recipient_id]:
+            votes_by[recipient_id].append((vote_id, value))
 
     returned: set[int] = set()
     if votes_by:

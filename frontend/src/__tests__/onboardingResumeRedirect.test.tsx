@@ -1,9 +1,9 @@
 /**
- * `/` puts a returning OAuth round trip back into the onboarding flow (#1861).
+ * `/` is the welcome flow, and a returning OAuth round trip resumes it in place (#1861, #3541).
  *
  * Every OAuth callback lands on `/` (`auth.py::_signed_in_redirect`), so the
  * `sessionStorage` mark read by `RootLanding` is the whole mechanism. No effects
- * run here, so the redirect shows as the ABSENCE of Home and FieldDesk.
+ * run here, so the page shows as which stub rendered.
  */
 import { Suspense } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
@@ -15,10 +15,11 @@ import { AuthContext } from '../auth/AuthContext'
 import type { CurrentUser } from '../api/auth'
 import { RootLanding } from '../App'
 
-vi.mock('../pages/Home', () => ({ default: () => <div data-page="home" /> }))
+vi.mock('../pages/Onboarding', () => ({ default: () => <div data-page="flow" /> }))
 vi.mock('../pages/FieldDesk', () => ({ default: () => <div data-page="field-desk" /> }))
 
-const SIGNED_IN = { account_id: 1, character: null, is_admin: false } as unknown as CurrentUser
+const NO_CHARACTER = { account_id: 1, character: null, is_admin: false } as unknown as CurrentUser
+const PLAYER = { account_id: 1, character: { id: 7 }, is_admin: false } as unknown as CurrentUser
 
 function withHandoff(marked: boolean): void {
   vi.stubGlobal('sessionStorage', {
@@ -53,25 +54,33 @@ afterEach(() => {
 })
 
 describe('the root route and the onboarding handoff mark', () => {
-  it('sends a signed-in viewer carrying the mark back into the flow', async () => {
-    withHandoff(true)
-
-    const markup = await renderRoot(SIGNED_IN)
-
-    expect(markup).not.toContain('data-page="field-desk"')
-    expect(markup).not.toContain('data-page="home"')
-  })
-
-  it('leaves a signed-in viewer without the mark on their desk', async () => {
+  it('shows a guest the flow', async () => {
     withHandoff(false)
 
-    expect(await renderRoot(SIGNED_IN)).toContain('data-page="field-desk"')
+    expect(await renderRoot(null)).toContain('data-page="flow"')
   })
 
-  it('does not pull a guest into the flow, mark or no mark', async () => {
-    // No account to bind consent to; a stale mark must not cost a guest the homepage.
+  it('shows a signed-in account with no character the flow', async () => {
+    withHandoff(false)
+
+    expect(await renderRoot(NO_CHARACTER)).toContain('data-page="flow"')
+  })
+
+  it('leaves a player with a character on their desk', async () => {
+    withHandoff(false)
+
+    const markup = await renderRoot(PLAYER)
+
+    expect(markup).toContain('data-page="field-desk"')
+    expect(markup).not.toContain('data-page="flow"')
+  })
+
+  it('resumes the flow in place for a player carrying the mark: the contract is recorded there', async () => {
     withHandoff(true)
 
-    expect(await renderRoot(null)).toContain('data-page="home"')
+    const markup = await renderRoot(PLAYER)
+
+    expect(markup).toContain('data-page="flow"')
+    expect(markup).not.toContain('data-page="field-desk"')
   })
 })

@@ -96,11 +96,14 @@ async def test_a_mod_ban_blocks_new_lives_until_it_is_lifted(
 
     me = (await client.get("/auth/me", headers=auth_headers)).json()
     assert me["can_create_additional_character"] is False
+    assert me["character_creation_banned"] is True
     resp = await _create(client, auth_headers)
     assert resp.status_code == 403
     assert _code(resp) == ErrorCode.character_creation_banned.value
 
     assert (await _ban(client, character.id, auth_headers2, False)).status_code == 200
+    me = (await client.get("/auth/me", headers=auth_headers)).json()
+    assert me["character_creation_banned"] is False
     lifted = await _create(client, auth_headers)
     assert _code(lifted) == ErrorCode.second_character_level_too_low.value
 
@@ -112,6 +115,8 @@ async def test_a_self_deleted_life_does_not_block_a_new_one(
         await client.delete(f"/characters/{character.id}", headers=auth_headers)
     ).status_code == 204
 
+    me = (await client.get("/auth/me", headers=auth_headers)).json()
+    assert me["character_creation_banned"] is False
     assert (await _create(client, auth_headers)).status_code == 201
 
 

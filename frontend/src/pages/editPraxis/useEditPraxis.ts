@@ -681,6 +681,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     setError,
 
     title,
+    needsProof: media.length === 0 && !user?.is_admin,
     setTitle,
     body,
     setBody,

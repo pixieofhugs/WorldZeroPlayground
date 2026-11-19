@@ -71,9 +71,13 @@ export default function VoteRingPanel({ accountId }: { accountId: number }) {
   useEffect(() => {
     setRing(null);
     setError(null);
+    let stale = false;
     getVoteRing(id)
-      .then(setRing)
-      .catch((err) => setError(extractError(err, t("accounts.ring.loadError"))));
+      .then((r) => !stale && setRing(r))
+      .catch((err) => !stale && setError(extractError(err, t("accounts.ring.loadError"))));
+    return () => {
+      stale = true;
+    };
   }, [id, t]);
 
   if (error) return <p className="font-body content-text danger-text mt-4">{error}</p>;

@@ -34,6 +34,10 @@ MOD_BANNED = and_(
     Character.status == CharacterStatus.banned, Character.departed_at.is_(None)
 )
 
+def _mod_banned_exists(account_id: int):
+    return exists().where(Character.account_id == account_id, MOD_BANNED)
+
+
 # The rule is "not banned"; a set so a future life state needs no rewrite.
 _ROSTER_STATUSES: frozenset[CharacterStatus] = frozenset({CharacterStatus.active})
 _DEFAULT_HANDLE = "wanderer"
@@ -123,7 +127,7 @@ async def account_peak_level_and_ban(
                     Character.status == CharacterStatus.active,
                 )
                 .scalar_subquery(),
-                exists().where(Character.account_id == account_id, MOD_BANNED),
+                _mod_banned_exists(account_id),
             )
         )
     ).one()
@@ -239,6 +243,8 @@ class AccountEligibility:
 
     can_create_additional_character: bool = False
     can_start_as_albescent: bool = False
+    # A mod-banned life blocks every new one, first included.
+    character_creation_banned: bool = False
 
 
 async def load_account_eligibility(
@@ -257,13 +263,14 @@ async def load_account_eligibility(
             peak_level >= era.second_character_level_required and not mod_banned
         ),
         can_start_as_albescent=has_stamp(account, era.secret_faction_slug, "unlocked"),
+        character_creation_banned=mod_banned,
     )
 
 
 async def has_mod_banned_life(account_id: int, session: AsyncSession) -> bool:
     return bool(
         await session.scalar(
-            select(exists().where(Character.account_id == account_id, MOD_BANNED))
+            select(_mod_banned_exists(account_id))
         )
     )
 
@@ -479,7 +486,8 @@ async def create_character(
         raise_coded(
             403,
             ErrorCode.character_creation_banned,
-            "A moderator banned one of your characters, so you can't create another.",
+            "A moderator banned one of your characters, so you can't create "
+            "another until that's lifted.",
         )
 
     if existing_count > 0:
@@ -586,9 +594,12 @@ async def soft_delete_character(
     character = await session.get(Character, character_id)
     if character is None:
         raise HTTPException(status_code=404, detail="Character not found.")
+    # Distinguishes self-deletion from a ban (#1577); never cleared. A life a
+    # moderator already banned stays unstamped, so MOD_BANNED (and its hidden
+    # votes) survives the player deleting their account.
+    if character.status != CharacterStatus.banned:
+        character.departed_at = datetime.now(timezone.utc)
     character.status = CharacterStatus.banned
-    # Distinguishes self-deletion from a ban (#1577); never cleared.
-    character.departed_at = character.departed_at or datetime.now(timezone.utc)
     erased_avatar_url = character.avatar_url
     character.avatar_url = ""
 

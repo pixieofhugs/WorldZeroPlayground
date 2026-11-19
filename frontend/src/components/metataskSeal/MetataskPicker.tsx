@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 import type { TaskOut } from "../../api/tasks";
 import MetataskSeal from "./MetataskSeal";
 import { drawAtRoot } from "../ui/drawAtRoot";
+import { useModal } from "../../hooks/useModal";
 import { useFormFactor } from "../../hooks/useFormFactor";
 import { factionCssVar, factionName } from "../../utils/factions";
 import { ErrorBanner } from "../../pages/editPraxis/archetypes/shared";
@@ -41,6 +42,7 @@ export default function MetataskPicker({
   const [query, setQuery] = useState("");
   const [factionFilter, setFactionFilter] = useState<string>(ALL_FILTER);
   const [pending, setPending] = useState<TaskOut | null>(null);
+  const ref = useModal(closeMetataskPicker);
 
   const factionSlugs = useMemo(() => {
     const seen: string[] = [];
@@ -82,6 +84,7 @@ export default function MetataskPicker({
 
   const overlay = (
     <div
+      ref={ref}
       role="dialog"
       aria-modal="true"
       aria-label={t("editPraxis.attach.pickerTitle")}

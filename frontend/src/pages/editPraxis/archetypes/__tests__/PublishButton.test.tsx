@@ -27,11 +27,11 @@ function member(id: number, cast: boolean): PraxisMemberOut {
     character_id: id,
     character_display_name: `M${id}`,
     character_avatar_url: "",
-    has_submitted: cast,
+    has_approved: cast,
     is_done: false,
     joined_at: "2026-01-01T00:00:00Z",
     nudged_at: null,
-    submitted_at: null,
+    approved_at: null,
   };
 }
 
@@ -376,5 +376,18 @@ describe("PublishButton — the primary is dead until the praxis has a title (#2
     );
     expect(markup).not.toContain("aria-describedby");
     expect(markup).not.toContain('role="status"');
+  });
+
+  it("is disabled with a hint until media is attached (#3473)", () => {
+    const markup = renderToStaticMarkup(
+      renderButton(soloState({ needsProof: true })),
+    );
+    expect(markup).toContain("disabled");
+    expect(markup).toContain(
+      i18n.t("forms:editPraxis.composer.publishNeedsProof"),
+    );
+    expect(
+      renderToStaticMarkup(renderButton(soloState({ needsProof: false }))),
+    ).not.toContain("disabled");
   });
 });

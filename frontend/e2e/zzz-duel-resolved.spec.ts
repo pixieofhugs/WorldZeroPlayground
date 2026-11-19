@@ -36,7 +36,7 @@ function resetEraViaScript(): void {
     `refusing the era reset: DATABASE_URL is not the isolated e2e database (${db || 'unset'}). ` +
       'Run this spec via `bash frontend/e2e/run-e2e.sh` — see HAZARD 2.',
   ).toBeTruthy()
-  // era_reset.py requires an admin (Era.started_by); seed.py makes @pixie one.
+  // era_reset.py requires an admin (Era.started_by_id); seed.py makes @pixie one.
   execFileSync(process.env.E2E_PYTHON ?? 'python', ['scripts/era_reset.py', 'pixie', '--yes'], {
     cwd: BACKEND_DIR,
     stdio: 'inherit',

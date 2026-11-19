@@ -36,7 +36,6 @@ class RelationshipListItem(WireModel):
     from_character_id: int
     to_character_id: int
     type: str
-    status: str
     created_at: datetime
     to_display_name: str
     to_avatar_url: str

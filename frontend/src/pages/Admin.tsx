@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { ALBESCENT_FACTION_SLUG, FACTION_RAINBOW_ORDER, factionName } from '../utils/factions'
@@ -54,7 +55,9 @@ function CopySheetPicker() {
 
 export default function Admin() {
   const { t } = useTranslation('admin')
+  useDocumentTitle(t('title'))
   const [activeTab, setActiveTab] = useState<Tab>(getInitialTab)
+  const [accountSearch, setAccountSearch] = useState('')
 
   const switchTab = (tab: Tab) => {
     setActiveTab(tab)
@@ -64,11 +67,6 @@ export default function Admin() {
   return (
     <div className="py-8">
       <PageTitle title={t('title')} />
-
-      <CopySheetPicker />
-      <Link to="/admin/level-ups" className="btn-outline text-xs self-start inline-block mb-6">
-        {t('levelUpSheet.button')}
-      </Link>
 
       <div
         className="flex gap-6 mb-6"
@@ -98,10 +96,23 @@ export default function Admin() {
         ))}
       </div>
 
-      {activeTab === 'moderation' && <ModerationTab />}
+      {activeTab === 'overview' && (
+        <>
+          <CopySheetPicker />
+          <Link to="/admin/level-ups" className="btn-outline text-xs self-start inline-block mb-6">
+            {t('levelUpSheet.button')}
+          </Link>
+        </>
+      )}
+      {activeTab === 'moderation' && <ModerationTab
+          onViewAccount={(search) => {
+            setAccountSearch(search)
+            switchTab('accounts')
+          }}
+        />}
       {activeTab === 'praxis' && <PraxisTab />}
       {activeTab === 'tasks' && <TasksTab />}
-      {activeTab === 'accounts' && <AccountsTab />}
+      {activeTab === 'accounts' && <AccountsTab key={accountSearch} initialSearch={accountSearch} />}
       {activeTab === 'overview' && <OverviewTab />}
       {activeTab === 'era' && <EraTab />}
     </div>

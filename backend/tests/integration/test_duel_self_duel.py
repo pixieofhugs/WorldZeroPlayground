@@ -77,7 +77,7 @@ async def _make_in_progress_praxis(
     session.add(praxis)
     await session.flush()
     session.add(
-        PraxisMember(praxis_id=praxis.id, character_id=author.id, has_submitted=False)
+        PraxisMember(praxis_id=praxis.id, character_id=author.id, has_approved=False)
     )
     await session.flush()
     return praxis

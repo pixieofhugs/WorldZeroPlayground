@@ -10,11 +10,11 @@ function member(id: number, submitted: boolean): PraxisMemberOut {
     character_id: id,
     character_display_name: `M${id}`,
     character_avatar_url: '',
-    has_submitted: submitted,
+    has_approved: submitted,
     is_done: false,
     joined_at: '2026-01-01T00:00:00Z',
     nudged_at: null,
-    submitted_at: null,
+    approved_at: null,
   }
 }
 

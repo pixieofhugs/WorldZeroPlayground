@@ -19,9 +19,9 @@ const member = (id: number): PraxisMemberOut => ({
   character_id: id,
   character_display_name: `Member ${id}`,
   character_avatar_url: '',
-  has_submitted: false,
+  has_approved: false,
   is_done: false,
-  submitted_at: null,
+  approved_at: null,
   joined_at: AT,
   nudged_at: null,
 })

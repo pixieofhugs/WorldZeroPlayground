@@ -6,7 +6,7 @@
 
 Thin CLI over ``services.era.apply_era_reset`` (semantics: ADR-0042). Irreversible
 and NOT idempotent: without ``--yes`` it prints the plan and exits 1. ``USERNAME``
-must be an admin (``Era.started_by`` audit FK). The primary door is
+must be an admin (``Era.started_by_id`` audit FK). The primary door is
 ``PUT /admin/eras/live`` (ADR-0091); this re-opens the era the DB says is live,
 for outages, and refuses an unregistered ``config_key`` rather than fall back.
 Unlike the route it allows re-opening the live era (a new season, same rules).
@@ -75,7 +75,7 @@ async def reset_era(session: AsyncSession, username: str, confirmed: bool) -> in
         return 1
     if not await account_has_admin_role(operator.account_id, session):
         print(
-            f"ERROR: '{username}' is not an admin, and Era.started_by records who "
+            f"ERROR: '{username}' is not an admin, and Era.started_by_id records who "
             f"opened the era. Run elevate_admin.py first, or name an admin."
         )
         return 1
@@ -114,7 +114,7 @@ async def reset_era(session: AsyncSession, username: str, confirmed: bool) -> in
     new_era_row = Era(
         name=opening.name,
         config_key=opening.config_key,
-        started_by=operator.account_id,
+        started_by_id=operator.account_id,
     )
     session.add(new_era_row)
     await session.flush()
@@ -147,7 +147,7 @@ def main() -> None:
     )
     parser.add_argument(
         "username",
-        help="Character username of the operator; their account is recorded as Era.started_by.",
+        help="Character username of the operator; their account is recorded as Era.started_by_id.",
     )
     add_env_argument(parser)
     parser.add_argument(

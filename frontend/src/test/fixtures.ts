@@ -73,12 +73,12 @@ export const aMember = (over: Partial<PraxisMemberOut> = {}): PraxisMemberOut =>
   character_id: AUTHOR.id,
   character_display_name: AUTHOR.name,
   character_avatar_url: '',
-  has_submitted: true,
+  has_approved: true,
   // Done is orthogonal to approval (ADR-0079).
   is_done: false,
   joined_at: '2026-01-01T00:00:00Z',
   nudged_at: null,
-  submitted_at: null,
+  approved_at: null,
   ...over,
 })
 
@@ -212,6 +212,7 @@ export const aCurrentUser = (over: Partial<CurrentUser> = {}): CurrentUser => ({
   is_owner: false,
   has_accepted_terms: true,
   can_create_additional_character: false,
+  character_creation_banned: false,
   can_start_as_albescent: false,
   albescent_revealed: false,
   albescent_glimpsed: false,
@@ -303,6 +304,7 @@ export const anEditPraxisState = (
 
   title: 'The Long Way Round',
   setTitle: noop,
+  needsProof: false,
   body: 'Walked the whole ridge before dark.',
   setBody: noop,
 

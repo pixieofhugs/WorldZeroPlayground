@@ -54,7 +54,20 @@
     "detailError": "Could not load account detail.",
     "suspendError": "Could not update account.",
     "banError": "Could not update character.",
-    "searchPlaceholder": "Search by email…",
+    "searchPlaceholder": "Search by email, username or character name…",
+    "suspendConfirm": {
+      "heading": "Suspend this account?",
+      "lead": "{{email}} will be suspended, with every character on it. You can unsuspend it later.",
+      "submit": "confirm — suspend account"
+    },
+    "banConfirm": {
+      "heading": "Ban {{name}}?",
+      "lead": "{{name}} (@{{username}}) will be banned. You can unban them later.",
+      "submit": "confirm — ban character"
+    },
+    "prev": "← previous",
+    "next": "next →",
+    "pageRange": "{{from}}–{{to}} of {{total}}",
     "empty": "No accounts found.",
     "idLabel": "ID #{{id}}",
     "suspend": "suspend",
@@ -205,6 +218,10 @@
     "created": "Imported {{total}} task(s).",
     "rejected": "Nothing was imported. {{total}} row(s) need fixing:"
   },
+  "moderateConfirm": {
+    "working": "working…",
+    "cancel": "cancel, keep as is"
+  },
   "moderation": {
     "loadError": "Couldn't load moderation data.",
     "actionError": "Moderation action failed.",
@@ -212,6 +229,11 @@
     "reportedByOne": "reported by {{name}}",
     "reportedByMany": "reported by {{count}} members",
     "log": {
+      "removedAllAuthor": "Removed {{count}} flagged posts by {{name}}",
+      "bannedAuthor": "Banned {{name}}",
+      "unbannedAuthor": "Unbanned {{name}}",
+      "suspendedAuthor": "Suspended the account of {{name}}",
+      "unsuspendedAuthor": "Unsuspended the account of {{name}}",
       "keptPraxis": "Kept praxis \"{{title}}\"",
       "removedPraxis": "Removed praxis \"{{title}}\"",
       "failedPraxis": "Failed praxis \"{{title}}\"",
@@ -224,7 +246,7 @@
     },
     "stats": {
       "openReports": "Open reports",
-      "activeMembers": "Active members"
+      "activeAccounts": "Active accounts"
     },
     "queue": {
       "heading": "Review queue",
@@ -238,6 +260,32 @@
         "comments": "Comments"
       },
       "byline": "by {{author}}",
+      "author": {
+        "banned": "banned",
+        "suspended": "suspended",
+        "ban": "ban character",
+        "unban": "unban character",
+        "suspend": "suspend account",
+        "unsuspend": "unsuspend account",
+        "viewAccount": "view account →",
+        "viewRing": "vote ring →",
+        "removeAll": "remove all {{count}} flagged by this author",
+        "removeAllConfirm": {
+          "heading": "Remove {{count}} flagged posts by {{name}}?",
+          "lead": "Every post by {{name}} (@{{username}}) with an open flag is removed. Their unflagged posts are untouched.",
+          "submit": "confirm — remove {{count}} posts"
+        },
+        "banConfirm": {
+          "heading": "Ban {{name}}?",
+          "lead": "{{name}} (@{{username}}) will be banned. You can unban them later.",
+          "submit": "confirm — ban character"
+        },
+        "suspendConfirm": {
+          "heading": "Suspend this account?",
+          "lead": "The account behind {{name}} (@{{username}}) will be suspended, with every character on it. You can unsuspend it later.",
+          "submit": "confirm — suspend account"
+        }
+      },
       "flags_one": "{{count}} flag",
       "flags_other": "{{count}} flags",
       "viewPraxis": "View praxis →",
