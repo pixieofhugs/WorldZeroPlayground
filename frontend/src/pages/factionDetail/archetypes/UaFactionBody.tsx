@@ -23,6 +23,7 @@ import {
   useSectionDisclosures,
 } from "../sectionDisclosure";
 import type { FactionDetailState } from "../useFactionDetail";
+import { paragraphsOf } from "../../../utils/paragraphs";
 
 /**
  * UA faction body — the six-section spine in the practice's dress (① is
@@ -156,10 +157,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
 
   if (!faction) return null;
 
-  const paragraphs = factionDescription(faction.slug)
-    .split(/\n\s*\n/)
-    .map((p) => p.trim())
-    .filter(Boolean);
+  const paragraphs = paragraphsOf(factionDescription(faction.slug));
   const ranked = [...members].sort((a, b) => b.all_time_score - a.all_time_score);
   const spot: CharacterOut | undefined = ranked[0];
   const register = ranked.slice(1);

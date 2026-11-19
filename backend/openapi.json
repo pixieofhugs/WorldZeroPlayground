@@ -1729,7 +1729,7 @@
             "type": "string"
           },
           "value": {
-            "maxLength": 2000,
+            "maxLength": 5000,
             "minLength": 1,
             "title": "Value",
             "type": "string"
