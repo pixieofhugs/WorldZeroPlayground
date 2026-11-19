@@ -93,7 +93,7 @@ correct shape for data whose freshness requirement is *zero*.
 
 ### The era rollover — a version key, not a bound
 
-Both `/auth/me` and `/game-config` already carry `era_name`. `utils/cacheEpoch`
+Both `/auth/me` and `/game-config` carry `era_name` (now `Era.id`; see the Amendment). `utils/cacheEpoch`
 remembers the era last seen and, when a response reports a different one, **drops
 the entire cache** and advances a version counter. A request already in flight is
 stamped with the version it was issued under and refuses to write its answer back
@@ -126,10 +126,8 @@ This is survivable only because of what the cache currently holds: everything a
 same-era reset changes (scores, levels, vote budgets, resolved duels) reaches the
 client through uncached reads. It stops being survivable the moment a Class B
 resource is cached, since a stale leaderboard would then outlive the reset that
-zeroed it. **The honest key is `Era.id`**, which changes on every reset — and
-today it reaches the client only inside an `era_announcement` feed payload, never
-as a per-response stamp. Adding it to `/auth/me` is the follow-up this ADR
-implies; until then, do not cache anything derived from era-scoped stats.
+zeroed it. **The honest key is `Era.id`**, which changes on every reset. The Amendment
+below moved the stamp to it.
 
 **Bad — an admin faction-status flip is now invisible until reload.** Under the
 old bound it self-healed in five minutes. The trade is accepted on the argument
@@ -168,11 +166,8 @@ everything the stamp would have invalidated.
 "changing it takes a deploy", and the claim that `/game-config` "cannot change
 while the process is running", no longer hold: a mod can switch eras from the admin
 page, and `/game-config` then serialises a different ruleset. Class A stays
-session-long because the **epoch** covers this: a switch to a differently named
-era moves `era_name` on `/auth/me` and `/game-config`, and every cache drops.
-
-Unchanged and still open: a switch to, or reset of, an era with the **same
-`era_name`** does not move the stamp (see "Bad — the stamp is coarser than the
-event"). The `Era.id` follow-up is therefore required, not optional, before any
-score-derived read is cached. `useTasks` and `usePraxes` hold viewer-keyed Class B
-first pages on that epoch, so they inherit both the fix and the gap.
+session-long because the **epoch** covers this: the stamp is
+`Era.id` on `/auth/me` and `/game-config` (0 when unseeded), so a switch to
+a differently named era, a same-name switch, or a reset all drop every cache.
+`useTasks` and `usePraxes` hold viewer-keyed Class B first pages on that epoch and
+inherit it.

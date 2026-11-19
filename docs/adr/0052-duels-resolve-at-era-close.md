@@ -68,8 +68,8 @@ unresolved duel.
 
 ## Amendment (2026-11-18, #3419, #3427): ties and `resolved_era_id`
 
-**A tie can have a winner.** "Equal -> NULL" is no longer the whole rule. On level
-votes, `duel_winner()` (`services/duel_outcome.py`) gives the win to the **sole**
+**A tie can have a winner.** "Equal -> NULL" is no longer the whole rule. On equal
+`points_from_votes`, `sole_tie_taker_slug` (`services/scoring.py`) gives the win to the **sole**
 faction holding the era's `takes_duel_ties` perk (`game_config.py`, #748, #2664).
 Two holders cancel and the tie stays NULL. The perk is **per-era faction data**,
 not a permanent advantage: Era 1 gives it to S.N.I.D.E., and another era may give
