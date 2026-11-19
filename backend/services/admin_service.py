@@ -1,6 +1,7 @@
 """Admin-only service functions for ad-hoc database management."""
 
 import logging
+from dataclasses import dataclass
 from typing import Optional
 
 from fastapi import HTTPException
@@ -31,6 +32,7 @@ from models.vote import Vote
 from schemas.admin import (
     AdminRow,
     AccountDetail,
+    AccountPage,
     AccountSummary,
     AdminTaskPatch,
     CharacterBrief,
@@ -46,6 +48,7 @@ from seed import upsert_era_factions
 from services.faction_service import refuse_hidden_faction
 from services.character import record_level_reached
 from services.duel import forfeit_settled_duels_for_character
+from services.praxis import moderate_praxis
 from services.era import (
     apply_era_reset,
     commit_and_bind_live_era,
@@ -58,25 +61,83 @@ from services.scoring import compute_vote_budget, compute_votes_available
 
 logger = logging.getLogger(__name__)
 
+ACCOUNT_PAGE_DEFAULT = 50
+ACCOUNT_PAGE_MAX = 200
+
 
 async def list_accounts(
     session: AsyncSession,
-    email_filter: str | None = None,
-) -> list[AccountSummary]:
-    query = select(Account).order_by(Account.created_at.desc())
-    if email_filter:
-        query = query.where(Account.email.ilike(f"%{email_filter}%"))
-    result = await session.execute(query)
-    accounts = result.scalars().all()
-    return [
-        AccountSummary(
-            id=account.id,
-            email=account.email,
-            status=account.status.value,
-            created_at=account.created_at,
+    search: str | None = None,
+    limit: int = ACCOUNT_PAGE_DEFAULT,
+    offset: int = 0,
+) -> AccountPage:
+    """One page of accounts; ``search`` matches email or any character's name."""
+    match_clause = None
+    if search:
+        pattern = f"%{search}%"
+        match_clause = or_(
+            Character.username.ilike(pattern), Character.display_name.ilike(pattern)
         )
-        for account in accounts
-    ]
+    query = select(Account)
+    if match_clause is not None:
+        query = query.where(
+            or_(
+                Account.email.ilike(f"%{search}%"),
+                select(Character.id)
+                .where(Character.account_id == Account.id, match_clause)
+                .exists(),
+            )
+        )
+    total = (
+        await session.execute(select(func.count()).select_from(query.subquery()))
+    ).scalar_one()
+    accounts = (
+        (
+            await session.execute(
+                # id breaks created_at ties so pages stay disjoint.
+                query.order_by(Account.created_at.desc(), Account.id.desc())
+                .limit(limit)
+                .offset(offset)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    matched: dict[int, list[CharacterBrief]] = {}
+    if match_clause is not None and accounts:
+        rows = await session.execute(
+            select(Character)
+            .where(
+                Character.account_id.in_([account.id for account in accounts]),
+                match_clause,
+            )
+            .order_by(Character.created_at)
+        )
+        for character in rows.scalars():
+            matched.setdefault(character.account_id, []).append(
+                CharacterBrief(
+                    id=character.id,
+                    username=character.username,
+                    display_name=character.display_name,
+                    faction_slug=character.faction_slug,
+                    status=character.status.value,
+                )
+            )
+    return AccountPage(
+        items=[
+            AccountSummary(
+                id=account.id,
+                email=account.email,
+                status=account.status.value,
+                created_at=account.created_at,
+                matched_characters=matched.get(account.id, []),
+            )
+            for account in accounts
+        ],
+        total=total,
+        limit=limit,
+        offset=offset,
+    )
 
 
 async def get_account_detail(account_id: int, session: AsyncSession) -> AccountDetail:
@@ -206,6 +267,17 @@ async def game_overview(session: AsyncSession) -> OverviewStats:
             Account.status == AccountStatus.suspended
         )
     )
+    active_accounts_result = await session.execute(
+        select(func.count()).select_from(Account).where(
+            Account.status == AccountStatus.active,
+            select(Character.id)
+            .where(
+                Character.account_id == Account.id,
+                Character.status != CharacterStatus.banned,
+            )
+            .exists(),
+        )
+    )
 
     return OverviewStats(
         accounts=account_count_result.scalar_one(),
@@ -215,6 +287,7 @@ async def game_overview(session: AsyncSession) -> OverviewStats:
         votes=vote_count_result.scalar_one(),
         flagged_praxis=flagged_count_result.scalar_one(),
         suspended_accounts=suspended_count_result.scalar_one(),
+        active_accounts=active_accounts_result.scalar_one(),
     )
 
 
@@ -266,6 +339,78 @@ async def flags_for_comments(
             _build_flag_out(flag, flagged_by_name)
         )
     return flags_by_comment
+
+
+@dataclass(frozen=True)
+class PraxisAuthorModeration:
+    account_id: int
+    username: str
+    character_status: str
+    account_status: str
+    flagged_count: int
+
+
+async def authors_for_moderation(
+    character_ids: set[int], session: AsyncSession
+) -> dict[int, PraxisAuthorModeration]:
+    """Account and moderation state per author character, for the queue's cards."""
+    if not character_ids:
+        return {}
+    result = await session.execute(
+        select(
+            Character.id,
+            Character.account_id,
+            Character.username,
+            Character.status,
+            Account.status,
+        )
+        .join(Account, Account.id == Character.account_id)
+        .where(Character.id.in_(character_ids))
+    )
+    flagged_counts = dict(
+        (
+            await session.execute(
+                select(Praxis.created_by_id, func.count())
+                .where(
+                    Praxis.created_by_id.in_(character_ids),
+                    Praxis.moderation_status == ModerationStatus.flagged,
+                )
+                .group_by(Praxis.created_by_id)
+            )
+        ).all()
+    )
+    return {
+        character_id: PraxisAuthorModeration(
+            account_id=account_id,
+            username=username,
+            character_status=character_status.value,
+            account_status=account_status.value,
+            flagged_count=flagged_counts.get(character_id, 0),
+        )
+        for (
+            character_id,
+            account_id,
+            username,
+            character_status,
+            account_status,
+        ) in result.all()
+    }
+
+
+async def remove_flagged_praxes_by_author(
+    character_id: int, session: AsyncSession
+) -> int:
+    """Hide every open-flagged praxis by one author (the single remove, in bulk)."""
+    result = await session.execute(
+        select(Praxis.id).where(
+            Praxis.created_by_id == character_id,
+            Praxis.moderation_status == ModerationStatus.flagged,
+        )
+    )
+    praxis_ids = list(result.scalars())
+    for praxis_id in praxis_ids:
+        await moderate_praxis(praxis_id, ModerationStatus.hidden.value, None, session)
+    return len(praxis_ids)
 
 
 async def apply_ban(
