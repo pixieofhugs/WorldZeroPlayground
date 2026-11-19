@@ -405,8 +405,8 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     }
   }, [idParam, title, navigate, refetch, user?.character?.id, duel]);
 
-  // Keep the draft and leave (#1081); the room already has every keystroke
-  // (#1743). The profile grid shows the viewer's own in_progress work.
+  // Keep the draft and leave (#1081); edits are on this phone (IndexedDB) and
+  // reach the room on the next sync (#1743). The profile grid shows the viewer's own in_progress work.
   const saveDraft = useCallback(async () => {
     if (!idParam) return;
     setError("");

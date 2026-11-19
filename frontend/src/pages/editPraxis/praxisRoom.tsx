@@ -30,7 +30,8 @@ import {
   samePresence,
 } from "./roomPresence";
 import { shouldReconnectRoom } from "./roomReconnect";
-import { roomStoreName, setRoomUnsent, trackRoomStore } from "./roomStore";
+import { proveRoomDelivery } from "./roomDelivery";
+import { roomStoreName, trackRoomDelivery, trackRoomStore } from "./roomStore";
 import { API_BASE_URL } from "../../api/baseUrl";
 
 /** Must match `ROOM_BODY_KEY` in `praxis_room.py`; a mismatch is a silent empty doc. */
@@ -180,11 +181,7 @@ export function PraxisRoomProvider({
     if (provider.synced) markSeeded();
     const onSync = (isSynced: boolean) => {
       setSynced(isSynced);
-      // Our step-2 reply precedes this event on the same socket, so the server has our edits.
-      if (isSynced) {
-        markSeeded();
-        setRoomUnsent(praxisId, false);
-      }
+      if (isSynced) markSeeded();
     };
     setSynced(provider.synced);
     provider.on("sync", onSync);
@@ -196,19 +193,17 @@ export function PraxisRoomProvider({
     };
     offline.on("synced", onOfflineLoaded);
 
-    const onDocUpdate = (_update: Uint8Array, origin: unknown) => {
-      // A live socket relays a local edit at once; anything else (offline,
-      // restored from the store) waits for the next sync.
-      if (origin !== provider && !(provider.wsconnected && provider.synced)) {
-        setRoomUnsent(praxisId, true);
-      }
+    const onDocUpdate = () => {
       onUpdateRef.current?.(new Date());
     };
     doc.on("update", onDocUpdate);
+    const untrackDelivery = trackRoomDelivery(praxisId, (timeoutMs) =>
+      proveRoomDelivery(provider, doc, timeoutMs),
+    );
 
     return () => {
       doc.off("update", onDocUpdate);
-      setRoomUnsent(praxisId, false);
+      untrackDelivery();
       provider.off("sync", onSync);
       provider.off("status", onStatus);
       provider.off("closed", onClosed);

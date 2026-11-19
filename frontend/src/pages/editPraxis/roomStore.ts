@@ -55,22 +55,23 @@ export function discardRoomStore(praxisId: number): void {
   indexedDB.deleteDatabase(roomStoreName(praxisId));
 }
 
-/** Rooms with edits the server may lack: publishing seals its document and the discard deletes our only copy. */
-const unsent = new Set<number>();
+/** Per open room: resolves true once the server is proven to hold every local edit. */
+const deliveryProofs = new Map<number, (timeoutMs: number) => Promise<boolean>>();
 
-export function setRoomUnsent(praxisId: number, hasUnsent: boolean): void {
-  if (hasUnsent) unsent.add(praxisId);
-  else unsent.delete(praxisId);
+export function trackRoomDelivery(
+  praxisId: number,
+  prove: (timeoutMs: number) => Promise<boolean>,
+): () => void {
+  deliveryProofs.set(praxisId, prove);
+  return () => {
+    if (deliveryProofs.get(praxisId) === prove) deliveryProofs.delete(praxisId);
+  };
 }
 
+/** Publish seals the server's document and the discard deletes our only copy, so prove delivery first. No open room, nothing to lose. */
 export async function whenRoomFlushed(
   praxisId: number,
   timeoutMs: number,
 ): Promise<boolean> {
-  const deadline = Date.now() + timeoutMs;
-  while (unsent.has(praxisId)) {
-    if (Date.now() >= deadline) return false;
-    await new Promise((resolve) => setTimeout(resolve, 100));
-  }
-  return true;
+  return (await deliveryProofs.get(praxisId)?.(timeoutMs)) ?? true;
 }
