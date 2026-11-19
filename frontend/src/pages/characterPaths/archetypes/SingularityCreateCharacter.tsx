@@ -426,6 +426,7 @@ export default function SingularityCreateCharacter({ state }: { state: CreateCha
                 <button
                   type="button"
                   onClick={() => navigate('/')}
+                  className="touch-target"
                   style={chassisLabel({
                     background: 'none',
                     border: 'none',
