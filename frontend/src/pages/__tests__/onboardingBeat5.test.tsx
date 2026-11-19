@@ -13,6 +13,7 @@ vi.mock('../../api/votes', () => ({ castVote: mocks.castVote }))
 vi.mock('../../hooks/useTheme', () => ({ useTheme: () => ({ theme: 'dark', toggle: () => {} }) }))
 
 import Beat5 from '../onboarding/beats/Beat5'
+import OnboardingFlow from '../onboarding/OnboardingFlow'
 import { HoldNextContext } from '../onboarding/beats/holdNext'
 
 function mount() {
@@ -74,5 +75,34 @@ describe('onboarding beat 5', () => {
       vi.advanceTimersByTime(10_000)
     })
     expect(view.container.textContent).toContain('47')
+  })
+})
+
+describe('onboarding flow stage a11y', () => {
+  it('keeps the vote reachable in beat 5, castable by keyboard, and every other stage hidden', async () => {
+    window.matchMedia = ((q: string) => ({ matches: true, media: q, addEventListener() {}, removeEventListener() {} })) as never
+    const { container, getByTestId } = render(
+      <MemoryRouter>
+        <OnboardingFlow resumed={false} onAccepted={() => {}} />
+      </MemoryRouter>,
+    )
+    const stage = () => container.querySelector('.ob-stage')!
+    fireEvent.click(getByTestId('onboarding-start'))
+    for (let beat = 1; beat <= 4; beat++) {
+      expect(stage().getAttribute('aria-hidden')).toBe('true')
+      expect(container.querySelector('.swing')?.hasAttribute('inert') ?? true).toBe(true)
+      fireEvent.click(container.querySelector('.ob-next')!)
+    }
+    expect(stage().closest('[aria-hidden="true"]')).toBeNull()
+    const star = stage().querySelector<HTMLElement>('button[aria-pressed]')!
+    expect(star.closest('[aria-hidden="true"]')).toBeNull()
+    expect(container.querySelector('.ob-hold')).not.toBeNull()
+    star.focus()
+    fireEvent.keyDown(star, { key: 'Enter' })
+    fireEvent.click(star)
+    expect(container.querySelector('.ob-hold')).toBeNull()
+    expect(container.querySelector('.ob-next')).not.toBeNull()
+    fireEvent.click(container.querySelector('.ob-next')!)
+    expect(stage().getAttribute('aria-hidden')).toBe('true')
   })
 })
