@@ -248,9 +248,9 @@ copy key, which is likewise written by a human and has no surrogate id.
 | `task.py` | `task` | `id` | `created_by_id` (+ `primary_faction_slug`, `metatask_faction_slug`, strings) |
 | `taunt_message.py` | `taunt_message` | `id` | `from_character_id`, `to_character_id` |
 | `terms_acceptance.py` | `terms_acceptance` | `id` | `account_id` |
-| `vote.py` | `vote` | `id` | `praxis_id`, `voter_character_id`, `voter_account_id` |
+| `vote.py` | `vote` | `id` | `praxis_id`, `voter_character_id`, `voter_account_id`, `era_id` |
 
-32 tables, 58 integer foreign keys, 5 string ones.
+32 tables, 59 integer foreign keys, 5 string ones.
 
 `backend/tests/unit/test_model_conventions.py` parses this table and asserts both
 halves against `Base.metadata`, so a new model that skips this list fails there.

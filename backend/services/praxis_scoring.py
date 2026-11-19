@@ -70,7 +70,7 @@ async def compute_contributions(
     )
     tasks_by_id: dict[int, Task] = {t.id: t for t in tasks_result.scalars()}
 
-    tallies = await tally_votes(praxis_ids, session)
+    tallies = await tally_votes(praxis_ids, session, cast_in="sealed")
 
     # ``resolved`` included so an era-frozen duel keeps its modifier (ADR-0052).
     duel_result = await session.execute(
@@ -112,7 +112,9 @@ async def compute_contributions(
 
     opp_tallies: dict[int, VoteTally] = {}
     if opponent_praxis_ids:
-        opp_tallies = await tally_votes(list(opponent_praxis_ids), session)
+        opp_tallies = await tally_votes(
+            list(opponent_praxis_ids), session, cast_in="sealed"
+        )
 
     # Every praxis type earns metatask points (ADR-0051), outside both
     # multipliers (ADR-0086). Same rows as praxis_out.applied_metatasks_for (the

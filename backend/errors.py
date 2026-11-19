@@ -30,6 +30,7 @@ class ErrorCode(str, enum.Enum):
     vote_budget_exhausted = "VOTE_BUDGET_EXHAUSTED"
     vote_level_too_low = "VOTE_LEVEL_TOO_LOW"
     vote_needs_received_vote = "VOTE_NEEDS_RECEIVED_VOTE"
+    vote_cast_in_closed_era = "VOTE_CAST_IN_CLOSED_ERA"
 
     # -- Level gates --------------------------------------------------------
     task_level_too_low = "TASK_LEVEL_TOO_LOW"
@@ -74,6 +75,8 @@ class ErrorCode(str, enum.Enum):
     # -- Praxis posting limits (#3473, #3474) ---------------------------------
     #: A praxis needs one photo, video or audio file to submit or to keep.
     praxis_needs_proof = "PRAXIS_NEEDS_PROOF"
+    #: 413 too big, 422 not a Yjs update: the draft the browser sent with a submit.
+    praxis_doc_update_invalid = "PRAXIS_DOC_UPDATE_INVALID"
     #: 429. ``params``: ``hours`` until the next post, ``next_post_at`` (ISO).
     praxis_post_cooldown = "PRAXIS_POST_COOLDOWN"
 

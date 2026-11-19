@@ -53,7 +53,6 @@ from services.character_stats import (
 from services.era import (
     get_current_era_row,
     get_current_era_row_safe,
-    get_era_row_for_praxis,
     get_or_create_stats,
 )
 from services.era_gates import may_create_collab_praxis
@@ -70,7 +69,7 @@ from services.praxis_duel import (
     get_duel_for_praxis,
     maybe_settle_duel,
 )
-from services.praxis_room import close_member_sockets
+from services.praxis_room import close_member_sockets, merge_client_state
 from services.praxis_visibility import (
     duel_side_hidden_condition,
     praxis_membership_condition,
@@ -630,13 +629,9 @@ async def unsubmit_praxis(
     await session.flush()
     # The room reseeds from body_text on first connect (ADR-0073 rule 7).
 
-    # Every member, in the era the praxis was sealed in (#1345).
-    era_row = await get_era_row_for_praxis(praxis, session)
-    await recalculate_members_stats(praxis, session, era, era_row=era_row)
+    await recalculate_members_stats(praxis, session, era)
     if forfeit_winner_character_id is not None:
-        await recalculate_character_stats(
-            forfeit_winner_character_id, session, era, era_row=era_row
-        )
+        await recalculate_character_stats(forfeit_winner_character_id, session, era)
         await session.flush()
     return await get_praxis(praxis_id, session)
 
@@ -1273,10 +1268,7 @@ async def leave_praxis(
 
     await collab_consensus.on_member_leave(praxis, session, era)
 
-    # In the praxis's era (#1345).
-    await recalculate_character_stats(
-        character_id, session, era, era_row=await get_era_row_for_praxis(praxis, session)
-    )
+    await recalculate_character_stats(character_id, session, era)
     await session.flush()
     return await get_praxis(praxis_id, session)
 
@@ -1306,6 +1298,7 @@ async def submit_praxis(
     character_id: int,
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
+    doc_state: str | None = None,
 ) -> Praxis:
     """**Propose**, then **Approve** — the two signals that publish (ADR-0079).
 
@@ -1316,6 +1309,16 @@ async def submit_praxis(
     # Plain read on purpose (#2874): settling first would seal twice (double
     # taunts, habit re-stamp, new submitted_at). The settling read below seals.
     praxis = await get_praxis_for_member(praxis_id, character_id, "submit", session)
+
+    # The sealed text must hold every edit the browser had; sockets give no ack (#3611).
+    merged = {}
+    if doc_state is not None:
+        merged = await merge_client_state(praxis_id, doc_state)
+    # Against the stored row, not the pre-merge room: unflushed edits are unseen too.
+    if any(getattr(praxis, column) != value for column, value in merged.items()):
+        # Text the other members never saw: a live proposal or published collab
+        # falls back, and this submit proposes the merged text afresh (ADR-0079).
+        await collab_consensus.on_member_edit(praxis, session, era)
 
     went_live = await collab_consensus.on_submit(praxis, character_id, session, era)
     if went_live:
@@ -1357,14 +1360,11 @@ async def moderate_praxis(
 
     await session.flush()
     await _apply_media_publication(praxis, session)
-    era_row = await get_era_row_for_praxis(praxis, session)
-    await recalculate_members_stats(praxis, session, era, era_row=era_row)
+    await recalculate_members_stats(praxis, session, era)
 
     opponent_character_id = await _duel_opponent_character_id(praxis_id, session)
     if opponent_character_id is not None:
-        await recalculate_character_stats(
-            opponent_character_id, session, era, era_row=era_row
-        )
+        await recalculate_character_stats(opponent_character_id, session, era)
         await session.flush()
     return await get_praxis(praxis_id, session)
 

@@ -1,8 +1,5 @@
 // @vitest-environment jsdom
-/**
- * #3579 — publish seals the server's document, so it must wait until the
- * server holds this browser's offline edits (`trackRoomDelivery`), not post at once.
- */
+/** #3611 — publish carries the browser's room state, so the seal can't miss offline edits. */
 import type { ReactNode } from 'react'
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
@@ -29,7 +26,7 @@ vi.mock('../../../auth/AuthContext', () => ({
 }))
 
 import { useEditPraxis } from '../useEditPraxis'
-import { trackRoomDelivery } from '../roomStore'
+import { trackRoomState } from '../roomStore'
 
 const wrapper = ({ children }: { children: ReactNode }) => <MemoryRouter>{children}</MemoryRouter>
 
@@ -39,24 +36,13 @@ afterEach(() => {
   submit.mockClear()
 })
 
-it('holds the submit until delivery is proven, and refuses when it is not', async () => {
-  let prove!: (ok: boolean) => void
-  untrack = trackRoomDelivery(1, () => new Promise<boolean>((r) => { prove = r }))
+it('sends the open room state with the submit', async () => {
+  untrack = trackRoomState(1, () => 'c3RhdGU=')
   const { result } = renderHook(() => useEditPraxis('1'), { wrapper })
   await waitFor(() => expect(result.current.praxis).not.toBeNull())
-
-  let done!: Promise<void>
   void act(async () => {
-    done = result.current.publish()
+    void result.current.publish()
   })
-  await new Promise((r) => setTimeout(r, 50))
-  expect(submit).not.toHaveBeenCalled()
-  await act(async () => { prove(false); await done })
-  expect(submit).not.toHaveBeenCalled()
-
-  void act(async () => {
-    done = result.current.publish()
-  })
-  await act(async () => { prove(true); await done })
-  expect(submit).toHaveBeenCalledTimes(1)
+  await waitFor(() => expect(submit).toHaveBeenCalled())
+  expect(submit).toHaveBeenCalledWith(1, 'c3RhdGU=')
 })

@@ -469,7 +469,7 @@ async def crowned_praxis_ids(
     )
     praxes = list(result.scalars().all())
     contributions = await author_contributions_for(praxes, session, era)
-    tallies = await tally_votes([p.id for p in praxes], session)
+    tallies = await tally_votes([p.id for p in praxes], session, cast_in="sealed")
 
     scores: dict[int, dict[int, float]] = {}
     for praxis in praxes:
