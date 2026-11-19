@@ -125,9 +125,9 @@ async def test_batch_gates_metatask_by_author_level_and_reads_own_habit_row(
         db_session.add(collab)
         await db_session.flush()
         for member, bonus in zip((author, other), habits):
-            db_session.add(
-                PraxisMember(praxis_id=collab.id, character_id=member, habit_bonus_points=bonus)
-            )
+            db_session.add(PraxisMember(
+                praxis_id=collab.id, character_id=member, habit_bonus_points=bonus
+            ))
         db_session.add(PraxisMetaTask(praxis_id=collab.id, task_id=meta.id))
         collabs.append(collab)
     await db_session.commit()
