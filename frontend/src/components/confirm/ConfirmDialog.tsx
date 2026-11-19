@@ -5,7 +5,7 @@
  *
  * A11y: labelled/described dialog, `useModal` (Escape, Tab trap, focus restore), focus on DISMISS (the
  * safe half), backdrop click
- * dismisses. These need a DOM, so they are verified by hand.
+ * dismisses.
  * Settings' delete-account uses `children` + `confirmDisabled` (#2161).
  */
 import { useEffect, useId, useRef, type ReactNode } from 'react'

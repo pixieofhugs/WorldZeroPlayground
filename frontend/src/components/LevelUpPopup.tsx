@@ -220,6 +220,7 @@ function MobileLevelUpCard({
   continueText,
   onContinue,
   sealRing,
+  preview,
 }: {
   level: number
   rank: string
@@ -227,9 +228,10 @@ function MobileLevelUpCard({
   continueText: string
   onContinue: () => void
   sealRing: 'rainbow' | 'ink'
+  preview?: boolean
 }) {
   const { t } = useTranslation('progression')
-  const ref = useModal(onContinue)
+  const ref = useModal(onContinue, !preview)
   return (
     <div
       onClick={onContinue}
@@ -327,6 +329,8 @@ interface LevelUpPopupProps {
   continueLabel?: string
   sealRing?: 'rainbow' | 'ink'
   dimBackdrop?: boolean
+  /** An admin copy-sheet embed: no focus trap, Escape or focus steal. */
+  preview?: boolean
 }
 
 export default function LevelUpPopup({
@@ -337,16 +341,18 @@ export default function LevelUpPopup({
   continueLabel,
   sealRing = 'rainbow',
   dimBackdrop = true,
+  preview,
 }: LevelUpPopupProps) {
   const { t } = useTranslation('progression')
   const formFactor = useFormFactor()
   const continueText = continueLabel ?? t('popup.continue')
   const rank = tKey(t, `ranks.${rankKey}`)
   // The mobile card mounts its own; this one only guards the desktop card.
-  const ref = useModal(onContinue, formFactor !== 'mobile')
+  const ref = useModal(onContinue, formFactor !== 'mobile' && !preview)
   if (formFactor === 'mobile') {
     return (
       <MobileLevelUpCard
+        preview={preview}
         level={level}
         rank={rank}
         abilities={abilities}

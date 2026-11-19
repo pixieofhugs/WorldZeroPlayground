@@ -3,7 +3,7 @@
  * whose cast closed the gate. Transient client state derived from
  * `praxis.members[]`; no API, no persistence. Mobile full-screen, desktop a
  * centred panel (#494); continue is manual, never a timer. Chrome mirrors
- * LevelUpPopup: dim overlay, role="dialog", autofocused primary, no trap.
+ * LevelUpPopup: dim overlay, role="dialog", autofocused primary, `useModal` trap.
  */
 import type { PraxisMemberOut } from '../../api/praxis'
 import { drawAtRoot } from '../ui/drawAtRoot'

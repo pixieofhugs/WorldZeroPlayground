@@ -5,6 +5,8 @@ const FOCUSABLE =
 
 // Open modals, topmost last: only the top one answers Escape and Tab.
 const open: object[] = []
+// Where the last closed modal sent focus, for a keyed successor whose own opener was that modal's now-detached button.
+let lastRestored: Element | null = null
 
 /**
  * Shared modal behaviour (#3568); attach the ref to the `role="dialog"` element.
@@ -27,6 +29,8 @@ export function useModal<T extends HTMLElement = HTMLDivElement>(
   useEffect(() => {
     const panel = ref.current
     if (!active || !panel) return
+    if (!opener.current?.isConnected) opener.current = lastRestored
+    lastRestored = null
     const token = {}
     open.push(token)
     const items = () => [...panel.querySelectorAll<HTMLElement>(FOCUSABLE)]
@@ -52,7 +56,10 @@ export function useModal<T extends HTMLElement = HTMLDivElement>(
       open.splice(open.indexOf(token), 1)
       const back = opener.current
       opener.current = null
-      if (back instanceof HTMLElement) back.focus()
+      lastRestored = back
+      // Focus already elsewhere (a keyed successor's autoFocus) is not ours to take.
+      const at = document.activeElement
+      if (back instanceof HTMLElement && (!at || at === document.body)) back.focus()
     }
   }, [active])
 

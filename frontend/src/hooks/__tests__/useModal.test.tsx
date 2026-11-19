@@ -74,4 +74,60 @@ describe('useModal', () => {
     fireEvent.keyDown(document, { key: 'Escape' })
     expect(screen.getByRole('dialog')).toBeTruthy()
   })
+
+  it('a keyed queue hands the first opener down and keeps each autoFocus', () => {
+    function Queued({ id, next }: { id: number; next: () => void }) {
+      const ref = useModal(next)
+      return (
+        <div ref={ref} role="dialog" aria-label="q">
+          <button>skip{id}</button>
+          <button autoFocus onClick={next}>apply{id}</button>
+        </div>
+      )
+    }
+    function Queue() {
+      const [n, setN] = useState(0)
+      return (
+        <>
+          <button onClick={() => setN(3)}>add</button>
+          {n > 0 && <Queued key={n} id={n} next={() => setN(n - 1)} />}
+        </>
+      )
+    }
+    render(<Queue />)
+    const add = screen.getByText('add')
+    add.focus()
+    fireEvent.click(add)
+    expect(document.activeElement).toBe(screen.getByText('apply3'))
+    fireEvent.click(screen.getByText('apply3'))
+    expect(document.activeElement).toBe(screen.getByText('apply2'))
+    fireEvent.click(screen.getByText('apply2'))
+    expect(document.activeElement).toBe(screen.getByText('apply1'))
+    fireEvent.click(screen.getByText('apply1'))
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(document.activeElement).toBe(add)
+  })
+
+  it('an inactive (preview) modal does not trap Tab or answer Escape', () => {
+    function Preview({ onClose }: { onClose: () => void }) {
+      const ref = useModal(onClose, false)
+      return (
+        <div ref={ref} role="dialog" aria-label="p">
+          <button>inside</button>
+        </div>
+      )
+    }
+    const onClose = vi.fn()
+    render(
+      <>
+        <button>editor</button>
+        <Preview onClose={onClose} />
+      </>,
+    )
+    screen.getByText('editor').focus()
+    expect(fireEvent.keyDown(document.activeElement!, { key: 'Tab' })).toBe(true)
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(onClose).not.toHaveBeenCalled()
+    expect(document.activeElement).toBe(screen.getByText('editor'))
+  })
 })

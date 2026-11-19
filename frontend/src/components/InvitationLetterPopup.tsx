@@ -34,11 +34,14 @@ function tArr<T>(t: TFunction<'factions'>, key: string): T[] {
 interface InvitationLetterPopupProps {
   factionSlug: string
   onClose: () => void
+  /** An admin copy-sheet embed: no focus trap, Escape or focus steal. */
+  preview?: boolean
 }
 
 export default function InvitationLetterPopup({
   factionSlug,
   onClose,
+  preview,
 }: InvitationLetterPopupProps) {
   const { t } = useTranslation('factions')
   const { user, applyUser } = useAuth()
@@ -48,7 +51,7 @@ export default function InvitationLetterPopup({
   const [confirming, setConfirming] = useState(false)
   const [joining, setJoining] = useState(false)
   const [joinError, setJoinError] = useState<string | null>(null)
-  const ref = useModal(onClose)
+  const ref = useModal(onClose, !preview)
 
   const name = factionName(factionSlug)
   const base = `${factionSlug}.invitation`
