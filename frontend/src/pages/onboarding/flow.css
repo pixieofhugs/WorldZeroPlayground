@@ -87,6 +87,7 @@
 .ob-stage{position:relative;flex:1;min-height:330px;display:flex;align-items:center;justify-content:center}
 .ob-sheet{box-sizing:border-box;border:3px solid transparent;border-radius:14px;background:linear-gradient(var(--faction-default-card-bg),var(--faction-default-card-bg)) padding-box,var(--faction-default-rainbow) border-box;box-shadow:0 12px 32px -14px var(--color-cast-shadow);color:var(--faction-default-card-text)}
 .ob-box{position:sticky;bottom:12px;z-index:5;width:100%;max-width:900px;align-self:center;padding:20px 24px 10px;display:flex;flex-direction:column;gap:10px}
+@media (max-width:767px) and (pointer:coarse){.ob-box{bottom:calc(12px + var(--tab-bar-clearance))}}
 .ob-box-top{display:flex;align-items:center;gap:14px}
 .ob-pips{display:flex;gap:5px}
 .ob-pips i{width:7px;height:7px;border-radius:2px;background:var(--faction-default-border)}
