@@ -224,7 +224,12 @@ def test_advertise_and_enforce_agree_across_the_matrix(field: str) -> None:
                 field,
             )
         )
-        != (enforced := predicate(level, slug, is_admin, ERA_1))
+        != (
+            enforced := predicate(
+                level, slug, is_admin, ERA_1,
+                **({"has_received_vote": True} if field == "can_vote" else {}),
+            )
+        )
     ]
     assert not disagreements, (
         f"/auth/me advertises {field} differently from "
