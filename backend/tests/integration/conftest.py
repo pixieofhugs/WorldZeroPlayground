@@ -89,6 +89,12 @@ async def test_engine():
     await engine.dispose()
 
 
+@pytest.fixture
+def media_root(tmp_path, monkeypatch):
+    monkeypatch.setattr(settings, "MEDIA_ROOT", str(tmp_path))
+    return tmp_path
+
+
 @pytest_asyncio.fixture
 async def db_connection(test_engine):
     """One raw connection per test, wrapped in a transaction that rolls back."""

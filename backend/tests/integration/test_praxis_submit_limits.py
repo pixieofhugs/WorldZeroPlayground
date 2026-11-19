@@ -2,15 +2,17 @@
 from datetime import datetime, timedelta, timezone
 
 import pytest
+from fastapi import HTTPException
 from httpx import AsyncClient
-from sqlalchemy import delete, func, select
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from game_config import CURRENT_ERA
 from models.account import Account
 from models.character import Character
-from models.praxis import MediaItem, Praxis, PraxisStatus
+from models.praxis import MediaItem, Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.task import Task
+from services import collab_consensus
 from tests.integration.factories import attach_proof, make_admin, make_task
 
 pytestmark = [pytest.mark.asyncio, pytest.mark.proof_rule]
@@ -70,8 +72,14 @@ async def test_admin_may_submit_without_media(
 
 
 async def test_last_media_of_a_submitted_praxis_cannot_be_deleted(
-    client: AsyncClient, db_session: AsyncSession, active_task: Task, auth_headers: dict
+    client: AsyncClient,
+    db_session: AsyncSession,
+    active_task: Task,
+    auth_headers: dict,
+    media_root,
 ):
+    proof = media_root / "proof.png"
+    proof.write_bytes(b"x")
     praxis_id = await _draft(client, auth_headers, active_task)
     await _give_proof(db_session, praxis_id)
     await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers)
@@ -88,6 +96,7 @@ async def test_last_media_of_a_submitted_praxis_cannot_be_deleted(
         .select_from(MediaItem)
         .where(MediaItem.praxis_id == praxis_id)
     ) == 1
+    assert proof.exists()
 
 
 async def test_a_collab_needs_one_media_item_from_any_member(
@@ -186,3 +195,33 @@ async def test_admin_has_no_cooldown(
     _, first = await _post(client, db_session, auth_headers, active_task)
     _, second = await _post(client, db_session, auth_headers, other_task)
     assert first.status_code == second.status_code == 200
+
+
+async def test_cooldown_check_sees_a_post_committed_after_the_account_was_loaded(
+    db_session: AsyncSession,
+    account: Account,
+    character: Character,
+    active_task: Task,
+):
+    """The auth dependency loads the Account first; a locked re-read must refresh it."""
+    object.__setattr__(CURRENT_ERA, "praxis_post_cooldown_hours", 24)
+    praxis = Praxis(
+        task_id=active_task.id, created_by_id=character.id, type=PraxisType.solo
+    )
+    db_session.add(praxis)
+    await db_session.flush()
+    db_session.add(PraxisMember(praxis_id=praxis.id, character_id=character.id))
+    await attach_proof(db_session, praxis)
+    await db_session.commit()
+    await db_session.refresh(praxis, ["members"])
+    # The identity map now holds the stale None.
+    assert account.last_praxis_posted_at is None
+    await db_session.execute(
+        update(Account)
+        .where(Account.id == account.id)
+        .values(last_praxis_posted_at=datetime.now(timezone.utc))
+        .execution_options(synchronize_session=False)
+    )
+    with pytest.raises(HTTPException) as refused:
+        await collab_consensus.on_submit(praxis, character.id, db_session, CURRENT_ERA)
+    assert refused.value.status_code == 429

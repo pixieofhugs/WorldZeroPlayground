@@ -237,6 +237,7 @@ async def on_submit(
             .join(Character, Character.account_id == Account.id)
             .where(Character.id == character_id)
             .with_for_update()
+            .execution_options(populate_existing=True)
         )
         if account is not None:
             _check_post_cooldown(account, datetime.now(timezone.utc), era)

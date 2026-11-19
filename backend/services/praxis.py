@@ -807,18 +807,6 @@ async def delete_media_item(
     to the praxis. Paths go through ``resolve_stored_media_path`` (never a bare
     join); ``None`` means nothing on disk, and the row removal still succeeds.
     """
-    abs_path = resolve_stored_media_path(media_item.file_path)
-    if abs_path is not None:
-        try:
-            os.remove(abs_path)
-        except OSError:
-            pass
-        # rmdir refuses non-empty (pre-#1336 shared) directories.
-        try:
-            os.rmdir(os.path.dirname(abs_path))
-        except OSError:
-            pass
-
     if praxis.status == PraxisStatus.submitted:
         remaining = await session.scalar(
             select(func.count())
@@ -837,6 +825,19 @@ async def delete_media_item(
     await session.flush()
     # Cancels a pending publish (ADR-0012).
     await collab_consensus.on_member_edit(praxis, session, era)
+
+    # Last, so a refused delete never strands a row on a missing file.
+    abs_path = resolve_stored_media_path(media_item.file_path)
+    if abs_path is not None:
+        try:
+            os.remove(abs_path)
+        except OSError:
+            pass
+        # rmdir refuses non-empty (pre-#1336 shared) directories.
+        try:
+            os.rmdir(os.path.dirname(abs_path))
+        except OSError:
+            pass
 
 
 async def can_view_praxis(
