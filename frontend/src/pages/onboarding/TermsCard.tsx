@@ -125,7 +125,7 @@ export default function TermsCard({
       </OnboardingCard>
 
       <div aria-hidden="true" className="ob-sheet ob-sigstrip" data-testid="onboarding-signature">
-        <span className="ob-lora ob-sigx">x</span>
+        <span className="ob-lora ob-sigx">{'x'}</span>
         <span className="ob-sigline" />
         <svg className="ob-sig" viewBox="0 0 200 40" width="200" height="40">
           <path d="M4 30 C 10 4, 22 4, 18 26 C 16 36, 30 12, 34 22 C 36 30, 42 14, 48 22 C 52 30, 58 6, 64 20 C 68 32, 80 30, 76 20 C 72 10, 88 12, 96 24 C 102 32, 112 14, 120 22 C 128 30, 140 18, 196 26" />
