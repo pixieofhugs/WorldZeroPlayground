@@ -31,3 +31,35 @@ export function clearOnboardingHandoff(): void {
     // Nothing was stored if the write refused.
   }
 }
+
+/**
+ * The contract click, held through the OAuth redirect: the consent row can only
+ * be written once an account exists. A boolean like the mark above; `false` means
+ * storage refused, and the contract simply shows again after sign-in.
+ */
+export const HELD_TERMS_KEY = 'wz_terms_accepted'
+
+export function holdTermsAcceptance(): boolean {
+  try {
+    sessionStorage.setItem(HELD_TERMS_KEY, 'true')
+    return true
+  } catch {
+    return false
+  }
+}
+
+export function termsAcceptanceHeld(): boolean {
+  try {
+    return sessionStorage.getItem(HELD_TERMS_KEY) === 'true'
+  } catch {
+    return false
+  }
+}
+
+export function clearTermsAcceptance(): void {
+  try {
+    sessionStorage.removeItem(HELD_TERMS_KEY)
+  } catch {
+    // Nothing was stored if the write refused.
+  }
+}

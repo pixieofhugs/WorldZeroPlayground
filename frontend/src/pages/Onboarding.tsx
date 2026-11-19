@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
-import { clearOnboardingHandoff, onboardingHandoffPending } from '../utils/onboardingResume'
+import { clearOnboardingHandoff, clearTermsAcceptance, onboardingHandoffPending } from '../utils/onboardingResume'
 import { resolveHandoffDestination } from '../utils/onboardingHandoff'
 import OnboardingFlow from './onboarding/OnboardingFlow'
 
@@ -15,7 +15,9 @@ export default function Onboarding() {
 
   useEffect(() => {
     clearOnboardingHandoff()
-  }, [])
+    // A cold open runs the full flow; a stale held click must not skip the contract.
+    if (!resumed) clearTermsAcceptance()
+  }, [resumed])
 
   return (
     <OnboardingFlow

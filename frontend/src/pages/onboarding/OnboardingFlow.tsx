@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../auth/AuthContext'
+import { acceptTerms } from '../../api/terms'
+import { clearTermsAcceptance, holdTermsAcceptance, termsAcceptanceHeld } from '../../utils/onboardingResume'
 import AuthCard from './AuthCard'
+import Declined from './Declined'
 import TermsCard from './TermsCard'
 import Wisp from './Wisp'
 import { BEATS } from './beats'
 import { HoldNextContext } from './beats/holdNext'
-import { back, initialFlow, isBeat, next, skip, toSignIn, type Flow, type Step } from './flowSteps'
+import { back, decline, initialFlow, isBeat, next, skip, toSignIn, type Flow, type Step } from './flowSteps'
 import './flow.css'
 
 const TYPE_MS = 28
@@ -91,8 +94,27 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
   const [leaving, setLeaving] = useState(false)
   const [cameFrom, setCameFrom] = useState<Step | null>(null)
   const [held, setHeld] = useState<string | null>(null)
+  // After an OAuth round trip a held click is written once, before creation; a failure shows the contract again.
+  const [recording, setRecording] = useState(() => resumed && termsAcceptanceHeld())
+  const recordedOnce = useRef(false)
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
   useEffect(() => () => clearTimeout(timer.current), [])
+
+  useEffect(() => {
+    if (!recording || loading || recordedOnce.current) return
+    if (!user) return setRecording(false)
+    recordedOnce.current = true
+    acceptTerms().then(
+      () => {
+        clearTermsAcceptance()
+        onAccepted()
+      },
+      () => {
+        clearTermsAcceptance()
+        setRecording(false)
+      },
+    )
+  }, [recording, loading, user, onAccepted])
 
   const { step } = flow
   const n = isBeat(step) ? step : null
@@ -234,14 +256,27 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
 
       {step === 'signin' && <div className={screenCls}><AuthCard onBack={onBack} /></div>}
 
+      {step === 'declined' && (
+        <div className={screenCls}>
+          <Declined onReconsider={onBack} />
+        </div>
+      )}
+
       {step === 'contract' && (
         <div className={screenCls}>
-          {loading ? (
+          {loading || recording ? (
             <div className="page font-body text-muted">{tc('loading')}</div>
-          ) : !user ? (
-            <AuthCard onBack={onBack} />
           ) : (
-            <TermsCard onAccepted={onAccepted} onBack={onBack} />
+            <TermsCard
+              // A session writes the row now; a guest holds the click through sign-in.
+              record={user ? acceptTerms : async () => void holdTermsAcceptance()}
+              onAccepted={() => (user ? onAccepted() : move(next))}
+              onDecline={() => {
+                clearTermsAcceptance()
+                move(decline)
+              }}
+              onBack={onBack}
+            />
           )}
         </div>
       )}
