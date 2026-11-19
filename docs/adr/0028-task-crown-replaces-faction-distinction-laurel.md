@@ -1,6 +1,6 @@
 # ADR-0028 — The Task Crown replaces the Faction Distinction Laurel
 
-**Status:** Amended by ADR-0054
+**Status:** Amended by ADR-0054, ADR-0033
 **Date:** 2026-07-03
 
 **Supersedes:** the cross-task "faction champion" semantics of the Faction Distinction Laurel (`FdlLaurel` / `topPraxisIndex`)
@@ -15,6 +15,11 @@ per-card recolour of its inner disc + glyph only; everything else here stands.
 card shows), not raw vote-points. "Top score reduces to most vote-points" held while score was
 base + votes; the duel multiplier, habit bonus and metatask points now make them differ, so
 the crown reuses the card's own scoring. Ties, sole entrants and the permissive rule stand.
+
+**Amendment (2026-11-18, #3502)** — the "Supersedes" line above no longer holds.
+[ADR-0033](0033-player-profile-contract-and-badge-registry.md) restored a cross-task
+`FdlLaurel` on the player profile: it marks the character's highest-`score` praxis, which
+hides that card's Task Crown. Owner ruling: the laurel stays as shipped.
 
 ## Context
 

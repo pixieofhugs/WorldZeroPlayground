@@ -42,7 +42,7 @@
 | [0025](0025-active-character-is-the-actor.md) | The active character is the actor for every write path | Amended | [ADR-0041](0041-two-layer-identity-account-vs-character.md) |
 | [0026](0026-ua-comment-adopts-the-gilt-salon.md) | The UA comment adopts the gilt-salon identity | Amended | [ADR-0093](0093-comment-timestamps-read-the-same-for-every-faction.md) |
 | [0027](0027-albescent-is-a-secret-society.md) | Albescent is a secret society, revealed by a sticky per-account flag | Amended | [ADR-0080](0080-one-life-earns-albescent-its-siblings-take-it-and-the-earner-never-can.md), [ADR-0082](0082-albescent-is-redacted-not-hidden.md) |
-| [0028](0028-task-crown-replaces-faction-distinction-laurel.md) | The Task Crown replaces the Faction Distinction Laurel | Amended | [ADR-0054](0054-one-theme-aware-task-crown.md) |
+| [0028](0028-task-crown-replaces-faction-distinction-laurel.md) | The Task Crown replaces the Faction Distinction Laurel | Amended | [ADR-0054](0054-one-theme-aware-task-crown.md), [ADR-0033](0033-player-profile-contract-and-badge-registry.md) |
 | [0029](0029-faction-permits-is-the-single-faction-rules-seam.md) | `faction_permits` is the single faction-rules seam | Accepted | — |
 | [0030](0030-default-faction-behaviour-ua-is-ordinary-grid-is-a-directory.md) | Default faction behaviour: UA is an ordinary faction; the grid is a directory, not a join surface | Amended | [ADR-0087](0087-structural-faction-slugs-are-not-era-owned.md) |
 | [0031](0031-backend-emits-keys-frontend-catalog-resolves.md) | Backend emits copy keys; the frontend catalog resolves them | Accepted | — |

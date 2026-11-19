@@ -6,7 +6,11 @@
 import { describe, it, expect, afterEach, vi } from 'vitest'
 
 import {
+  HELD_TERMS_KEY,
   clearOnboardingHandoff,
+  clearTermsAcceptance,
+  holdTermsAcceptance,
+  termsAcceptanceHeld,
   markOnboardingHandoff,
   onboardingHandoffPending,
 } from '../onboardingResume'
@@ -64,5 +68,37 @@ describe('the onboarding handoff mark', () => {
     expect(() => markOnboardingHandoff()).not.toThrow()
     expect(() => clearOnboardingHandoff()).not.toThrow()
     expect(onboardingHandoffPending()).toBe(false)
+  })
+})
+
+describe('the held contract click', () => {
+  it('is held under one key until the account exists, then cleared', () => {
+    const store = withStorage()
+    expect(termsAcceptanceHeld()).toBe(false)
+
+    expect(holdTermsAcceptance()).toBe(true)
+    expect([...store.entries()]).toEqual([[HELD_TERMS_KEY, 'true']])
+    expect(termsAcceptanceHeld()).toBe(true)
+
+    clearTermsAcceptance()
+    expect(termsAcceptanceHeld()).toBe(false)
+  })
+
+  it('reports a refusal instead of throwing, and reads as not held', () => {
+    vi.stubGlobal('sessionStorage', {
+      getItem: () => {
+        throw new Error('denied')
+      },
+      setItem: () => {
+        throw new Error('denied')
+      },
+      removeItem: () => {
+        throw new Error('denied')
+      },
+    })
+
+    expect(holdTermsAcceptance()).toBe(false)
+    expect(termsAcceptanceHeld()).toBe(false)
+    expect(() => clearTermsAcceptance()).not.toThrow()
   })
 })
