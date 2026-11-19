@@ -45,6 +45,7 @@ from schemas.praxis import (
 )
 from services import collab_consensus
 from services.albescent_reveal import is_albescent_revealed
+from services.character import is_playable
 from services.character_stats import (
     recalculate_character_stats,
     recalculate_members_stats,
@@ -1042,7 +1043,7 @@ async def invite_to_praxis(
         )
 
     invitee = await session.get(Character, invitee_id)
-    if invitee is None:
+    if invitee is None or not await is_playable(invitee, session):
         raise HTTPException(status_code=404, detail="Invitee not found.")
 
     if await is_active_member_of_task(invitee, praxis.task, session, era):
