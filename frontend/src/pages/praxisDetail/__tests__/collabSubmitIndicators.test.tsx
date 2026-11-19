@@ -28,7 +28,7 @@ const member = (
     id: characterId * 10,
     character_id: characterId,
     character_display_name: name,
-    has_submitted: hasSubmitted,
+    has_approved: hasSubmitted,
   });
 
 const praxis = (
@@ -142,7 +142,7 @@ describe("the CAST control is gone from the owner actions (#521 → #1089)", () 
       <PraxisOwnerActions
         state={state({
           isOwner: true,
-          user: user(1), // Ada — has_submitted: true
+          user: user(1), // Ada — has_approved: true
           praxis: praxis([ADA(), BETH()], "in_progress", "2026-01-03T00:00:00Z"),
         })}
       />,
@@ -157,7 +157,7 @@ describe("the CAST control is gone from the owner actions (#521 → #1089)", () 
       <PraxisOwnerActions
         state={state({
           isOwner: true,
-          user: user(2), // Beth — has_submitted: false
+          user: user(2), // Beth — has_approved: false
           praxis: praxis([ADA(), BETH()], "in_progress", "2026-01-03T00:00:00Z"),
         })}
       />,

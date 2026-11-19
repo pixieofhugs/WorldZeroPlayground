@@ -184,7 +184,9 @@ async def test_era_id_follows_a_new_era_row_with_the_same_name(
     assert before == era.id
 
     # A same-era reset / name-keeping switch (ADR-0091) appends a row.
-    db_session.add(Era(name=era.name, config_key=era.config_key, started_by=account.id))
+    db_session.add(
+        Era(name=era.name, config_key=era.config_key, started_by_id=account.id)
+    )
     await db_session.commit()
 
     after = (await client.get("/game-config")).json()["era_id"]

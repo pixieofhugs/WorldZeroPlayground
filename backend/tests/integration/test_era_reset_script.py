@@ -58,7 +58,7 @@ async def test_confirmed_run_opens_a_new_era_and_reseeds_stats(
     ).scalar_one()
     assert new_era.id != era.id
     assert new_era.config_key == CURRENT_ERA.config_key
-    assert new_era.started_by == account.id
+    assert new_era.started_by_id == account.id
 
     stats = (
         await db_session.execute(
@@ -79,7 +79,7 @@ async def test_a_non_admin_operator_is_refused(
     era: Era,
     some_faction: Faction,
 ):
-    """``started_by`` is an audit field: admins only."""
+    """``started_by_id`` is an audit field: admins only."""
     eras_before = await _era_count(db_session)
 
     exit_code = await reset_era(db_session, character.username, confirmed=True)

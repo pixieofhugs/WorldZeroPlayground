@@ -190,7 +190,7 @@ export function CollabRoster({
     canNudge && onNudgeCrew != null
       ? members.filter(
           (m) =>
-            !m.has_submitted &&
+            !m.has_approved &&
             m.character_id !== currentCharacterId &&
             m.nudged_at == null,
         ).length
@@ -204,7 +204,7 @@ export function CollabRoster({
     ? 'nudgeCrewDescription'
     : canNudge &&
         members.some(
-          (m) => !m.has_submitted && m.character_id !== currentCharacterId,
+          (m) => !m.has_approved && m.character_id !== currentCharacterId,
         )
       ? 'nudgeDescription'
       : null
@@ -212,7 +212,7 @@ export function CollabRoster({
   /**
    * Whether the viewer is among those outstanding (#1952). Members only (the
    * detail mount shows strangers), and only with a live proposal: since
-   * ADR-0079 `has_submitted` approves a proposal, so `writing` has none.
+   * ADR-0079 `has_approved` approves a proposal, so `writing` has none.
    */
   const proposalLive = gate.state === 'waiting' || gate.state === 'holdout'
   const yours =

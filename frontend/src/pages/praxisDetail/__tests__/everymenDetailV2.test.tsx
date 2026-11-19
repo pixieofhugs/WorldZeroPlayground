@@ -153,7 +153,7 @@ describe("Everymen praxis detail — the state axes", () => {
       praxis: {
         ...PRAXIS,
         type: "collab",
-        members: [MEMBER, { ...CO_MEMBER, has_submitted: false }],
+        members: [MEMBER, { ...CO_MEMBER, has_approved: false }],
       },
     });
     // Shared `collabCopy` words (#1812).

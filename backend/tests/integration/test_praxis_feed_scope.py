@@ -42,7 +42,7 @@ async def _make_praxis(
         point_value=10,
         level_required=0,
         status=TaskStatus.active,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=faction_slug,
     )
     db_session.add(task)

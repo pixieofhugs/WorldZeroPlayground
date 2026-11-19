@@ -64,7 +64,7 @@ async def _extra_task(session: AsyncSession, character: Character, title: str) -
         point_value=10,
         level_required=0,
         status=TaskStatus.active,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=character.faction_slug,
     )
     session.add(task)

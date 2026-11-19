@@ -65,7 +65,7 @@ describe('normalizeFeedItem', () => {
         praxis_id: 12,
         task_title: 'Plant a tree',
         task_point_value: 25,
-        viewer_has_submitted: true,
+        viewer_has_approved: true,
       }),
     )!
     expect(row.actions).toEqual([])
@@ -80,7 +80,7 @@ describe('normalizeFeedItem', () => {
         praxis_id: 12,
         task_title: 'Plant a tree',
         task_point_value: 25,
-        viewer_has_submitted: false,
+        viewer_has_approved: false,
       }),
     )!
     expect(row.actions.map((a) => a.id)).toEqual(['fileYours'])

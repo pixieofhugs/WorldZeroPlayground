@@ -63,7 +63,6 @@ async def unblock_character_route(
 @router.get("", response_model=list[RelationshipListItem])
 async def list_my_relationships(
     type: Optional[str] = None,
-    status: Optional[str] = None,
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db, scope="function"),
 ) -> list[RelationshipListItem]:
@@ -72,7 +71,6 @@ async def list_my_relationships(
         character_id=character.id,
         session=session,
         type_filter=type,
-        status_filter=status,
     )
 
 

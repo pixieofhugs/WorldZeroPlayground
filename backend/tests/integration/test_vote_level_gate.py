@@ -55,7 +55,7 @@ async def _roll_era(
     new_era_row = Era(
         name=CURRENT_ERA.name,
         config_key=CURRENT_ERA.config_key,
-        started_by=account.id,
+        started_by_id=account.id,
     )
     session.add(new_era_row)
     await session.flush()
