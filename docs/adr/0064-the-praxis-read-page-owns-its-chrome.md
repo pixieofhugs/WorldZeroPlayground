@@ -105,3 +105,12 @@ Rejected because it leaves a full-width duel band above a two-column page
 and a narrow comment thread below it, and because the rail's remaining job
 after ADR-0059 was one state, which the card covers in a third of the
 space.
+
+## Amendment (2026-11-18, #3424)
+
+**The comments heading is the shared neutral one, not the faction's own voice.**
+Every archetype passes `commentsHeading` built from the `detail.sections.comments`
+key ("Discussion", `locales/en/praxis.json`); only the heading's size and
+placement vary. This matches ADR-0061 ("one shared neutral `detail.*` block, no copy").
+The layout still owns the heading slot, and `CommentThread` still renders with
+`showHeading={false}`.
