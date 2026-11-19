@@ -1,6 +1,6 @@
 # ADR-0074 — One sky serves both themes; the Meadow is retired
 
-**Status:** Accepted
+**Status:** Superseded by ADR-0096
 **Date:** 2026-08-14
 
 **Relates to:** epic #654 (the Players constellation), #656 (the desktop

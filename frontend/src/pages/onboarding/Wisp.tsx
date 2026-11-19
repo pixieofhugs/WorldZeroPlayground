@@ -12,12 +12,12 @@ export const S = (i: number) => `var(--faction-default-stop-${i})`
 const WISP =
   'M50 104 C 30 104, 18 90, 18 72 C 18 56, 26 46, 32 36 C 34 42, 38 46, 42 46 C 38 32, 42 16, 52 4 C 54 16, 60 24, 66 30 C 68 24, 72 20, 76 18 C 74 30, 82 46, 82 70 C 82 90, 70 104, 50 104 Z'
 // Under a hat the hair is tucked away: same wisp, round on top.
-const BALD =
+export const BALD =
   'M50 104 C 30 104, 18 90, 18 72 C 18 52, 32 38, 50 38 C 68 38, 82 52, 82 70 C 82 90, 70 104, 50 104 Z'
 
 const ink = { stroke: K, strokeLinejoin: 'round' as const }
 
-const HATS: Record<WispHat, ReactNode> = {
+export const HATS: Record<WispHat, ReactNode> = {
   crown: (
     <>
       <path d="M21 50 L 23 18 L 36 30 L 50 -6 L 64 30 L 77 18 L 79 50 Z" fill={S(3)} strokeWidth="2" {...ink} />

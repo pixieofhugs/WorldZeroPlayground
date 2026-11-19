@@ -1,6 +1,6 @@
 # ADR-0060 — A collab that loses its last collaborator becomes solo
 
-**Status:** Accepted
+**Status:** Amended by ADR-0053, ADR-0086
 **Date:** 2026-07-28
 
 **Relates to:** #1071 (epic), #1072 (ADR-0059, the sibling behaviour change)
@@ -65,3 +65,7 @@ owned by the survivor — at any status.**
   state nobody wants to be in.
 - **Leave the orphan.** Accumulates rows that hold a task signup and can
   never be touched.
+
+## Amendment (2026-11-19, #3426)
+
+"ADR-0047's display follows automatically ... `(base + meta) x faction_mult + votes` rather than collapsing to Merit" is stale. ADR-0053 retired Merit and ADR-0086 moved the multiplier onto the base alone: `base x mult + meta + votes + habit` (`backend/schemas/praxis.py`). The behaviour this record decides (a collab that loses its last member becomes solo) is unchanged.

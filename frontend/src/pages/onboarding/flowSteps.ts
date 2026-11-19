@@ -1,5 +1,5 @@
 /** Title, beats, `contract` (or `declined`), then `signin` (skipped with a session), then the hand-off. */
-export type Step = 'title' | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 'contract' | 'declined' | 'signin'
+export type Step = 'title' | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 'contract' | 'declined' | 'signin' | 'returning'
 
 export const BEAT_COUNT = 7
 
@@ -26,7 +26,7 @@ export const decline = (f: Flow): Flow => moveTo(f, 'declined')
 
 export const skip = (f: Flow): Flow => moveTo(f, 'contract')
 
-export const toSignIn = (f: Flow): Flow => moveTo(f, 'signin')
+export const toSignIn = (f: Flow): Flow => moveTo(f, 'returning')
 
 export function back(f: Flow): Flow {
   const prev = f.history[f.history.length - 1]

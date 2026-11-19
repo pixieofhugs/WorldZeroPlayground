@@ -106,3 +106,7 @@ mentioned_character_id)`.
 - Not yet built. Implementation tracked in the GitHub issue filed from this design session.
 - Per-faction comment *aesthetics* (SNIDE/Everymen/Ephemerists/WoW/Singularity/UA/Albescent
   voices) are vault design work, not specified here.
+
+## Amendment (2026-11-19, #3426)
+
+"The `CommentThread` container is neutral chrome, not a per-faction surface" no longer holds on the praxis read page. ADR-0061 (amending this clause) and ADR-0064 make the thread a layout region the page mounts and the archetype owns, not chrome the dispatcher appends.
