@@ -25,6 +25,13 @@
     "4": "Complete them and post proof (in the form of photos, videos or audio) in order to get points.",
     "5": "Other players vote on the proof you post. The more they like it, the more points you get.",
     "6": "When you get enough points, you can level up and have access to more interesting, more difficult tasks, and vote to give points to tasks others have completed well.",
+    "b2": {
+      "cap": "Character",
+      "n1": "King Biscuit",
+      "n2": "Wizard Wobblewand",
+      "n3": "Agent Teacup",
+      "sub": "Not you. Unless you want it to be."
+    },
     "7": "Along the way there will be warring organizations, mysteries and most likely character development. World Zero will always be free and have no ads."
   },
   "auth": {

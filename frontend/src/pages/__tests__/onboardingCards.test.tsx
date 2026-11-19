@@ -76,7 +76,8 @@ describe('every onboarding card', () => {
 })
 
 describe('the seven beat lines', () => {
-  const lines = Object.values(onboarding.beats)
+  // Numbered keys are the seven lines; bN keys hold a beat's own stage copy.
+  const lines = Object.entries(onboarding.beats).filter(([k]) => /^\d$/.test(k)).map(([, v]) => String(v))
 
   it('are seven, and none is empty', () => {
     expect(lines).toHaveLength(7)

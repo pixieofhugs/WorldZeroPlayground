@@ -1,0 +1,33 @@
+/* Beat 2: the wisp flicks each hat off, its hair springs up, the next hat squashes it flat. Ported from src.html's "beat 2: hats". */
+.b2-row{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:clamp(20px,5vw,44px)}
+.b2-pic{position:relative;width:160px;height:160px}
+.b2-ring{box-sizing:border-box;width:160px;height:160px;border-radius:50%;padding:4px;background-image:var(--faction-default-rainbow-conic);-webkit-mask:conic-gradient(#000 var(--sweep),transparent 0);mask:conic-gradient(#000 var(--sweep),transparent 0);animation:ob-sweep 1.4s cubic-bezier(.5,0,.2,1) forwards,ob-thump 1.7s ease-out forwards}
+.b2-pic .ob-disc{border-radius:50%}
+.b2-wisp{position:absolute;left:38px;top:26px;width:84px;height:102px;overflow:visible}
+.b2-text{display:flex;flex-direction:column;gap:10px;min-width:250px}
+.b2-text>.boing:first-child{animation-delay:.2s}
+.b2-text>.ob-srule{animation-delay:.8s}
+.b2-sub{font-size:17px;color:var(--faction-default-card-muted);animation-delay:1.8s}
+.b2-names{position:relative;display:block;height:1.3em;font-size:34px}
+
+@keyframes b2-acc{0%{opacity:0;transform:translateY(-38px) scale(.5) rotate(-16deg);animation-timing-function:cubic-bezier(.5,0,.85,.5)}5%{opacity:1;transform:translateY(4px) scale(1.24,.76)}8%{transform:translateY(-4px) scale(.94,1.1) rotate(4deg)}11%{transform:rotate(-2.5deg)}14%,26.4%{opacity:1;transform:none}27.4%{opacity:1;transform:translateY(-12px) rotate(calc(var(--kr) * .1));animation-timing-function:cubic-bezier(.2,.6,.5,1)}33.3%,100%{opacity:0;transform:translate(var(--kx),-54px) rotate(var(--kr)) scale(.8)}}
+.b2-acc{opacity:0;transform-box:fill-box;transform-origin:50% 100%;animation:b2-acc 6s linear infinite}
+.b2-acc:nth-of-type(2){animation-delay:2s}
+.b2-acc:nth-of-type(3){animation-delay:4s}
+@keyframes b2-tada{0%,11%,34%,70%,95%,100%{transform:none}5%{transform:scale(.98,1.03)}16%{transform:scale(1.12,.86)}22%{transform:scale(.95,1.07)}28%{transform:scale(1.02,.98)}77%{transform:scale(1.12,.86)}82%{transform:translateY(-8px) scale(.92,1.13)}89%{transform:scale(1.07,.94)}}
+.b2-tada{transform-origin:50px 104px;animation:b2-tada 2s ease-out infinite}
+@keyframes b2-look{0%,2%,24%,76%,96%,100%{translate:0 0}6%,13%{translate:0 -3.2px}17%{translate:0 1px}82%,90%{translate:0 -3.4px}}
+.b2-tada .mpup{animation:b2-look 2s ease-in-out infinite}
+@keyframes b2-hair{0%,13.5%{transform:none}15.5%,80.5%{transform:scaleY(0)}85%{transform:scale(.88,1.32)}90%{transform:scale(1,.86)}95%{transform:scale(.98,1.07)}100%{transform:none}}
+.b2-hair{transform-origin:50px 71px;animation:b2-hair 2s linear infinite}
+@keyframes b2-nm{0%{opacity:0;transform:translateY(12px) skewX(-8deg)}5%{opacity:1;transform:translateY(-3px)}9%,30%{opacity:1;transform:none}33%,100%{opacity:0}}
+.b2-nm{position:absolute;left:0;top:0;opacity:0;white-space:nowrap;animation:b2-nm 6s ease-out infinite}
+.b2-nm:nth-child(2){animation-delay:2s}
+.b2-nm:nth-child(3){animation-delay:4s}
+
+/* Settled frame: crown on, first name, no hair. */
+@media (prefers-reduced-motion: reduce){
+  .onboarding-arc .b2-hair{display:none}
+  .onboarding-arc .b2-nm:first-child,.onboarding-arc .b2-acc:nth-of-type(1){opacity:1}
+  .onboarding-arc .b2-ring{-webkit-mask:none;mask:none}
+}
