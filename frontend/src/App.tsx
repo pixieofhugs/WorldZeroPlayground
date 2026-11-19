@@ -13,8 +13,8 @@ import { importAccountDeleted } from './pages/accountDeletedLoader'
  *
  * Named loaders let a chunk start before `/auth/me` answers: `RootLanding`
  * warms one (#1380), and each `ProtectedRoute warm` must name its child's
- * loader (#1483; `protectedRoute.test.tsx` scans this file). `import()` is
- * memoised, so warming is idempotent.
+ * loader (#1483; `auth/__tests__/appProtectedRoutesWarm.test.tsx` renders
+ * App over a path table). `import()` is memoised, so warming is idempotent.
  */
 const importHome = () => import('./pages/Home')
 const importFieldDesk = () => import('./pages/FieldDesk')
