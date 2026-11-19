@@ -1,10 +1,11 @@
-import type { } from 'react'
+import { useContext } from 'react'
 import { resolveVariant } from '../../utils/factionDispatch'
 import { surfaceMap } from '../../factions'
 import { useAuth } from '../../auth/AuthContext'
 import type { CurrentUser } from '../../api/auth'
 import DefaultVote from './DefaultVote'
 import { VoteFactionContext, VoteLoginGate } from './VoteShell'
+import { VoteSandboxContext } from './voteSandbox'
 
 /**
  * Vote UI dispatcher keyed by the praxis's task faction; unskinned factions
@@ -38,6 +39,7 @@ export default function VoteUI({
   ...props
 }: VoteUIProps & { factionSlug?: string | null }) {
   const { user } = useAuth()
+  const sandbox = useContext(VoteSandboxContext)
   if (!voteRegionVisible(user, viewerCanVote)) {
     return null
   }
@@ -45,7 +47,7 @@ export default function VoteUI({
   // deliberately isn't told, so chrome stays. `=== false` so a stale cached
   // payload doesn't read as gated. Needs a character: "reach level N" is
   // meaningless without one.
-  if (user?.character && user.can_vote === false) {
+  if (!sandbox && user?.character && user.can_vote === false) {
     return (
       <VoteLoginGate
         factionSlug={factionSlug}
