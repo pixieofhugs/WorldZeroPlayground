@@ -77,6 +77,9 @@ from services.task_import import (
 from services.scoring import compute_votes_available
 from services.auth import create_jwt
 
+from schemas.admin import VoteRingOut
+from services.vote_ring import get_vote_ring
+
 router = APIRouter()
 
 
@@ -137,6 +140,15 @@ async def admin_get_account(
     session: AsyncSession = Depends(get_db, scope="function"),
 ) -> AccountDetail:
     return await get_account_detail(account_id, session)
+
+
+@router.get("/accounts/{account_id}/vote-ring", response_model=VoteRingOut)
+async def admin_vote_ring(
+    account_id: int,
+    _: Account = Depends(require_admin),
+    session: AsyncSession = Depends(get_db, scope="function"),
+) -> VoteRingOut:
+    return await get_vote_ring(account_id, session)
 
 
 # Owner-only admin roster (#3258)
