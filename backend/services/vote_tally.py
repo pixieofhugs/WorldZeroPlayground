@@ -1,12 +1,14 @@
 """Single source for vote aggregation (ADR-0014)."""
 from dataclasses import dataclass
-from typing import Collection, Optional
+from typing import Collection, Literal, Optional
 
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.account import Account, AccountStatus
 from models.character import Character
+from models.era import Era
+from models.praxis import Praxis
 from models.vote import Vote
 
 
@@ -24,8 +26,14 @@ _EMPTY_TALLY = VoteTally(points_from_votes=0, voter_count=0)
 async def tally_votes(
     praxis_ids: Collection[int],
     session: AsyncSession,
+    *,
+    cast_in: int | Literal["sealed"] | None = None,
 ) -> dict[int, VoteTally]:
     """A ``VoteTally`` for EVERY requested id, in one query.
+
+    ``cast_in``: ``None`` counts every vote; an era id counts votes cast in that
+    era; ``"sealed"`` counts each praxis's votes from the era it was sealed in,
+    the number its card and crown show (ADR-0099).
 
     Dense on purpose (#1378): ``id in result`` means "was in the batch", which
     page callers use to decide whether to fall back to their own query.
@@ -36,7 +44,7 @@ async def tally_votes(
     # Deferred: services.character -> services.era -> this module is a cycle.
     from services.character import MOD_BANNED
 
-    agg_result = await session.execute(
+    query = (
         select(Vote.praxis_id, func.sum(Vote.value), func.count(Vote.id))
         .join(Character, Character.id == Vote.voter_character_id)
         .join(Account, Account.id == Vote.voter_account_id)
@@ -48,6 +56,22 @@ async def tally_votes(
         )
         .group_by(Vote.praxis_id)
     )
+    if cast_in == "sealed":
+        # Same rule as ``get_era_row_for_praxis``; an unsealed praxis counts all.
+        sealing_era = (
+            select(Era.id)
+            .where(Era.started_at <= Praxis.submitted_at)
+            .order_by(Era.id.desc())
+            .limit(1)
+            .correlate(Praxis)
+            .scalar_subquery()
+        )
+        query = query.join(Praxis, Praxis.id == Vote.praxis_id).where(
+            or_(Praxis.submitted_at.is_(None), Vote.era_id == sealing_era)
+        )
+    elif cast_in is not None:
+        query = query.where(Vote.era_id == cast_in)
+    agg_result = await session.execute(query)
     tallies: dict[int, VoteTally] = {
         praxis_id: _EMPTY_TALLY for praxis_id in praxis_ids
     }

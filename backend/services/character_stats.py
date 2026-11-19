@@ -33,12 +33,12 @@ from services.character import (
 from services.era import (
     get_closing_era_id,
     get_current_era_row,
-    get_era_row_for_praxis,
     get_next_era_row,
     get_or_create_stats,
 )
 from services.faction_service import unjoinable_faction_slugs
 from services.praxis_scoring import Contribution, compute_contributions
+from services.vote_tally import tally_votes
 from services.scoring import compute_level, exact, round_half_up
 from services.taunt_service import emit_recalc_taunts
 
@@ -143,6 +143,34 @@ async def _deliver_earned_invitations(
         )
 
 
+async def _scored_praxes(
+    character_id: int, scope: ColumnElement[bool], session: AsyncSession
+) -> list[Praxis]:
+    """Submitted, scoreable praxes ``character_id`` authored (solo, duel sides) or
+    is a collab member of, narrowed by ``scope``."""
+    solo_result = await session.execute(
+        select(Praxis).where(
+            Praxis.created_by_id == character_id,
+            Praxis.type == PraxisType.solo,
+            Praxis.status == PraxisStatus.submitted,
+            Praxis.moderation_status.notin_(list(UNSCORED_MODERATION_STATUSES)),
+            scope,
+        )
+    )
+    collab_result = await session.execute(
+        select(Praxis)
+        .join(PraxisMember, PraxisMember.praxis_id == Praxis.id)
+        .where(
+            PraxisMember.character_id == character_id,
+            Praxis.type == PraxisType.collab,
+            Praxis.status == PraxisStatus.submitted,
+            Praxis.moderation_status.notin_(list(UNSCORED_MODERATION_STATUSES)),
+            scope,
+        )
+    )
+    return list(solo_result.scalars().all()) + list(collab_result.scalars().all())
+
+
 async def recalculate_character_stats(
     character_id: int,
     session: AsyncSession,
@@ -153,8 +181,8 @@ async def recalculate_character_stats(
 ) -> None:
     """Recompute score, level and vote budget for one character in ``era_row``.
 
-    Gathers that era's scored solo/duel and collab praxes (ADR-0014). A past
-    ``era_row`` credits that era's row but delivers no invitations or taunts.
+    Gathers that era's scored solo/duel and collab praxes (ADR-0014), plus votes
+    cast in it on older praxes (ADR-0099). A past ``era_row`` is a no-op.
     Also the ADR-0068 taunt hook; pass ``emit_taunts=False`` from backfills.
     """
     if era_row is None:
@@ -164,46 +192,42 @@ async def recalculate_character_stats(
     if author is None:
         return
 
+    # None ⟹ era_row is the live era: no upper bound, and invitations may land.
+    next_era_row = await get_next_era_row(era_row, session)
+    # A closed era's standings are frozen: nothing after the roll touches them (ADR-0099).
+    if next_era_row is not None:
+        return
+
     # Pre-recalc level gates metatask bonus; slight staleness is acceptable.
     stats = await get_or_create_stats(session, character_id, era_row.id)
     author_level = stats.level
 
-    # None ⟹ era_row is the live era: no upper bound, and invitations may land.
-    next_era_row = await get_next_era_row(era_row, session)
     within_era = _era_window_condition(era_row, next_era_row)
+    all_praxes = await _scored_praxes(character_id, within_era, session)
 
-    # Solo includes duel sides.
-    solo_result = await session.execute(
-        select(Praxis).where(
-            Praxis.created_by_id == character_id,
-            Praxis.type == PraxisType.solo,
-            Praxis.status == PraxisStatus.submitted,
-            Praxis.moderation_status.notin_(list(UNSCORED_MODERATION_STATUSES)),
-            within_era,
-        )
+    # Old praxes keep their base with the era that sealed them; only votes cast
+    # in this era move here.
+    carried = await _scored_praxes(
+        character_id,
+        and_(
+            ~within_era,
+            Praxis.id.in_(select(Vote.praxis_id).where(Vote.era_id == era_row.id)),
+        ),
+        session,
     )
-    solo_praxes = list(solo_result.scalars().all())
-
-    collab_result = await session.execute(
-        select(Praxis)
-        .join(PraxisMember, PraxisMember.praxis_id == Praxis.id)
-        .where(
-            PraxisMember.character_id == character_id,
-            Praxis.type == PraxisType.collab,
-            Praxis.status == PraxisStatus.submitted,
-            Praxis.moderation_status.notin_(list(UNSCORED_MODERATION_STATUSES)),
-            within_era,
-        )
+    carried_votes = await tally_votes(
+        [p.id for p in carried], session, cast_in=era_row.id
     )
-    collab_praxes = list(collab_result.scalars().all())
 
-    all_praxes = solo_praxes + collab_praxes
     contributions = await compute_contributions(
         all_praxes, author, era, session, character_level=author_level
     )
     # The one rounding site: round the sum, not each contribution. Decimal +
     # round_half_up, never int() or banker's round() (ADR-0053, #1578).
-    total_score = round_half_up(sum(exact(c.total) for c in contributions.values()))
+    total_score = round_half_up(
+        sum(exact(c.total) for c in contributions.values())
+        + sum(exact(t.points_from_votes) for t in carried_votes.values())
+    )
 
     # Vote budget is derived on read (compute_votes_available).
     score_delta = total_score - stats.score
@@ -214,10 +238,6 @@ async def recalculate_character_stats(
     record_level_reached(author, stats.level)
     if score_delta:
         author.all_time_score += score_delta
-
-    if next_era_row is not None:
-        # Closed era: no invitations (ADR-0022) or taunts (ADR-0068).
-        return
 
     if emit_taunts and score_delta:
         await emit_recalc_taunts(
@@ -253,11 +273,11 @@ async def recalculate_members_stats(
 
     The member set is the unit of recalculation for anything that changes a
     praxis's worth: recalculating only ``created_by_id`` strands collab members
-    (#1465). Lives here to avoid an import cycle. Era defaults to the praxis's
-    own, not the live one (#1345).
+    (#1465). Lives here to avoid an import cycle. Era defaults to the live one:
+    a vote on an old praxis credits the era it is cast in (ADR-0099).
     """
     if era_row is None:
-        era_row = await get_era_row_for_praxis(praxis, session)
+        era_row = await get_current_era_row(session)
     for member in praxis.members:
         await recalculate_character_stats(
             member.character_id, session, era, era_row=era_row
