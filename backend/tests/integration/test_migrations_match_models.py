@@ -262,17 +262,17 @@ async def test_onboarding_seed_key_backfill_survives_a_pre_0019_title_collision(
         )
         real_id = await conn.fetchval(
             "INSERT INTO task (title, description, point_value, level_required,"
-            " status, task_type, created_by, primary_faction_slug,"
-            " is_task_vision_eligible) VALUES ($1, 'old desc', 10, 0, 'active',"
-            " 'standard', $2, 'na', false) RETURNING id",
+            " status, task_type, created_by, primary_faction_slug)"
+            " VALUES ($1, 'old desc', 10, 0, 'active',"
+            " 'standard', $2, 'na') RETURNING id",
             'Take a Picture of "Yourself"',
             character_id,
         )
         impostor_id = await conn.fetchval(
             "INSERT INTO task (title, description, point_value, level_required,"
-            " status, task_type, created_by, primary_faction_slug,"
-            " is_task_vision_eligible) VALUES ($1, 'a coincidence', 5, 0,"
-            " 'pending', 'standard', $2, 'na', false) RETURNING id",
+            " status, task_type, created_by, primary_faction_slug)"
+            " VALUES ($1, 'a coincidence', 5, 0,"
+            " 'pending', 'standard', $2, 'na') RETURNING id",
             "Introduce Yourself",
             character_id,
         )
@@ -329,17 +329,17 @@ async def test_onboarding_seed_key_backfill_matches_dev_recorded_state(
         )
         real_id = await conn.fetchval(
             "INSERT INTO task (title, description, point_value, level_required,"
-            " status, task_type, created_by, primary_faction_slug,"
-            " is_task_vision_eligible) VALUES ($1, 'new desc', 10, 0, 'active',"
-            " 'standard', $2, 'albescent', false) RETURNING id",
+            " status, task_type, created_by, primary_faction_slug)"
+            " VALUES ($1, 'new desc', 10, 0, 'active',"
+            " 'standard', $2, 'albescent') RETURNING id",
             "Introduce Yourself",
             character_id,
         )
         duplicate_id = await conn.fetchval(
             "INSERT INTO task (title, description, point_value, level_required,"
-            " status, task_type, created_by, primary_faction_slug,"
-            " is_task_vision_eligible) VALUES ($1, 'old desc', 10, 0, 'active',"
-            " 'standard', $2, 'na', false) RETURNING id",
+            " status, task_type, created_by, primary_faction_slug)"
+            " VALUES ($1, 'old desc', 10, 0, 'active',"
+            " 'standard', $2, 'na') RETURNING id",
             'Take a Picture of "Yourself"',
             character_id,
         )

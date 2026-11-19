@@ -157,7 +157,6 @@ async def sync_era_tasks(session, era, created_by_id: int) -> int:
             status=TaskStatus.active,
             created_by=created_by_id,
             primary_faction_slug=task_def.faction_slug,
-            is_task_vision_eligible=task_def.is_task_vision_eligible,
         ))
         added += 1
     await session.flush()

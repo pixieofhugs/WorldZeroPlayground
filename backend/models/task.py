@@ -1,7 +1,7 @@
 import enum
 from typing import TYPE_CHECKING, List, Optional
 
-from sqlalchemy import BigInteger, Boolean, Enum, ForeignKey, Identity, Integer, String, Text
+from sqlalchemy import BigInteger, Enum, ForeignKey, Identity, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from models.base import Base
@@ -58,11 +58,6 @@ class Task(TimestampMixin, Base):
     # Metatasks only: which faction may apply it.
     metatask_faction_slug: Mapped[Optional[str]] = mapped_column(
         String, ForeignKey("faction.slug"), nullable=True
-    )
-    # Parked v2 Task Vision (SPEC-backend-architecture §10). No reader; keep
-    # it off the wire until one exists (#1471).
-    is_task_vision_eligible: Mapped[bool] = mapped_column(
-        Boolean, default=False, nullable=False
     )
     # Identity for seed-owned rows (#3064); NULL otherwise. Lets
     # ``ensure_onboarding_task`` upsert by key, not title.

@@ -759,8 +759,6 @@ async def test_get_task_response_fields(client: AsyncClient, active_task: Task):
         "in_progress_count",
     }
     assert required_fields.issubset(data.keys())
-    # Parked v2 feature, deliberately off the wire (#1471).
-    assert "is_task_vision_eligible" not in data
     assert "account_id" not in data
     assert "email" not in data
 
