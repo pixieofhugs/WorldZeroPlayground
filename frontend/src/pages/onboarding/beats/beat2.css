@@ -12,8 +12,8 @@
 
 @keyframes b2-acc{0%{opacity:0;transform:translateY(-38px) scale(.5) rotate(-16deg);animation-timing-function:cubic-bezier(.5,0,.85,.5)}5%{opacity:1;transform:translateY(4px) scale(1.24,.76)}8%{transform:translateY(-4px) scale(.94,1.1) rotate(4deg)}11%{transform:rotate(-2.5deg)}14%,26.4%{opacity:1;transform:none}27.4%{opacity:1;transform:translateY(-12px) rotate(calc(var(--kr) * .1));animation-timing-function:cubic-bezier(.2,.6,.5,1)}33.3%,100%{opacity:0;transform:translate(var(--kx),-54px) rotate(var(--kr)) scale(.8)}}
 .b2-acc{opacity:0;transform-box:fill-box;transform-origin:50% 100%;animation:b2-acc 6s linear infinite}
-.b2-acc:nth-of-type(2){animation-delay:2s}
-.b2-acc:nth-of-type(3){animation-delay:4s}
+.b2-a2{animation-delay:2s}
+.b2-a3{animation-delay:4s}
 @keyframes b2-tada{0%,11%,34%,70%,95%,100%{transform:none}5%{transform:scale(.98,1.03)}16%{transform:scale(1.12,.86)}22%{transform:scale(.95,1.07)}28%{transform:scale(1.02,.98)}77%{transform:scale(1.12,.86)}82%{transform:translateY(-8px) scale(.92,1.13)}89%{transform:scale(1.07,.94)}}
 .b2-tada{transform-origin:50px 104px;animation:b2-tada 2s ease-out infinite}
 @keyframes b2-look{0%,2%,24%,76%,96%,100%{translate:0 0}6%,13%{translate:0 -3.2px}17%{translate:0 1px}82%,90%{translate:0 -3.4px}}
@@ -28,6 +28,6 @@
 /* Settled frame: crown on, first name, no hair. */
 @media (prefers-reduced-motion: reduce){
   .onboarding-arc .b2-hair{display:none}
-  .onboarding-arc .b2-nm:first-child,.onboarding-arc .b2-acc:nth-of-type(1){opacity:1}
+  .onboarding-arc .b2-nm:first-child,.onboarding-arc .b2-a1{opacity:1}
   .onboarding-arc .b2-ring{-webkit-mask:none;mask:none}
 }
