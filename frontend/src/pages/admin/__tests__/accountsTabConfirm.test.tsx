@@ -13,6 +13,7 @@ const api = vi.hoisted(() => ({
 vi.mock("../../../api/admin", () => api);
 vi.mock("../../../auth/AuthContext", () => ({ useAuth: () => ({ user: { is_owner: false } }) }));
 vi.mock("../AdminRosterSection", () => ({ default: () => null }));
+vi.mock("../VoteRingPanel", () => ({ default: () => null }));
 
 import AccountsTab from "../AccountsTab";
 

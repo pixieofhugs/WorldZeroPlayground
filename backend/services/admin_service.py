@@ -47,6 +47,7 @@ from schemas.admin import (
 from seed import upsert_era_factions
 from services.faction_service import refuse_hidden_faction
 from services.character import MOD_BANNED, record_level_reached
+from services.character_stats import recalculate_for_account_votes
 from services.duel import forfeit_settled_duels_for_character
 from services.praxis import moderate_praxis
 from services.era import (
@@ -436,8 +437,11 @@ async def apply_ban(
 
     Un-banning refuses a departed life: ``departed_at`` is written only by the
     player's own ``soft_delete_character``; ``status`` alone can't tell them apart.
+    A mod-banned life of a deleted account stays unstamped, so that is checked too.
     """
-    if not banned and character.departed_at is not None:
+    account = await session.get(Account, character.account_id)
+    deleted = account is not None and account.status == AccountStatus.deleted
+    if not banned and (character.departed_at is not None or deleted):
         raise_coded(
             409,
             ErrorCode.character_departed_not_restorable,
@@ -451,6 +455,7 @@ async def apply_ban(
         character.status = CharacterStatus.active
 
     await session.flush()
+    await recalculate_for_account_votes(character.account_id, session, era)
 
 
 async def set_character_stats(
@@ -610,12 +615,16 @@ async def suspend_account(
     account_id: int,
     suspended: bool,
     session: AsyncSession,
+    era: EraConfig = CURRENT_ERA,
 ) -> Account:
     account = await session.get(Account, account_id)
     if account is None:
         raise HTTPException(status_code=404, detail="Account not found.")
+    if account.status == AccountStatus.deleted:
+        raise_coded(409, ErrorCode.account_deleted, "Account was deleted.")
     account.status = AccountStatus.suspended if suspended else AccountStatus.active
     await session.flush()
+    await recalculate_for_account_votes(account_id, session, era)
     await session.refresh(account)
     return account
 
