@@ -21,9 +21,14 @@ describe('needsCharacterRedirect', () => {
   })
 
   it('still bounces a character-less account away from every other route', () => {
-    for (const pathname of ['/', '/tasks', '/praxis', '/leaderboard', '/factions', '/updates']) {
+    for (const pathname of ['/tasks', '/praxis', '/leaderboard', '/factions', '/updates']) {
       expect(needsCharacterRedirect(false, true, false, pathname)).toBe(true)
     }
+  })
+
+  it('does not send a creation-banned account to the create form', () => {
+    expect(characterRedirectTarget(false, true, false, true, '/tasks', false, true)).toBeNull()
+    expect(characterRedirectTarget(false, true, false, false, '/tasks', false, true)).toBe('/start')
   })
 
   it('does not bounce a character-less account away from /start', () => {
@@ -48,7 +53,7 @@ describe('needsCharacterRedirect', () => {
 /** #3468: the contract comes before creation, and `/start` must be reachable to show it. */
 describe('characterRedirectTarget', () => {
   it('sends an account with no acceptance to the contract, /characters/create included', () => {
-    for (const pathname of ['/', '/tasks', '/characters/create']) {
+    for (const pathname of ['/tasks', '/characters/create']) {
       expect(characterRedirectTarget(false, true, false, false, pathname)).toBe('/start')
     }
   })
@@ -67,8 +72,14 @@ describe('characterRedirectTarget', () => {
 
   it('leaves an accepted, character-less account to the flow while the hand-off mark is pending', () => {
     expect(characterRedirectTarget(false, true, false, true, '/', true)).toBeNull()
-    expect(characterRedirectTarget(false, true, false, true, '/', false)).toBe('/characters/create')
-    expect(characterRedirectTarget(false, true, false, false, '/', true)).toBe('/start')
+    expect(characterRedirectTarget(false, true, false, true, '/tasks', true)).toBeNull()
+    expect(characterRedirectTarget(false, true, false, true, '/tasks', false)).toBe('/characters/create')
+    expect(characterRedirectTarget(false, true, false, false, '/tasks', true)).toBe('/start')
+  })
+
+  it('leaves / to the flow, accepted or not', () => {
+    expect(characterRedirectTarget(false, true, false, true, '/')).toBeNull()
+    expect(characterRedirectTarget(false, true, false, false, '/')).toBeNull()
   })
 
   it('never fires while loading, signed out, or with a character', () => {

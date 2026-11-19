@@ -18,7 +18,7 @@
  * WHY THIS FILE DOES NOT MOUNT THE COMPONENT
  * ------------------------------------------
  * It runs in the default 'node' environment. The DOM walk is exercised against
- * the minimal element shape `copyTargetsForElement` reads, and the revert path
+ * the minimal element shape `copyMatchForElement` reads, and the revert path
  * through its own helper. The mounted behaviour (arming must not loop, Revert
  * must revert) lives in `components/admin/__tests__/copyEditorRender.test.tsx`,
  * which opts into jsdom.
@@ -28,10 +28,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { listCopyOverrides, putCopyOverride } from '../api/copy'
 import { pluralForms, revertCopy, saveCopy, shippedValue } from '../components/admin/CopyEditor'
-import i18n, { loadCopyOverrides, resources } from '../i18n'
+import i18n, { lazyShipped, loadCopyOverrides } from '../i18n'
 import {
   COPY_ANCESTOR_LIMIT,
-  copyTargetsForElement,
+  copyMatchForElement,
   copyTargetsForText,
   missingPlaceholders,
   recordRenderedCopy,
@@ -72,7 +72,7 @@ const json = (body: unknown) => () =>
     }),
   )
 
-/** The minimum `copyTargetsForElement` reads: text, children, a parent. */
+/** The minimum `copyMatchForElement` reads: text, children, a parent. */
 const stub = (
   textContent: string,
   parentElement: Element | null = null,
@@ -161,7 +161,7 @@ describe('resolving a click to a key', () => {
     const rendered = i18n.t('admin:overview.loadError')
     const label = stub(rendered)
     const icon = stub('*', label)
-    expect(copyTargetsForElement(icon)).toEqual([{ ns: 'admin', key: 'overview.loadError' }])
+    expect(copyMatchForElement(icon)?.targets ?? []).toEqual([{ ns: 'admin', key: 'overview.loadError' }])
   })
 
   it('finds a label one level DOWN, which is where a click on a button lands', () => {
@@ -171,7 +171,7 @@ describe('resolving a click to a key', () => {
     const glyph = stub('★')
     const label = stub(rendered)
     const button = stub(`★${rendered}`, null, [glyph, label])
-    expect(copyTargetsForElement(button)).toEqual([{ ns: 'admin', key: 'tasks.statusError' }])
+    expect(copyMatchForElement(button)?.targets ?? []).toEqual([{ ns: 'admin', key: 'tasks.statusError' }])
   })
 
   it('offers both when two child labels match, rather than picking one', () => {
@@ -179,7 +179,7 @@ describe('resolving a click to a key', () => {
     recordRenderedCopy('All', { ns: 'admin', key: 'moderation.queue.filter.all' })
     recordRenderedCopy('Done', { ns: 'common', key: 'filters.bar.done' })
     const row = stub('AllDone', null, [stub('All'), stub('Done')])
-    expect(copyTargetsForElement(row)).toEqual([
+    expect(copyMatchForElement(row)?.targets ?? []).toEqual([
       { ns: 'admin', key: 'moderation.queue.filter.all' },
       { ns: 'common', key: 'filters.bar.done' },
     ])
@@ -190,12 +190,12 @@ describe('resolving a click to a key', () => {
     const rendered = i18n.t('admin:accounts.banError')
     let node = stub(rendered)
     for (let i = 0; i <= COPY_ANCESTOR_LIMIT; i += 1) node = stub('...', node)
-    expect(copyTargetsForElement(node)).toEqual([])
+    expect(copyMatchForElement(node)?.targets ?? []).toEqual([])
   })
 
   it('answers empty for text no key rendered', () => {
     setCopyRecording(true)
-    expect(copyTargetsForElement(stub("a character's own words"))).toEqual([])
+    expect(copyMatchForElement(stub("a character's own words"))?.targets ?? []).toEqual([])
   })
 })
 
@@ -240,7 +240,7 @@ describe('reverting to the shipped wording', () => {
 
   it('keeps the exported catalog free of every override applied so far', () => {
     i18n.addResource('en', 'admin', 'overview.loadError', 'nope')
-    expect(resources.en.admin.overview.loadError).toBe("Couldn't load overview.")
+    expect((lazyShipped.admin as { overview: { loadError: string } }).overview.loadError).toBe("Couldn't load overview.")
   })
 })
 

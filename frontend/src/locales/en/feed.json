@@ -86,6 +86,7 @@
     "answer": "Answer",
     "fileYours": "Submit yours",
     "reply": "Reply",
+    "replyGated": "Reach level {{level}} to reply",
     "failed": "That didn't go through."
   },
   "badge": {
@@ -109,7 +110,8 @@
       "globalTaskActivated": "A new task has been activated",
       "awaitingSubmission": "Waiting on your submission",
       "mentionedYou": "mentioned you in a comment",
-      "commentedOnYours": "commented on your praxis"
+      "commentedOnYours": "commented on your praxis",
+      "nudgedYou": "nudged you to submit your part of"
     },
     "points_one": "{{points}} point",
     "points_other": "{{points}} points",

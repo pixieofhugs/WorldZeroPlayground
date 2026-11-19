@@ -426,6 +426,7 @@ export default function SingularityCreateCharacter({ state }: { state: CreateCha
                 <button
                   type="button"
                   onClick={() => navigate('/')}
+                  className="touch-target"
                   style={chassisLabel({
                     background: 'none',
                     border: 'none',
@@ -464,7 +465,7 @@ export default function SingularityCreateCharacter({ state }: { state: CreateCha
                   cursor: submitting ? 'wait' : 'pointer',
                 }}
               >
-                {submitting ? t('createCharacter.submitBusy') : t('createCharacter.submitIdle')}
+                {submitting ? t('createCharacter.submitBusy') : (<>{t('createCharacter.submitIdle')}<span aria-hidden="true"> {t('createCharacter.submitGlyph')}</span></>)}
                 {/* Block cursor; stays drawn when motion is reduced. */}
                 <span
                   aria-hidden

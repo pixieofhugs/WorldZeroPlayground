@@ -6,15 +6,21 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from errors import ErrorCode
 from faction_slugs import CROSS_FACTION_SLUG
-from models.account import Account
-from models.character import Character
+from models.account import Account, AccountStatus
+from models.character import Character, CharacterStatus
 from models.character_stats import CharacterStats
 from models.contact import ContactMessage
 from models.era import Era
 from models.praxis import Praxis
 from models.task import Task, TaskStatus
 from schemas.task import MAX_TASK_NOTES
-from tests.integration.factories import DEFAULT_FACTION_SLUG, make_admin
+from tests.integration.factories import (
+    DEFAULT_FACTION_SLUG,
+    make_account,
+    make_admin,
+    make_character,
+    make_task,
+)
 
 
 @pytest.mark.asyncio
@@ -32,7 +38,7 @@ async def test_admin_list_pending_tasks(
         point_value=5,
         level_required=0,
         status=TaskStatus.pending,
-        created_by=character.id,
+        created_by_id=character.id,
     )
     db_session.add(task)
     await db_session.commit()
@@ -59,7 +65,7 @@ async def test_admin_can_move_task_freely_between_states(
         point_value=5,
         level_required=0,
         status=TaskStatus.pending,
-        created_by=character.id,
+        created_by_id=character.id,
     )
     db_session.add(task)
     await db_session.commit()
@@ -135,6 +141,12 @@ async def test_admin_list_flagged_praxes(
     assert [flag["reason"] for flag in row["flags"]] == ["harassment"]
     assert row["flags"][0]["reason_detail"] is None
     assert row["flags"][0]["flagged_by_name"] == character2.display_name
+    # The card moderates its author through the existing ban/suspend routes.
+    assert row["author_account_id"] == character.account_id
+    assert row["author_flagged_count"] == 1
+    assert row["author_username"] == character.username
+    assert row["author_status"] == "active"
+    assert row["author_account_status"] == "active"
 
 
 @pytest.mark.asyncio
@@ -297,8 +309,73 @@ async def test_admin_list_accounts(
 
     resp = await client.get("/admin/accounts", headers=auth_headers)
     assert resp.status_code == 200
-    emails = [a["email"] for a in resp.json()]
+    emails = [a["email"] for a in resp.json()["items"]]
     assert account.email in emails
+
+
+@pytest.mark.asyncio
+async def test_admin_accounts_search_by_email_username_and_display_name(
+    client: AsyncClient,
+    account: Account,
+    era,
+    some_faction,
+    auth_headers: dict,
+    db_session: AsyncSession,
+):
+    await make_admin(db_session, account)
+    target = await make_character(
+        db_session,
+        era,
+        username="zorblax",
+        display_name="Captain Quux",
+        email="needle@example.com",
+    )
+    await make_character(db_session, era, username="bystander")
+    await db_session.commit()
+
+    for term in ("ZORB", "captain qu", "needle@"):
+        resp = await client.get(
+            "/admin/accounts", params={"search": term}, headers=auth_headers
+        )
+        body = resp.json()
+        assert [row["id"] for row in body["items"]] == [target.account_id], term
+        assert body["total"] == 1
+    by_name = (
+        await client.get(
+            "/admin/accounts", params={"search": "zorb"}, headers=auth_headers
+        )
+    ).json()["items"][0]
+    assert [c["username"] for c in by_name["matched_characters"]] == ["zorblax"]
+
+
+@pytest.mark.asyncio
+async def test_admin_accounts_pages_are_disjoint_and_bounded(
+    client: AsyncClient,
+    account: Account,
+    auth_headers: dict,
+    db_session: AsyncSession,
+):
+    await make_admin(db_session, account)
+    for index in range(4):
+        await make_account(db_session, f"page{index}@example.com")
+    await db_session.commit()
+
+    first = (
+        await client.get("/admin/accounts", params={"limit": 3}, headers=auth_headers)
+    ).json()
+    second = (
+        await client.get(
+            "/admin/accounts", params={"limit": 3, "offset": 3}, headers=auth_headers
+        )
+    ).json()
+    first_ids = {row["id"] for row in first["items"]}
+    second_ids = {row["id"] for row in second["items"]}
+    assert len(first_ids) == 3 and first_ids.isdisjoint(second_ids)
+    assert first["total"] == second["total"] == 5
+
+    for bad in ({"limit": 0}, {"limit": 100000}, {"offset": -1}):
+        resp = await client.get("/admin/accounts", params=bad, headers=auth_headers)
+        assert resp.status_code == 422
 
 
 @pytest.mark.asyncio
@@ -493,7 +570,7 @@ async def test_admin_edit_pending_task(
         point_value=5,
         level_required=0,
         status=TaskStatus.pending,
-        created_by=character.id,
+        created_by_id=character.id,
     )
     db_session.add(task)
     await db_session.commit()
@@ -525,7 +602,7 @@ async def test_admin_edit_task_faction(
         point_value=5,
         level_required=0,
         status=TaskStatus.pending,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=CROSS_FACTION_SLUG,
     )
     db_session.add(task)
@@ -567,7 +644,7 @@ async def test_admin_edit_task_unknown_faction_rejected(
         point_value=5,
         level_required=0,
         status=TaskStatus.pending,
-        created_by=character.id,
+        created_by_id=character.id,
     )
     db_session.add(task)
     await db_session.commit()
@@ -690,7 +767,7 @@ async def test_admin_era_reset_zeros_votes_spent_this_era(
     new_era_row = EraModel(
         name=CURRENT_ERA.name,
         config_key=CURRENT_ERA.config_key,
-        started_by=account.id,
+        started_by_id=account.id,
     )
     db_session.add(new_era_row)
     await db_session.flush()
@@ -748,7 +825,7 @@ async def test_admin_era_reset_preserves_votes_spent_without_flag(
     new_era_row = EraModel(
         name=CURRENT_ERA.name,
         config_key=CURRENT_ERA.config_key,
-        started_by=account.id,
+        started_by_id=account.id,
     )
     db_session.add(new_era_row)
     await db_session.flush()
@@ -854,3 +931,79 @@ async def test_proposal_notes_over_the_cap_are_rejected(
         headers=auth_headers2,
     )
     assert resp.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_overview_active_accounts_counts_accounts_not_characters(
+    client: AsyncClient,
+    account: Account,
+    era,
+    some_faction,
+    auth_headers: dict,
+    db_session: AsyncSession,
+):
+    await make_admin(db_session, account)
+    two_lives = await make_account(db_session, "two@example.com")
+    await make_character(db_session, era, username="first", account=two_lives)
+    await make_character(db_session, era, username="second", account=two_lives)
+    await make_character(
+        db_session,
+        era,
+        username="banned",
+        status=CharacterStatus.banned,
+    )
+    suspended = await make_character(db_session, era, username="sus")
+    suspended_account = await db_session.get(Account, suspended.account_id)
+    suspended_account.status = AccountStatus.suspended
+    await db_session.commit()
+
+    stats = (await client.get("/admin/overview", headers=auth_headers)).json()
+    assert stats["characters"] == 4
+    assert stats["active_accounts"] == 1
+
+
+@pytest.mark.asyncio
+async def test_remove_flagged_hides_only_the_authors_flagged_posts(
+    client: AsyncClient,
+    account: Account,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+    db_session: AsyncSession,
+):
+    await make_admin(db_session, account)
+    ids = []
+    for title in ("one", "two", "unflagged"):
+        task = await make_task(db_session, character, title=title, commit=True)
+        created = await client.post(
+            "/praxes",
+            json={"task_id": task.id, "title": title},
+            headers=auth_headers,
+        )
+        ids.append(created.json()["id"])
+    for praxis_id in ids[:2]:
+        flagged = await client.post(
+            f"/praxes/{praxis_id}/flag", json={"reason": "spam"}, headers=auth_headers2
+        )
+        assert flagged.status_code == 200, flagged.text
+
+    resp = await client.post(
+        f"/admin/characters/{character.id}/praxes/remove-flagged",
+        headers=auth_headers,
+    )
+    assert resp.status_code == 200
+    assert resp.json() == {"removed": 2}
+    states = {
+        praxis.id: praxis.moderation_status.value
+        for praxis in (
+            await db_session.execute(select(Praxis).where(Praxis.id.in_(ids)))
+        ).scalars()
+    }
+    assert [states[i] for i in ids] == ["hidden", "hidden", "visible"]
+
+    missing = await client.post(
+        "/admin/characters/999999/praxes/remove-flagged", headers=auth_headers
+    )
+    assert missing.status_code == 404

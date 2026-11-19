@@ -3,7 +3,6 @@
 # adding one. A file that has gone clean and is still listed fails
 # src/__tests__/staticInlineStyleRule.test.ts. A value read from a
 # module-scope static const counts as static.
-src/components/ActivityTicker.tsx
 src/components/AlbescentInvitation.tsx
 src/components/CharacterSwitcherSheet.tsx
 src/components/CredentialCard.tsx
@@ -176,7 +175,6 @@ src/pages/Contact.tsx
 src/pages/EditPraxis.tsx
 src/pages/Factions.tsx
 src/pages/FieldDesk.tsx
-src/pages/Home.tsx
 src/pages/Praxes.tsx
 src/pages/ProposeTask.tsx
 src/pages/Settings.tsx

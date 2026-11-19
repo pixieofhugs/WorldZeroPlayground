@@ -172,6 +172,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/accounts/{account_id}/vote-ring": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Admin Vote Ring */
+        get: operations["admin_vote_ring_admin_accounts__account_id__vote_ring_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/admins": {
         parameters: {
             query?: never;
@@ -244,6 +261,23 @@ export interface paths {
         put?: never;
         /** Ban Character */
         post: operations["ban_character_admin_characters__character_id__ban_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/characters/{character_id}/praxes/remove-flagged": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Remove Flagged Praxes */
+        post: operations["remove_flagged_praxes_admin_characters__character_id__praxes_remove_flagged_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2068,6 +2102,17 @@ export interface components {
             /** Status */
             status: string;
         };
+        /** AccountPage */
+        AccountPage: {
+            /** Items */
+            items: components["schemas"]["AccountSummary"][];
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Total */
+            total: number;
+        };
         /** AccountSummary */
         AccountSummary: {
             /**
@@ -2079,6 +2124,11 @@ export interface components {
             email: string;
             /** Id */
             id: number;
+            /**
+             * Matched Characters
+             * @default []
+             */
+            matched_characters: components["schemas"]["CharacterBrief"][];
             /** Status */
             status: string;
         };
@@ -2521,8 +2571,8 @@ export interface components {
             task_point_value: number;
             /** Task Title */
             task_title: string;
-            /** Viewer Has Submitted */
-            viewer_has_submitted: boolean;
+            /** Viewer Has Approved */
+            viewer_has_approved: boolean;
         };
         /**
          * CommentAuthor
@@ -2794,6 +2844,11 @@ export interface components {
              */
             can_vote: boolean;
             character: components["schemas"]["CharacterOut"] | null;
+            /**
+             * Character Creation Banned
+             * @default false
+             */
+            character_creation_banned: boolean;
             /**
              * Email
              * @default
@@ -3102,6 +3157,10 @@ export interface components {
             era_id: number;
             /** Name */
             name: string;
+            /** Tasks Created */
+            tasks_created: number;
+            /** Tasks Reactivated */
+            tasks_reactivated: number;
         };
         /** FactionChoiceRequest */
         FactionChoiceRequest: {
@@ -3325,6 +3384,16 @@ export interface components {
              * @default []
              */
             applied_metatasks: components["schemas"]["TaskOut"][];
+            /** Author Account Id */
+            author_account_id: number;
+            /** Author Account Status */
+            author_account_status: string;
+            /** Author Flagged Count */
+            author_flagged_count: number;
+            /** Author Status */
+            author_status: string;
+            /** Author Username */
+            author_username: string;
             /** Body Text */
             body_text: string | null;
             /**
@@ -4007,6 +4076,11 @@ export interface components {
         OverviewStats: {
             /** Accounts */
             accounts: number;
+            /**
+             * Active Accounts
+             * @default 0
+             */
+            active_accounts: number;
             /** Active Tasks */
             active_tasks: number;
             /** Characters */
@@ -4326,6 +4400,8 @@ export interface components {
         PraxisInviteStatus: "pending" | "accepted" | "declined";
         /** PraxisMemberOut */
         PraxisMemberOut: {
+            /** Approved At */
+            approved_at: string | null;
             /**
              * Character Avatar Url
              * @default
@@ -4335,8 +4411,8 @@ export interface components {
             character_display_name: string;
             /** Character Id */
             character_id: number;
-            /** Has Submitted */
-            has_submitted: boolean;
+            /** Has Approved */
+            has_approved: boolean;
             /** Id */
             id: number;
             /** Is Done */
@@ -4350,8 +4426,6 @@ export interface components {
             nudged_at: string | null;
             /** Praxis Id */
             praxis_id: number;
-            /** Submitted At */
-            submitted_at: string | null;
         };
         /** PraxisOut */
         PraxisOut: {
@@ -4505,8 +4579,6 @@ export interface components {
             from_character_id: number;
             /** Id */
             id: number;
-            /** Status */
-            status: string;
             /** To Avatar Url */
             to_avatar_url: string;
             /** To Character Id */
@@ -4523,6 +4595,11 @@ export interface components {
          * @enum {string}
          */
         RelationshipTypeEnum: "friend" | "foe";
+        /** RemoveFlaggedOut */
+        RemoveFlaggedOut: {
+            /** Removed */
+            removed: number;
+        };
         /**
          * ReturningPlayerOut
          * @description What the consent gate may know (``GET /auth/returning-player``).
@@ -4536,6 +4613,24 @@ export interface components {
              * Format: date
              */
             deleted_on: string;
+        };
+        /**
+         * RingRecipient
+         * @description One account an account's votes went to (admin-only).
+         */
+        RingRecipient: {
+            /** Account Id */
+            account_id: number;
+            /** Average Stars */
+            average_stars: number;
+            /** Display Name */
+            display_name: string;
+            /** Reciprocal */
+            reciprocal: boolean;
+            /** Share */
+            share: number;
+            /** Votes */
+            votes: number;
         };
         /**
          * SidebarOut
@@ -4934,6 +5029,15 @@ export interface components {
             /** Vote Id */
             vote_id: number;
         };
+        /** VoteRingOut */
+        VoteRingOut: {
+            /** Recipients */
+            recipients: components["schemas"]["RingRecipient"][];
+            /** Top3 Share */
+            top3_share: number;
+            /** Total Votes */
+            total_votes: number;
+        };
         /**
          * VoteTallyOut
          * @description A praxis's vote aggregate, in the field names every praxis payload uses.
@@ -5183,7 +5287,9 @@ export interface operations {
     admin_list_accounts_admin_accounts_get: {
         parameters: {
             query?: {
-                email?: string | null;
+                search?: string | null;
+                limit?: number;
+                offset?: number;
             };
             header?: never;
             path?: never;
@@ -5199,7 +5305,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AccountSummary"][];
+                    "application/json": components["schemas"]["AccountPage"];
                 };
             };
             /** @description Validation Error */
@@ -5270,6 +5376,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SuspendActionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_vote_ring_admin_accounts__account_id__vote_ring_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                account_id: number;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VoteRingOut"];
                 };
             };
             /** @description Validation Error */
@@ -5438,6 +5577,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BanActionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_flagged_praxes_admin_characters__character_id__praxes_remove_flagged_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                character_id: number;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RemoveFlaggedOut"];
                 };
             };
             /** @description Validation Error */
@@ -8340,7 +8512,6 @@ export interface operations {
         parameters: {
             query?: {
                 type?: string | null;
-                status?: string | null;
             };
             header?: never;
             path?: never;

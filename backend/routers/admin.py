@@ -11,6 +11,7 @@ from sqlalchemy.orm import selectinload
 
 from config import settings
 from db import get_db
+from errors import ErrorCode, raise_coded
 from dependencies import get_current_character_optional, require_admin, require_owner
 from models.account import Account
 from models.character import Character, CharacterStatus
@@ -20,10 +21,11 @@ from schemas.admin import (
     AdminGrantIn,
     AdminRow,
     AccountDetail,
-    AccountSummary,
+    AccountPage,
     AdminTaskPatch,
     BanAction,
     BanActionOut,
+    RemoveFlaggedOut,
     CharacterStatsPatch,
     CharacterStatsOut,
     CharacterSummary,
@@ -39,6 +41,7 @@ from schemas.admin import (
     SuspendActionOut,
     TaskImportResult,
     TaskStatusAction,
+    VoteRingOut,
 )
 from schemas.task import TaskOut
 from schemas.praxis import PraxisCardOut, PraxisOut
@@ -48,10 +51,14 @@ from services.praxis_out import build_praxis_cards, build_praxis_out, crowned_pr
 from services.comment import build_comment_out, list_flagged_comments, moderate_comment
 from services.task import build_task_out, in_progress_counts_for_tasks
 from services.admin_service import (
+    ACCOUNT_PAGE_DEFAULT,
+    ACCOUNT_PAGE_MAX,
     admin_edit_task,
     apply_ban,
     archive_message,
+    authors_for_moderation,
     delete_unreferenced_task,
+    remove_flagged_praxes_by_author,
     find_admin_accounts,
     grant_admin,
     list_admins,
@@ -76,6 +83,8 @@ from services.task_import import (
 )
 from services.scoring import compute_votes_available
 from services.auth import create_jwt
+from services.vote_ring import get_vote_ring
+
 
 router = APIRouter()
 
@@ -121,13 +130,15 @@ async def admin_archive_message(
     return ContactMessageOut.model_validate(message)
 
 
-@router.get("/accounts", response_model=list[AccountSummary])
+@router.get("/accounts", response_model=AccountPage)
 async def admin_list_accounts(
-    email: str | None = None,
+    search: str | None = None,
+    limit: int = Query(ACCOUNT_PAGE_DEFAULT, ge=1, le=ACCOUNT_PAGE_MAX),
+    offset: int = Query(0, ge=0),
     _: Account = Depends(require_admin),
     session: AsyncSession = Depends(get_db, scope="function"),
-) -> list[AccountSummary]:
-    return await list_accounts(session, email_filter=email)
+) -> AccountPage:
+    return await list_accounts(session, search=search, limit=limit, offset=offset)
 
 
 @router.get("/accounts/{account_id}", response_model=AccountDetail)
@@ -137,6 +148,15 @@ async def admin_get_account(
     session: AsyncSession = Depends(get_db, scope="function"),
 ) -> AccountDetail:
     return await get_account_detail(account_id, session)
+
+
+@router.get("/accounts/{account_id}/vote-ring", response_model=VoteRingOut)
+async def admin_vote_ring(
+    account_id: int,
+    _: Account = Depends(require_admin),
+    session: AsyncSession = Depends(get_db, scope="function"),
+) -> VoteRingOut:
+    return await get_vote_ring(account_id, session)
 
 
 # Owner-only admin roster (#3258)
@@ -297,12 +317,15 @@ async def admin_list_flagged_praxes(
         .order_by(Praxis.created_at.desc())
     )
     praxis_list = result.scalars().all()
-    # Task Crown (ADR-0028): one query for the list, not per card.
+    # Task Crown (ADR-0028): one batch for the list, one scoring pass per author.
     crowned = await crowned_praxis_ids(
         {praxis.task_id for praxis in praxis_list}, session
     )
     flags_by_praxis = await flags_for_praxes(
         {praxis.id for praxis in praxis_list}, session
+    )
+    authors = await authors_for_moderation(
+        {praxis.created_by_id for praxis in praxis_list}, session
     )
     return [
         FlaggedPraxisOut(
@@ -312,6 +335,11 @@ async def admin_list_flagged_praxes(
                 )
             ).model_dump(),
             flags=flags_by_praxis.get(praxis.id, []),
+            author_account_id=authors[praxis.created_by_id].account_id,
+            author_username=authors[praxis.created_by_id].username,
+            author_flagged_count=authors[praxis.created_by_id].flagged_count,
+            author_status=authors[praxis.created_by_id].character_status,
+            author_account_status=authors[praxis.created_by_id].account_status,
         )
         for praxis in praxis_list
     ]
@@ -423,7 +451,7 @@ async def list_pending_tasks(
             level_required=task.level_required,
             status=task.status,
             task_type=task.task_type,
-            created_by=task.created_by,
+            created_by=task.created_by_id,
             primary_faction_slug=task.primary_faction_slug,
             metatask_faction_slug=task.metatask_faction_slug,
             created_at=task.created_at,
@@ -449,6 +477,24 @@ async def ban_character(
         raise HTTPException(status_code=404, detail="Character not found.")
     await apply_ban(character, data.banned, session)
     return BanActionOut(character_id=character_id, banned=data.banned)
+
+
+@router.post(
+    "/characters/{character_id}/praxes/remove-flagged",
+    response_model=RemoveFlaggedOut,
+)
+async def remove_flagged_praxes(
+    character_id: int,
+    _: Account = Depends(require_admin),
+    session: AsyncSession = Depends(get_db, scope="function"),
+) -> RemoveFlaggedOut:
+    if await session.get(Character, character_id) is None:
+        raise_coded(
+            404, ErrorCode.character_not_found, "Character not found."
+        )
+    return RemoveFlaggedOut(
+        removed=await remove_flagged_praxes_by_author(character_id, session)
+    )
 
 
 @router.post("/tasks/import-csv", response_model=TaskImportResult, status_code=201)

@@ -33,8 +33,8 @@ async def _set_cast(
             PraxisMember.character_id == character_id,
         )
         .values(
-            has_submitted=cast,
-            submitted_at=datetime.now(timezone.utc) if cast else None,
+            has_approved=cast,
+            approved_at=datetime.now(timezone.utc) if cast else None,
         )
     )
     await session.commit()
@@ -81,12 +81,12 @@ async def _make_duel(
             PraxisMember(
                 praxis_id=challenger_praxis.id,
                 character_id=challenger.id,
-                has_submitted=challenger_submitted,
+                has_approved=challenger_submitted,
             ),
             PraxisMember(
                 praxis_id=opponent_praxis.id,
                 character_id=opponent.id,
-                has_submitted=opponent_submitted,
+                has_approved=opponent_submitted,
             ),
         ]
     )

@@ -47,7 +47,7 @@ async def main() -> None:
     session_factory = async_sessionmaker(engine, expire_on_commit=False)
     try:
         async with session_factory() as session:
-            # ``created_by`` is a non-nullable FK; any character will do.
+            # ``created_by_id`` is a non-nullable FK; any character will do.
             created_by_id = (
                 await session.execute(select(Character.id).order_by(Character.id).limit(1))
             ).scalars().first()
@@ -68,7 +68,7 @@ async def main() -> None:
                     level_required=level_required,
                     status=TaskStatus.active,
                     task_type=TaskType.standard,
-                    created_by=created_by_id,
+                    created_by_id=created_by_id,
                     primary_faction_slug=CROSS_FACTION_SLUG,
                 ))
                 added += 1

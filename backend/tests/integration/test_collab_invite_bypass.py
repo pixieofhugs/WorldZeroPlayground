@@ -129,7 +129,7 @@ async def high_level_task(db_session: AsyncSession, inviter: Character) -> Task:
         point_value=100,
         level_required=TASK_LEVEL_REQUIRED,
         status=TaskStatus.active,
-        created_by=inviter.id,
+        created_by_id=inviter.id,
         primary_faction_slug=TASK_FACTION_SLUG,
     )
     db_session.add(task)
@@ -195,7 +195,7 @@ async def test_wrong_faction_low_level_character_can_be_invited_and_submit(
     )
     assert submit_resp.status_code == 200, submit_resp.text
     submitted = {
-        member["character_id"]: member["has_submitted"]
+        member["character_id"]: member["has_approved"]
         for member in submit_resp.json()["members"]
     }
     assert submitted[invitee.id] is True

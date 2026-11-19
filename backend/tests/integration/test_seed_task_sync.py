@@ -25,8 +25,8 @@ from seed import (
     duel_fixture_task_faction_slug,
     ensure_duel_fixture_task,
     ensure_onboarding_task,
-    sync_era_tasks,
 )
+from services.era_tasks import sync_era_tasks
 from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 
@@ -205,7 +205,7 @@ async def test_second_row_with_the_onboarding_seed_key_is_rejected_by_the_databa
         level_required=0,
         status=TaskStatus.active,
         task_type=TaskType.standard,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=CROSS_FACTION_SLUG,
     ))
     with pytest.raises(IntegrityError):
@@ -231,7 +231,7 @@ async def test_onboarding_seed_survives_a_player_task_with_the_same_title(
         level_required=0,
         status=TaskStatus.pending,
         task_type=TaskType.standard,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=CROSS_FACTION_SLUG,
     ))
     await db_session.flush()
@@ -361,3 +361,24 @@ async def test_duel_fixture_task_skipped_when_the_era_lacks_the_faction(
         )
     ).scalars().all()
     assert rows == []
+
+
+async def test_the_deploy_seeder_never_reactivates_a_retired_task(
+    db_session: AsyncSession,
+    era: Era,
+    character: Character,
+    some_faction: Faction,
+):
+    await sync_era_tasks(
+        db_session, _era_with_tasks(_standard_task("Alpha Task")), character.id
+    )
+    alpha = (await db_session.execute(select(Task))).scalars().one()
+    alpha.status = TaskStatus.retired
+    await db_session.flush()
+
+    added = await sync_era_tasks(
+        db_session, _era_with_tasks(_standard_task("Alpha Task")), character.id
+    )
+
+    assert added == 0
+    assert alpha.status == TaskStatus.retired

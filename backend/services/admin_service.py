@@ -1,6 +1,7 @@
 """Admin-only service functions for ad-hoc database management."""
 
 import logging
+from dataclasses import dataclass
 from typing import Optional
 
 from fastapi import HTTPException
@@ -31,6 +32,7 @@ from models.vote import Vote
 from schemas.admin import (
     AdminRow,
     AccountDetail,
+    AccountPage,
     AccountSummary,
     AdminTaskPatch,
     CharacterBrief,
@@ -44,8 +46,11 @@ from schemas.admin import (
 # ``seed`` imports no service, so no cycle; it owns the mirror (runs every deploy).
 from seed import upsert_era_factions
 from services.faction_service import refuse_hidden_faction
-from services.character import record_level_reached
+from services.character import MOD_BANNED, record_level_reached
+from services.character_stats import recalculate_for_account_votes
+from services.era_tasks import sync_era_tasks, tasks_to_reactivate
 from services.duel import forfeit_settled_duels_for_character
+from services.praxis import moderate_praxis
 from services.era import (
     apply_era_reset,
     commit_and_bind_live_era,
@@ -58,25 +63,83 @@ from services.scoring import compute_vote_budget, compute_votes_available
 
 logger = logging.getLogger(__name__)
 
+ACCOUNT_PAGE_DEFAULT = 50
+ACCOUNT_PAGE_MAX = 200
+
 
 async def list_accounts(
     session: AsyncSession,
-    email_filter: str | None = None,
-) -> list[AccountSummary]:
-    query = select(Account).order_by(Account.created_at.desc())
-    if email_filter:
-        query = query.where(Account.email.ilike(f"%{email_filter}%"))
-    result = await session.execute(query)
-    accounts = result.scalars().all()
-    return [
-        AccountSummary(
-            id=account.id,
-            email=account.email,
-            status=account.status.value,
-            created_at=account.created_at,
+    search: str | None = None,
+    limit: int = ACCOUNT_PAGE_DEFAULT,
+    offset: int = 0,
+) -> AccountPage:
+    """One page of accounts; ``search`` matches email or any character's name."""
+    match_clause = None
+    if search:
+        pattern = f"%{search}%"
+        match_clause = or_(
+            Character.username.ilike(pattern), Character.display_name.ilike(pattern)
         )
-        for account in accounts
-    ]
+    query = select(Account)
+    if match_clause is not None:
+        query = query.where(
+            or_(
+                Account.email.ilike(f"%{search}%"),
+                select(Character.id)
+                .where(Character.account_id == Account.id, match_clause)
+                .exists(),
+            )
+        )
+    total = (
+        await session.execute(select(func.count()).select_from(query.subquery()))
+    ).scalar_one()
+    accounts = (
+        (
+            await session.execute(
+                # id breaks created_at ties so pages stay disjoint.
+                query.order_by(Account.created_at.desc(), Account.id.desc())
+                .limit(limit)
+                .offset(offset)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    matched: dict[int, list[CharacterBrief]] = {}
+    if match_clause is not None and accounts:
+        rows = await session.execute(
+            select(Character)
+            .where(
+                Character.account_id.in_([account.id for account in accounts]),
+                match_clause,
+            )
+            .order_by(Character.created_at)
+        )
+        for character in rows.scalars():
+            matched.setdefault(character.account_id, []).append(
+                CharacterBrief(
+                    id=character.id,
+                    username=character.username,
+                    display_name=character.display_name,
+                    faction_slug=character.faction_slug,
+                    status=character.status.value,
+                )
+            )
+    return AccountPage(
+        items=[
+            AccountSummary(
+                id=account.id,
+                email=account.email,
+                status=account.status.value,
+                created_at=account.created_at,
+                matched_characters=matched.get(account.id, []),
+            )
+            for account in accounts
+        ],
+        total=total,
+        limit=limit,
+        offset=offset,
+    )
 
 
 async def get_account_detail(account_id: int, session: AsyncSession) -> AccountDetail:
@@ -151,8 +214,18 @@ async def list_characters(
     ]
 
 
+async def list_characters_to_reset(session: AsyncSession) -> list[Character]:
+    """Lives an era roll resets: active plus mod-banned, so an unban is clean."""
+    result = await session.execute(
+        select(Character).where(
+            or_(Character.status != CharacterStatus.banned, MOD_BANNED)
+        )
+    )
+    return list(result.scalars().all())
+
+
 async def list_active_characters(session: AsyncSession) -> list[Character]:
-    """Return every non-banned character — shared by era-reset and stats-backfill."""
+    """Return every non-banned character, for the stats backfill."""
     result = await session.execute(
         select(Character).where(Character.status != CharacterStatus.banned)
     )
@@ -206,6 +279,17 @@ async def game_overview(session: AsyncSession) -> OverviewStats:
             Account.status == AccountStatus.suspended
         )
     )
+    active_accounts_result = await session.execute(
+        select(func.count()).select_from(Account).where(
+            Account.status == AccountStatus.active,
+            select(Character.id)
+            .where(
+                Character.account_id == Account.id,
+                Character.status != CharacterStatus.banned,
+            )
+            .exists(),
+        )
+    )
 
     return OverviewStats(
         accounts=account_count_result.scalar_one(),
@@ -215,6 +299,7 @@ async def game_overview(session: AsyncSession) -> OverviewStats:
         votes=vote_count_result.scalar_one(),
         flagged_praxis=flagged_count_result.scalar_one(),
         suspended_accounts=suspended_count_result.scalar_one(),
+        active_accounts=active_accounts_result.scalar_one(),
     )
 
 
@@ -222,7 +307,7 @@ def _build_flag_out(flag: Flag, flagged_by_name: str) -> FlagOut:
     return FlagOut(
         reason=flag.reason,
         reason_detail=flag.reason_detail,
-        flagged_by_id=flag.flagged_by,
+        flagged_by_id=flag.flagged_by_id,
         flagged_by_name=flagged_by_name,
         created_at=flag.created_at,
     )
@@ -236,7 +321,7 @@ async def flags_for_praxes(
         return {}
     result = await session.execute(
         select(Flag, Character.display_name)
-        .join(Character, Character.id == Flag.flagged_by)
+        .join(Character, Character.id == Flag.flagged_by_id)
         .where(Flag.praxis_id.in_(praxis_ids))
         .order_by(Flag.created_at.desc())
     )
@@ -256,7 +341,7 @@ async def flags_for_comments(
         return {}
     result = await session.execute(
         select(Flag, Character.display_name)
-        .join(Character, Character.id == Flag.flagged_by)
+        .join(Character, Character.id == Flag.flagged_by_id)
         .where(Flag.comment_id.in_(comment_ids))
         .order_by(Flag.created_at.desc())
     )
@@ -266,6 +351,78 @@ async def flags_for_comments(
             _build_flag_out(flag, flagged_by_name)
         )
     return flags_by_comment
+
+
+@dataclass(frozen=True)
+class PraxisAuthorModeration:
+    account_id: int
+    username: str
+    character_status: str
+    account_status: str
+    flagged_count: int
+
+
+async def authors_for_moderation(
+    character_ids: set[int], session: AsyncSession
+) -> dict[int, PraxisAuthorModeration]:
+    """Account and moderation state per author character, for the queue's cards."""
+    if not character_ids:
+        return {}
+    result = await session.execute(
+        select(
+            Character.id,
+            Character.account_id,
+            Character.username,
+            Character.status,
+            Account.status,
+        )
+        .join(Account, Account.id == Character.account_id)
+        .where(Character.id.in_(character_ids))
+    )
+    flagged_counts = dict(
+        (
+            await session.execute(
+                select(Praxis.created_by_id, func.count())
+                .where(
+                    Praxis.created_by_id.in_(character_ids),
+                    Praxis.moderation_status == ModerationStatus.flagged,
+                )
+                .group_by(Praxis.created_by_id)
+            )
+        ).all()
+    )
+    return {
+        character_id: PraxisAuthorModeration(
+            account_id=account_id,
+            username=username,
+            character_status=character_status.value,
+            account_status=account_status.value,
+            flagged_count=flagged_counts.get(character_id, 0),
+        )
+        for (
+            character_id,
+            account_id,
+            username,
+            character_status,
+            account_status,
+        ) in result.all()
+    }
+
+
+async def remove_flagged_praxes_by_author(
+    character_id: int, session: AsyncSession
+) -> int:
+    """Hide every open-flagged praxis by one author (the single remove, in bulk)."""
+    result = await session.execute(
+        select(Praxis.id).where(
+            Praxis.created_by_id == character_id,
+            Praxis.moderation_status == ModerationStatus.flagged,
+        )
+    )
+    praxis_ids = list(result.scalars())
+    for praxis_id in praxis_ids:
+        await moderate_praxis(praxis_id, ModerationStatus.hidden.value, None, session)
+    return len(praxis_ids)
 
 
 async def apply_ban(
@@ -281,8 +438,11 @@ async def apply_ban(
 
     Un-banning refuses a departed life: ``departed_at`` is written only by the
     player's own ``soft_delete_character``; ``status`` alone can't tell them apart.
+    A mod-banned life of a deleted account stays unstamped, so that is checked too.
     """
-    if not banned and character.departed_at is not None:
+    account = await session.get(Account, character.account_id)
+    deleted = account is not None and account.status == AccountStatus.deleted
+    if not banned and (character.departed_at is not None or deleted):
         raise_coded(
             409,
             ErrorCode.character_departed_not_restorable,
@@ -296,6 +456,7 @@ async def apply_ban(
         character.status = CharacterStatus.active
 
     await session.flush()
+    await recalculate_for_account_votes(character.account_id, session, era)
 
 
 async def set_character_stats(
@@ -369,7 +530,7 @@ async def assign_or_revoke_role(
         session.add(AccountRole(
             account_id=account_id,
             role_id=role.id,
-            granted_by=admin_account_id,
+            granted_by_id=admin_account_id,
         ))
         await session.flush()
 
@@ -455,12 +616,16 @@ async def suspend_account(
     account_id: int,
     suspended: bool,
     session: AsyncSession,
+    era: EraConfig = CURRENT_ERA,
 ) -> Account:
     account = await session.get(Account, account_id)
     if account is None:
         raise HTTPException(status_code=404, detail="Account not found.")
+    if account.status == AccountStatus.deleted:
+        raise_coded(409, ErrorCode.account_deleted, "Account was deleted.")
     account.status = AccountStatus.suspended if suspended else AccountStatus.active
     await session.flush()
+    await recalculate_for_account_votes(account_id, session, era)
     await session.refresh(account)
     return account
 
@@ -485,7 +650,7 @@ async def list_pending_tasks_with_proposer(
     """Return pending tasks paired with their proposer's display name (or None)."""
     result = await session.execute(
         select(Task, Character.display_name)
-        .outerjoin(Character, Character.id == Task.created_by)
+        .outerjoin(Character, Character.id == Task.created_by_id)
         .where(Task.status == TaskStatus.pending)
         .order_by(Task.created_at)
     )
@@ -655,8 +820,10 @@ async def roll_into_era(
     in the system, and there is no undo.
 
     Delegates to the owners: new ``Era`` row (ADR-0042), roster mirror,
-    ``apply_era_reset`` (incoming era's flags; freezes duels #824), then
-    ``commit_and_bind_live_era``. ``operator`` is the ``Era.started_by`` audit.
+    ``apply_era_reset`` (incoming era's flags; freezes duels #824), the incoming
+    era's ``reactivate_tasks`` (named retired ones return) and ``tasks`` (new ones
+    are created); the onboarding task is spared by the retirement, not relisted), then
+    ``commit_and_bind_live_era``. ``operator`` is the ``Era.started_by_id`` audit.
 
     Refuses an unregistered key and the already-live era (a full destructive
     reset for nothing; a disabled <option> is not a control).
@@ -681,12 +848,33 @@ async def roll_into_era(
             f"{era_config.name} is already the live era.",
         )
 
-    characters = await list_active_characters(session)
+    # Before any write: a bad title refuses the whole roll.
+    to_reactivate = await tasks_to_reactivate(session, era_config)
+
+    creator_id = (
+        await session.execute(
+            select(Character.id)
+            .where(Character.account_id == operator.id)
+            .order_by(Character.id)
+            .limit(1)
+        )
+    ).scalar_one_or_none()
+    if creator_id is None:
+        board_titles = set((await session.execute(select(Task.title))).scalars())
+        if any(task.title not in board_titles for task in era_config.tasks):
+            raise_coded(
+                409,
+                ErrorCode.era_roll_needs_character,
+                "This era lists new tasks and the operator has no character "
+                "to author them.",
+            )
+
+    characters = await list_characters_to_reset(session)
     new_era_row = Era(
         # Fallback if the config file is later deleted; see models/era.py.
         name=era_config.name,
         config_key=era_config.config_key,
-        started_by=operator.id,
+        started_by_id=operator.id,
     )
     session.add(new_era_row)
     await session.flush()
@@ -697,6 +885,10 @@ async def roll_into_era(
 
     await apply_era_reset(characters, new_era_row, session, era=era_config)
 
+    for task in to_reactivate:
+        task.status = TaskStatus.active
+    tasks_created = await sync_era_tasks(session, era_config, creator_id)
+
     # Durable first, live second; see `commit_and_bind_live_era`.
     await commit_and_bind_live_era(session, era_config)
 
@@ -705,4 +897,6 @@ async def roll_into_era(
         config_key=era_config.config_key,
         name=era_config.name,
         characters_reset=len(characters),
+        tasks_reactivated=len(to_reactivate),
+        tasks_created=tasks_created,
     )

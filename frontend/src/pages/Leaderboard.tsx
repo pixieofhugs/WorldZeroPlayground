@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { useTranslation } from 'react-i18next'
 import { getLeaderboard } from '../api/leaderboard'
 import { getNearbyAirports } from '../api/me'
@@ -27,6 +28,7 @@ import {
  */
 export default function Leaderboard() {
   const { t } = useTranslation('common')
+  useDocumentTitle(t('leaderboard.title'))
   const { user } = useAuth()
   const config = useGameConfig()
   const formFactor = useFormFactor()
@@ -132,8 +134,8 @@ function useViewerRelationships(myCharId: number | null): ViewerRelationships {
     }
     let cancelled = false
     Promise.all([
-      listRelationships({ type: 'friend', status: 'active' }).catch(() => []),
-      listRelationships({ type: 'foe', status: 'active' }).catch(() => []),
+      listRelationships({ type: 'friend' }).catch(() => []),
+      listRelationships({ type: 'foe' }).catch(() => []),
       getNearbyAirports().catch(() => null),
     ]).then(([friends, foes, nearby]) => {
       if (cancelled) return

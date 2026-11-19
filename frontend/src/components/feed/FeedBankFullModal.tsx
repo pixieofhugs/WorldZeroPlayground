@@ -10,7 +10,8 @@
  * A named `role="dialog"`, focus moves in on open, Escape dismisses. The harness
  * can't run effects, so only the static contract is tested.
  */
-import { useEffect, useId, useRef } from 'react'
+import { useEffect, useId } from 'react'
+import { useModal } from '../../hooks/useModal'
 import { createPortal } from 'react-dom'
 
 /** One in-progress praxis the viewer may drop to free a bank slot. */
@@ -44,21 +45,13 @@ export default function FeedBankFullModal({
 }) {
   const titleId = useId()
   const bodyId = useId()
-  const panelRef = useRef<HTMLDivElement>(null)
+  const panelRef = useModal(onDismiss)
 
   // Focus the panel, not a button: every drop destroys or leaves a praxis, so
   // there is no safe default.
   useEffect(() => {
     panelRef.current?.focus()
-  }, [])
-
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onDismiss()
-    }
-    document.addEventListener('keydown', onKeyDown)
-    return () => document.removeEventListener('keydown', onKeyDown)
-  }, [onDismiss])
+  }, [panelRef])
 
   const modal = (
     <div

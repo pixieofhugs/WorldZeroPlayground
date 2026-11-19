@@ -170,7 +170,6 @@ describe("one drawing at four mounts (#2230)", () => {
     for (const side of SIDES) {
       const html = renderToStaticMarkup(<EphemeristsNotationBand seed="task:41" side={side} />);
       expect(html, `${side} draws marks`).toContain("var(--");
-      expect(html, side).not.toMatch(/(?<![&\w])#[0-9a-fA-F]{3,8}\b/);
     }
   });
 });

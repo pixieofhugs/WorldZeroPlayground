@@ -53,7 +53,7 @@ function Title({ cameBack, onStart }: { cameBack: boolean; onStart: () => void }
   const shown = useTitleTyping(welcome, cameBack || reducedMotion())
   const delay = (s: number): CSSProperties => ({ animationDelay: `${s}s` })
   return (
-    <main className={`ob-title ${cameBack ? 'ob-rew ob-quick' : ''}`}>
+    <section className={`ob-title ${cameBack ? 'ob-rew ob-quick' : ''}`}>
       <div aria-hidden="true" className="ob-rail">
         <div className="boing ob-level">
           <span className="ob-cap">{t('flow.level')}</span>
@@ -90,7 +90,7 @@ function Title({ cameBack, onStart }: { cameBack: boolean; onStart: () => void }
       <button type="button" className="boing ob-start" style={delay(4.3)} onClick={onStart} data-testid="onboarding-start">
         {t('flow.start')}
       </button>
-    </main>
+    </section>
   )
 }
 
@@ -150,6 +150,19 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
     return () => clearTimeout(id)
   }, [beat, leaving, done, reveal, line.length])
 
+  // Focus carries the whole line to a screen reader; typing is only for the eyes.
+  const lineBox = useRef<HTMLButtonElement>(null)
+  const rootRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (beat) return lineBox.current?.focus({ preventScroll: true })
+    const root = rootRef.current
+    if (step === 'title') return cameFrom !== null ? root?.querySelector<HTMLElement>('[data-testid=onboarding-start]')?.focus({ preventScroll: true }) : undefined
+    const el = root?.querySelector<HTMLElement>('h1, h2') ?? root?.querySelector<HTMLElement>('section')
+    if (!el) return
+    if (!el.hasAttribute('tabindex')) el.tabIndex = -1
+    el.focus({ preventScroll: true })
+  }, [step, beat, loading, recording, cameFrom])
+
   // Leaving un-types the line while the scene is yanked away.
   useEffect(() => {
     if (!leaving || !beat) return
@@ -185,6 +198,10 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
     else if (held === null) move(next)
   }
 
+  const goNext = () => {
+    if (held === null) move(next)
+  }
+
   const setHold = useCallback((label: string | null) => setHeld(label), [])
 
   // Back plays on the whole screen except beat to beat, where only the stage swaps.
@@ -196,10 +213,10 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
   const onBack = flow.history.length ? goBack : undefined
 
   const Beat = n === null ? null : BEATS[n - 1]
-  const label = !done ? t('flow.finishLine') : n === 7 ? t('flow.toContract') : t('flow.next')
+  const label = n === 7 ? t('flow.toContract') : t('flow.next')
 
   return (
-    <div className="onboarding-arc ob-root" data-theme="dark" style={{ ['--conf' as string]: CONFIDENCE[String(step)] ?? 1 }}>
+    <div ref={rootRef} className="onboarding-arc ob-root" data-theme="dark" style={{ ['--conf' as string]: CONFIDENCE[String(step)] ?? 1 }}>
       <span aria-hidden="true" className="ob-aurora" style={{ animationDelay: step === 'title' && !cameBack ? '3.4s' : '0s' }} />
       <header className="ob-header">
         <span>
@@ -229,9 +246,9 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
       {step === 'title' && <Title cameBack={cameBack} onStart={() => move(next)} />}
 
       {Beat && n !== null && (
-        <main className={`ob-beat ${screenCls}`}>
+        <section className={`ob-beat ${screenCls}`}>
           <HoldNextContext.Provider value={setHold}>
-            <section aria-hidden={n === VOTE_BEAT ? undefined : true} className={`ob-stage ${stageCls}`} key={step}>
+            <section aria-hidden={n === VOTE_BEAT ? undefined : true} inert={n !== VOTE_BEAT} className={`ob-stage ${stageCls}`} key={step}>
               <Beat confidence={CONFIDENCE[n]} />
             </section>
           </HoldNextContext.Provider>
@@ -245,15 +262,12 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
                 ))}
               </span>
             </span>
-            <button type="button" className="ob-adv" onClick={advance} aria-label={label}>
+            <button type="button" className="ob-adv" key={step} ref={lineBox} tabIndex={-1} onClick={(e) => (e.detail === 0 ? goNext() : advance())} aria-label={line}>
               <span aria-hidden="true" className="ob-lora ob-line-text">
                 {line.slice(0, reveal)}
                 <span className="ob-caret" />
               </span>
             </button>
-            <span className="ob-sr" aria-live="polite">
-              {line}
-            </span>
             <span className="ob-box-nav">
               {onBack ? (
                 <button type="button" className="ob-ghost ob-cap ob-bk ob-prev" onClick={onBack}>
@@ -262,16 +276,16 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
               ) : (
                 <span />
               )}
-              {done && held !== null ? (
+              {held !== null ? (
                 <span className="ob-cap ob-hold">{held}</span>
               ) : (
-                <button type="button" className="ob-ghost ob-cap ob-next ob-fwd" onClick={advance}>
+                <button type="button" className="ob-ghost ob-cap ob-next ob-fwd" onClick={goNext}>
                   {label}
                 </button>
               )}
             </span>
           </div>
-        </main>
+        </section>
       )}
 
       {step === 'signin' && <div className={screenCls}><AuthCard onBack={onBack} /></div>}

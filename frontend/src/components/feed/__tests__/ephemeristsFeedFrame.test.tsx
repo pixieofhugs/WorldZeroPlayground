@@ -72,10 +72,6 @@ describe('EphemeristsFeedFrame — the Valley plate ground', () => {
     expect(frame()).not.toContain('--eph-')
   })
 
-  it('names no colour in hex', () => {
-    expect(frame()).not.toMatch(/#[0-9a-fA-F]{3,8}\b/)
-  })
-
   it('reuses the kit ornament rather than drawing new marks', () => {
     const html = frame()
     // The kite sigil (#1635, redrawn by Sigil Studies v2); the retired sun

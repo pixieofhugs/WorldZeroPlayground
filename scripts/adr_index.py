@@ -14,6 +14,12 @@ Header contract: every `docs/adr/NNNN-*.md` opens with exactly
 where `<status>` is `Accepted`, `Reversed`, `Superseded by ADR-NNNN` or
 `Amended by ADR-NNNN` (the last two take a comma-separated list). Which clause
 moved goes in the body under `## Amendment`, never the status value.
+
+A `**Amends:**` / `**Supersedes...**` header line names its targets (every
+`ADR-NNNN` up to the next blank or `**` line); each target's status must name
+it back. `Supersedes` means "Superseded by" only if whole-record: "in full",
+"entirely", or the target follows the marker with no "only" / "clause" /
+"for <surface>". Everything else, ambiguity included, is "Amended by".
 """
 
 from __future__ import annotations
@@ -55,6 +61,29 @@ class AdrFormatError(ValueError):
     """An ADR's opening block does not match the header contract."""
 
 
+_CHANGE_LINE = re.compile(r"^\*\*(Amends|Supersedes)", re.M)
+_WHOLE = re.compile(r"\b(in full|entirely)\b")
+_PARTIAL = re.compile(r"\b(only|clause|half|for [a-z])")
+_DIRECT = re.compile(r"\A\*\*Supersedes:?\*\*:? \**\[?ADR-\d{4}")
+
+
+def _changes(text: str) -> list[tuple[str, str]]:
+    found: list[tuple[str, str]] = []
+    for start in _CHANGE_LINE.finditer(text):
+        lines = []
+        for line in text[start.start() :].split("\n"):
+            if lines and (not line or line.startswith("**")):
+                break
+            lines.append(line)
+        block = " ".join(lines)
+        whole = start.group(1) == "Supersedes" and (
+            _WHOLE.search(block) or (_DIRECT.match(block) and not _PARTIAL.search(block))
+        )
+        for n in dict.fromkeys(re.findall(r"ADR-(\d{4})", block)):
+            found.append((n, "Superseded" if whole else "Amended"))
+    return found
+
+
 @dataclass(frozen=True)
 class Adr:
     number: str
@@ -62,6 +91,7 @@ class Adr:
     title: str
     status: str
     date: str
+    changes: tuple[tuple[str, str], ...] = ()
 
     @property
     def verb(self) -> str:
@@ -83,7 +113,8 @@ class Adr:
 
 
 def parse(path: Path) -> Adr:
-    header = _HEADER.match(path.read_text(encoding="utf-8"))
+    text = path.read_text(encoding="utf-8")
+    header = _HEADER.match(text)
     if header is None:
         raise AdrFormatError(
             f"{path.name}: the first four lines must be `# <title>`, a blank line, "
@@ -104,6 +135,7 @@ def parse(path: Path) -> Adr:
         title=_TITLE_PREFIX.sub("", header.group("title").strip()),
         status=status,
         date=header.group("date"),
+        changes=tuple(_changes(text)),
     )
 
 
@@ -141,10 +173,16 @@ def render(adrs: list[Adr]) -> str:
         "|---|---|---|---|",
     ]
 
+    declared: dict[str, list[str]] = {}
+    for a in adrs:
+        for target, _ in a.changes:
+            declared.setdefault(target, []).append(a.number)
+
     for adr in adrs:
+        named = list(dict.fromkeys(adr.refs + declared.get(adr.number, [])))
         refs = ", ".join(
             f"[ADR-{n}]({index[n].filename})" if n in index else f"ADR-{n} (missing)"
-            for n in adr.refs
+            for n in named
         )
         lines.append(
             f"| [{adr.number}]({adr.filename}) "

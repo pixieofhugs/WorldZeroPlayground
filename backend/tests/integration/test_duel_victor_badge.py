@@ -26,7 +26,9 @@ DUEL_VICTOR_BADGE = {"key": "duel_victor", "name": "Duel Victor"}
 
 
 async def _next_era(session: AsyncSession, account: Account, *, name: str) -> Era:
-    era_row = Era(name=name, config_key=CURRENT_ERA.config_key, started_by=account.id)
+    era_row = Era(
+        name=name, config_key=CURRENT_ERA.config_key, started_by_id=account.id
+    )
     session.add(era_row)
     await session.commit()
     await session.refresh(era_row)
@@ -196,7 +198,7 @@ async def test_the_real_era_reset_produces_the_badge(
         db_session, era, label="reset", challenger_votes=6, opponent_votes=2, commit=True)
 
     new_era_row = Era(
-        name="Era 2", config_key=CURRENT_ERA.config_key, started_by=account.id
+        name="Era 2", config_key=CURRENT_ERA.config_key, started_by_id=account.id
     )
     db_session.add(new_era_row)
     await db_session.flush()

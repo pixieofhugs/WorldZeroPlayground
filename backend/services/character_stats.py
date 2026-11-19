@@ -7,7 +7,7 @@ from typing import Any
 from fastapi import HTTPException
 from sqlalchemy import ColumnElement, and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import InstrumentedAttribute
+from sqlalchemy.orm import InstrumentedAttribute, selectinload
 
 from faction_slugs import CROSS_FACTION_SLUG, UNAFFILIATED_FACTION_SLUG
 from game_config import CURRENT_ERA, EraConfig
@@ -263,6 +263,28 @@ async def recalculate_members_stats(
             member.character_id, session, era, era_row=era_row
         )
     await session.flush()
+
+
+async def recalculate_for_account_votes(
+    account_id: int,
+    session: AsyncSession,
+    era: EraConfig = CURRENT_ERA,
+) -> None:
+    """Re-score every praxis ``account_id`` voted on, after a moderation flip.
+
+    Tallies skip moderated voters on read, so stored scores must follow.
+    """
+    result = await session.execute(
+        select(Praxis)
+        .where(
+            Praxis.id.in_(
+                select(Vote.praxis_id).where(Vote.voter_account_id == account_id)
+            )
+        )
+        .options(selectinload(Praxis.members))
+    )
+    for praxis in result.scalars().all():
+        await recalculate_members_stats(praxis, session, era)
 
 
 @dataclasses.dataclass(frozen=True)

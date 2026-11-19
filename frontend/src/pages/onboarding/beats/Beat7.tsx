@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react'
+import { type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import { FACTION_RAINBOW_ORDER, factionCssVar } from '../../../utils/factions'
 import '../../../factionFaces'

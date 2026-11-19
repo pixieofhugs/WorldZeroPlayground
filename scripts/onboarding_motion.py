@@ -5,8 +5,7 @@ onboarding beats play, computed from the Rig below.
 Edit this file and rerun `python3 scripts/onboarding_motion.py`; never edit
 generated.css by hand. `--check` exits 1 if the checked-in file is stale.
 
-Ported from .design-sync/onboarding-arc/build.py: b1()'s glass and flowers are
-returned, and b6()'s ledge/card geometry and timings go to motion/beat6.generated.ts
+b1()'s glass and flowers are returned, and b6()'s ledge/card geometry and timings go to motion/beat6.generated.ts
 (the markup itself is Beat6.tsx).
 """
 import json

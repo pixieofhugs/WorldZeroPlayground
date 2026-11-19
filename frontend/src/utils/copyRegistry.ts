@@ -112,10 +112,6 @@ export function copyMatchForElement(
   return null
 }
 
-export function copyTargetsForElement(start: Element | null): CopyTarget[] {
-  return copyMatchForElement(start)?.targets ?? []
-}
-
 /**
  * The one hard guard on a save: a dropped `{{…}}` renders a silent hole.
  * Whole-token compare, so a renamed placeholder counts as dropped.

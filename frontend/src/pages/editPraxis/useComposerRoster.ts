@@ -98,7 +98,7 @@ export function useComposerRoster(options: {
 
   useEffect(() => {
     if (!user?.character) return;
-    listRelationships({ type: "foe", status: "active" })
+    listRelationships({ type: "foe" })
       .then((rels) => setFoeIds(new Set(rels.map((r) => r.to_character_id))))
       .catch(() => {
         /* foes-first ordering is a nicety */

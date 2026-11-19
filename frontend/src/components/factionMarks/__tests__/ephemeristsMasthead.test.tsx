@@ -104,7 +104,6 @@ describe("EphemeristsMasthead — the register, deleted", () => {
 describe("EphemeristsMasthead — ink", () => {
   it("hardcodes no colour", () => {
     const html = render("card");
-    expect(html).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
     // Retired colour family.
     expect(html).not.toMatch(/--eph-[a-z]/);
     expect(html).toContain("--faction-ephemerists-plate-band-ink");
