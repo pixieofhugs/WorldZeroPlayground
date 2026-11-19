@@ -35,12 +35,12 @@ const LOCATION_PLACEHOLDER = forms.character.locationPlaceholder
 test.use({ storageState: { cookies: [], origins: [] } })
 
 // A vote-gated bot drops the vote skins from the sweep silently (#3102);
-// `loginAs` checks the era's gate.
+// `loginAs` checks the era's gates (level, and a received vote: #3475).
 const BOT_LEVEL = 1
 
 async function loginAs(page: Page, faction: SweepFaction): Promise<{ characterId: number }> {
   const response = await page.request.post(
-    `${API}/auth/dev-login?key=contrast&name=Contrast%20Bot&faction=${faction}&level=${BOT_LEVEL}`,
+    `${API}/auth/dev-login?key=contrast&name=Contrast%20Bot&faction=${faction}&level=${BOT_LEVEL}&received_vote=true`,
   )
   expect(response.ok(), `dev-login?faction=${faction} failed — is the backend up on ${API}?`).toBeTruthy()
   const body = await response.json()
@@ -48,7 +48,7 @@ async function loginAs(page: Page, faction: SweepFaction): Promise<{ characterId
   const me = await (await page.request.get(`${API}/auth/me`)).json()
   expect(
     me.can_vote,
-    `the contrast bot is vote-gated at level ${BOT_LEVEL} (the era asks for ${me.vote_level_required}) — raise BOT_LEVEL, or the vote skins go unswept`,
+    `the contrast bot is vote-gated (${me.vote_lock_reason ?? 'level'}; level ${BOT_LEVEL}, the era asks for ${me.vote_level_required}) — fix the login, or the vote skins go unswept`,
   ).toBe(true)
   return { characterId: body.character_id }
 }
