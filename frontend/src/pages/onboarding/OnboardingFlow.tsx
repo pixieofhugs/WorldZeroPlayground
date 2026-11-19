@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState, type CSSProperties } from 're
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthContext'
-import { loadAppCopy } from '../../i18n'
 import { acceptTerms } from '../../api/terms'
 import type { TaskOut } from '../../api/tasks'
 import { resolveHandoffTask } from '../../utils/onboardingHandoff'
@@ -150,11 +149,6 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
     const id = setTimeout(() => setReveal((r) => r + 1), TYPE_MS)
     return () => clearTimeout(id)
   }, [beat, leaving, done, reveal, line.length])
-
-  // Beat 7's bubbles read `feed:` copy; fetch it one beat early so the scene never waits.
-  useEffect(() => {
-    if (n === 6) void loadAppCopy()
-  }, [n])
 
   // Leaving un-types the line while the scene is yanked away.
   useEffect(() => {

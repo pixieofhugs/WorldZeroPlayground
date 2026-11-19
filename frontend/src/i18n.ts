@@ -7,6 +7,7 @@ import { isCopyRecording, recordRenderedCopy } from './utils/copyRegistry'
 import common from './locales/en/common.json'
 import errors from './locales/en/errors.json'
 import factions from './locales/en/factions.json'
+import feed from './locales/en/feed.json'
 import home from './locales/en/home.json'
 import praxis from './locales/en/praxis.json'
 import progression from './locales/en/progression.json'
@@ -26,6 +27,7 @@ export const resources = {
     common,
     errors,
     factions,
+    feed,
     home,
     praxis,
     progression,
@@ -35,7 +37,9 @@ export const resources = {
   },
 } as const
 
-/** Shipped JSON of namespaces loaded with their route, for Revert (`shippedValue`). */
+/**
+ * `feed` is eager: the task and sigil cards read it with `i18n.t` from the welcome flow and the
+ * shell, which no route loader awaits. Shipped JSON of namespaces loaded with their route, for Revert (`shippedValue`). */
 export const lazyShipped: Record<string, unknown> = {}
 
 /** Only `/start` surfaces read `onboarding:`; keeping it out of the eager bundle holds the byte budget. */
@@ -46,13 +50,8 @@ export function registerNamespace(ns: string, json: object): void {
 }
 
 export async function loadAppCopy(): Promise<void> {
-  const [admin, feed, forms] = await Promise.all([
-    import('./locales/en/admin.json'),
-    import('./locales/en/feed.json'),
-    import('./locales/en/forms.json'),
-  ])
+  const [admin, forms] = await Promise.all([import('./locales/en/admin.json'), import('./locales/en/forms.json')])
   registerNamespace('admin', admin.default)
-  registerNamespace('feed', feed.default)
   registerNamespace('forms', forms.default)
 }
 
