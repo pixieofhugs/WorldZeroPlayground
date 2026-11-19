@@ -26,7 +26,7 @@ fi
 
 if [ -n "$REMOTE_URL" ]; then
     # --- prod/remote mode: drop the public schema, nothing else ---
-    DSN=$(echo "$REMOTE_URL" | sed 's|^postgresql+asyncpg://|postgresql://|; s|^postgres://|postgresql://|')
+    DSN=$(echo "$REMOTE_URL" | sed 's|^postgresql+asyncpg://|postgresql://|')
     TARGET=$(echo "$DSN" | sed 's|.*@||')
     echo "WARNING: this DROPs the public schema on a REMOTE database — all data is lost."
     echo "Target: $TARGET"

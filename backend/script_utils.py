@@ -17,12 +17,6 @@ def get_settings(env: str) -> Settings:
     if not env_file:
         raise ValueError(f"Unknown environment '{env}'. Choose: {list(ENV_FILES)}")
     settings = Settings(_env_file=env_file)
-    url = settings.DATABASE_URL
-    if url.startswith("postgres://"):
-        url = url.replace("postgres://", "postgresql+asyncpg://", 1)
-    elif url.startswith("postgresql://"):
-        url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
-    settings.DATABASE_URL = url
     return settings
 
 

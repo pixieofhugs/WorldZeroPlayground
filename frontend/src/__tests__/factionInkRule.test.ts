@@ -267,7 +267,7 @@ describe(`${HUE_RULE} stays silent where the hue is doing its job`, () => {
     expect(
       await reportsHue(
         'export const s = (slug: string) => ({ color: factionCssVar(slug) })',
-        'src/components/ActivityTicker.tsx',
+        'src/components/probe.tsx',
       ),
     ).toBe(true)
   })
