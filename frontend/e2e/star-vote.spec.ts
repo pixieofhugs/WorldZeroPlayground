@@ -1,7 +1,14 @@
 import { test, expect, type BrowserContext, type Page } from '@playwright/test'
 
 import type { components } from '../src/api/generated/schema'
-import { createPraxis, fetchTasks, loginPlayer, submitPraxis, type Player } from '../src/utils/e2eScenario'
+import {
+  attachProof,
+  createPraxis,
+  fetchTasks,
+  loginPlayer,
+  submitPraxis,
+  type Player,
+} from '../src/utils/e2eScenario'
 import { MULTI_INVITE_LEVEL, selectDistinctTasks } from '../src/utils/collabScenario'
 import { scenarioFor } from './duel.helpers'
 
@@ -15,29 +22,35 @@ test.describe.configure({ mode: 'serial', retries: 0 })
 
 test.describe('star vote', () => {
   let author: Player<BrowserContext>
+  // One author per praxis: an account may post once a day (#3474).
+  let coauthor: Player<BrowserContext>
   let voter: Player<BrowserContext>
   let praxes: { id: number; title: string }[]
 
   test.beforeAll(async ({ browser }) => {
     author = await loginPlayer(scenarioFor(browser), 'va', AUTHOR_LEVEL)
+    coauthor = await loginPlayer(scenarioFor(browser), 'vc', AUTHOR_LEVEL)
     voter = await loginPlayer(scenarioFor(browser), 'vb', VOTER_LEVEL, { receivedVote: true })
     const tasks = selectDistinctTasks(await fetchTasks(author), 2)
     praxes = []
     for (const [index, task] of tasks.entries()) {
+      const writer = index === 0 ? author : coauthor
       const title = `Vote ${index} ${author.name}`
-      const praxis = await createPraxis(author, {
+      const praxis = await createPraxis(writer, {
         task_id: task.id,
         type: 'solo',
         title,
         body_text: 'rate me',
       })
-      await submitPraxis(author, praxis.id)
+      await attachProof(writer, praxis.id)
+      await submitPraxis(writer, praxis.id)
       praxes.push({ id: praxis.id, title })
     }
   })
 
   test.afterAll(async () => {
     await author.ctx.close()
+    await coauthor.ctx.close()
     await voter.ctx.close()
   })
 

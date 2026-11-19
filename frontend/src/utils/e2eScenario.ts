@@ -20,10 +20,20 @@ export interface E2EResponse {
   json(): Promise<unknown>
 }
 
+/** Slice of Playwright's multipart file value. */
+export interface E2EUpload {
+  name: string
+  mimeType: string
+  buffer: Buffer
+}
+
 /** Slice of Playwright's `APIRequestContext`. */
 export interface E2ERequest {
   get(url: string): Promise<E2EResponse>
-  post(url: string, options?: { data?: unknown }): Promise<E2EResponse>
+  post(
+    url: string,
+    options?: { data?: unknown; multipart?: Record<string, E2EUpload> },
+  ): Promise<E2EResponse>
 }
 
 /** Slice of Playwright's `BrowserContext`: one cookie jar. */
@@ -151,6 +161,24 @@ export async function respondToInvite(
       { data: { accept } },
     ),
     `respond to invite ${inviteId}`,
+  )
+}
+
+// A 1x1 PNG: a praxis needs one media item to submit (#3473).
+const PROOF_PNG_BASE64 =
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='
+
+export const proofPng = (): Uint8Array =>
+  Uint8Array.from(atob(PROOF_PNG_BASE64), (char) => char.charCodeAt(0))
+
+/** Scaffolding: attach one image so a later `submitPraxis` is accepted. */
+export async function attachProof(player: Player, praxisId: number): Promise<void> {
+  const buffer = Buffer.from(proofPng())
+  await readJson(
+    await player.ctx.request.post(`${player.api}/praxes/${praxisId}/media`, {
+      multipart: { file: { name: 'proof.png', mimeType: 'image/png', buffer } },
+    }),
+    `attach proof to praxis ${praxisId}`,
   )
 }
 

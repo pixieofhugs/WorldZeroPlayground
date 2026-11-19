@@ -156,7 +156,7 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
   useEffect(() => {
     if (beat) return lineBox.current?.focus({ preventScroll: true })
     const root = rootRef.current
-    if (step === 'title') return cameFrom !== null ? root?.querySelector<HTMLElement>('[data-testid=onboarding-start]')?.focus() : undefined
+    if (step === 'title') return cameFrom !== null ? root?.querySelector<HTMLElement>('[data-testid=onboarding-start]')?.focus({ preventScroll: true }) : undefined
     const el = root?.querySelector<HTMLElement>('h1, h2') ?? root?.querySelector<HTMLElement>('section')
     if (!el) return
     if (!el.hasAttribute('tabindex')) el.tabIndex = -1
@@ -262,7 +262,7 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
                 ))}
               </span>
             </span>
-            <button type="button" className="ob-adv" ref={lineBox} tabIndex={-1} onClick={advance} aria-label={line}>
+            <button type="button" className="ob-adv" key={step} ref={lineBox} tabIndex={-1} onClick={(e) => (e.detail === 0 ? goNext() : advance())} aria-label={line}>
               <span aria-hidden="true" className="ob-lora ob-line-text">
                 {line.slice(0, reveal)}
                 <span className="ob-caret" />

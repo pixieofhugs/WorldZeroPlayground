@@ -10,7 +10,7 @@
  * Accepted limit (#3136): no keyboard reach while a `ConfirmDialog` traps Tab.
  * Strings are picked by pointer anyway.
  */
-import { useEffect, useRef, useState, type CSSProperties } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { deleteCopyOverride, putCopyOverride } from '../../api/copy'
@@ -128,6 +128,43 @@ export function keepEscapeInPanel(
 /** Room for a multi-paragraph description on desktop, so spellcheck marks can be seen. */
 const EDITING_WIDTH = 'min(40rem, calc(100vw - var(--space-xl)))'
 
+/** Narrower than this and a box over the spot is a sliver; the panel's textarea is kinder. */
+const MIN_SPOT_WIDTH = 40
+
+/** The spot's own typography, so the box reads as the text itself. No `text-transform`: it shows what is stored. */
+function spotLook(el: Element): CSSProperties {
+  const cs = getComputedStyle(el)
+  return {
+    font: cs.font,
+    letterSpacing: cs.letterSpacing,
+    color: cs.color,
+    textAlign: cs.textAlign as CSSProperties['textAlign'],
+    whiteSpace: cs.whiteSpace === 'nowrap' ? 'pre-wrap' : cs.whiteSpace,
+    padding: cs.padding,
+  }
+}
+
+/** The spot's viewport box, kept current on scroll and resize; null once it is off screen or too narrow. */
+function useSpotRect(spot: Element | null): DOMRect | null {
+  const [rect, setRect] = useState<DOMRect | null>(null)
+  useLayoutEffect(() => {
+    if (!spot) return setRect(null)
+    const measure = () => {
+      const r = spot.getBoundingClientRect()
+      const seen = r.bottom > 0 && r.top < innerHeight && r.right > 0 && r.left < innerWidth
+      setRect(seen && r.width >= MIN_SPOT_WIDTH ? r : null)
+    }
+    measure()
+    addEventListener('scroll', measure, true)
+    addEventListener('resize', measure)
+    return () => {
+      removeEventListener('scroll', measure, true)
+      removeEventListener('resize', measure)
+    }
+  }, [spot])
+  return rect
+}
+
 const ROW: CSSProperties = {
   display: 'flex',
   gap: 'var(--space-xs)',
@@ -152,6 +189,17 @@ export default function CopyEditor() {
   const [choices, setChoices] = useState<CopyTarget[]>([])
   const [draft, setDraft] = useState('')
   const [notice, setNotice] = useState<string | null>(null)
+  /** The clicked element, set only for a direct open: the choosers keep the panel textarea. */
+  const [spot, setSpot] = useState<HTMLElement | null>(null)
+  const spotRect = useSpotRect(isMobile ? null : spot)
+  const look = useMemo(() => (spot ? spotLook(spot) : {}), [spot])
+  const lastSpot = useRef<HTMLElement | null>(null)
+  if (spot) lastSpot.current = spot
+  useEffect(() => {
+    if (target) return
+    setSpot(null)
+    lastSpot.current?.focus({ preventScroll: true })
+  }, [target])
 
   /**
    * `t` in a ref, load-bearing: react-i18next hands back a new `t` on every store
@@ -166,7 +214,8 @@ export default function CopyEditor() {
   unsaved.current = target !== null && draft !== currentTemplate(target)
 
   /** Reads only refs and setState, so it is safe to leave out of the effect's deps. */
-  const openTarget = (found: CopyTarget) => {
+  const openTarget = (found: CopyTarget, el: HTMLElement | null = null) => {
+    setSpot(el)
     const template = currentTemplate(found)
     if (template === null) {
       // A plural key holds no string itself; offer each form.
@@ -222,7 +271,7 @@ export default function CopyEditor() {
         setNotice(translate.current('copyEdit.pickKey'))
         return
       }
-      openTarget(found[0])
+      openTarget(found[0], match?.el instanceof HTMLElement ? match.el : null)
     }
 
     document.addEventListener('click', onClick, true)
@@ -333,21 +382,39 @@ export default function CopyEditor() {
           <textarea
             className="font-body"
             value={draft}
-            rows={4}
+            rows={spotRect ? 1 : 4}
+            autoFocus={spotRect !== null}
             spellCheck
             onChange={(event) => setDraft(event.target.value)}
             aria-label={t('copyEdit.textareaLabel')}
-            style={{
-              width: '100%',
-              padding: 'var(--space-xs)',
-              background: 'var(--color-bg-surface-alt)',
-              border: '1.5px solid var(--color-border)',
-              color: 'var(--color-text-primary)',
-              // Grows to its text (no Firefox yet: it keeps rows=4 and a resize handle).
-              fieldSizing: 'content',
-              minHeight: '4lh',
-              maxHeight: '50vh',
-            }}
+            style={
+              spotRect
+                ? {
+                    ...look,
+                    position: 'fixed',
+                    top: spotRect.top,
+                    left: spotRect.left,
+                    minWidth: spotRect.width,
+                    maxWidth: `calc(100vw - ${spotRect.left}px)`,
+                    background: 'var(--color-bg-page)',
+                    border: 0,
+                    outline: '1px dashed var(--color-accent-primary)',
+                    resize: 'none',
+                    fieldSizing: 'content',
+                    boxSizing: 'border-box',
+                  }
+                : {
+                    width: '100%',
+                    padding: 'var(--space-xs)',
+                    background: 'var(--color-bg-surface-alt)',
+                    border: '1.5px solid var(--color-border)',
+                    color: 'var(--color-text-primary)',
+                    // Grows to its text (no Firefox yet: it keeps rows=4 and a resize handle).
+                    fieldSizing: 'content',
+                    minHeight: '4lh',
+                    maxHeight: '50vh',
+                  }
+            }
           />
           <div style={ROW}>
             <button type="button" onClick={save} style={BUTTON} className="label-caption">

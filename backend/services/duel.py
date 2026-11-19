@@ -25,6 +25,7 @@ from models.praxis import (
 )
 from models.task import Task
 from schemas.duel import DuelDetailOut, DuelSideOut
+from services.character import is_playable
 from services.scoring import compute_duel_multiplier
 from services.character_stats import recalculate_character_stats
 from services.nudge import latest_nudge_at
@@ -257,7 +258,7 @@ async def issue_duel_challenge(
         raise_coded(404, ErrorCode.task_not_found, "Task no longer exists.")
 
     opponent = await session.get(Character, opponent_character_id)
-    if opponent is None:
+    if opponent is None or not await is_playable(opponent, session):
         raise_coded(
             404, ErrorCode.character_not_found, "Opponent character not found."
         )

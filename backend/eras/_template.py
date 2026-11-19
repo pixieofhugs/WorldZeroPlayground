@@ -186,6 +186,7 @@ ERA_N = EraConfig(
     secret_faction_glimpse_level=6,
     invitation_point_threshold=50,   # ADR-0022
     invitation_task_threshold=2,
+    praxis_post_cooldown_hours=24,  # hours between first-time posts; admins exempt
     # starting_faction_slug / reset_faction_slug: OMIT — pinned to `na` (ADR-0087).
 
     reset_score=True,

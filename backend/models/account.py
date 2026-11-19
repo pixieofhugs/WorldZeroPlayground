@@ -1,8 +1,10 @@
 import enum
+from datetime import datetime
 from typing import TYPE_CHECKING, List
 
 from sqlalchemy import (
     BigInteger,
+    DateTime,
     Enum,
     ForeignKey,
     Identity,
@@ -77,6 +79,11 @@ class Account(TimestampMixin, Base):
     # default in code. Read only via `services.notification_prefs.resolve_prefs`.
     notification_prefs: Mapped[dict] = mapped_column(
         JSONB, nullable=False, default=dict, server_default=text("'{}'::jsonb")
+    )
+
+    # The account's last first-time praxis seal (#3474); the daily cap reads it.
+    last_praxis_posted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
     )
 
     # Disambiguates from the active_character_id FK path.
