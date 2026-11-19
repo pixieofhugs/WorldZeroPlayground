@@ -1,33 +1,33 @@
 /* The wisp and the faction buddies. */
-.bud{position:relative;display:inline-block;flex:none;width:var(--s,24px);height:var(--s,24px);border-radius:50%;background:var(--c);box-shadow:inset 0 0 0 1px color-mix(in srgb,white 45%,transparent),0 0 10px color-mix(in srgb,var(--c) 45%,transparent)}
-.e{position:absolute;top:27%;width:34%;height:36%;border-radius:50%;background:var(--faction-default-card-text);overflow:hidden;animation:blink var(--bk,4.3s) var(--bd,0s) infinite}
-.e.l{left:11%}.e.r{right:11%}
-.e::after{content:"";position:absolute;left:28%;top:28%;width:46%;height:46%;border-radius:50%;background:var(--faction-default-on-fill)}
-@keyframes blink{0%,91%,100%{transform:scaleY(1)}94%{transform:scaleY(.08)}}
-.eyes{transform-box:fill-box;transform-origin:center;animation:blink2 9.7s infinite}
+:where(.onboarding-arc) .bud{position:relative;display:inline-block;flex:none;width:var(--s,24px);height:var(--s,24px);border-radius:50%;background:var(--c);box-shadow:inset 0 0 0 1px color-mix(in srgb,white 45%,transparent),0 0 10px color-mix(in srgb,var(--c) 45%,transparent)}
+:where(.onboarding-arc) .e{position:absolute;top:27%;width:34%;height:36%;border-radius:50%;background:var(--faction-default-card-text);overflow:hidden;animation:ob-blink var(--bk,4.3s) var(--bd,0s) infinite}
+:where(.onboarding-arc) .e.l{left:11%}:where(.onboarding-arc) .e.r{right:11%}
+:where(.onboarding-arc) .e::after{content:"";position:absolute;left:28%;top:28%;width:46%;height:46%;border-radius:50%;background:var(--faction-default-on-fill)}
+@keyframes ob-blink{0%,91%,100%{transform:scaleY(1)}94%{transform:scaleY(.08)}}
+:where(.onboarding-arc) .eyes{transform-box:fill-box;transform-origin:center;animation:blink2 9.7s infinite}
 @keyframes blink2{0%,29%,33%,74.5%,78%,81.5%,100%{transform:scaleY(1)}31%,76%,79.8%{transform:scaleY(.08)}}
-.lids,.mo{opacity:0}
-.mo{transform-box:fill-box;transform-origin:center}
+:where(.onboarding-arc) .lids,:where(.onboarding-arc) .mo{opacity:0}
+:where(.onboarding-arc) .mo{transform-box:fill-box;transform-origin:center}
 /* the wisp's border is the same on every page: its ink outline, plus a faint cream rim so the ink never sinks into a dark page */
-.msc{filter:drop-shadow(0 0 1px color-mix(in srgb,var(--faction-default-card-text) 55%,transparent))}
+:where(.onboarding-arc) .msc{filter:drop-shadow(0 0 1px color-mix(in srgb,var(--faction-default-card-text) 55%,transparent))}
 /* ── the wisp: --conf (0 shy … 1 bold) adds spectrum to its body and lifts its gaze ── */
 @property --conf{syntax:'<number>';inherits:true;initial-value:.5}
 /* idle is three clocks that never line up: an uneven sway, a breath, and the odd glance (plus blink2 above) */
-.msway{transform-origin:50px 104px;animation:msway 7.3s ease-in-out infinite,breathe 3.1s ease-in-out infinite}
+:where(.onboarding-arc) .msway{transform-origin:50px 104px;animation:msway 7.3s ease-in-out infinite,breathe 3.1s ease-in-out infinite}
 @keyframes msway{0%,100%{transform:skewX(-3deg)}14%{transform:skewX(3.6deg)}31%{transform:skewX(-1.4deg)}44%,53%{transform:skewX(2.2deg)}69%{transform:skewX(-4.2deg)}85%{transform:skewX(.8deg)}}
 @keyframes breathe{0%,100%{scale:1 1}45%{scale:.985 1.028}}
-.mpup{transform:translateY(calc((1 - var(--conf)) * 2.5px));animation:glance 11.3s ease-in-out infinite}
+:where(.onboarding-arc) .mpup{transform:translateY(calc((1 - var(--conf)) * 2.5px));animation:glance 11.3s ease-in-out infinite}
 @keyframes glance{0%,18%,38%,61%,77%,100%{translate:0 0}21%,34%{translate:2.3px -.6px}64%,73%{translate:-2.5px .5px}}
-.blush{opacity:calc(.2 + var(--conf) * .25);transition:opacity .35s}
-.msc .blush{fill:color-mix(in srgb,var(--faction-coven) 70%,var(--faction-default-card-text))}
-.msc .wshade-mid{stop-color:var(--faction-default-card-text);stop-opacity:0}
-.msc:hover .blush,.shy .blush{opacity:.95}
-.fb{position:relative;display:inline-block}
-.mth{position:absolute;left:50%;top:67%;width:28%;height:13%;margin-left:-14%;box-sizing:border-box;border:solid var(--faction-default-on-fill);border-width:0 0 2px;border-radius:0 0 100% 100%/0 0 180% 180%}
-.fhat{position:absolute;z-index:1;left:50%;bottom:78%;width:86%;transform:translateX(-50%);overflow:visible}
-.wsleep .eyes { opacity: 0; }
-.wsleep .lids { opacity: 1; }
-.wsleep .msway { animation: snore 2.5s ease-in-out infinite; }
+:where(.onboarding-arc) .blush{opacity:calc(.2 + var(--conf) * .25);transition:opacity .35s}
+:where(.onboarding-arc) .msc .blush{fill:color-mix(in srgb,var(--faction-coven) 70%,var(--faction-default-card-text))}
+:where(.onboarding-arc) .msc .wshade-mid{stop-color:var(--faction-default-card-text);stop-opacity:0}
+:where(.onboarding-arc) .msc:hover .blush,:where(.onboarding-arc) .shy .blush{opacity:.95}
+:where(.onboarding-arc) .fb{position:relative;display:inline-block}
+:where(.onboarding-arc) .mth{position:absolute;left:50%;top:67%;width:28%;height:13%;margin-left:-14%;box-sizing:border-box;border:solid var(--faction-default-on-fill);border-width:0 0 2px;border-radius:0 0 100% 100%/0 0 180% 180%}
+:where(.onboarding-arc) .fhat{position:absolute;z-index:1;left:50%;bottom:78%;width:86%;transform:translateX(-50%);overflow:visible}
+:where(.onboarding-arc) .wsleep .eyes{ opacity: 0; }
+:where(.onboarding-arc) .wsleep .lids{ opacity: 1; }
+:where(.onboarding-arc) .wsleep .msway{ animation: snore 2.5s ease-in-out infinite; }
 @keyframes snore{0%,100%{scale:1 1}20%{scale:.97 .94}40%{scale:1.04 1.06}60%{scale:.97 .94}78%{scale:1.04 1.06}96%{scale:.95 .9}}
 @keyframes hatpop{0%{transform:translateY(-26px) scale(.4)}55%{transform:translateY(3px) scale(1.25,.8)}78%{transform:translateY(-2px) scale(.95,1.08)}100%{transform:none}}
-.hatpop{transform-box:fill-box;transform-origin:50% 100%;animation:hatpop .45s cubic-bezier(.3,.7,.4,1)}
+:where(.onboarding-arc) .hatpop{transform-box:fill-box;transform-origin:50% 100%;animation:hatpop .45s cubic-bezier(.3,.7,.4,1)}

@@ -52,6 +52,14 @@ export default function Beat5({ confidence }: BeatProps) {
     return () => ids.forEach(clearTimeout)
   }, [])
 
+  // The fixture card's links lead nowhere real; only the vote row belongs in the tab order.
+  useEffect(() => {
+    root.current?.querySelectorAll('.b5-card a[href]').forEach((a) => a.setAttribute('tabindex', '-1'))
+    // The card re-keys on every tally, so the star just pressed is gone; hand focus to its replacement.
+    if (voted !== null && document.activeElement === document.body)
+      root.current?.querySelector<HTMLElement>('.b5-card button[aria-pressed="true"]')?.focus({ preventScroll: true })
+  }, [judged, voted])
+
   const sandbox = useMemo(() => ({ value: voted, cast: setVoted }), [voted])
   const fromJudges = JUDGES.slice(0, judged).reduce((sum, j) => sum + j.score, 0)
   const fromVotes = fromJudges + (voted ?? 0)

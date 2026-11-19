@@ -400,6 +400,7 @@ export default function EphemeristsCreateCharacter({ state }: { state: CreateCha
               <button
                 type="button"
                 onClick={() => navigate('/')}
+                  className="touch-target"
                 style={composerLabelStyle({
                   ...label,
                   background: 'none',

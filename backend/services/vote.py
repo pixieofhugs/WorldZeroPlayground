@@ -159,6 +159,7 @@ async def cast_or_update_vote(
             voter_character_id=voter.id,
             voter_account_id=voter.account_id,
             value=value,
+            era_id=era_row.id,
         )
         stats.votes_spent_this_era += 1
         session.add(cast)
@@ -171,7 +172,13 @@ async def cast_or_update_vote(
 
     # ``tally_votes`` answers for every id given, so the key is always present (#1378).
     tallies = await tally_votes([praxis.id], session)
-    return VoteCast(vote=cast, tally=tallies[praxis.id], voter_stats=stats)
+    # The card scores the sealing era's votes only; the client swaps this in.
+    sealed = await tally_votes([praxis.id], session, cast_in="sealed")
+    tally = VoteTally(
+        points_from_votes=sealed[praxis.id].points_from_votes,
+        voter_count=tallies[praxis.id].voter_count,
+    )
+    return VoteCast(vote=cast, tally=tally, voter_stats=stats)
 
 
 async def account_has_received_vote(account_id: int, session: AsyncSession) -> bool:

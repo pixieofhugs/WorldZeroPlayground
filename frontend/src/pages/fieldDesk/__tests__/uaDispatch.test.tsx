@@ -40,7 +40,7 @@ const ACTIVE_TASK = aPraxisCard({
   task_point_value: 15,
   task_level_required: 1,
   status: 'in_progress',
-  title: null,
+  title: "",
   created_by_id: 42,
   created_by_display_name: 'Ada Reed',
   submitted_at: null,

@@ -58,6 +58,7 @@ The failure being fixed is copy and routing, not permissions.
 document says only what each slot must carry. Build with obvious placeholders — never
 invent final copy, and never lift the throwaway wording from the prototype
 (`prototype/onboarding-flow`), which exists to be reacted to and is not a source.
+The one exception is the approved prototype (below).
 
 ### What the intro must land — six things, over a short run of beats
 
@@ -89,8 +90,11 @@ the shipped default (#3457, standing rule 8), replacing the "never lift the prot
 wording" rule above for that prototype. That wording lives in
 `frontend/src/locales/en/onboarding.json`, and the owner still owns every string in it.
 
-*2026-11-18, [#3457](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3457):* the reviewed prototype wording is the shipped default; ownership of
+*2026-11-18, [#3457](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3457):* the reviewed prototype wording is the shipped default, and the
+"never invent final copy" placeholder rule no longer applies to it; ownership of
 the strings is unchanged.
+
+The approved prototype was vendored for the build as `.design-sync/onboarding-arc/` and deleted once the flow shipped ([#3598](https://github.com/pixieofhugs/WorldZeroPlayground/pull/3598), commit aaf79e3f). The shipped flow under `frontend/src/pages/onboarding/` is now the reference the copy exception covers.
 
 - **The revision must mention the deleted-account record** ([#3451](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3451)): per ADR-0081, a salted hash of the sign-in ID is kept for a limited time. Wording is the owner's, still owed.
 
@@ -130,7 +134,7 @@ here. The rules that matter:
 - **The band is the border** — `border: 3px solid transparent` with the gradient painted
   into the border box, not a decorative stripe.
 - **Lora italic for titles, Courier Prime for everything else.**
-- Every colour through a `--faction-default-*` token, both themes, no hardcoded hex.
+- Every colour through a `--faction-default-*` token, no hardcoded hex; both themes everywhere but the flow (dark-only, below).
   The primary control takes na's card ink — a single rainbow stop used alone reads as a
   single-hue accent, which is precisely what `na` is not.
 
@@ -196,7 +200,7 @@ arc**, which has exactly one destination.
   a flag riding back through a redirect. It stays honest this way: the click is held
   client-side through the OAuth redirect (the same mechanism as *Authentication*), and the
   consent row is written only once the account exists, so the server never records an
-  acceptance that has no identity behind it. If a new account arrives with no acceptance,
+  acceptance that has no identity behind it. If the flow returns from OAuth holding no click,
   the player is sent back to the contract before character creation.
 - **Recorded as an append-only consent log** — one row per acceptance event, carrying the
   account, the version, and the time. Existing accounts have no rows, which is the honest
@@ -265,8 +269,11 @@ written at once because the account already exists (*Terms*). The OAuth resume
 (`utils/onboardingResume`) is not a cold open: it lands past the title, the beats and the
 contract, with the held contract click carried through the redirect.
 
-**Someone who already plays gets the "Welcome back" sign-in view** rather than the run from
-the top: a sign-in and nothing else, for a person who has a character already.
+**Someone who already plays gets the "Welcome back" sign-in view**: a sign-in and nothing
+else, for a person who has a character already. The flow cannot tell a returner before
+sign-in (a scan always re-runs from the top), so the view is reached from the header's Sign in
+on the title and the beats while signed out (#3461; #3514's `toSignIn` goes to step `'signin'`).
+Open for the owner: does it skip the contract?
 
 *2026-11-18, [#3457](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3457); #3452:* was written when sign-in came before the terms. The order is
 now title, seven beats, contract, sign-in, creation, arrival, and a signed-in person who opens
@@ -284,8 +291,10 @@ character with no praxis (the mark).
 
 ## Level 1
 
-The existing **Field Stamp** pop-up, unchanged — it already fires at the right moment and
-announces rank `trailhead` and its unlocks. No bespoke ending: by then the player has done a
+The existing **Field Stamp** pop-up, unchanged apart from that — it already fires at the right moment and
+announces rank `trailhead` and its unlocks. Its `vote` unlock (`backend/eras/era_1.py`)
+shows [#3475](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3475)'s lock
+explanation: the level gate stays and the received-vote condition is added. No bespoke ending: by then the player has done a
 real thing in the world and photographed it, which does not need a surface congratulating
 them for it.
 

@@ -53,7 +53,6 @@ from services.character_stats import (
 from services.era import (
     get_current_era_row,
     get_current_era_row_safe,
-    get_era_row_for_praxis,
     get_or_create_stats,
 )
 from services.era_gates import may_create_collab_praxis
@@ -350,9 +349,7 @@ async def list_praxes(
         query = query.where(Praxis.status == status)
 
     if status == PraxisStatus.submitted:
-        # Invariant (``_apply_seal``): submitted ⟹ submitted_at set; corrupt rows
-        # are hidden. Only here: drafts have NULL by definition. Also keeps the
-        # sort free of NULLS-FIRST traps.
+        # Drafts have NULL submitted_at; this keeps the sort free of NULLS-FIRST traps.
         query = query.where(Praxis.submitted_at.isnot(None))
 
     if era_scope == PraxisEraScope.this_era:
@@ -557,7 +554,7 @@ async def create_praxis(
         task_id=task_id,
         type=praxis_type,
         status=PraxisStatus.in_progress,
-        title=title,
+        title=title or "",
         body_text=body_text or "",
         moderation_status=ModerationStatus.visible,
         created_by_id=character_id,
@@ -632,13 +629,9 @@ async def unsubmit_praxis(
     await session.flush()
     # The room reseeds from body_text on first connect (ADR-0073 rule 7).
 
-    # Every member, in the era the praxis was sealed in (#1345).
-    era_row = await get_era_row_for_praxis(praxis, session)
-    await recalculate_members_stats(praxis, session, era, era_row=era_row)
+    await recalculate_members_stats(praxis, session, era)
     if forfeit_winner_character_id is not None:
-        await recalculate_character_stats(
-            forfeit_winner_character_id, session, era, era_row=era_row
-        )
+        await recalculate_character_stats(forfeit_winner_character_id, session, era)
         await session.flush()
     return await get_praxis(praxis_id, session)
 
@@ -1246,7 +1239,7 @@ async def kick_member(
     close_member_sockets(praxis_id, member_id)
 
     # A kick resets the changed group back to drafting (ADR-0013).
-    await collab_consensus.on_member_kicked(praxis, session)
+    await collab_consensus.on_member_kicked(praxis, session, era)
 
 
 async def leave_praxis(
@@ -1275,10 +1268,7 @@ async def leave_praxis(
 
     await collab_consensus.on_member_leave(praxis, session, era)
 
-    # In the praxis's era (#1345).
-    await recalculate_character_stats(
-        character_id, session, era, era_row=await get_era_row_for_praxis(praxis, session)
-    )
+    await recalculate_character_stats(character_id, session, era)
     await session.flush()
     return await get_praxis(praxis_id, session)
 
@@ -1355,18 +1345,15 @@ async def moderate_praxis(
     if mod_enum == ModerationStatus.failed:
         praxis.admin_note = admin_note or ""
     elif mod_enum == ModerationStatus.visible:
-        praxis.admin_note = None
+        praxis.admin_note = ""
 
     await session.flush()
     await _apply_media_publication(praxis, session)
-    era_row = await get_era_row_for_praxis(praxis, session)
-    await recalculate_members_stats(praxis, session, era, era_row=era_row)
+    await recalculate_members_stats(praxis, session, era)
 
     opponent_character_id = await _duel_opponent_character_id(praxis_id, session)
     if opponent_character_id is not None:
-        await recalculate_character_stats(
-            opponent_character_id, session, era, era_row=era_row
-        )
+        await recalculate_character_stats(opponent_character_id, session, era)
         await session.flush()
     return await get_praxis(praxis_id, session)
 

@@ -3,16 +3,16 @@
 Backfilled from ``created_at`` against ``era.started_at``; a vote older than
 every era falls to the first. Idempotent (a fresh DB's root already built it).
 
-Revision ID: 0038_vote_era_id
-Revises: 0037_account_last_post
+Revision ID: 0041_vote_era_id
+Revises: 0040_lifecycle_checks
 Create Date: 2026-11-19
 """
 from typing import Sequence, Union
 
 from alembic import op
 
-revision: str = "0038_vote_era_id"
-down_revision: Union[str, None] = "0037_account_last_post"
+revision: str = "0041_vote_era_id"
+down_revision: Union[str, None] = "0040_lifecycle_checks"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

@@ -26,10 +26,12 @@ from models.praxis import (
     PraxisType,
 )
 from models.task import Task, TaskStatus
+from models.vote import Vote
 from services.character_stats import recalculate_character_stats
 from services.era import apply_era_reset, get_or_create_stats
 from services.praxis import moderate_praxis
 from services.vote import cast_vote_on_praxis
+from services.vote_tally import tally_votes
 from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 # Off the fixtures' slug, never a named faction (#2708).
@@ -305,12 +307,14 @@ async def test_vote_on_past_era_praxis_credits_the_era_it_is_cast_in(
 async def test_failing_a_closed_era_praxis_leaves_that_era_frozen(
     db_session: AsyncSession,
     character: Character,
+    character2: Character,
     prior_era: Era,
     current_era: Era,
     some_faction: Faction,
 ):
     old = await _seed_both_eras(db_session, character, prior_era, current_era)
     await _bank_closed_era(db_session, character, prior_era, 777)
+    await cast_vote_on_praxis(character2, old.id, 5, db_session)
     await recalculate_character_stats(character.id, db_session)
     await db_session.commit()
     before_current = (await _stats(db_session, character, current_era)).score
@@ -321,7 +325,37 @@ async def test_failing_a_closed_era_praxis_leaves_that_era_frozen(
     await db_session.commit()
 
     assert (await _stats(db_session, character, prior_era)).score == 777
-    assert (await _stats(db_session, character, current_era)).score == before_current
+    after = (await _stats(db_session, character, current_era)).score
+    assert after == before_current - 5
+
+
+@pytest.mark.asyncio
+async def test_cast_response_tally_matches_the_closed_era_card(
+    db_session: AsyncSession,
+    character: Character,
+    character2: Character,
+    character3: Character,
+    prior_era: Era,
+    current_era: Era,
+    some_faction: Faction,
+):
+    old = await _seed_both_eras(db_session, character, prior_era, current_era)
+    db_session.add(
+        Vote(
+            praxis_id=old.id,
+            voter_character_id=character3.id,
+            voter_account_id=character3.account_id,
+            value=3,
+            era_id=prior_era.id,
+        )
+    )
+    await db_session.commit()
+
+    cast = await cast_vote_on_praxis(character2, old.id, 5, db_session)
+
+    sealed = await tally_votes([old.id], db_session, cast_in="sealed")
+    assert cast.tally.points_from_votes == sealed[old.id].points_from_votes == 3
+    assert cast.tally.voter_count == 2
 
 
 @pytest.mark.asyncio

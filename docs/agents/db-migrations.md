@@ -119,34 +119,27 @@ human, by the procedure under "Blast radius".
 Prerequisites: every environment is at the same schema state (or you're willing
 to wipe), and you've read every model in `backend/models/` to know the final schema.
 
-1. **Inventory enums.** `grep -rn "class.*enum.Enum" backend/models/`. For each,
-   note the lowercase PG type name (`class AccountStatus` → `accountstatus`) and its values.
-2. **Order tables by FK tier.** Tier 0 = no FK deps (`faction`, `contact_message`);
+1. **Order tables by FK tier.** Tier 0 = no FK deps (`faction`, `contact_message`);
    Tier 1 depends only on Tier 0 (`account`, `role`); Tier 2+ on prior tiers.
-3. **Delete the chain.** `rm backend/alembic/versions/*.py`.
-4. **Write the new root** with `down_revision = None`:
-   - **A — enum types** via `op.execute("DO $$ … CREATE TYPE … AS ENUM (…) … $$;")`,
-     each guarded so re-running is a no-op. Keep the values in declaration order —
-     Postgres sorts an enum by the order its values were added.
-   - **B — tables** via `Base.metadata.create_all(op.get_bind())`. This is the whole
+2. **Delete the chain.** `rm backend/alembic/versions/*.py`.
+3. **Write the new root** with `down_revision = None`:
+   - **A — tables** via `Base.metadata.create_all(op.get_bind())`. This is the whole
      point: the baseline is generated from the models, so it cannot drift from them
-     and every model-level index / identity / type change ships for free. (Steps 1–2
-     still matter — enums are the one thing `create_all` must *not* emit.)
-   - **C — reference data** is `seed.py`'s job, not the migration's; `start.sh` runs
+     and every model-level index / identity / type change ships for free.
+   - **B — reference data** is `seed.py`'s job, not the migration's; `start.sh` runs
      it right after `alembic upgrade head`.
-   - **D — downgrade()** is `Base.metadata.drop_all` then `DROP TYPE IF EXISTS` each
-     enum, in reverse.
+   - **C — downgrade()** is `Base.metadata.drop_all`.
    - **Revision id must be ≤ 32 chars** — `alembic_version.version_num` is
      `varchar(32)`, and an over-long id only fails *after* the DDL has run.
      `backend/tests/test_migration_revision_ids.py` guards this.
-5. **Verify** on a fresh DB: `alembic upgrade head`, then `alembic check` (drift),
+4. **Verify** on a fresh DB: `alembic upgrade head`, then `alembic check` (drift),
    then a `downgrade base` → `upgrade head` round-trip, then seed and spot-check the
    rows. Do this by hand against a real Postgres — CI builds from
    `Base.metadata.create_all`, so a green `pytest` proves nothing about the migration.
-6. **Stamp, don't upgrade, live DBs** that already hold the schema:
+5. **Stamp, don't upgrade, live DBs** that already hold the schema:
    `alembic stamp <new_root>` (writes the revision without running DDL — this is
    Strategy B above). Under Strategy A you wipe instead; see "Blast radius".
-7. **Delete any test coupled to a revision you removed.** A test that imports a
+6. **Delete any test coupled to a revision you removed.** A test that imports a
    migration module by path (there was one for `0011`) breaks at collection.
 
 Future squashes are identical with a bumped id (next is `0003_squashed`,
@@ -262,11 +255,8 @@ copy key, which is likewise written by a human and has no surrogate id.
 `backend/tests/unit/test_model_conventions.py` parses this table and asserts both
 halves against `Base.metadata`, so a new model that skips this list fails there.
 
-### The `create_type=False` convention (three-layer enum defense)
+### Enums are strings with a CHECK (#3448)
 
-PG enum types are created once via `CREATE TYPE`; SQLAlchemy tries to auto-create them
-whenever it sees `Enum()`, causing "type already exists" errors. So:
-
-1. Every model `Enum()` column uses `create_type=False`.
-2. `alembic/env.py` has a safety loop forcing `create_type=False` on all metadata enums.
-3. Migrations own all `CREATE TYPE` via explicit `op.execute()`.
+A Python enum column is `string_enum(X)` (`models/base.py`): `VARCHAR(32)` plus a
+`ck_<table>_<enumclass>` CHECK on the member names. A new value is a revision that
+widens that CHECK (drop and re-add); there is no `ALTER TYPE`.

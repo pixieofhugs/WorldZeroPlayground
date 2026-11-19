@@ -3,16 +3,20 @@
 Never calls ``session.commit``; routers do.
 """
 
+import asyncio
 import io
 import logging
 import os
 import re
 import shutil
+import subprocess
+import tempfile
 import uuid
 from typing import Iterable
 
 from fastapi import HTTPException, UploadFile
-from PIL import Image
+from pillow_heif import register_heif_opener
+from PIL import Image, ImageOps, ImageSequence
 
 from config import settings
 from errors import ErrorCode, raise_coded
@@ -20,6 +24,8 @@ from models.praxis import MediaItem, MediaType
 
 
 logger = logging.getLogger(__name__)
+
+register_heif_opener()
 
 
 #: Limits are stated in MB for both prose and catalog ``params`` (#1401).
@@ -33,6 +39,72 @@ AVATAR_MAX_BYTES = AVATAR_MAX_MEGABYTES * BYTES_PER_MEGABYTE
 MEDIA_MAX_MEGABYTES = 100
 MEDIA_MAX_BYTES = MEDIA_MAX_MEGABYTES * BYTES_PER_MEGABYTE
 MEDIA_FILENAME_MAX_LEN = 100
+
+
+FFMPEG_TIMEOUT_SECONDS = 120
+#: Output formats we write; anything else Pillow opens (MPO, TIFF, HEIF...) is JPEG.
+_OUTPUT_EXTENSIONS = {
+    "JPEG": (".jpg", ".jpeg"),
+    "PNG": (".png",),
+    "GIF": (".gif",),
+    "WEBP": (".webp",),
+}
+
+
+def _strip_image(contents: bytes) -> tuple[bytes, str]:
+    """Re-encode from clean pixels only; returns (bytes, output format).
+
+    Never saves from the opened file: writers copy tags (TIFF XMP) and
+    ``info`` (JPEG/GIF comments) from it, so every frame is copied with ``info``
+    emptied. Orientation is applied to the pixels first.
+    """
+    with Image.open(io.BytesIO(contents)) as source:
+        fmt = source.format if source.format in _OUTPUT_EXTENSIONS else "JPEG"
+        options: dict = {}
+        if icc := source.info.get("icc_profile"):
+            options["icc_profile"] = icc
+        if fmt != "JPEG" and getattr(source, "n_frames", 1) > 1:
+            # Pillow's bomb check is per frame; every RGBA frame is held at once.
+            if source.n_frames * source.width * source.height > Image.MAX_IMAGE_PIXELS:
+                raise Image.DecompressionBombError("animated image too large to strip")
+            frames, durations = [], []
+            for frame in ImageSequence.Iterator(source):
+                durations.append(frame.info.get("duration", 100))
+                frames.append(frame.convert("RGBA"))
+            options.update(
+                save_all=True, append_images=frames[1:], duration=durations,
+                loop=source.info.get("loop", 0),
+            )
+            image = frames[0]
+        else:
+            image = ImageOps.exif_transpose(source)
+        if fmt == "JPEG":
+            options["quality"] = 95
+            if image.mode not in ("RGB", "L", "CMYK"):
+                image = image.convert("RGB")
+        for each in [image, *options.get("append_images", [])]:
+            each.info = {}
+        buffer = io.BytesIO()
+        image.save(buffer, format=fmt, **options)
+    return buffer.getvalue(), fmt
+
+
+def _strip_av(contents: bytes, extension: str) -> bytes:
+    """Drop container metadata (location atoms, tags) without re-encoding."""
+    with tempfile.TemporaryDirectory() as scratch:
+        source = os.path.join(scratch, "in" + extension)
+        target = os.path.join(scratch, "out" + extension)
+        with open(source, "wb") as handle:
+            handle.write(contents)
+        subprocess.run(
+            ["ffmpeg", "-nostdin", "-v", "error", "-i", source,
+             "-map", "0:V?", "-map", "0:a?", "-sn", "-dn",
+             "-map_metadata", "-1", "-map_chapters", "-1",
+             "-c", "copy", target],
+            check=True, capture_output=True, timeout=FFMPEG_TIMEOUT_SECONDS,
+        )
+        with open(target, "rb") as handle:
+            return handle.read()
 
 
 def _sanitize_filename(raw: str) -> str:
@@ -335,7 +407,6 @@ async def process_and_save_media(
     relative_path = os.path.join(relative_directory, filename)
 
     try:
-        os.makedirs(absolute_directory, exist_ok=True)
         contents = await upload.read()
         if len(contents) > MEDIA_MAX_BYTES:
             raise_coded(
@@ -344,6 +415,30 @@ async def process_and_save_media(
                 f"File too large (max {MEDIA_MAX_MEGABYTES} MB).",
                 {"max_megabytes": MEDIA_MAX_MEGABYTES},
             )
+        try:
+            if media_type is MediaType.image:
+                contents, fmt = await asyncio.to_thread(_strip_image, contents)
+                stem, extension = os.path.splitext(filename)
+                if extension.lower() not in _OUTPUT_EXTENSIONS[fmt]:
+                    filename = stem + _OUTPUT_EXTENSIONS[fmt][0]
+            else:
+                contents = await asyncio.to_thread(
+                    _strip_av, contents, os.path.splitext(filename)[1].lower()
+                )
+        except Exception as exc:
+            # Never store a file whose location data we couldn't remove.
+            logger.exception(
+                "Could not strip metadata for praxis %s: %s",
+                praxis_id, getattr(exc, "stderr", b""),
+            )
+            raise_coded(
+                422,
+                ErrorCode.media_unreadable,
+                "We couldn't read that file. Try a different one.",
+            )
+        absolute_path = os.path.join(absolute_directory, filename)
+        relative_path = os.path.join(relative_directory, filename)
+        os.makedirs(absolute_directory, exist_ok=True)
         with open(absolute_path, "wb") as file_handle:
             file_handle.write(contents)
     except HTTPException:

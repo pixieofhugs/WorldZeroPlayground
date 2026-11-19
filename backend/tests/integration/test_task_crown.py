@@ -1,5 +1,5 @@
-"""Task Crown ``is_top_for_task`` (ADR-0028, #354): top submitted praxis by live
-vote-points; all ties crowned, including all-zero."""
+"""Task Crown ``is_top_for_task`` (ADR-0028, #354): top submitted praxis by displayed
+score (ADR-0028 amendment, #3417); all ties crowned, including all-zero."""
 import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession

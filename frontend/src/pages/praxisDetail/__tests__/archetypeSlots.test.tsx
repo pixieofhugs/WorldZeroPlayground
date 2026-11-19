@@ -113,14 +113,14 @@ describe("praxis-read layout contract at both form factors", () => {
   }
 });
 
-// The failed mark keys on status alone; `admin_note` may be null or "" (#1538).
+// The failed mark keys on status alone; `admin_note` may be "" (#1538).
 
 const FAILED_TITLE = "This praxis was marked as failed.";
 
 describe("failed banner (#1538)", () => {
   for (const [slug, Archetype] of Object.entries(archetypes)) {
-    it(`${slug} marks a failed praxis with a null, empty, or written note`, () => {
-      for (const note of [null, "", "The photo is of a different ridge."]) {
+    it(`${slug} marks a failed praxis with an empty or written note`, () => {
+      for (const note of ["", "The photo is of a different ridge."]) {
         const failed = state();
         failed.praxis = { ...PRAXIS, moderation_status: "failed", admin_note: note };
         expect(
@@ -148,7 +148,7 @@ describe("failed banner (#1538)", () => {
   });
 
   it("leaves no empty body element when the note is blank", () => {
-    for (const note of [null, ""]) {
+    for (const note of [""]) {
       const failed = state();
       failed.praxis = { ...PRAXIS, moderation_status: "failed", admin_note: note };
       const { html } = render(<PraxisStatusBanners state={failed} />);

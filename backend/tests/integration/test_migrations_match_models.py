@@ -5,8 +5,8 @@ place the chain's result is checked. ``0002_squashed`` itself uses
 ``create_all``, so ``alembic check`` cannot see a model column with no revision;
 two extra checks cover that:
 
-* enum values: ``create_type=False`` (``alembic/env.py``) means migrations own
-  every ``CREATE TYPE``, so DB values are independent of the models.
+* enum values: a model enum's ``ck_<table>_<enum>`` CHECK is created by a
+  migration, so the DB's values are independent of the models.
 * ``alembic/schema_snapshot.txt`` (#2448): a committed baseline, diffed like
   ``api-schema`` (#1584). Refreshing it blindly turns the check off.
 
@@ -21,11 +21,13 @@ from __future__ import annotations
 
 import difflib
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
 
 import asyncpg
+import pytest
 import pytest_asyncio
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy.engine import make_url
@@ -78,21 +80,21 @@ def _report(label: str, result: "subprocess.CompletedProcess[str]") -> str:
 
 
 async def _enum_values_in_db(database: str) -> dict[str, set[str]]:
+    """Values each ``ck_<table>_<enum>`` CHECK admits, keyed by that name."""
     conn = await asyncpg.connect(_dsn(database))
     try:
         rows = await conn.fetch(
-            "SELECT t.typname, e.enumlabel FROM pg_type t"
-            " JOIN pg_enum e ON e.enumtypid = t.oid"
-            " JOIN pg_namespace n ON n.oid = t.typnamespace"
-            " WHERE n.nspname = 'public'"
+            "SELECT conname, pg_get_constraintdef(oid) AS definition FROM pg_constraint"
+            " WHERE contype = 'c' AND connamespace = 'public'::regnamespace"
         )
     finally:
         await conn.close()
-
-    found: dict[str, set[str]] = {}
-    for row in rows:
-        found.setdefault(row["typname"], set()).add(row["enumlabel"])
-    return found
+    return {
+        row["conname"]: set(
+            re.findall(r"'([^']*)'::character varying", row["definition"])
+        )
+        for row in rows
+    }
 
 
 def _enum_values_in_models() -> dict[str, set[str]]:
@@ -100,8 +102,8 @@ def _enum_values_in_models() -> dict[str, set[str]]:
     for table in Base.metadata.tables.values():
         for column in table.columns:
             type_ = column.type
-            if isinstance(type_, SAEnum) and type_.name and type_.native_enum:
-                declared.setdefault(type_.name, set()).update(type_.enums)
+            if isinstance(type_, SAEnum) and type_.name:
+                declared[f"ck_{table.name}_{type_.name}"] = set(type_.enums)
     return declared
 
 
@@ -150,20 +152,19 @@ async def test_migrations_match_models(migration_db: str) -> None:
         if values - in_db.get(name, set())
     }
     assert not missing, (
-        "Enum values the models can produce that the migrated database has no "
-        f"type member for: {missing}\n\n"
+        "Enum values the models can produce that the migrated database's CHECK "
+        f"rejects: {missing}\n\n"
         "The rest of the suite cannot see this: its create_all schema emits its "
-        "own CREATE TYPE. A deployed database will reject the value at INSERT. "
-        "Add it to a migration (0002_squashed's ENUMS builds fresh databases; a "
-        "deployed one needs ALTER TYPE ... ADD VALUE in a new revision)."
+        "own CHECK. A deployed database will reject the value at INSERT. "
+        "Widen the CHECK in a new revision."
     )
     unreachable = {
         name: sorted(values - in_models.get(name, set()))
         for name, values in in_db.items()
-        if values - in_models.get(name, set())
+        if name in in_models and values - in_models[name]
     }
     assert not unreachable, (
-        "Enum values the migrations create that no model declares — states the "
+        "Enum values the CHECKs admit that no model declares — states the "
         f"database accepts and the application cannot produce: {unreachable}\n\n"
         "Drop them from the migration, or add them to the Python enum."
     )
@@ -542,3 +543,134 @@ async def test_check_constraint_migration_refuses_a_violating_row(
     refused = _alembic("upgrade", "head")
     assert refused.returncode != 0
     assert "relationship has 1 rows violating" in refused.stderr
+
+
+async def _insert_task_and_character(conn: asyncpg.Connection) -> tuple[int, int]:
+    await conn.execute("INSERT INTO faction (slug, status) VALUES ('na', 'visible')")
+    account_id = await conn.fetchval(
+        "INSERT INTO account (email, status)"
+        " VALUES ('p@example.com', 'active') RETURNING id"
+    )
+    character_id = await conn.fetchval(
+        "INSERT INTO character"
+        " (account_id, username, display_name, faction_slug, status)"
+        " VALUES ($1, 'pat', 'Pat', 'na', 'active') RETURNING id",
+        account_id,
+    )
+    task_id = await conn.fetchval(
+        "INSERT INTO task (title, point_value, level_required, status, created_by_id)"
+        " VALUES ('t', 10, 0, 'active', $1) RETURNING id",
+        character_id,
+    )
+    return task_id, character_id
+
+
+async def test_lifecycle_check_migration_stamps_era_and_refuses_the_rest(
+    migration_db: str,
+) -> None:
+    """#3450: 0039 stamps an unsealed-era praxis, names a bad duel, keeps the row."""
+    assert _alembic("upgrade", "0039_praxis_text_not_null").returncode == 0
+    conn = await asyncpg.connect(_dsn(migration_db))
+    try:
+        task_id, character_id = await _insert_task_and_character(conn)
+        account_id = await conn.fetchval("SELECT id FROM account LIMIT 1")
+        era_id = await conn.fetchval(
+            "INSERT INTO era (name, config_key, started_by_id, started_at)"
+            " VALUES ('e', 'era_1', $1, now() - interval '1 day') RETURNING id",
+            account_id,
+        )
+        for name in (
+            "ck_praxis_submitted_has_stamps",
+            "ck_duel_declined_has_declined_at",
+        ):
+            table = name.split("_")[1]
+            await conn.execute(f"ALTER TABLE {table} DROP CONSTRAINT {name}")
+        praxis_id = await conn.fetchval(
+            "INSERT INTO praxis (task_id, type, created_by_id, status, submitted_at)"
+            " VALUES ($1, 'solo', $2, 'submitted', now()) RETURNING id",
+            task_id,
+            character_id,
+        )
+        duel_id = await conn.fetchval(
+            "INSERT INTO duel"
+            " (task_id, challenger_praxis_id, opponent_character_id, status)"
+            " VALUES ($1, $2, $3, 'declined') RETURNING id",
+            task_id,
+            praxis_id,
+            character_id,
+        )
+    finally:
+        await conn.close()
+
+    refused = _alembic("upgrade", "head")
+    assert refused.returncode != 0
+    assert "duel has 1 rows violating" in refused.stderr
+    assert f"[{duel_id}]" in refused.stderr
+
+    conn = await asyncpg.connect(_dsn(migration_db))
+    try:
+        assert await conn.fetchval(
+            "SELECT count(*) FROM duel WHERE id = $1", duel_id
+        ) == 1
+        await conn.execute("UPDATE duel SET declined_at = now() WHERE id = $1", duel_id)
+    finally:
+        await conn.close()
+    up = _alembic("upgrade", "head")
+    assert up.returncode == 0, _report("upgrade head", up)
+    conn = await asyncpg.connect(_dsn(migration_db))
+    try:
+        assert await conn.fetchval(
+            "SELECT era_id FROM praxis WHERE id = $1", praxis_id
+        ) == era_id
+    finally:
+        await conn.close()
+
+
+async def test_enum_and_praxis_text_migrations_convert_real_rows(
+    migration_db: str,
+) -> None:
+    """#3448/#3449: native-enum rows survive; NULL text becomes ''."""
+    assert _alembic("upgrade", "head").returncode == 0
+    back = _alembic("downgrade", "0036_check_constraints")
+    assert back.returncode == 0, _report("downgrade to 0036", back)
+    conn = await asyncpg.connect(_dsn(migration_db))
+    try:
+        assert await conn.fetchval(
+            "SELECT udt_name FROM information_schema.columns"
+            " WHERE table_name = 'praxis' AND column_name = 'status'"
+        ) == "praxisstatus"
+        task_id, character_id = await _insert_task_and_character(conn)
+        praxis_id = await conn.fetchval(
+            "INSERT INTO praxis"
+            " (task_id, type, created_by_id, title, body_text, admin_note)"
+            " VALUES ($1, 'solo', $2, NULL, NULL, NULL) RETURNING id",
+            task_id,
+            character_id,
+        )
+    finally:
+        await conn.close()
+
+    up = _alembic("upgrade", "head")
+    assert up.returncode == 0, _report("upgrade head", up)
+    conn = await asyncpg.connect(_dsn(migration_db))
+    try:
+        row = await conn.fetchrow(
+            "SELECT status, title, body_text, admin_note FROM praxis WHERE id = $1",
+            praxis_id,
+        )
+        assert tuple(row) == ("in_progress", "", "", "")
+        assert await conn.fetchval(
+            "SELECT count(*) FROM pg_type WHERE typname = 'praxisstatus'"
+        ) == 0
+        for statement in (
+            "INSERT INTO praxis (task_id, type, created_by_id, status)"
+            f" VALUES ({task_id}, 'solo', {character_id}, 'bogus')",
+            "INSERT INTO praxis (task_id, type, created_by_id, title)"
+            f" VALUES ({task_id}, 'solo', {character_id}, NULL)",
+        ):
+            with pytest.raises(asyncpg.PostgresError):
+                await conn.execute(statement)
+    finally:
+        await conn.close()
+    check = _alembic("check")
+    assert check.returncode == 0, _report("check", check)

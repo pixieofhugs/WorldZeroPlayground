@@ -6,22 +6,24 @@ import { acceptTerms } from '../../api/terms'
 import type { TaskOut } from '../../api/tasks'
 import { resolveHandoffTask } from '../../utils/onboardingHandoff'
 import { clearTermsAcceptance, holdTermsAcceptance, termsAcceptanceHeld } from '../../utils/onboardingResume'
-import Arrival from './Arrival'
-import AuthCard from './AuthCard'
-import CharacterStep from './CharacterStep'
-import Declined from './Declined'
-import SignInView from './SignInView'
-import TermsCard from './TermsCard'
 import Wisp from './Wisp'
 import { BEATS } from './beats'
 import { HoldNextContext } from './beats/holdNext'
 import { back, decline, initialFlow, isBeat, next, skip, toArrival, toCharacter, toSignIn, type Flow, type Step } from './flowSteps'
 import './flow.css'
 
+// Past START only: out of the graph the title waits on. Warmed on mount so START never meets a gap.
+const loadSteps = () =>
+  Promise.all([import('./Arrival'), import('./AuthCard'), import('./CharacterStep'), import('./Declined'), import('./SignInView'), import('./TermsCard')]).then(
+    ([a, b, c, d, e, f]) => ({ Arrival: a.default, AuthCard: b.default, CharacterStep: c.default, Declined: d.default, SignInView: e.default, TermsCard: f.default }),
+  )
+
 const TYPE_MS = 28
 const LEAVE_MS = 460
 const TITLE_DELAY_MS = 2800
 const TITLE_CHAR_MS = 84
+// START bounces in as the Wisp starts to drop (1s), not after the title has typed: a player who wants in never waits on the bit.
+const START_DELAY_S = 0.8
 
 // The one beat whose stage holds a live control (Next waits on it), so it stays out of aria-hidden.
 const VOTE_BEAT = 5
@@ -87,7 +89,7 @@ function Title({ cameBack, onStart }: { cameBack: boolean; onStart: () => void }
           <span className="ob-caret" />
         </span>
       </h1>
-      <button type="button" className="boing ob-start" style={delay(4.3)} onClick={onStart} data-testid="onboarding-start">
+      <button type="button" className="boing ob-start" style={delay(START_DELAY_S)} onClick={onStart} data-testid="onboarding-start">
         {t('flow.start')}
       </button>
     </section>
@@ -112,6 +114,13 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
   const wrote = useRef(false)
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
   useEffect(() => () => clearTimeout(timer.current), [])
+  const [steps, setSteps] = useState<Awaited<ReturnType<typeof loadSteps>> | null>(null)
+  const [stepsTry, setStepsTry] = useState(0)
+  const [stepsFailed, setStepsFailed] = useState(false)
+  useEffect(() => {
+    setStepsFailed(false)
+    loadSteps().then(setSteps, () => setStepsFailed(true))
+  }, [stepsTry])
 
   // A player with a character goes where the hand-off sends them; one without creates it here.
   const hasCharacter = !!user?.character || arrival !== null
@@ -161,7 +170,7 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
     if (!el) return
     if (!el.hasAttribute('tabindex')) el.tabIndex = -1
     el.focus({ preventScroll: true })
-  }, [step, beat, loading, recording, cameFrom])
+  }, [step, beat, loading, recording, cameFrom, steps])
 
   // Leaving un-types the line while the scene is yanked away.
   useEffect(() => {
@@ -248,7 +257,7 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
       {Beat && n !== null && (
         <section className={`ob-beat ${screenCls}`}>
           <HoldNextContext.Provider value={setHold}>
-            <section aria-hidden={n === VOTE_BEAT ? undefined : true} className={`ob-stage ${stageCls}`} key={step}>
+            <section aria-hidden={n === VOTE_BEAT ? undefined : true} inert={n !== VOTE_BEAT} className={`ob-stage ${stageCls}`} key={step}>
               <Beat confidence={CONFIDENCE[n]} />
             </section>
           </HoldNextContext.Provider>
@@ -288,11 +297,25 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
         </section>
       )}
 
-      {step === 'signin' && <div className={screenCls}><AuthCard onBack={onBack} /></div>}
+      {!steps && step !== 'title' && !beat && (
+        <section className={`${screenCls} page font-body text-muted`}>
+          {stepsFailed ? (
+            <button type="button" className="ob-ghost" data-testid="onboarding-steps-retry" onClick={() => setStepsTry((n) => n + 1)}>
+              {t('flow.loadFailed')}
+            </button>
+          ) : (
+            tc('loading')
+          )}
+        </section>
+      )}
+
+      {steps && (
+        <>
+      {step === 'signin' && <div className={screenCls}><steps.AuthCard onBack={onBack} /></div>}
 
       {step === 'character' && (
         <div className={screenCls}>
-          <CharacterStep
+          <steps.CharacterStep
             onBack={onBack}
             onCreated={async (c) => {
               const task = await resolveHandoffTask()
@@ -306,19 +329,19 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
 
       {step === 'arrival' && arrival && (
         <div className={screenCls}>
-          <Arrival name={arrival.name} task={arrival.task} onBack={onBack} />
+          <steps.Arrival name={arrival.name} task={arrival.task} onBack={onBack} />
         </div>
       )}
 
       {step === 'returning' && (
         <div className={screenCls}>
-          <SignInView onRestart={() => move(() => initialFlow(false))} />
+          <steps.SignInView onRestart={() => move(() => initialFlow(false))} />
         </div>
       )}
 
       {step === 'declined' && (
         <div className={screenCls}>
-          <Declined onReconsider={onBack} />
+          <steps.Declined onReconsider={onBack} />
         </div>
       )}
 
@@ -327,7 +350,7 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
           {loading || recording ? (
             <div className="page font-body text-muted">{tc('loading')}</div>
           ) : (
-            <TermsCard
+            <steps.TermsCard
               // A session writes the row now; a guest holds the click through sign-in.
               record={
                 user
@@ -347,6 +370,8 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
             />
           )}
         </div>
+      )}
+        </>
       )}
     </div>
   )

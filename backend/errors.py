@@ -68,6 +68,7 @@ class ErrorCode(str, enum.Enum):
     # -- Media limits -------------------------------------------------------
     media_type_unsupported = "MEDIA_TYPE_UNSUPPORTED"
     media_too_large = "MEDIA_TOO_LARGE"
+    media_unreadable = "MEDIA_UNREADABLE"
     avatar_must_be_image = "AVATAR_MUST_BE_IMAGE"
     avatar_too_large = "AVATAR_TOO_LARGE"
 
@@ -175,6 +176,10 @@ class ErrorCode(str, enum.Enum):
     #: Re-opening the live era would wipe every score for nothing. 409, not
     #: 422: the request is well formed, the state refuses it.
     era_already_live = "ERA_ALREADY_LIVE"
+    #: 409: the era lists new tasks and the operator has no Character to author them.
+    era_roll_needs_character = "ERA_ROLL_NEEDS_CHARACTER"
+    #: 409: a ``reactivate_tasks`` title matches no task, or several.
+    era_reactivate_ambiguous = "ERA_REACTIVATE_AMBIGUOUS"
 
     # -- Copy overrides (#3065) ---------------------------------------------
     #: Usually two admins reverting the same string: already shipped wording.

@@ -1,9 +1,9 @@
 import enum
 
-from sqlalchemy import Enum, String
+from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from models.base import Base
+from models.base import Base, string_enum
 from models.mixins import TimestampMixin
 
 
@@ -26,6 +26,6 @@ class Faction(TimestampMixin, Base):
 
     slug: Mapped[str] = mapped_column(String, primary_key=True)
     status: Mapped[FactionStatus] = mapped_column(
-        Enum(FactionStatus, create_type=False), nullable=False, default=FactionStatus.visible
+        string_enum(FactionStatus), nullable=False, default=FactionStatus.visible
     )
     # ADR-0038: FK target only; prose is in factions.json, rules in eras/.

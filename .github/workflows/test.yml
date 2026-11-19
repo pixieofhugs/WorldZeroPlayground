@@ -50,6 +50,9 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Install ffmpeg (media metadata strip, #3589)
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg
+
       - name: Install dependencies
         run: pip install -r backend/requirements.txt
 
@@ -58,7 +61,7 @@ jobs:
         working-directory: backend
 
       - name: Run tests with coverage
-        run: pytest --cov=. --cov-report=term-missing --cov-fail-under=92
+        run: pytest --cov=. --cov-report=term-missing --cov-fail-under=96
         working-directory: backend
 
       # Ruff findings may only shrink (#2427); config in .bros.toml. Inside this

@@ -249,7 +249,7 @@ async def test_collab_batch_cancels_pending_publish_only_when_a_file_lands(
 ):
     """ADR-0012: a pending publish is cancelled only when a file is stored, so a
     batch of all-failing files is not an edit."""
-    # A level-1 creator: collabs need level 1; `character` is level 0.
+    # A creator at the collab level; `character` is level 0.
     await make_character(
         db_session, era, username="collabauthor", account=account2,
         level=CURRENT_ERA.collaboration_level_required,
@@ -322,9 +322,9 @@ async def test_same_named_files_in_one_batch_keep_their_own_bytes(
     assert paths[0] != paths[1]
     # Uniqueness comes from the directory, not the basename.
     assert [os.path.basename(path) for path in paths] == ["proof.jpg", "proof.jpg"]
-    for path, expected in zip(paths, (first_bytes, second_bytes)):
-        with open(os.path.join(str(media_root), path), "rb") as handle:
-            assert handle.read() == expected
+    for path, expected in zip(paths, ((32, 32), (64, 48))):
+        with Image.open(os.path.join(str(media_root), path)) as stored:
+            assert stored.size == expected
 
     detail = await client.get(f"/praxes/{praxis_id}", headers=auth_headers)
     assert len(detail.json()["media_items"]) == 2
@@ -359,8 +359,8 @@ async def test_deleting_one_same_named_file_leaves_the_other_readable(
     assert deletion.status_code == 204, deletion.text
 
     survivor = os.path.join(str(media_root), second_item["file_path"])
-    with open(survivor, "rb") as handle:
-        assert handle.read() == second_bytes
+    with Image.open(survivor) as stored:
+        assert stored.size == (64, 48)
     assert not os.path.exists(os.path.join(str(media_root), first_item["file_path"]))
 
 

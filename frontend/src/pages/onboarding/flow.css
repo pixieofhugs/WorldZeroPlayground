@@ -1,4 +1,4 @@
-/* The flow's frame: header, title page, text box. Ported from .design-sync/onboarding-arc/src.html; ob- prefixed because this sheet stays loaded once /start has been visited. */
+/* The flow's frame: header, title page, text box. ob- prefixed because this sheet stays loaded once /start has been visited. */
 .ob-root{position:relative;min-height:100vh;box-sizing:border-box;display:flex;flex-direction:column;background:var(--color-bg-page);color:var(--faction-default-card-text);font-family:var(--font-body)}
 /* Stops sideways scroll from the aurora and beat 1's world without clipping at the root, which gave the world's soft mask hard edges. */
 html:has(.ob-root){overflow-x:hidden}
@@ -68,7 +68,7 @@ html:has(.ob-root){overflow-x:hidden}
 .ob-snz .mpup{animation:glance 11.3s ease-in-out 7.5s infinite}
 .ob-snz .blush{animation:ob-bwake .5s ease-out 4.4s both}
 @keyframes ob-sbub{0%{transform:scale(0)}20%{transform:scale(.95)}40%{transform:scale(.38)}60%{transform:scale(1.12)}78%{transform:scale(.5)}95%{opacity:1;transform:scale(1.75)}100%{opacity:0;transform:scale(2.5)}}
-.ob-sbub{position:absolute;left:28px;top:52px;width:20px;height:20px;box-sizing:border-box;border-radius:50%;border:1.6px solid var(--faction-default-card-text);background:radial-gradient(circle at 34% 30%,color-mix(in srgb,white 70%,transparent) 0 14%,color-mix(in srgb,var(--faction-default-card-text) 16%,transparent) 15%);transform-origin:0 62%;transform:scale(0);animation:ob-sbub 2.5s ease-in-out 1.7s forwards}
+.ob-sbub{position:absolute;left:28px;top:52px;width:20px;height:20px;box-sizing:border-box;border-radius:50%;border:1.6px solid var(--faction-default-card-text);background:radial-gradient(circle at 34% 30%,color-mix(in srgb,var(--faction-default-card-text) 70%,transparent) 0 14%,color-mix(in srgb,var(--faction-default-card-text) 16%,transparent) 15%);transform-origin:0 62%;transform:scale(0);animation:ob-sbub 2.5s ease-in-out 1.7s forwards}
 @keyframes ob-zz{0%{opacity:0;transform:scale(.5)}25%{opacity:.9}100%{opacity:0;transform:translate(18px,-36px) scale(1.25) rotate(14deg)}}
 .ob-zz{position:absolute;left:72%;bottom:88%;font:italic 600 17px var(--font-display);color:var(--faction-default-card-muted);opacity:0;animation:ob-zz 1s ease-out}
 @keyframes ob-bang{0%{opacity:0;transform:scale(0)}20%{opacity:1;transform:scale(1.5) rotate(-8deg)}40%{transform:scale(1) rotate(4deg)}75%{opacity:1}100%{opacity:0;transform:translateY(-8px)}}
@@ -80,6 +80,7 @@ html:has(.ob-root){overflow-x:hidden}
 .ob-start:hover::before,.ob-start:focus-visible::before{opacity:1;animation:ob-caret 1s step-end infinite}
 .ob-start:hover::after,.ob-start:focus-visible::after{transform:scaleX(1)}
 .ob-start:focus-visible{outline:none}
+.ob-start:hover,.ob-start:focus-visible{animation:ob-jiggle .35s ease-in-out}
 .ob-quick *{animation-delay:0s!important}
 .ob-quick .ob-zz,.ob-quick .ob-sbub{display:none}
 
@@ -93,6 +94,7 @@ html:has(.ob-root){overflow-x:hidden}
 .ob-pips{display:flex;gap:5px}
 .ob-pips i{width:7px;height:7px;border-radius:2px;background:var(--faction-default-border)}
 .ob-adv{padding:0;border:0;background:transparent;color:inherit;cursor:pointer;font:inherit;text-align:left}
+.ob-adv:active{transform:scale(.995,.985)}
 .ob-adv:focus-visible{outline:2px solid var(--faction-default-card-text);outline-offset:4px}
 .ob-root h1:focus,.ob-root h2:focus,.ob-root section:focus{outline:none}
 .ob-line-text{display:block;font-size:clamp(20px,2.3vw,27px);line-height:1.4;min-height:2.8em}

@@ -244,7 +244,9 @@ class EraConfig:
     secret_faction_glimpse_level: int = 6
     secret_faction_join_level: int = 8   # on an existing char
 
-    tasks: tuple = ()                # tuple[TaskDef, ...]
+    tasks: tuple = ()                # tuple[TaskDef, ...]: new tasks
+    # Existing tasks (by title) the era roll brings back from the retired pool.
+    reactivate_tasks: tuple[str, ...] = ()
 
     # Indexed by level like level_thresholds (index 0 never shown).
     level_profiles: tuple = ()       # tuple[LevelProfile, ...]

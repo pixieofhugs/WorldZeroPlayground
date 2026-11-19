@@ -79,10 +79,10 @@ class PraxisOut(WireModel):
     task_faction_slug: Optional[str] = None  # populated by build_praxis_out; drives per-faction vote UI
     type: PraxisType
     status: PraxisStatus
-    title: Optional[str]
-    body_text: Optional[str]
+    title: str
+    body_text: str
     moderation_status: ModerationStatus
-    admin_note: Optional[str]
+    admin_note: str
     flagged_at: Optional[datetime]
     submitted_at: Optional[datetime] = None  # set on in_progress→submitted
     submit_proposed_at: Optional[datetime] = None  # collab pending-publish window opened-at (ADR-0012)
@@ -132,7 +132,7 @@ class PraxisCardOut(WireModel):
     task_level_required: int
     type: PraxisType
     status: PraxisStatus
-    title: Optional[str]
+    title: str
     moderation_status: ModerationStatus
     created_by_id: int
     created_by_display_name: str
@@ -157,7 +157,7 @@ class PraxisCardOut(WireModel):
     applied_metatasks: List[TaskOut] = []
     task_faction_slug: Optional[str] = None
     # For mobile praxis cards (#573).
-    body_text: Optional[str] = None
+    body_text: str = ""
     created_by_faction_slug: Optional[str] = None  # author's member faction; actor-scoped byline
     members: List[PraxisMemberOut] = []
     media_items: List[MediaItemOut] = []

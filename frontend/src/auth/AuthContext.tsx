@@ -100,6 +100,20 @@ export function refetchWhenVisible(
   }
 }
 
+let warmedMe: Promise<CurrentUser> | null = null
+
+/** Starts the first `/auth/me` before React renders; the provider's first probe takes it instead of sending its own. */
+export function warmMe(): void {
+  warmedMe = getMe()
+  warmedMe.catch(() => {})
+}
+
+function takeMe(): Promise<CurrentUser> {
+  const p = warmedMe ?? getMe()
+  warmedMe = null
+  return p
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<CurrentUser | null>(null)
   const [loading, setLoading] = useState(true)
@@ -114,7 +128,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(me)
   }
 
-  const fetchUser = runSessionProbe(getMe, adoptViewer, rememberSession, () => setLoading(false))
+  const fetchUser = runSessionProbe(takeMe, adoptViewer, rememberSession, () => setLoading(false))
 
   // A built `CurrentUser` proves the session is live. Also how joining Albescent reveals it.
   const applyUser = (me: CurrentUser) => {

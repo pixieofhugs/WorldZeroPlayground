@@ -93,10 +93,13 @@ ERA_N_FACTIONS = {
 #   level_required -- 0 = anyone
 #   point_value    -- before modifiers
 #
-# DECIDE FIRST: tasks here are re-added by `seed.py::sync_era_tasks` on EVERY
+# DECIDE FIRST: tasks here are re-added by `services/era_tasks.py` on EVERY
 # deploy, so an admin-UI delete won't stick. Era 1 leaves this EMPTY and
-# curates in the admin UI (#1398). Level 0 is the game-wide onboarding task
-# (`seed.py::ensure_onboarding_task`, #511).
+# curates in the admin UI (#1398). The era roll retires the board, then
+# creates the tasks listed here. To bring EXISTING tasks back instead, name
+# them by title in `reactivate_tasks` (an EraConfig field, set below): the roll
+# refuses if a title matches no task or several. Level 0 is the game-wide
+# onboarding task (`seed.py::ensure_onboarding_task`, #511).
 
 ERA_N_TASKS: tuple[TaskDef, ...] = (
     # TODO: tasks, or leave empty. Example:
@@ -197,6 +200,7 @@ ERA_N = EraConfig(
 
     factions=ERA_N_FACTIONS,
     tasks=ERA_N_TASKS,
+    reactivate_tasks=(),
     level_profiles=ERA_N_LEVEL_PROFILES,
 
     # Perks as slug sets (#1871); inheritors are added automatically.
