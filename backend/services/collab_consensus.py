@@ -4,7 +4,7 @@ Silence is consent: Propose opens a ``collab_auto_submit_days`` window, all
 approved seals, an edit cancels the proposal, a kick resets the group.
 
 Three signals (ADR-0079): Done (``is_done``, social only), Propose
-(``submit_proposed_at``), Approve (``has_approved``, name kept for the wire).
+(``submit_proposed_at``), Approve (``has_approved``).
 
 Also owns ``collab → solo`` (ADR-0060). Duel settling lives in
 ``services.praxis`` to avoid a ``services.duel`` import cycle.
