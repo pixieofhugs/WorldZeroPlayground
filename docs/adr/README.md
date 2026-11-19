@@ -86,7 +86,7 @@
 | [0069](0069-the-character-profile-and-the-duel-seal-collapse-to-one-responsive-component-per-faction.md) | The character profile and the duel seal collapse to one responsive component per faction | Accepted | — |
 | [0070](0070-an-unanswered-obligation-lives-in-the-queue-never-in-the-stream.md) | An unanswered obligation lives in the queue, never in the stream | Accepted | — |
 | [0071](0071-three-doors-lead-into-a-praxis-and-two-of-them-are-deliberate-carve-outs.md) | Three doors lead into a praxis, and two of them are deliberate carve-outs | Accepted | — |
-| [0072](0072-a-cached-read-names-its-staleness-class-and-one-epoch-outranks-them-all.md) | A cached read names its staleness class, and one epoch outranks them all | Accepted | — |
+| [0072](0072-a-cached-read-names-its-staleness-class-and-one-epoch-outranks-them-all.md) | A cached read names its staleness class, and one epoch outranks them all | Amended | [ADR-0091](0091-the-latest-era-row-chooses-the-live-ruleset.md) |
 | [0073](0073-a-praxis-is-written-in-a-room-and-the-room-is-not-the-record.md) | A praxis is written in a room, and the room is not the record | Accepted | — |
 | [0074](0074-one-sky-serves-both-themes-the-meadow-is-retired.md) | One sky serves both themes; the Meadow is retired | Accepted | — |
 | [0075](0075-a-verified-email-is-one-account-whatever-provider-vouches-for-it.md) | A verified email is one Account, whatever provider vouches for it | Accepted | — |
