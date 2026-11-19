@@ -3,6 +3,7 @@
  * per-faction archetypes own only their visuals. {@link PraxisDetailState} is
  * the contract every archetype consumes.
  */
+import { isViewerMember } from "../../utils/praxisMembership";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -94,20 +95,6 @@ export interface PraxisDetailState {
 
   // Metatasks are READ-ONLY on detail (#1093): `apply_metatask` 422s outside
   // `in_progress`. Sealing after publish would reopen scoring and needs an ADR.
-}
-
-/**
- * Mirrors the backend `_require_member`: any MEMBER may act (ADR-0013), not just
- * the creator (#348). The creator is always seeded as a member.
- */
-export function isViewerMember(
-  praxis: PraxisOut | null,
-  viewerCharacterId: number | null | undefined,
-): boolean {
-  if (!praxis || viewerCharacterId == null) return false;
-  return praxis.members.some(
-    (member) => member.character_id === viewerCharacterId,
-  );
 }
 
 export function usePraxisDetail(idParam: string | undefined): PraxisDetailState {
