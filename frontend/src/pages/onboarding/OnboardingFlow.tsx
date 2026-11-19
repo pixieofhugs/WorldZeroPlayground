@@ -248,7 +248,7 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
       {Beat && n !== null && (
         <section className={`ob-beat ${screenCls}`}>
           <HoldNextContext.Provider value={setHold}>
-            <section aria-hidden={n === VOTE_BEAT ? undefined : true} className={`ob-stage ${stageCls}`} key={step}>
+            <section aria-hidden={n === VOTE_BEAT ? undefined : true} inert={n !== VOTE_BEAT} className={`ob-stage ${stageCls}`} key={step}>
               <Beat confidence={CONFIDENCE[n]} />
             </section>
           </HoldNextContext.Provider>
