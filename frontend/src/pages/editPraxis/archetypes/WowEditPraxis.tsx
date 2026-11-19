@@ -41,7 +41,7 @@ import {
   composerDropGround,
   composerLabelStyle,
   composerMetaCluster,
-  formatAutosave,
+  AutosaveStatus,
   useComposerSizes,
   type ComposerDress,
 } from "./shared";
@@ -415,11 +415,7 @@ export default function WowEditPraxis({ state }: Props) {
           meta={
             <span style={composerMetaCluster}>
               <span style={composerLabelStyle(QUIET_STYLE)}>
-                {state.autosaveAt
-                  ? t("editPraxis.composer.statusSaved", {
-                      ago: formatAutosave(state.autosaveAt),
-                    })
-                  : t("editPraxis.composer.statusUnsaved")}
+                <AutosaveStatus at={state.autosaveAt} />
               </span>
               <WriteUpTabs
                 tab={tab}

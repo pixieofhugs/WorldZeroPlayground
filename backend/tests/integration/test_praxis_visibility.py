@@ -166,9 +166,11 @@ async def test_withdraw_settled_duel_side_forfeits(
     praxis_id = await _create_solo(client, active_task, auth_headers)
     assert (await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers)).status_code == 200
 
+    opponent_praxis = await _submitted_solo(db_session, active_task, character2)
     duel = Duel(
         task_id=active_task.id,
         challenger_praxis_id=praxis_id,
+        opponent_praxis_id=opponent_praxis.id,
         opponent_character_id=character2.id,
         status=DuelStatus.settled,
     )
@@ -391,9 +393,11 @@ async def test_can_view_and_list_service_gate_duel_side(
     from services.praxis import can_view_praxis, list_praxes
 
     challenger_praxis = await _submitted_solo(db_session, active_task, character)
+    opponent_praxis = await _submitted_solo(db_session, active_task, character2)
     duel = Duel(
         task_id=active_task.id,
         challenger_praxis_id=challenger_praxis.id,
+        opponent_praxis_id=opponent_praxis.id,
         opponent_character_id=character2.id,
         status=DuelStatus.active,
     )

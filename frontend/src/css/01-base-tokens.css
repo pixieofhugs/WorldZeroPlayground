@@ -1474,6 +1474,8 @@
   --space-4xl: 48px;
   --space-5xl: 64px;
   --space-6xl: 96px;
+  /* Smallest tappable box (WCAG 2.5.5 / Apple HIG). */
+  --touch-target: 44px;
 
   /* ── Desktop shell width (#1562) ── The one width the nav bar and page
      agree on: `ShellContent`'s DESKTOP_REGION and `NavBar`'s inner container.

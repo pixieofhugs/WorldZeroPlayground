@@ -44,7 +44,7 @@ function side(overrides: Partial<DuelSideOut> = {}): DuelSideOut {
 
 function praxis(overrides: Partial<PraxisOut> = {}): PraxisOut {
   return {
-    admin_note: null,
+    admin_note: "",
     applied_metatasks: [],
     body_text: 'I went up before the light six days running.',
     can_flag: false,

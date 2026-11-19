@@ -41,7 +41,7 @@
 .calm .lunge,.calm .jaw,.calm .dbrow,.calm .dpup{animation:none}
 .calm .fire{display:none}
 .calm .dpup{transform:translate(-2px,4px)}
-.calm .deye{animation:blink 3.7s 1.4s infinite}
+.calm .deye{animation:ob-blink 3.7s 1.4s infinite}
 
 @media (prefers-reduced-motion: reduce){
 .onboarding-arc .b6bang{display:none}

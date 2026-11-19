@@ -425,7 +425,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
     <>
       {sectionHead(t("detail.sections.writeUp"))}
       <MarkdownPreview
-        source={praxis.body_text ?? ''}
+        source={praxis.body_text}
         className="markdown-preview content-text"
         style={{ fontFamily: MONO, lineHeight: 1.8, color: BRIGHT }}
       />

@@ -317,7 +317,7 @@ async def admin_list_flagged_praxes(
         .order_by(Praxis.created_at.desc())
     )
     praxis_list = result.scalars().all()
-    # Task Crown (ADR-0028): one query for the list, not per card.
+    # Task Crown (ADR-0028): one batch for the list, one scoring pass per author.
     crowned = await crowned_praxis_ids(
         {praxis.task_id for praxis in praxis_list}, session
     )

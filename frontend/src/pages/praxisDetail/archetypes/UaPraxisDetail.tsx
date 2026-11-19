@@ -496,7 +496,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
             `position: absolute` is harmless (§5). */}
         <UaInkColumn style={{ left: 14, top: 14, bottom: 14 }} />
         <MarkdownPreview
-          source={praxis.body_text ?? ''}
+          source={praxis.body_text}
           className="markdown-preview content-text"
           style={{
             fontFamily: UA_TEXT,

@@ -69,7 +69,7 @@ function makePraxis(): PraxisCardOut {
     is_top_for_task: false,
     task_faction_slug: 'ephemerists',
     applied_metatasks: [],
-    body_text: null,
+    body_text: "",
     created_by_avatar_url: '',
     created_by_faction_slug: null,
     duel_id: null,

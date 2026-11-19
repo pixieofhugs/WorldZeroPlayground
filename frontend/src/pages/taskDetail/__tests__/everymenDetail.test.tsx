@@ -57,7 +57,7 @@ const PRAXIS: PraxisCardOut[] = [1, 2, 3, 4].map((n) => ({
   habit_bonus_points: 0,
   is_top_for_task: false,
   applied_metatasks: [],
-  body_text: null,
+  body_text: "",
   created_by_avatar_url: "",
   created_by_faction_slug: null,
   duel_id: null,

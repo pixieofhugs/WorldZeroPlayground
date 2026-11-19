@@ -4,7 +4,6 @@ from sqlalchemy import (
     BigInteger,
     Boolean,
     CheckConstraint,
-    Enum,
     ForeignKey,
     Identity,
     Index,
@@ -13,7 +12,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from models.base import Base
+from models.base import Base, string_enum
 from models.mixins import TimestampMixin
 from models.praxis import ModerationStatus
 
@@ -58,7 +57,7 @@ class Comment(TimestampMixin, Base):
         Boolean, nullable=False, server_default="false"
     )
     moderation_status: Mapped[ModerationStatus] = mapped_column(
-        Enum(ModerationStatus, create_type=False),
+        string_enum(ModerationStatus),
         nullable=False,
         default=ModerationStatus.visible,
         server_default="visible",
