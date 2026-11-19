@@ -5,6 +5,7 @@ import { acceptTerms } from '../../api/terms'
 import { clearTermsAcceptance, holdTermsAcceptance, termsAcceptanceHeld } from '../../utils/onboardingResume'
 import AuthCard from './AuthCard'
 import Declined from './Declined'
+import SignInView from './SignInView'
 import TermsCard from './TermsCard'
 import Wisp from './Wisp'
 import { BEATS } from './beats'
@@ -257,6 +258,12 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
       )}
 
       {step === 'signin' && <div className={screenCls}><AuthCard onBack={onBack} /></div>}
+
+      {step === 'returning' && (
+        <div className={screenCls}>
+          <SignInView onRestart={() => move(() => initialFlow(false))} />
+        </div>
+      )}
 
       {step === 'declined' && (
         <div className={screenCls}>
