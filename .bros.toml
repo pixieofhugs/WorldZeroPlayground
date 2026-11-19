@@ -14,7 +14,7 @@ run = "scripts/wz test --cov=. --cov-fail-under=92"
 [[check]]
 name = "node_modules"
 paths = ["frontend/*", ".design-sync/*"]
-run = "test -x frontend/node_modules/.bin/tsc || { echo 'frontend/node_modules is missing: run scripts/wz prep.'; exit 1; }"
+run = "if [ -f frontend/node_modules/.wz-lock-hash ]; then [ \"$(cat frontend/node_modules/.wz-lock-hash)\" = \"$(sha256sum frontend/package-lock.json | cut -d' ' -f1)\" ] || { echo 'frontend/node_modules is stale: run scripts/wz prep.'; exit 1; }; else test -x frontend/node_modules/.bin/tsc || { echo 'frontend/node_modules is missing: run scripts/wz prep (main checkout: npm ci in frontend/).'; exit 1; }; fi"
 
 [[check]]
 name = "lint"
