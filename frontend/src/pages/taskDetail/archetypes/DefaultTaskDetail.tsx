@@ -2,7 +2,6 @@ import { useState, type CSSProperties, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
-import { useFormFactor } from "../../../hooks/useFormFactor";
 import {
   factionFill,
   factionName,
@@ -79,7 +78,6 @@ export default function DefaultTaskDetail({
   sheetOverlay?: ReactNode;
 }) {
   const { t } = useTranslation("tasks");
-  const desktop = useFormFactor() !== "mobile";
   // Expands in place; deliberately does not link out to `/praxis?task_id=N`.
   const [showAllPraxis, setShowAllPraxis] = useState(false);
   const {
@@ -118,7 +116,7 @@ export default function DefaultTaskDetail({
     background: "var(--color-bg-page)",
     border: "1px solid var(--faction-default-border)",
     borderRadius: 11,
-    padding: desktop ? "var(--space-lg)" : "var(--space-md)",
+    padding: "var(--fx-space-lg--md)",
     boxSizing: "border-box",
   };
   const primaryButton: CSSProperties = {
@@ -129,16 +127,14 @@ export default function DefaultTaskDetail({
     textDecoration: "none",
     fontFamily: "var(--font-display)",
     fontWeight: 600,
-    fontSize: desktop ? "var(--text-content)" : "var(--text-xl)",
+    fontSize: "var(--fx-text-content--xl)",
     letterSpacing: "0.14em",
     textTransform: "uppercase",
     color: "var(--color-bg-page)",
     background: "var(--color-text-primary)",
     border: "1px solid var(--color-text-primary)",
     borderRadius: 10,
-    padding: desktop
-      ? "var(--space-lg) var(--space-xl)"
-      : "var(--space-md) var(--space-lg)",
+    padding: "var(--fx-space-lg-xl--md-lg)",
   };
 
   /** A spectrum hairline that runs out from a label — the page's only rule. */
@@ -310,7 +306,7 @@ export default function DefaultTaskDetail({
           style={{
             ...innerBox,
             flex: hasAction ? "0 0 auto" : "1 1 auto",
-            minWidth: desktop ? 168 : 122,
+            minWidth: "var(--fx-worth-min-default)",
           }}
         >
           {worthSlot ?? scoreBody}
@@ -384,7 +380,7 @@ export default function DefaultTaskDetail({
         className="font-display italic"
         style={{
           fontWeight: 600,
-          fontSize: desktop ? "var(--text-display)" : "var(--text-heading)",
+          fontSize: "var(--fx-text-display--heading)",
           lineHeight: 1.12,
           letterSpacing: "-0.01em",
           margin: 0,
@@ -501,7 +497,7 @@ export default function DefaultTaskDetail({
         style={{
           display: "flex",
           alignItems: "center",
-          gap: desktop ? "var(--space-xl)" : "var(--space-lg)",
+          gap: "var(--fx-space-xl--lg)",
           flexWrap: "wrap",
         }}
       >
@@ -513,7 +509,7 @@ export default function DefaultTaskDetail({
             className="font-display"
             style={{
               fontWeight: 600,
-              fontSize: desktop ? "var(--text-heading)" : "var(--text-title)",
+              fontSize: "var(--fx-text-heading--title)",
               lineHeight: 0.9,
               color: "var(--color-text-primary)",
             }}
@@ -538,7 +534,7 @@ export default function DefaultTaskDetail({
             className="font-display"
             style={{
               fontWeight: 600,
-              fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
+              fontSize: "var(--fx-text-title--content)",
               lineHeight: 0.9,
               color: "var(--color-text-primary)",
             }}
@@ -552,7 +548,7 @@ export default function DefaultTaskDetail({
 
   // The brief in full: no clamp.
   const brief = (
-    <section style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}>
+    <section style={{ marginBottom: "var(--fx-space-2xl--xl)" }}>
       {sectionHead(t("detail.brief.heading"))}
       {task.description && (
         <p
@@ -571,7 +567,7 @@ export default function DefaultTaskDetail({
   );
 
   const gallery = (
-    <section style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}>
+    <section style={{ marginBottom: "var(--fx-space-2xl--xl)" }}>
       <div
         style={{
           display: "flex",
@@ -698,7 +694,7 @@ export default function DefaultTaskDetail({
           color: "var(--na-task-detail-ink)",
           border: "1px solid var(--faction-default-border)",
           borderRadius: 18,
-          padding: desktop ? "var(--space-2xl)" : "var(--space-lg)",
+          padding: "var(--fx-space-2xl--lg)",
           boxSizing: "border-box",
         }}
       >
@@ -708,10 +704,10 @@ export default function DefaultTaskDetail({
         <div
           style={{
             display: "flex",
-            flexDirection: desktop ? "row" : "column",
-            alignItems: desktop ? "flex-start" : "stretch",
+            flexDirection: "var(--fx-row-direction)" as "row",
+            alignItems: "var(--fx-align)",
             gap: "var(--space-xl)",
-            marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)",
+            marginBottom: "var(--fx-space-2xl--xl)",
           }}
         >
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -721,8 +717,8 @@ export default function DefaultTaskDetail({
           </div>
           <div
             style={{
-              ...actionColumnSize({ desktop, hasAction, width: 440 }),
-              marginTop: desktop ? "var(--space-sm)" : 0,
+              ...actionColumnSize({ hasAction, width: 440 }),
+              marginTop: "var(--fx-action-top, var(--space-sm))",
             }}
           >
             {actionPanel}

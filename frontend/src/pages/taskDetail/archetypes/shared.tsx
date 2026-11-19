@@ -97,21 +97,26 @@ export function TaskDetailComments({
  * `collapsedMinWidth` is for absolutely-positioned ornament wider than the content.
  */
 export function actionColumnSize({
-  desktop,
   hasAction,
   width,
   collapsedMinWidth,
 }: {
-  desktop: boolean;
   hasAction: boolean;
   width: number;
   collapsedMinWidth?: number;
 }): CSSProperties {
-  if (!desktop) return { flex: "1 1 auto", width: "100%" };
+  // Phone: `--fx-col-*` stack the column full-width (09-component-shared.css).
   if (!hasAction) {
-    return { flex: "0 0 auto", width: "auto", minWidth: collapsedMinWidth };
+    return {
+      flex: "var(--fx-col-flex, 0 0 auto)",
+      width: "var(--fx-col-width, auto)",
+      minWidth: collapsedMinWidth && `var(--fx-col-min, ${collapsedMinWidth}px)`,
+    };
   }
-  return { flex: `0 0 ${width}px`, width };
+  return {
+    flex: `var(--fx-col-flex, 0 0 ${width}px)`,
+    width: `var(--fx-col-width, ${width}px)`,
+  };
 }
 
 /**

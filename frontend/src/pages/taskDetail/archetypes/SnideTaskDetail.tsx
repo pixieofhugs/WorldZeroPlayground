@@ -2,7 +2,6 @@ import { useState, type CSSProperties, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
-import { useFormFactor } from "../../../hooks/useFormFactor";
 import { factionFill, factionName } from "../../../utils/factions";
 import { factionRoleVars } from "../../../utils/factionRoles";
 import { factionBodyVars } from "../../../utils/factionBodyFace";
@@ -131,7 +130,6 @@ function XMark({ size }: { size: number }) {
 
 export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
   const { t } = useTranslation("tasks");
-  const desktop = useFormFactor() !== "mobile";
   const [showAllPraxis, setShowAllPraxis] = useState(false);
   const {
     task,
@@ -196,11 +194,11 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
     background: HARD,
     color: "var(--faction-snide-acid)",
     fontFamily: IMPACT,
-    fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
+    fontSize: "var(--fx-text-title--content)",
     letterSpacing: "0.2em",
     textTransform: "uppercase",
     border: "3px solid var(--faction-snide-acid)",
-    padding: desktop ? "var(--space-lg) var(--space-xl)" : "var(--space-md)",
+    padding: "var(--fx-space-lg-xl--md)",
     boxShadow: `7px 7px 0 ${PINK}`,
     transform: "skewX(-4deg) rotate(-0.8deg)",
     display: "flex",
@@ -224,7 +222,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
       <span
         style={{
           fontFamily: IMPACT,
-          fontSize: desktop ? "var(--text-heading)" : "var(--text-title)",
+          fontSize: "var(--fx-text-heading--title)",
           lineHeight: 1.02,
           letterSpacing: "0.01em",
           textTransform: "uppercase",
@@ -245,12 +243,8 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
         style={{
           fontFamily: IMPACT,
           fontSize: big
-            ? desktop
-              ? "var(--text-display)"
-              : "var(--text-heading)"
-            : desktop
-              ? "var(--text-heading)"
-              : "var(--text-title)",
+            ? "var(--fx-text-display--heading)"
+            : "var(--fx-text-heading--title)",
           lineHeight: 0.82,
           color: INK,
           transform: big ? "rotate(-1.5deg)" : "none",
@@ -310,7 +304,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
           <div
             style={{
               fontFamily: MARK,
-              fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
+              fontSize: "var(--fx-text-title--content)",
               lineHeight: 1.2,
               color: PLATE_TEXT,
               marginBottom: "var(--space-md)",
@@ -333,7 +327,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
           <div
             style={{
               fontFamily: MARK,
-              fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
+              fontSize: "var(--fx-text-title--content)",
               lineHeight: 1.2,
               color: PLATE_TEXT,
               marginBottom: "var(--space-md)",
@@ -409,7 +403,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
             ...innerBox,
             // Alone (no move, #1138) the worth sheet takes the whole width.
             flex: hasAction ? "0 0 auto" : "1 1 auto",
-            minWidth: desktop ? 178 : 132,
+            minWidth: "var(--fx-worth-min-snide)",
             position: "relative",
             display: "flex",
             alignItems: "center",
@@ -434,7 +428,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
               display: "flex",
               flexDirection: "column",
               justifyContent: "center",
-              padding: desktop ? "var(--space-xl)" : "var(--space-lg)",
+              padding: "var(--fx-space-xl--lg)",
             }}
           >
             {actionBody}
@@ -503,7 +497,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
           flex row (flex drops whitespace children and glues the words, #1023). */}
       <h1
         style={{
-          fontSize: desktop ? "var(--text-display)" : "var(--text-heading)",
+          fontSize: "var(--fx-text-display--heading)",
           lineHeight: 1.3,
           margin: "0 0 var(--space-lg)",
         }}
@@ -619,7 +613,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
         style={{
           display: "flex",
           alignItems: "flex-end",
-          gap: desktop ? "var(--space-xl)" : "var(--space-lg)",
+          gap: "var(--fx-space-xl--lg)",
           flexWrap: "wrap",
         }}
       >
@@ -640,9 +634,9 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
 
   // The brief, in full, NOT ONE WORD REDACTED.
   const brief = (
-    <section style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}>
+    <section style={{ marginBottom: "var(--fx-space-2xl--xl)" }}>
       {sectionHead(t("detail.brief.heading"))}
-      <div style={{ ...panel, padding: desktop ? "var(--space-xl)" : "var(--space-lg)" }}>
+      <div style={{ ...panel, padding: "var(--fx-space-xl--lg)" }}>
         {task.description && (
           <p
             className="content-text"
@@ -662,7 +656,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
   );
 
   const gallery = (
-    <section style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}>
+    <section style={{ marginBottom: "var(--fx-space-2xl--xl)" }}>
       <div
         style={{
           display: "flex",
@@ -675,7 +669,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
         <span
           style={{
             fontFamily: IMPACT,
-            fontSize: desktop ? "var(--text-heading)" : "var(--text-title)",
+            fontSize: "var(--fx-text-heading--title)",
             lineHeight: 1.02,
             letterSpacing: "0.01em",
             textTransform: "uppercase",
@@ -794,7 +788,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
           maxWidth: 1200,
           margin: "0 auto",
           borderRadius: 18,
-          padding: desktop ? "var(--space-2xl)" : "var(--space-lg)",
+          padding: "var(--fx-space-2xl--lg)",
           overflow: "hidden",
           boxSizing: "border-box",
         }}
@@ -802,10 +796,10 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
         <div
           style={{
             display: "flex",
-            flexDirection: desktop ? "row" : "column",
-            alignItems: desktop ? "flex-start" : "stretch",
+            flexDirection: "var(--fx-row-direction)" as "row",
+            alignItems: "var(--fx-align)",
             gap: "var(--space-xl)",
-            marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)",
+            marginBottom: "var(--fx-space-2xl--xl)",
           }}
         >
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -815,8 +809,8 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
           </div>
           <div
             style={{
-              ...actionColumnSize({ desktop, hasAction, width: 452 }),
-              marginTop: desktop ? "var(--space-xl)" : 0,
+              ...actionColumnSize({ hasAction, width: 452 }),
+              marginTop: "var(--fx-action-top, var(--space-xl))",
             }}
           >
             {actionPlate}

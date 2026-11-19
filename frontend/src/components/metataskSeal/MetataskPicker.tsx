@@ -89,7 +89,7 @@ export default function MetataskPicker({
       className="fixed inset-0 z-50 flex items-center justify-center"
       style={{
         padding: "var(--sheet-pad)",
-        background: "var(--takeover-bg)",
+        background: "var(--takeover-bg, var(--color-overlay-strong))",
       }}
     >
       <div

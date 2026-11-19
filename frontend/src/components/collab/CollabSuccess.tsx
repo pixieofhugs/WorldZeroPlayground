@@ -42,7 +42,7 @@ export function CollabSuccess({
       aria-label={collabCopy(factionSlug, 'successHeading')}
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{
-        background: 'var(--takeover-bg)',
+        background: 'var(--takeover-bg, var(--color-overlay-strong))',
       }}
     >
       <div
