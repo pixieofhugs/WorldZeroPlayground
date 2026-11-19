@@ -152,9 +152,16 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
 
   // Focus carries the whole line to a screen reader; typing is only for the eyes.
   const lineBox = useRef<HTMLButtonElement>(null)
+  const rootRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
-    if (beat) lineBox.current?.focus({ preventScroll: true })
-  }, [step, beat])
+    if (beat) return lineBox.current?.focus({ preventScroll: true })
+    const root = rootRef.current
+    if (step === 'title') return cameFrom !== null ? root?.querySelector<HTMLElement>('[data-testid=onboarding-start]')?.focus() : undefined
+    const el = root?.querySelector<HTMLElement>('h1, h2') ?? root?.querySelector<HTMLElement>('section')
+    if (!el) return
+    if (!el.hasAttribute('tabindex')) el.tabIndex = -1
+    el.focus({ preventScroll: true })
+  }, [step, beat, loading, recording, cameFrom])
 
   // Leaving un-types the line while the scene is yanked away.
   useEffect(() => {
@@ -209,7 +216,7 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
   const label = n === 7 ? t('flow.toContract') : t('flow.next')
 
   return (
-    <div className="onboarding-arc ob-root" data-theme="dark" style={{ ['--conf' as string]: CONFIDENCE[String(step)] ?? 1 }}>
+    <div ref={rootRef} className="onboarding-arc ob-root" data-theme="dark" style={{ ['--conf' as string]: CONFIDENCE[String(step)] ?? 1 }}>
       <span aria-hidden="true" className="ob-aurora" style={{ animationDelay: step === 'title' && !cameBack ? '3.4s' : '0s' }} />
       <header className="ob-header">
         <span>

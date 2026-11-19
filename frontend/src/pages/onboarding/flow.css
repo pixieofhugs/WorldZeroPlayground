@@ -94,6 +94,7 @@ html:has(.ob-root){overflow-x:hidden}
 .ob-pips i{width:7px;height:7px;border-radius:2px;background:var(--faction-default-border)}
 .ob-adv{padding:0;border:0;background:transparent;color:inherit;cursor:pointer;font:inherit;text-align:left}
 .ob-adv:focus-visible{outline:2px solid var(--faction-default-card-text);outline-offset:4px}
+.ob-root h1:focus,.ob-root h2:focus,.ob-root section:focus{outline:none}
 .ob-line-text{display:block;font-size:clamp(20px,2.3vw,27px);line-height:1.4;min-height:2.8em}
 .ob-box-nav{display:flex;justify-content:space-between;align-items:center;gap:12px}
 .ob-box-nav .ob-ghost:first-child{margin-left:-14px}

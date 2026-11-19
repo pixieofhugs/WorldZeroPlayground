@@ -130,6 +130,19 @@ describe('the welcome flow for a screen reader', () => {
     expect((document.activeElement as HTMLElement).getAttribute('aria-label')).not.toBe(first)
   })
 
+  it('never drops focus to the body: contract takes its heading, Back returns to the beat line', () => {
+    mount(null, false)
+    fireEvent.click(screen.getByTestId('onboarding-start'))
+    for (let i = 0; i < 7; i++) {
+      if (document.querySelector('.ob-hold')) fireEvent.click(document.querySelector('.ob-stage button[aria-pressed]')!)
+      fireEvent.click(document.querySelector('.ob-next')!)
+    }
+    expect((document.activeElement as HTMLElement).tagName).toBe('H1')
+    fireEvent.click(screen.getByText('Back'))
+    expect((document.activeElement as HTMLElement).className).toContain('ob-adv')
+    onBeat(7)
+  })
+
   it('keeps one Next label and one press while the line is still typing', () => {
     vi.stubGlobal('matchMedia', () => ({ matches: false, addEventListener: () => {}, removeEventListener: () => {} }))
     mount(null, false)
