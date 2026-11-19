@@ -82,6 +82,7 @@ async def make_character(
         status=status,
         # Override only for a post-reset veteran (#3102).
         peak_level=level if peak_level is None else peak_level,
+        all_time_score=all_time_score,
     )
     session.add(character)
     await session.flush()
@@ -90,7 +91,6 @@ async def make_character(
             character_id=character.id,
             era_id=era.id,
             score=score,
-            all_time_score=all_time_score,
             level=level,
             votes_spent_this_era=votes_spent_this_era,
         )

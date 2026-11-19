@@ -36,6 +36,9 @@ const CARDS: Array<[string, React.ReactNode]> = [
   ['terms', <TermsCard onAccepted={() => {}} />],
 ]
 
+// The login step left the shared shell (no ring, one rainbow border); the terms card still wears it.
+const SHELL_CARDS = CARDS.filter(([name]) => name !== 'auth')
+
 describe('every onboarding card', () => {
   for (const [name, card] of CARDS) {
     it(`${name} keeps a way out of the flow`, () => {
@@ -46,13 +49,16 @@ describe('every onboarding card', () => {
       expect(markup).toContain('href="/tasks"')
     })
 
+  }
+  for (const [name, card] of SHELL_CARDS) {
     it(`${name} spends the rainbow exactly twice`, () => {
       const markup = render(card)
 
       // The border band and the conic step ring; a third is a design change.
       expect(markup.match(/--faction-default-rainbow/g)).toHaveLength(2)
     })
-
+  }
+  for (const [name, card] of CARDS) {
     it(`${name} lets a long control label wrap onto a centred second line`, () => {
       const markup = render(card)
 
@@ -76,7 +82,8 @@ describe('every onboarding card', () => {
 })
 
 describe('the seven beat lines', () => {
-  const lines = Object.values(onboarding.beats)
+  // Numbered keys are the seven lines; bN keys hold a beat's own stage copy.
+  const lines = Object.entries(onboarding.beats).filter(([k]) => /^\d$/.test(k)).map(([, v]) => String(v))
 
   it('are seven, and none is empty', () => {
     expect(lines).toHaveLength(7)
@@ -162,6 +169,8 @@ describe('the arc a stranger actually reads', () => {
       expect(words).not.toContain('PLACEHOLDER')
     })
 
+  }
+  for (const [name, card] of SHELL_CARDS) {
     it(`${name} wraps an over-long ring caption INSIDE the circle (#2765)`, () => {
       // 0.2em tracking is the ring caption's alone on this sheet.
       const ring = (render(card).match(/style="[^"]*"/g) ?? []).filter((style) =>

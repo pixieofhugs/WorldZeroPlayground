@@ -37,7 +37,12 @@ from services.character import (
     resolve_active_character,
 )
 from services.current_user import build_current_user
-from services.dev_fixture import albescent_floor, apply_dev_fixture, seed_received_vote
+from services.dev_fixture import (
+    albescent_floor,
+    apply_dev_fixture,
+    seed_draft_praxis,
+    seed_received_vote,
+)
 from services.era import get_current_era_row, get_or_create_stats
 
 router = APIRouter()
@@ -377,6 +382,7 @@ async def dev_login(
     invited: Optional[str] = None,
     albescent: Optional[Literal["glimpsed", "unlocked"]] = None,
     received_vote: bool = False,
+    draft_praxis: bool = False,
 ):
     """Dev-only bot login (bypasses Google OAuth). Disabled in production.
 
@@ -390,6 +396,8 @@ async def dev_login(
                   (raises the level to the era's floor for it if lower)
       received_vote — true: another character rates a praxis of the account's,
                   so voting is unlocked without the admin exemption (#3475)
+      draft_praxis — true: the account's character holds an in-progress praxis,
+                  returned as draft_praxis_id (composer shots, #3533)
 
     `faction` deliberately bypasses the join gate rather than replaying it.
     Players start unaffiliated and most factions are invite-gated
@@ -423,7 +431,13 @@ async def dev_login(
         character = result.character
 
     invited_slugs = [slug for slug in (invited or "").split(",") if slug]
-    needs_character = faction is not None or invited_slugs or albescent or received_vote
+    needs_character = (
+        faction is not None
+        or invited_slugs
+        or albescent
+        or received_vote
+        or draft_praxis
+    )
     if character is None and needs_character:
         raise HTTPException(
             status_code=400,
@@ -452,7 +466,7 @@ async def dev_login(
         stats.level = level
         record_level_reached(character, level)
         stats.score = thresholds[level] if level < len(thresholds) else thresholds[-1]
-        stats.all_time_score = max(stats.all_time_score, stats.score)
+        character.all_time_score = max(character.all_time_score, stats.score)
         await session.flush()
 
     if character is not None and (invited_slugs or albescent):
@@ -464,6 +478,10 @@ async def dev_login(
 
     if received_vote:
         await seed_received_vote(character, session)
+
+    draft_praxis_id = None
+    if draft_praxis:
+        draft_praxis_id = await seed_draft_praxis(character, session)
 
     jwt_token = create_jwt(account.id)
     response.set_cookie(
@@ -480,4 +498,5 @@ async def dev_login(
         character_id=character.id if character else None,
         character_name=character.display_name if character else None,
         faction_slug=character.faction_slug if character else None,
+        draft_praxis_id=draft_praxis_id,
     )

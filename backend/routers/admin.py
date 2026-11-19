@@ -196,7 +196,7 @@ async def admin_patch_character_stats(
         character_id=stats.character_id,
         era_id=stats.era_id,
         score=stats.score,
-        all_time_score=stats.all_time_score,
+        all_time_score=(await session.get(Character, character_id)).all_time_score,
         level=stats.level,
         votes_available=compute_votes_available(stats),
     )

@@ -77,7 +77,7 @@ the player never saw would be a worse outcome than an off-by-one ladder.
 Per-praxis scores are derived at read time, so cards, detail pages and the
 composer correct themselves the moment the formula lands. `CharacterStats.score`
 is a per-era gather that is stale until something triggers a recalc, and
-`CharacterStats.all_time_score` is a `+= delta` accumulator that never
+`Character.all_time_score` is a `+= delta` accumulator that never
 self-corrects. `scripts/backfill_metatask_multiplier.py` counted the affected set
 and, with `--apply`, re-banked it **as a delta** through
 `recalculate_character_stats` — never as `SUM(score)`, which would undo the zero

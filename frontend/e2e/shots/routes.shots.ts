@@ -15,8 +15,10 @@ import { SWEEP_VIEWPORTS } from '../../src/utils/contrastSweep'
  *   SHOT_LOGIN   extra /auth/dev-login params, e.g. "faction=snide&level=3"
  *                (default "level=1"); "guest" = signed out. The bot keeps its
  *                last faction, so name one when dress matters.
+ *                Feed frames: "invited=coven" lands a letter on /updates. Composer:
+ *                "draft_praxis=true" + route /praxis/{draft}/edit.
  *   SHOT_DIR     output dir (default test-results/shots, emptied on each run).
- *   SHOT_VIEWPORTS  mobile (375), narrow (621), desktop (1280), wide (1920).
+ *   SHOT_VIEWPORTS  mobile (375), narrow (621), composer (700), desktop (1280), wide (1920).
  *                Default "mobile,desktop".
  *   SHOT_THEME   light | dark | both. Unset = dark, no theme in file names.
  *   MAX_SCREENS  screenfuls per page (default 4).
@@ -36,6 +38,7 @@ const MAX_SCREENS = Number(process.env.MAX_SCREENS) || 4
 const SIZES = {
   ...SWEEP_VIEWPORTS,
   narrow: { width: 621, height: 900 },
+  composer: { width: 700, height: 900 },
   wide: { width: 1920, height: 1080 },
 }
 type ShotViewport = keyof typeof SIZES
@@ -63,6 +66,7 @@ for (const route of ROUTES) {
       const errors: string[] = []
       page.on('pageerror', (e) => errors.push(String(e)))
 
+      let draftId: number | null = null
       const { width, height } = SIZES[viewport]
       await page.addInitScript(([key, value]) => localStorage.setItem(key, value), [THEME_STORAGE_KEY, theme])
       await page.setViewportSize({ width, height })
@@ -70,9 +74,10 @@ for (const route of ROUTES) {
         // Own account, so it never re-factions a person's dev account.
         const res = await page.request.post(`${API}/auth/dev-login?key=shots&name=Shot%20Bot&${LOGIN}`)
         expect(res.ok(), `dev-login failed — is the backend up on ${API}?`).toBeTruthy()
+        draftId = (await res.json()).draft_praxis_id
       }
 
-      await page.goto(route)
+      await page.goto(route.replace('{draft}', String(draftId)))
       await settle(page)
 
       const name = route.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '') || 'root'

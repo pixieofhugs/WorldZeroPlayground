@@ -25,7 +25,7 @@ every prior era's standings — the game has no memory of who won Era 1. The
 star-schema split makes per-era history a natural consequence of the row-per-era
 shape instead of something reset logic has to preserve by hand.
 
-## Amendment (2026-11-18, #3427): `Character` carries `peak_level`
+## Amendment (2026-11-18, #3427, #3434): `Character` carries `peak_level` and `all_time_score`
 
 `Character` is not wholly a pure dimension. `Character.peak_level`
 (`backend/models/character.py`, #3102) is the highest level the character ever
@@ -34,6 +34,7 @@ function (`services.character.record_level_reached`). It sits on `Character`, no
 in `CharacterStats`, because an era reset inserts a new stats row and must not
 erase it.
 
-Open: #3434 asks whether `all_time_score` should move onto `Character` the same
-way. Today it is still per era in `CharacterStats` and this record's list stands.
-If #3434 lands, extend this amendment rather than adding a second.
+`Character.all_time_score` (#3434) moved onto `Character` the same way: a lifetime
+fact is one value moved by delta, not a column repeated on every era row.
+`reset_all_time_score` zeroes it at era start. Past eras' rows no longer record
+the lifetime total at their close.

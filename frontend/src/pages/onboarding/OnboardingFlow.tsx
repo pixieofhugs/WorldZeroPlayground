@@ -5,6 +5,7 @@ import { acceptTerms } from '../../api/terms'
 import { clearTermsAcceptance, holdTermsAcceptance, termsAcceptanceHeld } from '../../utils/onboardingResume'
 import AuthCard from './AuthCard'
 import Declined from './Declined'
+import SignInView from './SignInView'
 import TermsCard from './TermsCard'
 import Wisp from './Wisp'
 import { BEATS } from './beats'
@@ -16,6 +17,9 @@ const TYPE_MS = 28
 const LEAVE_MS = 460
 const TITLE_DELAY_MS = 2800
 const TITLE_CHAR_MS = 84
+
+// The one beat whose stage holds a live control (Next waits on it), so it stays out of aria-hidden.
+const VOTE_BEAT = 5
 
 const CONFIDENCE: Record<string, number> = { title: 0.08, 1: 0.18, 2: 0.3, 3: 0.42, 4: 0.5, 5: 0.6, 6: 0.72, 7: 0.82 }
 
@@ -213,7 +217,7 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
       {Beat && n !== null && (
         <main className={`ob-beat ${screenCls}`}>
           <HoldNextContext.Provider value={setHold}>
-            <section aria-hidden="true" className={`ob-stage ${stageCls}`} key={step}>
+            <section aria-hidden={n === VOTE_BEAT ? undefined : true} className={`ob-stage ${stageCls}`} key={step}>
               <Beat confidence={CONFIDENCE[n]} />
             </section>
           </HoldNextContext.Provider>
@@ -257,6 +261,12 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
       )}
 
       {step === 'signin' && <div className={screenCls}><AuthCard onBack={onBack} /></div>}
+
+      {step === 'returning' && (
+        <div className={screenCls}>
+          <SignInView onRestart={() => move(() => initialFlow(false))} />
+        </div>
+      )}
 
       {step === 'declined' && (
         <div className={screenCls}>

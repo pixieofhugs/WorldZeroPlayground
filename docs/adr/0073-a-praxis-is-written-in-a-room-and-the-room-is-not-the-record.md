@@ -1,6 +1,6 @@
 # ADR-0073 — A praxis is written in a room, and the room is not the record
 
-**Status:** Accepted
+**Status:** Amended by ADR-0079
 **Date:** 2026-08-14
 
 **Relates to:** ADR-0011 (a duel is two solo praxes), ADR-0012 (lazy consensus;
@@ -211,3 +211,7 @@ credential to mint, expire and track.
 ---
 
 *Footnote (2026-10-13, #3058): the hosting this record cites, `render.yaml`, is retired (Render was replaced by the Hetzner box in 2026-09). The argument above still holds as written; `deploy/docker-compose.yml` is now the file that declares the single backend instance.*
+
+## Amendment (2026-11-19, #3426): the freeze is retired
+
+"Submitting **freezes** the document read-only for everyone" (and the close code that went with it) is gone: ADR-0079 retired the pending-freeze. `pending` is writable; typing during a proposal cancels it after a first-keystroke confirm. Nothing in `services/praxis_room.py` or `editPraxis/roomReconnect.ts` freezes or closes a room. The publish-time flatten-and-destroy rule stands.
