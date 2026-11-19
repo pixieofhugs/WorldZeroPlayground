@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { TaskOut } from '../../api/tasks'
 // Type-only: the admin chunk stays out of every visitor's waterfall (#1141).
 import type { AdminTaskStatus } from '../../api/admin'
@@ -49,6 +50,7 @@ export default function TaskCard({
   inProgressCount,
   onSignup,
 }: TaskCardProps) {
+  const { t } = useTranslation('admin')
   const { user } = useAuth()
   const { adminMode } = useAdminMode()
   const showAdminControls = user?.is_admin && adminMode
@@ -159,15 +161,15 @@ export default function TaskCard({
           }}
         >
           {shown.status ==='active' && (
-            <AdminStatusButton label="retire" tone="danger" onClick={() => void handleStatusChange('retired')} />
+            <AdminStatusButton label={t('tasks.actions.retire')} tone="danger" onClick={() => void handleStatusChange('retired')} />
           )}
           {shown.status ==='retired' && (
-            <AdminStatusButton label="activate" tone="success" onClick={() => void handleStatusChange('active')} />
+            <AdminStatusButton label={t('tasks.actions.activate')} tone="success" onClick={() => void handleStatusChange('active')} />
           )}
           {shown.status ==='pending' && (
             <>
-              <AdminStatusButton label="activate" tone="success" onClick={() => void handleStatusChange('active')} />
-              <AdminStatusButton label="retire" tone="danger" onClick={() => void handleStatusChange('retired')} />
+              <AdminStatusButton label={t('tasks.actions.activate')} tone="success" onClick={() => void handleStatusChange('active')} />
+              <AdminStatusButton label={t('tasks.actions.retire')} tone="danger" onClick={() => void handleStatusChange('retired')} />
             </>
           )}
         </div>

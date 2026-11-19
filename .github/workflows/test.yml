@@ -69,6 +69,11 @@ jobs:
           command: ratchet ruff
           install: ruff==0.17.4
 
+      # wz-backup-pull's GitHub reporting (#3043, #3259). Stubs rsync, gh and
+      # notify-send; touches nothing real. In this required job so it gates.
+      - name: Backup-pull reporting (stubbed)
+        run: bash deploy/test-wz-backup-pull
+
   # The API contract gate (#1400). `backend/openapi.json` and the TypeScript
   # types generated from it are committed artifacts, and this job is what keeps
   # them honest: regenerate, then refuse a diff. Backend shape changes that the

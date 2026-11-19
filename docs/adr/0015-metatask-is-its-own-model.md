@@ -1,6 +1,6 @@
 # ADR-0015: A metatask is its own model, not a Task subtype
 
-**Status:** Accepted
+**Status:** Amended by ADR-0086
 **Date:** 2026-06-24
 
 > **⚠ Status (2026-07-17 audit): NOT BUILT.** The standalone-model split never
@@ -116,3 +116,19 @@ can_access_metatask(character, metatask, era) -> bool
 - **Flat (un-multiplied) metatask points** to make duels perfectly even. Rejected: the duel
   multiplier is a deliberate faction perk (e.g. SNIDE's duel-win modifier) and should keep
   applying to metatask points.
+
+## Amendment (2026-11-18, #3419): metatasks are faction-open, and the gate moved
+
+The faction gate is gone. `faction_permits` (`services/faction_service.py`) returns
+`True` for every character and task, metatasks included (#942; see the ADR-0029
+amendment). `_check_metatask_eligibility` (`services/praxis_metatask.py`) still
+calls it, so a future faction rule has one place to land.
+
+- **`can_access_metatask` was never built.** The apply gate is `may_apply_metatask`
+  and the propose gate `may_propose_metatask` (`services/era_gates.py`). Apply is
+  `era.metatask_apply_level`, or a faction with `can_apply_metatask_at_any_level`
+  (Albescent in Era 1; a per-era perk, so read the era file).
+- **The levels are era values, not 6 and 7.** Read `backend/eras/era_N.py`
+  (Era 1: propose 5, apply 5).
+- **Metatask points are flat.** "Stay inside the multipliers" and "No change to
+  ADR-0014" are superseded by ADR-0086: only the base multiplies.

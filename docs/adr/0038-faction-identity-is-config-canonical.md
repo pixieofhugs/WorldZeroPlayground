@@ -91,3 +91,10 @@ since `create_all` never creates the columns for it to drop.
 edit-path retirement. **Out (unchanged):** task-content localization (DB rows,
 player-authored free text — still a separate DB-content problem, as ADR-0031
 noted); faction *mechanics* stay config-owned.
+
+## Amendment (2026-11-18, #3427): there is no admin create path
+
+"The admin *create* path survives" is wrong. `backend/routers/factions.py` has
+only `GET /factions`, `POST /factions/choose` and `GET /factions/status`: no
+create route. The only writer of a faction row is the seed (`backend/seed.py`),
+which adds a `Faction(slug, status)` for each slug in the era's config.

@@ -96,3 +96,10 @@ The consolidated boolean surfaces as a single new `TaskOut` field
 - **Add standard-task faction locking now.** Rejected: no such rule exists or is
   spec'd; inventing it is a gameplay change, not a UI-truthfulness fix. Deferred
   to its own issue (the faction-rules seam).
+
+## Amendment (2026-11-18, #3419): the metatask faction gate is gone
+
+Gate 3 ("Metatask faction") no longer rejects anyone: `faction_permits` returns
+`True` since #942 (see the ADR-0029 amendment). `is_task_eligible_for_character`
+and `_check_metatask_eligibility` both route through it, so the flag and the
+guard still agree. The governing invariant is unchanged.
