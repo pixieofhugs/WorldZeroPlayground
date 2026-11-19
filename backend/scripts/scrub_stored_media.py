@@ -5,6 +5,7 @@ won't strip are listed and left untouched. Logic: ``services/media_scrub.py``.
 """
 
 import argparse
+import asyncio
 import os
 import sys
 from pathlib import Path
@@ -13,8 +14,23 @@ BACKEND_ROOT = Path(__file__).resolve().parent.parent
 if str(BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(BACKEND_ROOT))
 
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine  # noqa: E402
+
 from script_utils import add_env_argument, get_settings  # noqa: E402
-from services.media_scrub import scrub_media_root  # noqa: E402
+from services.media_scrub import convert_heic_rows, scrub_media_root  # noqa: E402
+
+
+async def convert_heic(database_url: str, media_root: str, apply: bool):
+    engine = create_async_engine(database_url, echo=False)
+    try:
+        async with async_sessionmaker(engine, expire_on_commit=False)() as session:
+            report, to_unlink = await convert_heic_rows(session, media_root, apply)
+            await session.commit()
+        for path in to_unlink:
+            os.unlink(path)
+    finally:
+        await engine.dispose()
+    return report
 
 
 def main() -> int:
@@ -23,7 +39,8 @@ def main() -> int:
     parser.add_argument("--apply", action="store_true", help="Rewrite files in place.")
     args = parser.parse_args()
 
-    media_root = get_settings(args.env).MEDIA_ROOT
+    settings = get_settings(args.env)
+    media_root = settings.MEDIA_ROOT
     print(f"Environment : {args.env}")
     print(f"Media root  : {os.path.realpath(media_root)}")
     mode = "APPLY - files WILL be rewritten" if args.apply else "dry run"
@@ -33,7 +50,13 @@ def main() -> int:
         return 1
 
     report = scrub_media_root(media_root, args.apply)
+    heic = asyncio.run(convert_heic(settings.DATABASE_URL, media_root, args.apply))
+    report.scanned += heic.scanned
+    report.failed += heic.failed
     verb = "Rewrote" if args.apply else "Would rewrite"
+    print(f"HEIC -> .jpg: {verb} {len(heic.cleaned)} row(s); old .heic URLs stop.")
+    for line in heic.cleaned:
+        print(f"  {line}")
     print(f"Scanned {report.scanned} media file(s); {report.already_clean} clean.")
     print(f"{verb} {len(report.cleaned)} file(s).")
     for path in report.cleaned:

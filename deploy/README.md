@@ -310,8 +310,10 @@ site's hostnames. A request to `dev.worldzero.org/auth/…` gets the SPA's 200.
 ### Scrubbing location from media stored before #3486/#3487
 
 `scrub_stored_media.py` runs every file under `MEDIA_ROOT` through the upload
-strip and rewrites it in place (idempotent; HEIC keeps its `.heic` path, now
-holding JPEG bytes, so no URL or `MediaItem` row changes). Run it on the host,
+strip and rewrites it in place (idempotent). HEIC/HEIF files are converted to
+`.jpg` as #3589 does for new uploads: the `MediaItem` path is updated in the
+transaction and the old `.heic` is deleted only after the commit, so old
+`.heic` hotlinks stop working. Run it on the host,
 inside the backend container (it reads the `media` volume), **dry run first**:
 
     ssh -i ~/.ssh/wz_deploy deploy@<server-ip> \

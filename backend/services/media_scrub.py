@@ -1,9 +1,10 @@
 """Scrub location metadata from media stored before upload-time stripping (#3590).
 
-Reuses the upload strip functions. Disk-driven: rewrites in place at the stored
-path, so no MediaItem row changes and every served URL keeps working. A HEIC
-file therefore ends up holding JPEG bytes under its ``.heic`` name; browsers
-sniff images, and the DB never has to move.
+Reuses the upload strip functions. ``scrub_media_root`` rewrites files in place
+on disk. HEIC/HEIF are not: #3589 stores them as ``.jpg``, so
+``convert_heic_rows`` does the same for existing rows (new file, row path
+updated, old file unlinked only after the caller commits). Hotlinks to the old
+``.heic`` URL break; the app serves through the row's path.
 """
 
 import io
@@ -12,9 +13,16 @@ import tempfile
 from dataclasses import dataclass, field
 
 from PIL import Image
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from models.praxis import MediaType
-from services.media import _SAFE_EXTENSIONS, _strip_av, _strip_image
+from models.praxis import MediaItem, MediaType
+from services.media import (
+    _SAFE_EXTENSIONS,
+    _strip_av,
+    _strip_image,
+    resolve_stored_media_path,
+)
 from services.media_sweep import scan_media_root
 
 
@@ -25,6 +33,9 @@ class ScrubReport:
     already_clean: int = 0
     failed: list[tuple[str, str]] = field(default_factory=list)
     skipped: list[str] = field(default_factory=list)
+
+
+HEIC_EXTENSIONS = (".heic", ".heif")
 
 
 def _media_type(extension: str) -> MediaType | None:
@@ -73,7 +84,7 @@ def scrub_media_root(media_root: str, apply: bool) -> ScrubReport:
     for scanned in files:
         extension = os.path.splitext(scanned.relative_path)[1].lower()
         media_type = _media_type(extension)
-        if media_type is None:
+        if media_type is None or extension in HEIC_EXTENSIONS:
             report.skipped.append(scanned.relative_path)
             continue
         report.scanned += 1
@@ -92,3 +103,42 @@ def scrub_media_root(media_root: str, apply: bool) -> ScrubReport:
             reason = f"{exc!r} {detail.decode(errors='replace')}".strip()
             report.failed.append((scanned.relative_path, reason))
     return report
+
+
+async def convert_heic_rows(
+    session: AsyncSession, media_root: str, apply: bool
+) -> tuple[ScrubReport, list[str]]:
+    """Convert HEIC/HEIF MediaItem files to stripped ``.jpg`` beside the original.
+
+    Returns the report (``cleaned`` holds ``old -> new`` lines) and the old
+    absolute paths to unlink once the caller has committed. Never commits.
+    """
+    report = ScrubReport()
+    to_unlink: list[str] = []
+    rows = await session.scalars(
+        select(MediaItem).where(MediaItem.type == MediaType.image)
+    )
+    for item in rows:
+        stem, extension = os.path.splitext(item.file_path)
+        if extension.lower() not in HEIC_EXTENSIONS:
+            continue
+        report.scanned += 1
+        old_path = resolve_stored_media_path(item.file_path, media_root)
+        new_relative = stem + ".jpg"
+        new_path = resolve_stored_media_path(new_relative, media_root)
+        try:
+            if old_path is None or new_path is None or not os.path.isfile(old_path):
+                raise FileNotFoundError(item.file_path)
+            if os.path.exists(new_path):
+                raise FileExistsError(new_relative)
+            with open(old_path, "rb") as handle:
+                converted, _format = _strip_image(handle.read())
+            if apply:
+                with open(new_path, "wb") as handle:
+                    handle.write(converted)
+                item.file_path = new_relative
+                to_unlink.append(old_path)
+            report.cleaned.append(f"{stem + extension} -> {new_relative}")
+        except Exception as exc:
+            report.failed.append((item.file_path, repr(exc)))
+    return report, to_unlink
