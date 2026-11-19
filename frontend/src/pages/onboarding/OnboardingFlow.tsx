@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useRef, useState, type CSSProperties } from 'react'
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthContext'
@@ -13,13 +13,10 @@ import { back, decline, initialFlow, isBeat, next, skip, toArrival, toCharacter,
 import './flow.css'
 
 // Past START only: out of the graph the title waits on. Warmed on mount so START never meets a gap.
-const Arrival = lazy(() => import('./Arrival'))
-const AuthCard = lazy(() => import('./AuthCard'))
-const CharacterStep = lazy(() => import('./CharacterStep'))
-const Declined = lazy(() => import('./Declined'))
-const SignInView = lazy(() => import('./SignInView'))
-const TermsCard = lazy(() => import('./TermsCard'))
-const warmSteps = () => void Promise.all([import('./Arrival'), import('./AuthCard'), import('./CharacterStep'), import('./Declined'), import('./SignInView'), import('./TermsCard')])
+const loadSteps = () =>
+  Promise.all([import('./Arrival'), import('./AuthCard'), import('./CharacterStep'), import('./Declined'), import('./SignInView'), import('./TermsCard')]).then(
+    ([a, b, c, d, e, f]) => ({ Arrival: a.default, AuthCard: b.default, CharacterStep: c.default, Declined: d.default, SignInView: e.default, TermsCard: f.default }),
+  )
 
 const TYPE_MS = 28
 const LEAVE_MS = 460
@@ -117,7 +114,8 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
   const wrote = useRef(false)
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
   useEffect(() => () => clearTimeout(timer.current), [])
-  useEffect(warmSteps, [])
+  const [steps, setSteps] = useState<Awaited<ReturnType<typeof loadSteps>> | null>(null)
+  useEffect(() => void loadSteps().then(setSteps), [])
 
   // A player with a character goes where the hand-off sends them; one without creates it here.
   const hasCharacter = !!user?.character || arrival !== null
@@ -167,7 +165,7 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
     if (!el) return
     if (!el.hasAttribute('tabindex')) el.tabIndex = -1
     el.focus({ preventScroll: true })
-  }, [step, beat, loading, recording, cameFrom])
+  }, [step, beat, loading, recording, cameFrom, steps])
 
   // Leaving un-types the line while the scene is yanked away.
   useEffect(() => {
@@ -294,12 +292,13 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
         </section>
       )}
 
-      <Suspense fallback={null}>
-      {step === 'signin' && <div className={screenCls}><AuthCard onBack={onBack} /></div>}
+      {steps && (
+        <>
+      {step === 'signin' && <div className={screenCls}><steps.AuthCard onBack={onBack} /></div>}
 
       {step === 'character' && (
         <div className={screenCls}>
-          <CharacterStep
+          <steps.CharacterStep
             onBack={onBack}
             onCreated={async (c) => {
               const task = await resolveHandoffTask()
@@ -313,19 +312,19 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
 
       {step === 'arrival' && arrival && (
         <div className={screenCls}>
-          <Arrival name={arrival.name} task={arrival.task} onBack={onBack} />
+          <steps.Arrival name={arrival.name} task={arrival.task} onBack={onBack} />
         </div>
       )}
 
       {step === 'returning' && (
         <div className={screenCls}>
-          <SignInView onRestart={() => move(() => initialFlow(false))} />
+          <steps.SignInView onRestart={() => move(() => initialFlow(false))} />
         </div>
       )}
 
       {step === 'declined' && (
         <div className={screenCls}>
-          <Declined onReconsider={onBack} />
+          <steps.Declined onReconsider={onBack} />
         </div>
       )}
 
@@ -334,7 +333,7 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
           {loading || recording ? (
             <div className="page font-body text-muted">{tc('loading')}</div>
           ) : (
-            <TermsCard
+            <steps.TermsCard
               // A session writes the row now; a guest holds the click through sign-in.
               record={
                 user
@@ -355,7 +354,8 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
           )}
         </div>
       )}
-      </Suspense>
+        </>
+      )}
     </div>
   )
 }

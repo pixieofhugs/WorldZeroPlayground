@@ -23,7 +23,7 @@ function preloadWelcomeFlow(): Plugin {
           chunk.viteMetadata?.importedCss.forEach((c) => css.add(c))
         }
         // Copy first: it is one tiny file the flow cannot mount without, and it queues behind the rest.
-        for (const re of [/locales[/\\]en[/\\]onboarding\.json$/, /pages[/\\]Onboarding\.tsx$/]) {
+        for (const re of [/locales[/\\]en[/\\](onboarding|forms|admin)\.json$/, /pages[/\\]Onboarding\.tsx$/]) {
           for (const chunk of Object.values(bundle)) if (chunk.type === 'chunk' && re.test(chunk.facadeModuleId ?? '')) walk(chunk.fileName)
         }
         ctx.chunk?.imports.forEach((i) => files.delete(i))
