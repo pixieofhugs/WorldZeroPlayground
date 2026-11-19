@@ -56,7 +56,10 @@ export async function loadAppCopy(): Promise<void> {
 }
 
 export async function loadOnboardingCopy(): Promise<void> {
-  registerNamespace('onboarding', (await import('./locales/en/onboarding.json')).default)
+  const [onboarding, forms] = await Promise.all([import('./locales/en/onboarding.json'), import('./locales/en/forms.json')])
+  registerNamespace('onboarding', onboarding.default)
+  // The flow's last step mounts the creation form.
+  registerNamespace('forms', forms.default)
 }
 
 const IS_PRODUCTION = import.meta.env.PROD
