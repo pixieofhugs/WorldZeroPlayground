@@ -76,8 +76,7 @@ async def test_failed_collab_praxis_contributes_nothing_to_members(
         await recalculate_character_stats(member.id, db_session)
 
     assert await _score_of(character.id, db_session) == 0
-    # character2 starts the era with a seeded score, so assert the drop, not zero.
-    assert await _score_of(character2.id, db_session) < before[character2.id]
+    assert await _score_of(character2.id, db_session) == 0
 
 
 @pytest.mark.asyncio
