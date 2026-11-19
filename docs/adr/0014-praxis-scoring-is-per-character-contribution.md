@@ -1,6 +1,6 @@
 # ADR-0014: Praxis scoring is per-character Contribution; the card shows Merit
 
-**Status:** Amended by ADR-0052, ADR-0053, ADR-0086
+**Status:** Amended by ADR-0047, ADR-0052, ADR-0053, ADR-0086
 **Date:** 2026-06-24
 
 > **Superseded in part — the *Merit (the card number)* section only.** The half
