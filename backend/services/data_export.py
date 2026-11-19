@@ -304,13 +304,13 @@ async def _characters(
             "status": character.status.value,
             "created_at": character.created_at.isoformat(),
             "departed_at": _stamp(character.departed_at),
-            "all_time_score": character.all_time_score,
             "stats": [
                 {
                     "era_id": row.era_id,
                     "score": row.score,
                     "level": row.level,
                     "votes_spent_this_era": row.votes_spent_this_era,
+                    "all_time_score": character.all_time_score,
                 }
                 for row in stats_by_character.get(character.id, [])
             ],
