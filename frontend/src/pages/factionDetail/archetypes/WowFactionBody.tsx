@@ -18,6 +18,7 @@ import {
   useSectionDisclosures,
 } from "../sectionDisclosure";
 import type { FactionDetailState } from "../useFactionDetail";
+import { paragraphsOf } from "../../../utils/paragraphs";
 
 /**
  * Warriors of Whimsy — the faction-page body. Derived, not drawn (no sheet):
@@ -194,10 +195,7 @@ const CARD_GRID: CSSProperties = {
 /** The charter: the faction description under bunting (#1909). */
 function Charter({ slug }: { slug: string }) {
   const { t } = useTranslation("factions");
-  const paragraphs = factionDescription(slug)
-    .split(/\n\s*\n/)
-    .map((p) => p.trim())
-    .filter(Boolean);
+  const paragraphs = paragraphsOf(factionDescription(slug));
 
   return (
     <section style={{ ...PLATE_FRAME, padding: 0, overflow: "hidden" }}>

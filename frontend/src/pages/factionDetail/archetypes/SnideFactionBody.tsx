@@ -16,6 +16,7 @@ import {
 } from "../sectionDisclosure";
 import type { FactionDetailState } from "../useFactionDetail";
 import { factionBodyVars } from "../../../utils/factionBodyFace"
+import { paragraphsOf } from "../../../utils/paragraphs";
 
 /**
  * S.N.I.D.E. faction-body — ransom-dispatch skin of the six-section spine
@@ -220,7 +221,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
   // platform copy (ADR-0061).
   const burned = membership.state === "burned";
 
-  const paragraphs = factionDescription(faction.slug).split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
+  const paragraphs = paragraphsOf(factionDescription(faction.slug));
 
   // ⑥ spotlight = highest all-time score; rap sheet = the rest.
   const ranked = [...members].sort((a, b) => b.all_time_score - a.all_time_score);

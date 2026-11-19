@@ -1,11 +1,8 @@
 /**
  * The global cache epoch: a version key, orthogonal to staleness (ADR-0072).
- * When `/auth/me` or `/game-config` reports a different `era_name`, the whole
- * cache drops.
- *
- * Gap: a same-era reset keeps the same `era_name` and is invisible here. Safe
- * only while score-derived data stays uncached; then the key must be `Era.id`
- * (ADR-0072, "Consequences").
+ * When `/auth/me` or `/game-config` reports a different `era_id`, the whole
+ * cache drops. The id, not the name: a same-era reset or a name-keeping switch
+ * (ADR-0091) appends an Era row but keeps the name.
  */
 
 /** A cache that can be emptied when the epoch turns over. */
@@ -15,13 +12,13 @@ export interface CacheEpoch {
   /** Enrol a cache; returns an unregister function. */
   register: (drop: Droppable) => () => void
   /** The first era seen only records; any later disagreement drops everything. */
-  noteEraStamp: (eraName: string) => void
+  noteEraStamp: (eraId: number) => void
   /** Empty every cache and bump the version, so in-flight fetches can't write back. */
   dropAll: () => void
   onDrop: (listener: () => void) => () => void
   /** Only meaningful compared against itself. */
   version: () => number
-  lastSeenEra: () => string | null
+  lastSeenEra: () => number | null
 }
 
 /** Build an epoch; the app uses {@link CACHE_EPOCH}, tests build their own. */
@@ -29,7 +26,7 @@ export function createCacheEpoch(): CacheEpoch {
   const caches = new Set<Droppable>()
   const listeners = new Set<() => void>()
   let version = 0
-  let lastSeenEra: string | null = null
+  let lastSeenEra: number | null = null
 
   const dropAll = (): void => {
     version += 1
@@ -44,10 +41,10 @@ export function createCacheEpoch(): CacheEpoch {
         caches.delete(drop)
       }
     },
-    noteEraStamp: (eraName) => {
-      if (lastSeenEra === eraName) return
+    noteEraStamp: (eraId) => {
+      if (lastSeenEra === eraId) return
       const rolled = lastSeenEra !== null
-      lastSeenEra = eraName
+      lastSeenEra = eraId
       if (rolled) dropAll()
     },
     dropAll,
@@ -70,8 +67,8 @@ export const CACHE_EPOCH: CacheEpoch = createCacheEpoch()
  * Hand-fired, not in the transport (#2892): a body sniff would also catch
  * `EraAnnouncementPayload.era_name`, a PAST era, and drop every cache per feed page.
  */
-export function noteEraStamp(eraName: string): void {
-  CACHE_EPOCH.noteEraStamp(eraName)
+export function noteEraStamp(eraId: number): void {
+  CACHE_EPOCH.noteEraStamp(eraId)
 }
 
 /**

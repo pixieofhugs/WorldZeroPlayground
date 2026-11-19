@@ -1,6 +1,7 @@
 import type { CSSProperties, HTMLAttributes, ReactNode } from "react";
 // Type-only: the dispatcher imports every tile, and every tile imports this.
 import type { SelectState } from "./FactionSelectCard";
+import { paragraphsOf } from "../../utils/paragraphs";
 
 /**
  * The select-card chassis (#3130, #3139): seven slots, three zones.
@@ -237,10 +238,7 @@ export function SelectCardMotto({ className, style, children }: TextSlotProps) {
 export function SelectCardPitch({ className, style, children }: TextSlotProps) {
   return (
     <div data-select-slot="pitch" className={className} style={{ ...style, flex: 1 }}>
-      {children
-        .split(/\n\s*\n/)
-        .map((part) => part.trim())
-        .filter(Boolean)
+      {paragraphsOf(children)
         .map((part, i) => (
           <p key={i} style={i ? { margin: "var(--space-sm) 0 0" } : { margin: 0 }}>
             {part}
