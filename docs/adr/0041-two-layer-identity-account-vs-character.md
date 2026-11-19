@@ -46,3 +46,12 @@ is that a player controls all characters under it.
 
 **Google-specific auth code** — would make a second provider a schema-and-rewrite
 job instead of a config change.
+
+## Amendment (2026-11-18, #3419, #3427): `Vote` also references the Account
+
+"Every game-facing row ... FKs to a Character, never to an Account" has one
+exception. `Vote.voter_account_id` is a `ForeignKey("account.id")`
+(`backend/models/vote.py`) beside the voter character, and
+`uq_vote_praxis_account` makes the vote one per account per praxis (#1150; see the
+#3419 amendment to ADR-0025). The column is never exposed publicly; it lets the
+database enforce the account-level anti-abuse rule this ADR already states.

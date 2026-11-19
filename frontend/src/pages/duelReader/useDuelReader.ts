@@ -9,7 +9,7 @@
  * the standing moves with the column's stamp.
  */
 import { useEffect, useState } from 'react'
-import { useTranslation } from 'react-i18next'
+import i18n from '../../i18n'
 import { useSearchParams } from 'react-router-dom'
 import { getPraxis, type PraxisOut } from '../../api/praxis'
 import { getDuelDetail, type DuelDetailOut } from '../../api/duel'
@@ -53,7 +53,6 @@ function numericId(raw: string | null | undefined): number | null {
 }
 
 export function useDuelReader(idParam: string | undefined): DuelReaderState {
-  const { t } = useTranslation('praxis')
   const { user } = useAuth()
   const [search] = useSearchParams()
 
@@ -98,7 +97,7 @@ export function useDuelReader(idParam: string | undefined): DuelReaderState {
         setPraxes({ challenger, opponent })
       })
       .catch((err) => {
-        if (!cancelled) setFetchError(extractError(err, t('detail.errors.load')))
+        if (!cancelled) setFetchError(extractError(err, i18n.t('praxis:detail.errors.load')))
       })
       .finally(() => {
         if (!cancelled) setLoading(false)
@@ -107,7 +106,7 @@ export function useDuelReader(idParam: string | undefined): DuelReaderState {
     return () => {
       cancelled = true
     }
-  }, [idParam, t])
+  }, [idParam])
 
   // `-1` is the conventional "no praxis yet" id.
   const challengerTally = useCastTally(praxes?.challenger?.id ?? -1)

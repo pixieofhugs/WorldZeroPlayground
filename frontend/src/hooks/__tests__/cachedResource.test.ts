@@ -132,18 +132,18 @@ describe('createResourceCache', () => {
 describe('the epoch drops what no bound could', () => {
   it('an era rollover re-reads a session-scoped resource that would otherwise never expire', async () => {
     const epoch = createCacheEpoch()
-    let era = 'TestEra'
+    let era = 1
     const fetchFn = vi.fn(() => Promise.resolve(era))
     const cache = createResourceCache(fetchFn, SESSION_TTL_MS, epoch)
 
     epoch.noteEraStamp(era)
-    expect(await cache.load()).toBe('TestEra')
+    expect(await cache.load()).toBe(1)
 
-    era = 'SecondEra'
-    epoch.noteEraStamp('SecondEra')
+    era = 2
+    epoch.noteEraStamp(2)
 
     expect(cache.peek()).toBeNull()
-    expect(await cache.load()).toBe('SecondEra')
+    expect(await cache.load()).toBe(2)
     expect(fetchFn).toHaveBeenCalledTimes(2)
   })
 
@@ -159,8 +159,8 @@ describe('the epoch drops what no bound could', () => {
     const cache = createResourceCache(fetchFn, SESSION_TTL_MS, epoch)
 
     const pending = cache.load()
-    epoch.noteEraStamp('TestEra')
-    epoch.noteEraStamp('SecondEra')
+    epoch.noteEraStamp(1)
+    epoch.noteEraStamp(2)
     release('rules-from-the-old-era')
 
     expect(await pending).toBeNull()
@@ -201,8 +201,8 @@ describe('the epoch drops what no bound could', () => {
     expect(factions.peek()).toEqual(['ua'])
 
     // Usually `/auth/me` reports the era, feeding neither cache.
-    epoch.noteEraStamp('TestEra')
-    epoch.noteEraStamp('SecondEra')
+    epoch.noteEraStamp(1)
+    epoch.noteEraStamp(2)
 
     expect(gameConfig.peek()).toBeNull()
     expect(factions.peek()).toBeNull()

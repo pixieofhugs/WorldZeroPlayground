@@ -7,7 +7,7 @@ import '../../../test/preloadArchetypes'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { describe, it, expect } from 'vitest'
-import { resources } from '../../../i18n'
+import { lazyShipped, resources } from '../../../i18n'
 import { recordedCopyTargets, setCopyRecording } from '../../../utils/copyRegistry'
 import { isFactionScopedKey } from '../../../utils/copyScope'
 import FactionCopySheet from '../FactionCopySheet'
@@ -28,7 +28,7 @@ function factionKeys(slug: string): string[] {
       for (const [k, v] of Object.entries(node)) walk(ns, v, [...path, k])
     }
   }
-  for (const [ns, table] of Object.entries(resources.en)) walk(ns, table, [])
+  for (const [ns, table] of Object.entries({ ...resources.en, ...lazyShipped })) walk(ns, table, [])
   // A plural is asked for by its stem; i18next picks `_one` / `_other`.
   return [...new Set(found.map((key) => key.replace(/_(zero|one|two|few|many|other)$/, '')))]
 }

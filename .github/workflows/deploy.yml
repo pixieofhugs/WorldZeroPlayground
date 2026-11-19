@@ -267,5 +267,7 @@ jobs:
       - name: Smoke worldzero.org
         run: |
           echo "Deployed $SHA to production."
-          curl -sf https://api.worldzero.org/health >/dev/null
-          curl -sf -o /dev/null -w '%{http_code}\n' https://worldzero.org
+          # The backend is still starting when the stack reports Started
+          # (#3343); retry for ~30s rather than fail a healthy deploy.
+          curl -sf --retry 10 --retry-delay 3 --retry-all-errors https://api.worldzero.org/health >/dev/null
+          curl -sf --retry 10 --retry-delay 3 --retry-all-errors -o /dev/null -w '%{http_code}\n' https://worldzero.org

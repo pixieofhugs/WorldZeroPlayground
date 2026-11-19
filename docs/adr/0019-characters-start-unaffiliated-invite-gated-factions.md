@@ -30,3 +30,18 @@ the only invite an account can hold is one it earns itself, via task work.
 - Invites are era-scoped, so the account-pooled start resets each era.
 - "Everyone starts in UA" and the `aged_out` forced-graduation mechanic are fully retired.
 - Incentive to ever leave unaffiliated now comes from scoring, not force — see ADR-0020.
+
+## Amendment (2026-11-18, #3427): the join gate reads more than letters
+
+"One account-scoped `EXISTS` query against `InvitationLetter`" understates the
+gate (#2385, #2218). `get_account_invited_faction_slugs`
+(`backend/services/character.py`) is the union, across the account's characters,
+of: current-era letters; each character's current faction; and current-era
+defection history (letters are deleted on defection, #2218). Sentinel slugs are
+excluded, and Albescent is added back if the account earned it. A new life may be
+born into any faction in that set.
+
+A **per-character rejoin refusal** sits on top, in `faction_service`: a character
+that left a faction may not return to it, unless its faction has
+`can_always_rejoin`. The owner ruled the code right, so this is the rule. Invites
+remain era-scoped.
