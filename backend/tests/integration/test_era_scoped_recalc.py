@@ -420,7 +420,6 @@ async def test_era_start_zeroes_lifetime_score_only_when_the_era_says_so(
     )
     db_session.add(new_era)
     await db_session.flush()
-    await apply_era_reset(
-        [character], new_era, db_session, replace(CURRENT_ERA, reset_all_time_score=reset)
-    )
+    era = replace(CURRENT_ERA, reset_all_time_score=reset)
+    await apply_era_reset([character], new_era, db_session, era)
     assert character.all_time_score == (0 if reset else 420)

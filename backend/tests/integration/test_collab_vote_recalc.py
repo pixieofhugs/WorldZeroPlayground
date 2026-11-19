@@ -162,7 +162,8 @@ async def test_a_collab_vote_moves_every_member_all_time_score(
 
     await db_session.refresh(character3)
     assert character3.all_time_score == before + FIRST_VOTE_VALUE
-    assert character3.all_time_score == (await _stats(db_session, character3.id, era)).score
+    stats = await _stats(db_session, character3.id, era)
+    assert character3.all_time_score == stats.score
 
 
 @pytest.mark.asyncio

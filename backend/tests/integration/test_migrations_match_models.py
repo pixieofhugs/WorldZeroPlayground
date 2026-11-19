@@ -374,18 +374,23 @@ async def test_all_time_score_moves_to_character_and_back(migration_db: str) -> 
 
     conn = await asyncpg.connect(_dsn(migration_db))
     try:
-        await conn.execute("INSERT INTO faction (slug, status) VALUES ('na', 'visible')")
+        await conn.execute(
+            "INSERT INTO faction (slug, status) VALUES ('na', 'visible')"
+        )
         account_id = await conn.fetchval(
-            "INSERT INTO account (email, status) VALUES ('atsm@example.com', 'active') RETURNING id"
+            "INSERT INTO account (email, status)"
+            " VALUES ('atsm@example.com', 'active') RETURNING id"
         )
         character_id = await conn.fetchval(
-            "INSERT INTO character (account_id, username, display_name, faction_slug, status)"
+            "INSERT INTO character"
+            " (account_id, username, display_name, faction_slug, status)"
             " VALUES ($1, 'atsm', 'Atsm', 'na', 'active') RETURNING id",
             account_id,
         )
         era_ids = [
             await conn.fetchval(
-                "INSERT INTO era (name, config_key, started_by) VALUES ($1, 'era_1', $2) RETURNING id",
+                "INSERT INTO era (name, config_key, started_by)"
+                " VALUES ($1, 'era_1', $2) RETURNING id",
                 name,
                 account_id,
             )

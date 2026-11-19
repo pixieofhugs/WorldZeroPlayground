@@ -19,13 +19,15 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     op.execute(
-        "ALTER TABLE character ADD COLUMN IF NOT EXISTS all_time_score INTEGER NOT NULL DEFAULT 0"
+        "ALTER TABLE character ADD COLUMN IF NOT EXISTS "
+        "all_time_score INTEGER NOT NULL DEFAULT 0"
     )
     op.execute(
         """
         DO $$ BEGIN
             IF EXISTS (SELECT 1 FROM information_schema.columns
-                       WHERE table_name = 'character_stats' AND column_name = 'all_time_score') THEN
+                       WHERE table_name = 'character_stats'
+                         AND column_name = 'all_time_score') THEN
                 UPDATE character c SET all_time_score = s.all_time_score
                 FROM (SELECT DISTINCT ON (character_id) character_id, all_time_score
                       FROM character_stats ORDER BY character_id, era_id DESC) s
@@ -39,7 +41,8 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     op.execute(
-        "ALTER TABLE character_stats ADD COLUMN IF NOT EXISTS all_time_score INTEGER NOT NULL DEFAULT 0"
+        "ALTER TABLE character_stats ADD COLUMN IF NOT EXISTS "
+        "all_time_score INTEGER NOT NULL DEFAULT 0"
     )
     op.execute(
         "UPDATE character_stats s SET all_time_score = c.all_time_score "
