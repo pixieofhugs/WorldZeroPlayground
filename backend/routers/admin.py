@@ -413,7 +413,9 @@ async def admin_moderate_comment(
     admin: Account = Depends(require_admin),
     session: AsyncSession = Depends(get_db, scope="function"),
 ):
-    comment = await moderate_comment(comment_id, data.status, session, actor_id=admin.id)
+    comment = await moderate_comment(
+        comment_id, data.status, session, actor_id=admin.id
+    )
     return build_comment_out(comment)
 
 

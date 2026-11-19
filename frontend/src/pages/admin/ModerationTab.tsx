@@ -1,7 +1,7 @@
 /**
  * Moderation tab (#237): flagged praxes and comments in one newest-first queue,
  * badged with the top reason (ADR-0037). Praxis: Keep / Remove / Fail (+note);
- * Comment: Keep / Remove. The action log is session-only client state.
+ * Comment: Keep / Remove. The action log is the persisted mod log (#3548).
  */
 import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
@@ -10,6 +10,7 @@ import { Link } from 'react-router-dom'
 import {
   getFlaggedPraxes,
   getFlaggedComments,
+  getModLog,
   getOverview,
   getMessages,
   moderatePraxis,
@@ -24,6 +25,7 @@ import type {
   FlagOut,
   FlaggedCommentOut,
   FlaggedPraxisOut,
+  ModActionOut,
 } from '../../api/admin'
 import { formatTimestamp, relativeTime } from '../../utils/dates'
 import { extractError } from '../../utils/errors'
@@ -81,12 +83,6 @@ function reporterText(flags: FlagOut[]): string {
     return i18n.t('admin:moderation.reportedByOne', { name: flags[0].flagged_by_name })
   }
   return i18n.t('admin:moderation.reportedByMany', { count: distinct.size })
-}
-
-interface ActionLogEntry {
-  id: number
-  text: string
-  at: string
 }
 
 
@@ -183,8 +179,14 @@ export default function ModerationTab({ onViewAccount }: { onViewAccount: (searc
 
   const [confirming, setConfirming] = useState<{ praxisId: number; kind: AuthorAction } | null>(null)
 
-  // Session-only, newest first; no undo or audit table, deliberately (#237).
-  const [actionLog, setActionLog] = useState<ActionLogEntry[]>([])
+  const [actionLog, setActionLog] = useState<ModActionOut[]>([])
+  const [actionLogTotal, setActionLogTotal] = useState(0)
+
+  const loadMoreLog = () => {
+    getModLog(actionLog.length)
+      .then((page) => setActionLog((previous) => [...previous, ...page.items]))
+      .catch((err) => setError(extractError(err, t('moderation.loadError'))))
+  }
 
   const refresh = () => {
     setError(null)
@@ -193,8 +195,11 @@ export default function ModerationTab({ onViewAccount }: { onViewAccount: (searc
       getFlaggedComments(),
       getOverview(),
       getMessages(showArchived),
+      getModLog(),
     ])
-      .then(([praxes, comments, overview, messageRows]) => {
+      .then(([praxes, comments, overview, messageRows, log]) => {
+        setActionLog(log.items)
+        setActionLogTotal(log.total)
         setFlaggedPraxes(praxes)
         setFlaggedComments(comments)
         setActiveAccounts(overview.active_accounts)
@@ -206,30 +211,16 @@ export default function ModerationTab({ onViewAccount }: { onViewAccount: (searc
 
   useEffect(() => { refresh() }, [showArchived])
 
-  const logAction = (text: string) => {
-    setActionLog((previous) => [
-      { id: Date.now(), text, at: new Date().toISOString() },
-      ...previous,
-    ])
-  }
-
   const handlePraxisAction = async (
     praxis: FlaggedPraxisOut,
     status: 'visible' | 'hidden' | 'failed',
     note?: string,
   ) => {
     setActionError(null)
-    const logKey =
-      status === 'visible'
-        ? 'moderation.log.keptPraxis'
-        : status === 'hidden'
-          ? 'moderation.log.removedPraxis'
-          : 'moderation.log.failedPraxis'
     try {
       await moderatePraxis(praxis.id, status, note)
       setFailNoteTarget(null)
       setFailNote('')
-      logAction(t(logKey, { title: praxis.title || praxis.task_title }))
       refresh()
     } catch (err) {
       setActionError(extractError(err, t('moderation.actionError')))
@@ -242,17 +233,12 @@ export default function ModerationTab({ onViewAccount }: { onViewAccount: (searc
     on: boolean,
   ) => {
     setActionError(null)
-    const name = praxis.created_by_display_name
     try {
       if (kind === 'removeAll') {
-        const count = await removeFlaggedPraxes(praxis.created_by_id)
-        logAction(t('moderation.log.removedAllAuthor', { name, count }))
+        await removeFlaggedPraxes(praxis.created_by_id)
       } else {
         if (kind === 'ban') await banCharacter(praxis.created_by_id, on)
         else await suspendAccount(praxis.author_account_id, on)
-        logAction(
-          t(`moderation.log.${on ? '' : 'un'}${kind === 'ban' ? 'banned' : 'suspended'}Author`, { name }),
-        )
       }
       setConfirming(null)
       refresh()
@@ -267,13 +253,8 @@ export default function ModerationTab({ onViewAccount }: { onViewAccount: (searc
     status: 'visible' | 'deleted',
   ) => {
     setActionError(null)
-    const logKey =
-      status === 'visible'
-        ? 'moderation.log.keptComment'
-        : 'moderation.log.removedComment'
     try {
       await moderateComment(comment.id, status)
-      logAction(t(logKey, { name: comment.author.display_name }))
       refresh()
     } catch (err) {
       setActionError(extractError(err, t('moderation.actionError')))
@@ -499,17 +480,29 @@ export default function ModerationTab({ onViewAccount }: { onViewAccount: (searc
           <h3 className="font-display text-xl font-bold mb-3 border-b-2 border-border pb-1">
             {t('moderation.actionLog.heading')}
           </h3>
-          <p className="font-body content-text text-muted mb-2">
-            {t('moderation.actionLog.note')}
-          </p>
           <ul className="flex flex-col gap-1">
             {actionLog.map((entry) => (
               <li key={entry.id} className="font-body text-sm">
-                {entry.text}
-                <span className="text-muted text-xs"> &middot; {formatTimestamp(entry.at)}</span>
+                {t('moderation.actionLog.entry', {
+                  actor: entry.actor_name ?? t('moderation.actionLog.unknownActor'),
+                  action: t(`moderation.actionLog.actions.${entry.action}`, {
+                    defaultValue: entry.action,
+                  }),
+                  target: t(`moderation.actionLog.targets.${entry.target_type}`, {
+                    defaultValue: entry.target_type,
+                  }),
+                  id: entry.target_id,
+                })}
+                {entry.detail && <span className="text-muted"> ({entry.detail})</span>}
+                <span className="text-muted text-xs"> &middot; {formatTimestamp(entry.created_at)}</span>
               </li>
             ))}
           </ul>
+          {actionLog.length < actionLogTotal && (
+            <button type="button" className="font-body text-sm underline mt-2" onClick={loadMoreLog}>
+              {t('moderation.actionLog.more')}
+            </button>
+          )}
         </section>
       )}
 

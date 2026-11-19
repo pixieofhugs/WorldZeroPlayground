@@ -64,6 +64,7 @@ from services.media import (
     restore_media_to_mount,
     withdraw_media_from_mount,
 )
+from services.mod_log import log_mod_action
 from services.praxis_duel import (
     discard_dissolved_duels_for_praxis,
     get_duel_for_praxis,
@@ -87,7 +88,6 @@ from services.signup_eligibility import (
     meets_task_level,
 )
 from services.vote import void_account_vote_on_join
-from services.mod_log import log_mod_action
 
 
 def _require_member(praxis: Praxis, character_id: int, action: str) -> None:

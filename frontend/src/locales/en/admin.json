@@ -219,18 +219,6 @@
     "archiveError": "Could not archive message.",
     "reportedByOne": "reported by {{name}}",
     "reportedByMany": "reported by {{count}} members",
-    "log": {
-      "removedAllAuthor": "Removed {{count}} flagged posts by {{name}}",
-      "bannedAuthor": "Banned {{name}}",
-      "unbannedAuthor": "Unbanned {{name}}",
-      "suspendedAuthor": "Suspended the account of {{name}}",
-      "unsuspendedAuthor": "Unsuspended the account of {{name}}",
-      "keptPraxis": "Kept praxis \"{{title}}\"",
-      "removedPraxis": "Removed praxis \"{{title}}\"",
-      "failedPraxis": "Failed praxis \"{{title}}\"",
-      "keptComment": "Kept comment by {{name}}",
-      "removedComment": "Removed comment by {{name}}"
-    },
     "typeLabel": {
       "praxis": "Praxis",
       "comment": "Comment"
@@ -290,8 +278,36 @@
       }
     },
     "actionLog": {
-      "heading": "Your last actions",
-      "note": "This session only — the list clears when you leave the page."
+      "heading": "Moderation log",
+      "entry": "{{actor}}: {{action}} ({{target}} #{{id}})",
+      "unknownActor": "A moderator",
+      "more": "Show older",
+      "targets": {
+        "character": "character",
+        "account": "account",
+        "praxis": "praxis",
+        "comment": "comment",
+        "task": "task"
+      },
+      "actions": {
+        "ban": "banned",
+        "unban": "unbanned",
+        "suspend": "suspended",
+        "unsuspend": "unsuspended",
+        "remove_flagged": "removed flagged posts",
+        "praxis_visible": "kept",
+        "praxis_hidden": "removed",
+        "praxis_failed": "failed",
+        "praxis_flagged": "flagged",
+        "comment_visible": "kept",
+        "comment_hidden": "held",
+        "comment_deleted": "removed",
+        "comment_flagged": "flagged",
+        "task_status": "changed status of",
+        "task_delete": "deleted",
+        "role_grant": "granted a role to",
+        "role_revoke": "revoked a role from"
+      }
     },
     "messages": {
       "heading": "Messages",

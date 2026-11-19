@@ -623,7 +623,11 @@ async def suspend_account(
     account.status = AccountStatus.suspended if suspended else AccountStatus.active
     await session.flush()
     await log_mod_action(
-        session, actor_id, "suspend" if suspended else "unsuspend", "account", account_id
+        session,
+        actor_id,
+        "suspend" if suspended else "unsuspend",
+        "account",
+        account_id,
     )
     await session.refresh(account)
     return account

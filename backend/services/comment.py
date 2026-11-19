@@ -20,8 +20,8 @@ from models.praxis import ModerationStatus, Praxis
 from models.task import Task, TaskStatus
 from schemas.comment import CommentAuthor, CommentMentionOut, CommentOut
 from services.era import get_current_era_row, get_or_create_stats
-from services.mod_log import log_mod_action
 from services.era_gates import may_comment
+from services.mod_log import log_mod_action
 from services.praxis import account_already_flagged, can_view_praxis
 
 # Unresolved handles stay plain text; render linkifies the resolved set only.

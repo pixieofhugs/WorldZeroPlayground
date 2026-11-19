@@ -31,7 +31,8 @@ def upgrade() -> None:
         """
     )
     op.execute(
-        "CREATE INDEX IF NOT EXISTS ix_mod_action_target ON mod_action (target_type, target_id)"
+        "CREATE INDEX IF NOT EXISTS ix_mod_action_target "
+        "ON mod_action (target_type, target_id)"
     )
     op.execute(
         "CREATE INDEX IF NOT EXISTS ix_mod_action_created_at ON mod_action (created_at)"

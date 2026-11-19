@@ -34,6 +34,7 @@ from models.nudge import Nudge
 from models.feed_dismissal import FeedDismissal
 from models.terms_acceptance import TermsAcceptance
 from models.copy_override import CopyOverride
+from models.mod_action import ModAction
 
 __all__ = [
     "Faction",
@@ -76,5 +77,5 @@ __all__ = [
     "FeedDismissal",
     "TermsAcceptance",
     "CopyOverride",
+    "ModAction",
 ]
-from models.mod_action import ModAction
