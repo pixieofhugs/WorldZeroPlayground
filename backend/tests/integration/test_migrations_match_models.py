@@ -369,8 +369,8 @@ async def test_onboarding_seed_key_backfill_matches_dev_recorded_state(
 async def test_all_time_score_moves_to_character_and_back(migration_db: str) -> None:
     """#3434: upgrade takes the latest era row's total; downgrade restores it."""
     assert _alembic("upgrade", "head").returncode == 0
-    back = _alembic("downgrade", "-1")
-    assert back.returncode == 0, _report("downgrade -1", back)
+    back = _alembic("downgrade", "0028_lower_unique_handles")
+    assert back.returncode == 0, _report("downgrade to 0028", back)
 
     conn = await asyncpg.connect(_dsn(migration_db))
     try:
@@ -417,3 +417,37 @@ async def test_all_time_score_moves_to_character_and_back(migration_db: str) -> 
         ) == 90
     finally:
         await conn.close()
+
+
+async def test_albescent_booleans_become_secret_faction_rows(migration_db: str) -> None:
+    """ADR-0097: stamps survive the column drop as rows for ``albescent``."""
+    assert _alembic("upgrade", "head").returncode == 0
+    back = _alembic("downgrade", "0029_all_time_score_on_character")
+    assert back.returncode == 0, _report("downgrade to 0029", back)
+
+    conn = await asyncpg.connect(_dsn(migration_db))
+    try:
+        stamped_id = await conn.fetchval(
+            "INSERT INTO account (email, status, albescent_unlocked, albescent_glimpsed)"
+            " VALUES ('stamped@example.com', 'active', true, true) RETURNING id"
+        )
+        await conn.execute(
+            "INSERT INTO account (email, status) VALUES ('plain@example.com', 'active')"
+        )
+    finally:
+        await conn.close()
+
+    up = _alembic("upgrade", "head")
+    assert up.returncode == 0, _report("upgrade head", up)
+
+    conn = await asyncpg.connect(_dsn(migration_db))
+    try:
+        rows = await conn.fetch(
+            "SELECT account_id, faction_slug, revealed, unlocked, glimpsed"
+            " FROM account_secret_faction"
+        )
+    finally:
+        await conn.close()
+    assert [tuple(row.values()) for row in rows] == [
+        (stamped_id, "albescent", False, True, True)
+    ]

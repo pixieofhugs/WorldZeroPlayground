@@ -17,6 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from errors import ErrorCode
 from game_config import CURRENT_ERA
 from models.account import Account
+from tests.stamps import stamp, stamped
 from models.character import Character
 from models.character_stats import CharacterStats
 from models.era import Era
@@ -45,7 +46,7 @@ async def _set_level(
 
 async def _qualify(session: AsyncSession, account: Account) -> None:
     """Stamp the unlock only (never joined); how it is earned is tested elsewhere."""
-    account.albescent_unlocked = True
+    stamp(account, "unlocked", True)
     await session.commit()
 
 
@@ -73,7 +74,7 @@ async def test_qualified_but_never_joined_account_is_revealed(
 
     # Derived, not written.
     await db_session.refresh(account)
-    assert account.albescent_revealed is False
+    assert stamped(account, "revealed") is False
 
 
 @pytest.mark.asyncio
@@ -118,7 +119,7 @@ async def test_the_ceiling_does_not_reach_the_reveal(
     """
     await _seed_faction(db_session, "albescent")
     await _qualify(db_session, account)
-    await _set_level(db_session, character, era, CURRENT_ERA.albescent_level_required)
+    await _set_level(db_session, character, era, CURRENT_ERA.secret_faction_join_level)
 
     me = (await client.get("/auth/me", headers=auth_headers)).json()
     assert me["albescent_revealed"] is True
@@ -148,8 +149,8 @@ async def test_reveal_survives_the_eviction_that_unset_no_column(
 ):
     """Joined long ago, evicted by #2399, still revealed: widening is an ``or``."""
     await _seed_faction(db_session, "albescent")
-    account.albescent_revealed = True
-    account.albescent_unlocked = False
+    stamp(account, "revealed", True)
+    stamp(account, "unlocked", False)
     await db_session.commit()
 
     me = (await client.get("/auth/me", headers=auth_headers)).json()
@@ -171,7 +172,7 @@ async def test_qualifying_does_not_open_the_join_gate_for_a_stranger(
     from services.faction_service import defect_to_faction
 
     await _seed_faction(db_session, "albescent")
-    account.albescent_revealed = True
+    stamp(account, "revealed", True)
     await db_session.commit()
 
     with pytest.raises(Exception) as excinfo:

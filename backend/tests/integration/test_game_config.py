@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from game_config import CURRENT_ERA
 from models.account import Account
+from tests.stamps import stamp, stamped
 from models.era import Era
 from services.progression import HIDDEN_UNTIL_REVEALED_UNLOCK_KEY
 from services.scoring import sole_tie_taker_slug
@@ -141,7 +142,7 @@ async def test_join_albescent_rung_hidden_from_unrevealed_account(
     account: Account,
     auth_headers: dict,
 ):
-    assert account.albescent_revealed is False
+    assert stamped(account, "revealed") is False
     data = (await client.get("/game-config", headers=auth_headers)).json()
     assert HIDDEN_UNTIL_REVEALED_UNLOCK_KEY not in _ladder_unlock_keys(data)
 
@@ -153,7 +154,7 @@ async def test_join_albescent_rung_shown_to_revealed_account(
     auth_headers: dict,
     db_session: AsyncSession,
 ):
-    account.albescent_revealed = True
+    stamp(account, "revealed", True)
     await db_session.flush()
 
     data = (await client.get("/game-config", headers=auth_headers)).json()

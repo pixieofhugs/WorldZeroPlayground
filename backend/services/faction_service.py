@@ -15,7 +15,8 @@ from models.faction import Faction, FactionStatus
 from models.faction_defection_history import FactionDefectionHistory
 from models.invitation_letter import InvitationLetter
 from models.task import Task
-from services.character import ALBESCENT_FACTION_SLUG, can_start_as_albescent
+from services.character import ALBESCENT_FACTION_SLUG, can_start_as_albescent  # noqa: F401
+from services.secret_faction import set_stamp
 from services.era import get_current_era_row, load_era_stats
 from services.era_gates import meets_albescent_level
 
@@ -170,7 +171,7 @@ def move_refusal(
         )
 
     # #2399: Albescent is joined via defection; two locks.
-    if target_slug == ALBESCENT_FACTION_SLUG:
+    if target_slug == era.secret_faction_slug:
         # (1) The account earned it (sticky column).
         if not facts.albescent_unlocked:
             return coded_error(
@@ -230,10 +231,10 @@ async def defect_to_faction(
     character.faction_slug = target_slug
 
     # ADR-0027 / #390: sticky reveal; never derive from live membership.
-    if target_slug == ALBESCENT_FACTION_SLUG:
+    if target_slug == era.secret_faction_slug:
         account = await session.get(Account, character.account_id)
         if account is not None:
-            account.albescent_revealed = True
+            set_stamp(account, target_slug, "revealed")
 
     await session.flush()
     await session.refresh(character)

@@ -90,7 +90,7 @@ async def test_sidebar_returns_all_three_panels(
 
 #: SELECTs for one rail read on a character with no activity (measured). One
 #: more fan-out, or a badge count the rail never draws, breaks the exact pin.
-SIDEBAR_SELECT_BUDGET = 20
+SIDEBAR_SELECT_BUDGET = 21
 
 
 @pytest.mark.asyncio

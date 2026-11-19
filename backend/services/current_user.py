@@ -99,11 +99,11 @@ async def build_current_user(
         can_create_additional_character=eligibility.can_create_additional_character,
         can_start_as_albescent=eligibility.can_start_as_albescent,
         # Through the seam (#2400): admins see, but cannot join, Albescent.
-        albescent_revealed=is_albescent_revealed(account, is_admin=is_admin),
+        albescent_revealed=is_albescent_revealed(account, is_admin=is_admin, era=era),
         # The seam resolves reveal-implies-glimpse (#2770).
-        albescent_glimpsed=is_albescent_glimpsed(account, is_admin=is_admin),
+        albescent_glimpsed=is_albescent_glimpsed(account, is_admin=is_admin, era=era),
         second_character_level_required=era.second_character_level_required,
-        albescent_level_required=era.albescent_level_required,
+        albescent_level_required=era.secret_faction_join_level,
         vote_level_required=era.vote_level_required,
         era_name=era.name,
         era_id=era_row.id if era_row is not None else 0,

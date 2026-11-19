@@ -5,10 +5,17 @@ Every surface that behaves differently for society members (``GET /factions``,
 Anonymous callers are unrevealed — fail closed.
 """
 
+from game_config import CURRENT_ERA, EraConfig
 from models.account import Account
+from services.secret_faction import has_stamp
 
 
-def is_albescent_revealed(account: Account | None, *, is_admin: bool = False) -> bool:
+def is_albescent_revealed(
+    account: Account | None,
+    *,
+    is_admin: bool = False,
+    era: EraConfig = CURRENT_ERA,
+) -> bool:
     """True when this account may be told the society exists.
 
     A union of three, each sticky on its own:
@@ -31,15 +38,26 @@ def is_albescent_revealed(account: Account | None, *, is_admin: bool = False) ->
     ``is_admin`` is caller-supplied (an ``account_role`` row) so this stays sync;
     defaults to the unprivileged answer.
 
-    ``bool()``: columns default at flush, so an unflushed Account holds ``None``.
+    An era with no secret faction reveals nothing, admin included.
     """
-    return bool(
+    slug = era.secret_faction_slug
+    return (
         account is not None
-        and (is_admin or account.albescent_revealed or account.albescent_unlocked)
+        and slug is not None
+        and (
+            is_admin
+            or has_stamp(account, slug, "revealed")
+            or has_stamp(account, slug, "unlocked")
+        )
     )
 
 
-def is_albescent_glimpsed(account: Account | None, *, is_admin: bool = False) -> bool:
+def is_albescent_glimpsed(
+    account: Account | None,
+    *,
+    is_admin: bool = False,
+    era: EraConfig = CURRENT_ERA,
+) -> bool:
     """True when this account may be shown that a row is THERE (#2770).
 
     * glimpsed — row drawn, ``[REDACTED]`` (ADR-0082).
@@ -49,10 +67,8 @@ def is_albescent_glimpsed(account: Account | None, *, is_admin: bool = False) ->
     Reveal implies glimpse, derived rather than stamped (see above).
     ``albescent_glimpsed`` is stamped by
     :func:`services.character.stamp_albescent_glimpse` when any life reaches
-    ``era.albescent_glimpse_level``; never unset. Anonymous: fail closed.
-    ``bool()`` for the same unflushed-``None`` reason.
+    ``era.secret_faction_glimpse_level``; never unset. Anonymous: fail closed.
     """
-    return bool(
-        is_albescent_revealed(account, is_admin=is_admin)
-        or (account is not None and account.albescent_glimpsed)
+    return is_albescent_revealed(account, is_admin=is_admin, era=era) or has_stamp(
+        account, era.secret_faction_slug, "glimpsed"
     )

@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from errors import ErrorCode
 from models.account import Account
+from tests.stamps import stamp, stamped
 from models.character import Character
 from models.era import Era
 from models.faction import Faction, FactionStatus
@@ -187,7 +188,7 @@ async def _make_account_albescent_eligible(
     from models.character_stats import CharacterStats
 
     account = await session.get(Account, character.account_id)
-    account.albescent_unlocked = True
+    stamp(account, "unlocked", True)
 
     result = await session.execute(
         select(CharacterStats).where(
@@ -196,7 +197,7 @@ async def _make_account_albescent_eligible(
         )
     )
     stats = result.scalar_one()
-    stats.level = CURRENT_ERA.albescent_level_required - 1
+    stats.level = CURRENT_ERA.secret_faction_join_level - 1
     await session.commit()
 
 
@@ -247,8 +248,8 @@ async def test_list_factions_serves_albescent_to_an_unrevealed_account(
     assert DEFAULT_FACTION_SLUG in slugs
     # Guard: passes for the wrong reason if a fixture starts stamping the unlock.
     await db_session.refresh(account)
-    assert account.albescent_revealed is False
-    assert account.albescent_unlocked is False
+    assert stamped(account, "revealed") is False
+    assert stamped(account, "unlocked") is False
 
 
 @pytest.mark.asyncio
@@ -288,7 +289,7 @@ async def test_albescent_join_reveals_and_lists(
     before = await client.get("/factions", headers=auth_headers)
     assert "albescent" in [f["slug"] for f in before.json()]
     await db_session.refresh(account)
-    assert account.albescent_revealed is False
+    assert stamped(account, "revealed") is False
 
     resp = await client.post(
         "/factions/choose",
@@ -298,7 +299,7 @@ async def test_albescent_join_reveals_and_lists(
     assert resp.status_code == 200
 
     await db_session.refresh(account)
-    assert account.albescent_revealed is True
+    assert stamped(account, "revealed") is True
 
     after = await client.get("/factions", headers=auth_headers)
     assert "albescent" in [f["slug"] for f in after.json()]
@@ -320,7 +321,7 @@ async def test_the_ladder_rung_is_display_only_never_the_gate(
     shown the rung and still refused.
     """
     await _seed_faction(db_session, "albescent")
-    account.albescent_revealed = True
+    stamp(account, "revealed", True)
     await db_session.commit()
 
     config = (await client.get("/game-config", headers=auth_headers)).json()
@@ -380,7 +381,7 @@ async def test_albescent_reveal_is_sticky_not_derived_from_membership(
     assert character.faction_slug != "albescent"
 
     await db_session.refresh(account)
-    assert account.albescent_revealed is True
+    assert stamped(account, "revealed") is True
 
     listed = await client.get("/factions", headers=auth_headers)
     assert "albescent" in [f["slug"] for f in listed.json()]

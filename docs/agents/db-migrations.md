@@ -227,6 +227,7 @@ copy key, which is likewise written by a human and has no surrogate id.
 | `account.py` | `account` | `id` | `active_character_id` |
 | `account.py` | `account_tombstone` | `id` | `account_id` |
 | `account.py` | `oauth_provider` | `id` | `account_id` |
+| `account_secret_faction.py` | `account_secret_faction` | `id` | `account_id` |
 | `character.py` | `character` | `id` | `account_id` (+ `faction_slug`, string) |
 | `character_block.py` | `character_block` | `id` | `blocker_character_id`, `blocked_character_id` |
 | `character_stats.py` | `character_stats` | `id` | `character_id`, `era_id` |
@@ -256,7 +257,7 @@ copy key, which is likewise written by a human and has no surrogate id.
 | `terms_acceptance.py` | `terms_acceptance` | `id` | `account_id` |
 | `vote.py` | `vote` | `id` | `praxis_id`, `voter_character_id`, `voter_account_id` |
 
-31 tables, 57 integer foreign keys, 5 string ones.
+32 tables, 58 integer foreign keys, 5 string ones.
 
 `backend/tests/unit/test_model_conventions.py` parses this table and asserts both
 halves against `Base.metadata`, so a new model that skips this list fails there.

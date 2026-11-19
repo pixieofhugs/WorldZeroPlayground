@@ -6,7 +6,9 @@ the faction facet (``SURFACES``). Unaffiliated matches ``na`` or ``albescent``.
 #2422: a revealed caller may ask for ``albescent`` alone; ``na`` still folds for
 everyone, and an unrevealed caller's two answers must stay identical.
 """
+from tests.stamps import account_with
 import pytest
+from tests.stamps import account_with
 import pytest_asyncio
 from httpx import AsyncClient
 from sqlalchemy import select
@@ -75,7 +77,7 @@ async def _ids(client: AsyncClient, url: str, headers: dict | None = None) -> se
 @pytest_asyncio.fixture
 async def revealed_headers(db_session: AsyncSession) -> dict:
     """Sets the sticky flag directly instead of running the join flow."""
-    acc = Account(email="revealed@example.com", albescent_revealed=True)
+    acc = account_with("revealed@example.com", revealed=True)
     db_session.add(acc)
     await db_session.commit()
     return {"Authorization": f"Bearer {create_jwt(acc.id)}"}

@@ -9,7 +9,7 @@ from dataclasses import dataclass, field, replace
 from enum import Enum
 from typing import Literal
 
-from faction_slugs import ALBESCENT_FACTION_SLUG, UNAFFILIATED_FACTION_SLUG
+from faction_slugs import UNAFFILIATED_FACTION_SLUG
 
 
 class LevelUnlockKind(str, Enum):
@@ -158,10 +158,6 @@ _STRUCTURAL_FACTION_ROLES: dict[str, str] = {
         "the neutral faction — the FK target for the born-unaffiliated state "
         "(ADR-0019/ADR-0030) and for cross-faction tasks"
     ),
-    ALBESCENT_FACTION_SLUG: (
-        "the endgame faction (ADR-0080); its gate stays era-tunable, its "
-        "existence does not"
-    ),
 }
 
 
@@ -206,7 +202,6 @@ class EraConfig:
     comment_flag_review_threshold: int    # flags before review queue
 
     second_character_level_required: int  # on an existing char
-    albescent_level_required: int         # on an existing char
     # ADR-0022: invite needs this AND invitation_task_threshold, per faction.
     invitation_point_threshold: int
 
@@ -238,11 +233,13 @@ class EraConfig:
     metatasks_per_praxis_max: int = 3
     metatasks_per_praxis_max_level: int = 7
 
-    # FLOOR on perceiving Albescent (#2770, amends ADR-0082); albescent_level_required
-    # is the ceiling on joining. Stamped per ACCOUNT (Account.albescent_glimpsed)
-    # so it doesn't blink with the character switcher. Must move with the era's
-    # level_profiles rung.
-    albescent_glimpse_level: int = 6
+    # This era's secret faction (ADR-0097), or None for an era with none. Must be
+    # a key of `factions`. The levels below are meaningless while it is None.
+    secret_faction_slug: str | None = None
+    # FLOOR on perceiving it (#2770, amends ADR-0082); the join level is the
+    # ceiling on joining. Must move with the era's level_profiles rung.
+    secret_faction_glimpse_level: int = 6
+    secret_faction_join_level: int = 8   # on an existing char
 
     tasks: tuple = ()                # tuple[TaskDef, ...]
 
@@ -277,6 +274,15 @@ class EraConfig:
                     f"era.factions. It is {role} in EVERY era (ADR-0087) — the "
                     f"rest of the roster is yours to choose, this slug is not."
                 )
+        if (
+            self.secret_faction_slug is not None
+            and self.secret_faction_slug not in self.factions
+        ):
+            raise ValueError(
+                f"{self.config_key or 'this era'}: secret_faction_slug "
+                f"{self.secret_faction_slug!r} is missing from era.factions "
+                f"(ADR-0097)."
+            )
         for field_name in ("starting_faction_slug", "reset_faction_slug"):
             value = getattr(self, field_name)
             if value != UNAFFILIATED_FACTION_SLUG:

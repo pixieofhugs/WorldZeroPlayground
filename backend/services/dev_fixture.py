@@ -29,9 +29,9 @@ from services.vote import account_has_received_vote
 def albescent_floor(state: str | None, level: int, era: EraConfig = CURRENT_ERA) -> int:
     """The level the account needs for ``state``, raised to at least ``level``."""
     if state == "unlocked":
-        return max(level, era.albescent_level_required)
+        return max(level, era.secret_faction_join_level)
     if state == "glimpsed":
-        return max(level, era.albescent_glimpse_level)
+        return max(level, era.secret_faction_glimpse_level)
     return level
 
 

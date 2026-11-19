@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from errors import ErrorCode
 from faction_slugs import ALBESCENT_FACTION_SLUG, UNAFFILIATED_FACTION_SLUG
 from models.account import Account
+from tests.stamps import stamped
 from models.era import Era
 from models.faction import Faction, FactionStatus
 from services.auth import create_jwt
@@ -256,4 +257,4 @@ async def test_the_sticky_column_is_never_written_for_an_admin(
 
     account = await db_session.get(Account, admin["account_id"])
     await db_session.refresh(account)
-    assert account.albescent_revealed is False
+    assert stamped(account, "revealed") is False
