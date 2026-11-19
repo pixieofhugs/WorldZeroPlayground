@@ -567,7 +567,7 @@ async def create_praxis(
     member = PraxisMember(
         praxis_id=praxis.id,
         character_id=character_id,
-        has_submitted=False,
+        has_approved=False,
     )
     session.add(member)
     await session.flush()
@@ -627,7 +627,7 @@ async def unsubmit_praxis(
     praxis.status = PraxisStatus.in_progress
     praxis.submit_proposed_at = None
     for member in praxis.members:
-        member.has_submitted = False
+        member.has_approved = False
     await session.flush()
     # The room reseeds from body_text on first connect (ADR-0073 rule 7).
 
@@ -1139,7 +1139,7 @@ async def respond_to_invite(
     member = PraxisMember(
         praxis_id=praxis.id,
         character_id=character_id,
-        has_submitted=False,
+        has_approved=False,
     )
     session.add(member)
 

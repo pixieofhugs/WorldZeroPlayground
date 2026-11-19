@@ -190,9 +190,8 @@ class PraxisMember(Base):
     character_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("character.id"), nullable=False
     )
-    # Means APPROVAL of the live proposal (ADR-0079). All approved → publish;
-    # any edit during a proposal clears all.
-    has_submitted: Mapped[bool] = mapped_column(
+    # All approved → publish; any edit during a proposal clears all (ADR-0079).
+    has_approved: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, server_default="false"
     )
     # "My part is finished" (ADR-0079): social badge, gates nothing. Separate so
@@ -200,8 +199,8 @@ class PraxisMember(Base):
     is_done: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, server_default="false"
     )
-    # When has_submitted last flipped True (#571); feed sorts by it.
-    submitted_at: Mapped[Optional[datetime]] = mapped_column(
+    # When has_approved last flipped True; feed sorts by it.
+    approved_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
     joined_at: Mapped[datetime] = mapped_column(

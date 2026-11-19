@@ -110,7 +110,7 @@ async def test_create_solo_praxis(
     assert data["moderation_status"] == "visible"
     assert len(data["members"]) == 1
     assert data["members"][0]["character_id"] == character.id
-    assert data["members"][0]["has_submitted"] is False
+    assert data["members"][0]["has_approved"] is False
 
 
 @pytest.mark.asyncio
@@ -1443,7 +1443,7 @@ async def test_kick_refused_on_submitted_collab(
     data = after.json()
     assert data["status"] == "submitted"
     assert {m["character_id"] for m in data["members"]} == {character.id, character2.id}
-    assert all(m["has_submitted"] for m in data["members"])
+    assert all(m["has_approved"] for m in data["members"])
 
 
 @pytest.mark.asyncio
@@ -1470,7 +1470,7 @@ async def test_kick_on_pending_collab_still_resets_casts(
     assert data["status"] == "in_progress"
     assert data["submit_proposed_at"] is None
     assert {m["character_id"] for m in data["members"]} == {character.id}
-    assert not any(m["has_submitted"] for m in data["members"])
+    assert not any(m["has_approved"] for m in data["members"])
 
 
 # Collab lazy-consensus publish (ADR-0012)
@@ -1528,7 +1528,7 @@ async def test_roster_row_carries_when_each_member_filed(
     auth_headers: dict,
     auth_headers2: dict,
 ):
-    """``PraxisMemberOut.submitted_at`` (#1415): NULL, timestamp, NULL after reset.
+    """``PraxisMemberOut.approved_at`` (#1415): NULL, timestamp, NULL after reset.
 
     A "when they filed" that survived an unsubmit would be worse than none.
     """
@@ -1537,21 +1537,21 @@ async def test_roster_row_carries_when_each_member_filed(
     )
 
     before = await client.get(f"/praxes/{praxis_id}", headers=auth_headers)
-    assert all(m["submitted_at"] is None for m in before.json()["members"])
+    assert all(m["approved_at"] is None for m in before.json()["members"])
 
     filed = await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers2)
     rows = {m["character_id"]: m for m in filed.json()["members"]}
-    assert rows[character2.id]["has_submitted"] is True
-    assert rows[character2.id]["submitted_at"] is not None
-    assert rows[character.id]["submitted_at"] is None
+    assert rows[character2.id]["has_approved"] is True
+    assert rows[character2.id]["approved_at"] is not None
+    assert rows[character.id]["approved_at"] is None
 
     # NULL again on withdraw: a group action that clears both (ADR-0079).
     reset = await client.post(
         f"/praxes/{praxis_id}/unsubmit", headers=auth_headers2
     )
     assert reset.status_code == 200, reset.text
-    assert all(not m["has_submitted"] for m in reset.json()["members"])
-    assert all(m["submitted_at"] is None for m in reset.json()["members"])
+    assert all(not m["has_approved"] for m in reset.json()["members"])
+    assert all(m["approved_at"] is None for m in reset.json()["members"])
 
 
 @pytest.mark.asyncio
@@ -1986,7 +1986,7 @@ async def test_create_praxis_minimal_body_starts_as_draft(
     assert data["moderation_status"] == "visible"
     assert len(data["members"]) == 1
     assert data["members"][0]["character_id"] == character.id
-    assert data["members"][0]["has_submitted"] is False
+    assert data["members"][0]["has_approved"] is False
     assert data["media_items"] == []
 
 
@@ -2500,7 +2500,7 @@ async def test_change_type_collab_to_solo_is_a_takeover(
     assert create.status_code == 201, create.text
     pid = create.json()["id"]
 
-    db_session.add(PraxisMember(praxis_id=pid, character_id=character.id, has_submitted=False))
+    db_session.add(PraxisMember(praxis_id=pid, character_id=character.id, has_approved=False))
     await db_session.commit()
 
     resp = await client.post(
@@ -2562,7 +2562,7 @@ async def test_change_type_takeover_clears_pending_publish_window(
     )
     assert create.status_code == 201, create.text
     pid = create.json()["id"]
-    db_session.add(PraxisMember(praxis_id=pid, character_id=character.id, has_submitted=False))
+    db_session.add(PraxisMember(praxis_id=pid, character_id=character.id, has_approved=False))
     await db_session.commit()
 
     submit = await client.post(f"/praxes/{pid}/submit", headers=auth_headers2)
@@ -2576,7 +2576,7 @@ async def test_change_type_takeover_clears_pending_publish_window(
     body = resp.json()
     assert body["status"] == "in_progress"
     assert body["submit_proposed_at"] is None
-    assert all(not m["has_submitted"] for m in body["members"])
+    assert all(not m["has_approved"] for m in body["members"])
 
 
 # Pending consensus state + unsubmit (#590)
@@ -2668,7 +2668,7 @@ async def test_unsubmit_pending_reopens_the_whole_group(
     data = unsub.json()
     assert data["status"] == "in_progress"
     assert data["submit_proposed_at"] is None
-    submitted = {m["character_id"]: m["has_submitted"] for m in data["members"]}
+    submitted = {m["character_id"]: m["has_approved"] for m in data["members"]}
     assert submitted == {
         character.id: False,
         character2.id: False,
@@ -2694,7 +2694,7 @@ async def test_unsubmit_last_pending_member_returns_to_in_progress(
     data = resp.json()
     assert data["status"] == "in_progress"
     assert data["submit_proposed_at"] is None
-    assert all(not m["has_submitted"] for m in data["members"])
+    assert all(not m["has_approved"] for m in data["members"])
 
 
 # Full-fidelity card fields for mobile praxis cards (#573)

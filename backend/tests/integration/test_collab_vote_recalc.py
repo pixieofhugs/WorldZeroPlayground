@@ -75,10 +75,10 @@ async def submitted_collab(
     db_session.add_all(
         [
             PraxisMember(
-                praxis_id=praxis.id, character_id=character.id, has_submitted=True
+                praxis_id=praxis.id, character_id=character.id, has_approved=True
             ),
             PraxisMember(
-                praxis_id=praxis.id, character_id=character3.id, has_submitted=True
+                praxis_id=praxis.id, character_id=character3.id, has_approved=True
             ),
         ]
     )

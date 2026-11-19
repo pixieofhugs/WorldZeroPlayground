@@ -401,7 +401,7 @@ export function PraxisOwnerActions({ state }: { state: PraxisDetailState }) {
  *  - `duelLive` — duel `pending`/`active`: a free, neutral reopen (forfeit only
  *    at `settled`, ADR-0011, which gets the forfeit dialog instead).
  *  - `collabOwnPart` — pending collab: only the caller's cast comes back.
- *  - `collabGroup` — published collab: every member's `has_submitted` clears.
+ *  - `collabGroup` — published collab: every member's `has_approved` clears.
  *  - `solo` — the default.
  */
 type UnsubmitCase = 'solo' | 'collabGroup' | 'collabOwnPart' | 'duelLive'

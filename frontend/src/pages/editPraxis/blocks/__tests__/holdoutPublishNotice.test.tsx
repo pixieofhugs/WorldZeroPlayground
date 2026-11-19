@@ -20,7 +20,7 @@ function member(id: number, hasSubmitted: boolean): PraxisMemberOut {
     praxis_id: 1,
     character_id: id,
     character_display_name: `M${id}`,
-    has_submitted: hasSubmitted,
+    has_approved: hasSubmitted,
     is_done: false,
     joined_at: OPENED,
   } as unknown as PraxisMemberOut;

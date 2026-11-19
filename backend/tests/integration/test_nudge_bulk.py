@@ -52,7 +52,7 @@ async def _set_cast(
             PraxisMember.character_id == character_id,
         )
         .values(
-            has_submitted=cast,
+            has_approved=cast,
             submitted_at=datetime.now(timezone.utc) if cast else None,
         )
     )
@@ -78,8 +78,8 @@ async def _join(
         PraxisMember(
             praxis_id=praxis.id,
             character_id=character.id,
-            has_submitted=cast,
-            submitted_at=datetime.now(timezone.utc) if cast else None,
+            has_approved=cast,
+            approved_at=datetime.now(timezone.utc) if cast else None,
         )
     )
     await session.commit()
@@ -323,8 +323,8 @@ async def test_the_crew_nudge_costs_the_same_whatever_the_crew_size(
         PraxisMember(
             praxis_id=bigger.id,
             character_id=character.id,
-            has_submitted=True,
-            submitted_at=datetime.now(timezone.utc),
+            has_approved=True,
+            approved_at=datetime.now(timezone.utc),
         )
     )
     await db_session.commit()

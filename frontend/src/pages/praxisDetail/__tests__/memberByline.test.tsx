@@ -17,7 +17,7 @@ const member = (
     id: characterId * 10,
     character_id: characterId,
     character_display_name: name,
-    has_submitted: hasSubmitted,
+    has_approved: hasSubmitted,
     joined_at: joinedAt,
   });
 

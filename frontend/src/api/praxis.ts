@@ -31,8 +31,8 @@ export const UNSCORED_MODERATION_STATUSES: ReadonlySet<ModerationStatus> = new S
 export type MediaItemOut = components['schemas']['MediaItemOut']
 
 /**
- * - `submitted_at`: when `has_submitted` last flipped true (#1415); cleared on
- *   unsubmit/reset. Branch on `has_submitted`.
+ * - `approved_at`: when `has_approved` last flipped true (#1415); cleared on
+ *   unsubmit/reset. Branch on `has_approved`.
  * - `nudged_at`: when the VIEWER last nudged this member (#1083); null once the
  *   24h window lapses, so it doubles as "may not nudge yet". Null on list cards.
  */

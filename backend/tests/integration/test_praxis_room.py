@@ -941,7 +941,7 @@ async def test_typing_while_a_proposal_is_live_cancels_it(
         async with rooms.sessions() as session:
             approvals = (
                 await session.execute(
-                    select(PraxisMember.has_submitted).where(
+                    select(PraxisMember.has_approved).where(
                         PraxisMember.praxis_id == collab.id
                     )
                 )
@@ -1035,7 +1035,7 @@ async def test_withdrawing_a_proposal_has_the_same_effect_as_an_edit(
         reopened = await unsubmit_praxis(collab.id, character2.id, db_session)
 
         assert reopened.status == PraxisStatus.in_progress
-        assert [member.has_submitted for member in reopened.members] == [False, False]
+        assert [member.has_approved for member in reopened.members] == [False, False]
         assert reopened.submit_proposed_at is None
 
         socket = await rooms.open(collab.id, account2.id)

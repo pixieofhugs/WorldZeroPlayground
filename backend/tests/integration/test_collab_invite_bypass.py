@@ -195,7 +195,7 @@ async def test_wrong_faction_low_level_character_can_be_invited_and_submit(
     )
     assert submit_resp.status_code == 200, submit_resp.text
     submitted = {
-        member["character_id"]: member["has_submitted"]
+        member["character_id"]: member["has_approved"]
         for member in submit_resp.json()["members"]
     }
     assert submitted[invitee.id] is True

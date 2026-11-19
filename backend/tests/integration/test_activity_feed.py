@@ -108,14 +108,14 @@ async def test_collaborator_submitted_carries_the_viewers_own_state(
         return rows[0]
 
     still_owed = await viewer_row()
-    assert still_owed["payload"]["viewer_has_submitted"] is False, (
+    assert still_owed["payload"]["viewer_has_approved"] is False, (
         "the viewer has not filed their part, so the CTA is still live"
     )
 
     await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers)
 
     filed = await viewer_row()
-    assert filed["payload"]["viewer_has_submitted"] is True, (
+    assert filed["payload"]["viewer_has_approved"] is True, (
         "the viewer has filed, so the CTA must drop"
     )
 

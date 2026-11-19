@@ -4,7 +4,7 @@ Silence is consent: Propose opens a ``collab_auto_submit_days`` window, all
 approved seals, an edit cancels the proposal, a kick resets the group.
 
 Three signals (ADR-0079): Done (``is_done``, social only), Propose
-(``submit_proposed_at``), Approve (``has_submitted``, name kept for the wire).
+(``submit_proposed_at``), Approve (``has_approved``, name kept for the wire).
 
 Also owns ``collab → solo`` (ADR-0060). Duel settling lives in
 ``services.praxis`` to avoid a ``services.duel`` import cycle.
@@ -47,9 +47,9 @@ async def _apply_seal(praxis: Praxis, session: AsyncSession, era: EraConfig) -> 
     if era_row is not None:
         praxis.era_id = era_row.id
     for member in praxis.members:
-        if not member.has_submitted:
-            member.submitted_at = now
-        member.has_submitted = True
+        if not member.has_approved:
+            member.approved_at = now
+        member.has_approved = True
     # Same `now` as the seal, not a second clock read.
     await stamp_habit_bonus(praxis, now, session, era)
     # Second pass: the fan-out flushes, so the seal must be whole first.
@@ -115,8 +115,8 @@ async def on_member_edit(
     praxis.submit_proposed_at = None
     praxis.status = PraxisStatus.in_progress
     for member in praxis.members:
-        member.has_submitted = False
-        member.submitted_at = None
+        member.has_approved = False
+        member.approved_at = None
     await session.flush()
     if was_live:
         await recalculate_members_stats(praxis, session, era)
@@ -151,13 +151,13 @@ async def on_submit(
     """
     for member in praxis.members:
         if member.character_id == character_id:
-            member.has_submitted = True
-            member.submitted_at = datetime.now(timezone.utc)
+            member.has_approved = True
+            member.approved_at = datetime.now(timezone.utc)
             break
     await session.flush()
     await session.refresh(praxis)
 
-    if all(m.has_submitted for m in praxis.members):
+    if all(m.has_approved for m in praxis.members):
         await _apply_seal(praxis, session, era)
         await session.flush()
         return True
@@ -209,7 +209,7 @@ async def on_member_leave(
     if (
         remaining
         and praxis.status != PraxisStatus.submitted
-        and all(m.has_submitted for m in remaining)
+        and all(m.has_approved for m in remaining)
     ):
         await seal_to_live(praxis, session, era)
 
@@ -229,8 +229,8 @@ async def on_member_kicked(praxis: Praxis, session: AsyncSession) -> None:
     """Call after removing the kicked member: group re-consents (ADR-0013).
     ``is_done`` survives."""
     for member in praxis.members:
-        member.has_submitted = False
-        member.submitted_at = None
+        member.has_approved = False
+        member.approved_at = None
     praxis.status = PraxisStatus.in_progress
     praxis.submit_proposed_at = None
     await session.flush()

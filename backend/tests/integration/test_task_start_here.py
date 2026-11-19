@@ -51,8 +51,8 @@ async def _complete(
         PraxisMember(
             praxis_id=praxis.id,
             character_id=character.id,
-            has_submitted=True,
-            submitted_at=praxis.submitted_at,
+            has_approved=True,
+            approved_at=praxis.submitted_at,
         )
     )
     await db_session.commit()

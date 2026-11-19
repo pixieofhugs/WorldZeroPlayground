@@ -224,13 +224,13 @@ async def full_feed(
     db_session.add(collab_praxis)
     await db_session.flush()
     viewer_member = PraxisMember(
-        praxis_id=collab_praxis.id, character_id=character.id, has_submitted=False
+        praxis_id=collab_praxis.id, character_id=character.id, has_approved=False
     )
     friend_member = PraxisMember(
         praxis_id=collab_praxis.id,
         character_id=character2.id,
-        has_submitted=True,
-        submitted_at=now,
+        has_approved=True,
+        approved_at=now,
     )
     collab_invite = PraxisInvite(
         praxis_id=collab_praxis.id,
@@ -755,7 +755,7 @@ async def test_a_nudge_retires_when_the_recipient_files(
     await db_session.execute(
         update(PraxisMember)
         .where(PraxisMember.id == full_feed["viewer_member_id"])
-        .values(has_submitted=True, submitted_at=datetime.now(timezone.utc))
+        .values(has_approved=True, submitted_at=datetime.now(timezone.utc))
     )
     await db_session.commit()
 
