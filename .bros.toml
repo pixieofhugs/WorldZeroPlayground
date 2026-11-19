@@ -77,7 +77,11 @@ words = 250
 [bouncer]
 # `*/` repeats each rule for worktrees under .claude/worktrees: bouncer matches
 # paths relative to the main checkout.
-ask = [".github/*", "*/.github/*"]
+ask = [
+  ".github/*", "*/.github/*",
+  ".claude/settings.json", "*/.claude/settings.json",
+  ".opencode/plugins/claude-hooks.js", "*/.opencode/plugins/claude-hooks.js",
+]
 # The merge guard lives in the Bot Bros bouncer plugin now (human-only there); nothing
 # in this repo is deny-listed.
 deny = []
