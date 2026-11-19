@@ -86,6 +86,26 @@ async def test_create_character_refuses_a_case_variant_username(
 
 
 @pytest.mark.asyncio
+async def test_create_character_lost_race_on_username_is_409(
+    client: AsyncClient,
+    character: Character,
+    account2: Account,
+    some_faction: Faction,
+    auth_headers2: dict,
+    monkeypatch,
+):
+    async def stale_pick(display_name, session):
+        return character.username.upper()
+
+    monkeypatch.setattr("services.character._derive_unique_username", stale_pick)
+    resp = await client.post(
+        "/characters", json={"display_name": "Other"}, headers=auth_headers2
+    )
+    assert resp.status_code == 409
+    assert detail_code(resp.json()["detail"]) == ErrorCode.username_taken.value
+
+
+@pytest.mark.asyncio
 async def test_create_character_unauthenticated(client: AsyncClient):
     resp = await client.post(
         "/characters",

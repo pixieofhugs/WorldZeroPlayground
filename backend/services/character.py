@@ -5,6 +5,7 @@ from typing import Optional
 
 from fastapi import HTTPException
 from sqlalchemy import case, func, or_, select, union
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import Select, false as sa_false
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -484,8 +485,14 @@ async def create_character(
         location=data.location or "",
         faction_slug=starting_faction_slug,
     )
-    session.add(character)
-    await session.flush()
+    try:
+        session.add(character)
+        await session.flush()
+    except IntegrityError as exc:
+        if "uq_character_username_lower" not in str(exc.orig):
+            raise
+        await session.rollback()
+        raise_coded(409, ErrorCode.username_taken, "That username is already taken.")
 
     stats = await get_or_create_stats(
         session,

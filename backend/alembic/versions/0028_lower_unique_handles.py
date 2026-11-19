@@ -26,11 +26,12 @@ def upgrade() -> None:
     bind = op.get_bind()
     for table, column, constraint in _COLUMNS:
         dupes = bind.exec_driver_sql(
-            f"SELECT lower({column}) FROM {table} GROUP BY 1 HAVING count(*) > 1"
+            f"SELECT array_agg(id) FROM {table} GROUP BY lower({column}) HAVING count(*) > 1"
         ).scalars().all()
         if dupes:
             raise RuntimeError(
-                f"{table}.{column} has case-variant duplicates {dupes}; "
+                f"{table}.{column} has {len(dupes)} case-variant duplicate groups, "
+                f"row ids {dupes}; "
                 "resolve them by hand, then re-run."
             )
         op.execute(f"ALTER TABLE {table} DROP CONSTRAINT IF EXISTS {constraint}")
