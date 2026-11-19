@@ -39,6 +39,7 @@ export async function passBeats(page: Page, onStep?: OnStep) {
 
 /** Contract to arrival. dev-login stands in for OAuth, and the sessionStorage marks are what the real sign-in click sets before it leaves. */
 export async function signInAndArrive(page: Page, onStep?: OnStep) {
+  await expect(page.getByTestId('onboarding-accept-terms')).toBeVisible()
   await onStep?.('contract')
   await page.getByTestId('onboarding-accept-terms').click()
   await expect(page.getByRole('heading', { name: copy.auth.title })).toBeVisible()

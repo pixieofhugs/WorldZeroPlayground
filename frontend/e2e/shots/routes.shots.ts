@@ -1,6 +1,7 @@
 import { test, expect, type Page } from '@playwright/test'
 
 import { THEME_STORAGE_KEY, type Theme } from '../../src/hooks/useTheme'
+import copy from '../../src/locales/en/onboarding.json' with { type: 'json' }
 import { settle } from './settle'
 import { openTitle, passBeats, signInAndArrive } from '../onboardingWalk'
 import { SWEEP_VIEWPORTS } from '../../src/utils/contrastSweep'
@@ -13,7 +14,7 @@ import { SWEEP_VIEWPORTS } from '../../src/utils/contrastSweep'
  * Starts this checkout's Vite on :3000; the backend is whatever is on :8000.
  *
  *   SHOT_ROUTES  space-separated paths (required). `flow` walks the welcome flow instead:
- *                every step, guest to arrival, as `flow-<step>` (dark only, the flow's own theme).
+ *                every step, guest to arrival, as `flow-<step>` (the flow forces dark; light is shot too and mostly identical).
  *   SHOT_LOGIN   extra /auth/dev-login params, e.g. "faction=snide&level=3"
  *                (default "level=1"); "guest" = signed out. The bot keeps its
  *                last faction, so name one when dress matters.
@@ -114,7 +115,7 @@ async function shootFlow(page: Page, prefix: string, suffix: string) {
   await openTitle(page)
   await shoot('title')
   await page.getByTestId('onboarding-header-sign-in').click()
-  await expect(page.getByRole('heading', { name: 'Welcome back.' })).toBeVisible()
+  await expect(page.locator('.ob-lora > span')).toHaveText(copy.signin.title, { timeout: 15_000 })
   await shoot('returning')
   await page.goto('/')
   await openTitle(page)
