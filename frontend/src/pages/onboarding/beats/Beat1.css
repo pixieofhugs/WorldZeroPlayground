@@ -73,6 +73,7 @@
 .onboarding-arc .b1 :is(.shard,.ck,.sheen,.scr,.bez,.burst){display:none}
 .onboarding-arc .b1 .bfly{opacity:1;transform:translate(388px,-112px)}
 .onboarding-arc .b1 .b1x{transform:translateX(308px)}
+.onboarding-arc .b1{transform:scale(var(--g))}
 }
 .b1 .sv{display:block;overflow:visible}
 .b1 .hills{position:absolute;left:0;bottom:var(--ob);display:block}

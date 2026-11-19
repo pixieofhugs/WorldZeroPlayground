@@ -31,6 +31,7 @@
 @media (prefers-reduced-motion: reduce){
 .onboarding-arc .b1 :is(.wpop,.wrise){opacity:1!important}
 .onboarding-arc .b1 :is(.wbird,.wbun){display:none!important}
+.onboarding-arc .b1 .rbw path{stroke-dashoffset:0}
 }
 .b1 .wgrass{fill:color-mix(in srgb,var(--faction-default-stop-4) 76%,var(--faction-default-on-fill))}
 .b1 .wtree{position:relative;display:block;width:110px;height:130px}
