@@ -13,6 +13,7 @@ from services.era_gates import (
     may_propose_task,
     may_see_pending_tasks,
     may_see_retired_tasks,
+    may_vote,
     vote_lock_reason,
 )
 from services.level_jump import available_level_reach, faction_level_jump_reach
@@ -65,7 +66,6 @@ def compute_capabilities(
         )
 
     # Thresholds and admin/None handling live in ``services.era_gates`` (#2867).
-    lock_reason = vote_lock_reason(peak_level, has_received_vote, is_admin, era)
     return CharacterCapabilities(
         can_propose_task=may_propose_task(
             character_level, faction_slug, is_admin, era
@@ -81,8 +81,16 @@ def compute_capabilities(
             character_level, faction_slug, is_admin, era
         ),
         can_comment=may_comment(character_level, faction_slug, is_admin, era),
-        can_vote=lock_reason is None,
-        vote_lock_reason=lock_reason,
+        can_vote=may_vote(
+            peak_level,
+            faction_slug,
+            is_admin,
+            era,
+            has_received_vote=has_received_vote,
+        ),
+        vote_lock_reason=vote_lock_reason(
+            peak_level, has_received_vote, is_admin, era
+        ),
         can_apply_metatask=may_apply_metatask(
             character_level, faction_slug, is_admin, era
         ),

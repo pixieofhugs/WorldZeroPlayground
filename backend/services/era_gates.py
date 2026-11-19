@@ -175,9 +175,12 @@ def vote_lock_reason(
 
 def may_vote(
     peak_level: int | None,
-    has_received_vote: bool,
+    faction_slug: str | None,
     is_admin: bool,
     era: EraConfig = CURRENT_ERA,
+    *,
+    has_received_vote: bool = True,
 ) -> bool:
-    """``vote_lock_reason`` is ``None``."""
+    """``vote_lock_reason`` is ``None``. The default means "rule not asked"; every
+    caller that knows the account passes the real answer."""
     return vote_lock_reason(peak_level, has_received_vote, is_admin, era) is None
