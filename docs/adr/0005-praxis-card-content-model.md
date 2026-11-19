@@ -1,6 +1,6 @@
 # Praxis card adopts the register-row content model, with the vote-reframe as hero
 
-**Status:** Accepted
+**Status:** Amended by ADR-0049, ADR-0053
 **Date:** 2026-06-22
 
 The praxis card "reads flat next to the task cards" (`SPEC-faction-ui-profile.md §1 #2`). The
@@ -57,3 +57,7 @@ Builds on ADR-0002 (a surface composes the fine-grained dispatchers; content slo
   (`task_level_required`, `average_stars`, `total_votes`, `submitted_at` column).
 - **Slot-invariant guard test:** GitHub #151.
 - **Demo data to test against:** `backend/scripts/seed_demo_praxes.py`.
+
+## Amendment (2026-11-19, #3421)
+
+The "read-only summary mode" of `VoteUI` was never built, and the card no longer wants it. `VoteUIProps` has no mode prop; the card mounts the interactive caster (`PraxisVoteFooter` in `praxisCard/shared.tsx`), and the summary badge is retired (CONTEXT.md, "Vote reframe"). The card's number is now the score stamp (ADR-0049, ADR-0053). The rest of the register-row content model stands.

@@ -15,17 +15,13 @@
  *    object the store mutates — and when that is wrong the DELETE still
  *    succeeds, the panel still says success, and the wording never comes back.
  *
- * WHY NOTHING HERE RENDERS THE COMPONENT
- * --------------------------------------
- * This repo has no DOM environment and no React Testing Library: `jsdom` and
- * `happy-dom` appear in `package-lock.json` only as vitest's OPTIONAL peers,
- * neither is installed, `vite.config.ts` says "renderToStaticMarkup needs no
- * DOM, so the default 'node' environment is fine", and no file under `src/`
- * carries a `@vitest-environment` docblock. Mounting this panel therefore needs
- * a new dependency, which this change is not allowed to add. So the DOM walk is
- * exercised against the minimal element shape `copyTargetsForElement` actually
- * reads, the revert path through its own helper, and the effect's dependency
- * list — which cannot be observed without a renderer — by reading the source.
+ * WHY THIS FILE DOES NOT MOUNT THE COMPONENT
+ * ------------------------------------------
+ * It runs in the default 'node' environment. The DOM walk is exercised against
+ * the minimal element shape `copyTargetsForElement` reads, and the revert path
+ * through its own helper. The mounted behaviour (arming must not loop, Revert
+ * must revert) lives in `components/admin/__tests__/copyEditorRender.test.tsx`,
+ * which opts into jsdom.
  */
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'

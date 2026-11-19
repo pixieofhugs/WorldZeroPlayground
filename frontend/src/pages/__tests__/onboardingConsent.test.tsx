@@ -13,7 +13,7 @@ import OnboardingFlow from '../onboarding/OnboardingFlow'
 vi.mock('../../api/terms', () => ({ acceptTerms: vi.fn() }))
 vi.mock('../../api/auth', () => ({ loginWith: () => {} }))
 
-const USER = { account_id: 1, character: null, is_admin: false } as unknown as CurrentUser
+const USER = { account_id: 1, character: { id: 1 }, is_admin: false } as unknown as CurrentUser
 
 function mount(user: CurrentUser | null, resumed: boolean, onAccepted = vi.fn()) {
   render(
@@ -47,6 +47,24 @@ beforeEach(() => {
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
+})
+
+describe('which sign-in leaves a resume mark', () => {
+  it('the header Sign in is plain; the step after the contract marks the hand-off', () => {
+    mount(null, false)
+    fireEvent.click(screen.getByTestId('onboarding-header-sign-in'))
+    fireEvent.click(screen.getByTestId('sign-in-google'))
+    expect(store.has('wz_onboarding_handoff')).toBe(false)
+
+    cleanup()
+    mount(null, false)
+    toContract()
+    fireEvent.click(screen.getByTestId('onboarding-accept-terms'))
+    return waitFor(() => expect(screen.getByTestId('sign-in-google')).toBeTruthy()).then(() => {
+      fireEvent.click(screen.getByTestId('sign-in-google'))
+      expect(store.get('wz_onboarding_handoff')).toBe('true')
+    })
+  })
 })
 
 describe('guest round trip', () => {

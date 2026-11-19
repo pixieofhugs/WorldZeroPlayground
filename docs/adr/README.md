@@ -4,7 +4,7 @@
      script instead. backend/tests/test_adr_index.py fails if this file
      is out of step with docs/adr/. -->
 
-96 records, of which **89 still state a rule**.
+97 records, of which **89 still state a rule**.
 
 | Status | Meaning |
 |---|---|
@@ -17,20 +17,20 @@
 |---|---|---|---|
 | [0001](0001-doc-authority-split.md) | Documentation authority is split: design canon vs. wiring | Accepted | — |
 | [0002](0002-page-is-a-composition-of-surfaces.md) | A page is a composition of independently-themed surfaces, not one faction block | Accepted | — |
-| [0003](0003-backend-owns-no-faction-color.md) | The backend owns no faction color | Accepted | — |
+| [0003](0003-backend-owns-no-faction-color.md) | The backend owns no faction color | Amended | [ADR-0038](0038-faction-identity-is-config-canonical.md) |
 | [0004](0004-rename-faction-slugs-to-match-identity.md) | Rename faction slugs to match identity (retire the legacy-slug reuse) | Accepted | — |
-| [0005](0005-praxis-card-content-model.md) | Praxis card adopts the register-row content model, with the vote-reframe as hero | Accepted | — |
+| [0005](0005-praxis-card-content-model.md) | Praxis card adopts the register-row content model, with the vote-reframe as hero | Amended | [ADR-0049](0049-the-score-stamp-is-a-manifest-surface.md), [ADR-0053](0053-a-praxis-has-one-number-merit-is-retired.md) |
 | [0006](0006-comment-system.md) | Comments are an actor-scoped, two-mode surface on praxis and tasks | Amended | [ADR-0061](0061-praxis-detail-is-one-shared-page-every-faction-dresses.md), [ADR-0064](0064-the-praxis-read-page-owns-its-chrome.md) |
 | [0007](0007-praxis-editing-is-status-only.md) | Praxis editing is status-only; retire `is_withdrawn` | Accepted | — |
 | [0008](0008-signup-eligibility-single-source.md) | Sign-up eligibility is one game-logic predicate | Accepted | — |
 | [0009](0009-blocks-are-mutual-and-visible.md) | Blocks are mutual and visible | Superseded | [ADR-0077](0077-a-block-is-its-own-record-not-a-status-on-a-friend-foe-edge.md) |
 | [0010](0010-ui-copy-catalog.md) | UI copy lives in a catalog, not inline JSX | Superseded | [ADR-0032](0032-react-i18next-copy-catalog.md) |
 | [0011](0011-duel-is-two-linked-praxes.md) | A duel is two linked praxes, not one shared praxis | Amended | [ADR-0052](0052-duels-resolve-at-era-close.md) |
-| [0012](0012-collab-lazy-consensus-submission.md) | Collaborations publish by lazy consensus, not unanimous submission | Accepted | — |
+| [0012](0012-collab-lazy-consensus-submission.md) | Collaborations publish by lazy consensus, not unanimous submission | Amended | [ADR-0079](0079-submitting-a-collab-is-three-signals-not-one-button.md) |
 | [0013](0013-collaborations-are-co-owned.md) | Collaborations are co-owned by all members | Accepted | — |
-| [0014](0014-praxis-scoring-is-per-character-contribution.md) | Praxis scoring is per-character Contribution; the card shows Merit | Amended | [ADR-0053](0053-a-praxis-has-one-number-merit-is-retired.md), [ADR-0086](0086-only-the-base-multiplies-a-metatask-is-flat.md) |
+| [0014](0014-praxis-scoring-is-per-character-contribution.md) | Praxis scoring is per-character Contribution; the card shows Merit | Amended | [ADR-0052](0052-duels-resolve-at-era-close.md), [ADR-0053](0053-a-praxis-has-one-number-merit-is-retired.md), [ADR-0086](0086-only-the-base-multiplies-a-metatask-is-flat.md) |
 | [0015](0015-metatask-is-its-own-model.md) | A metatask is its own model, not a Task subtype | Amended | [ADR-0086](0086-only-the-base-multiplies-a-metatask-is-flat.md) |
-| [0016](0016-per-faction-surfaces-share-one-data-contract.md) | Per-faction surfaces share one data contract; archetypes own only presentation | Accepted | — |
+| [0016](0016-per-faction-surfaces-share-one-data-contract.md) | Per-faction surfaces share one data contract; archetypes own only presentation | Amended | [ADR-0061](0061-praxis-detail-is-one-shared-page-every-faction-dresses.md), [ADR-0065](0065-the-edit-praxis-composer-is-one-shared-layout-every-faction-dresses.md) |
 | [0017](0017-praxis-read-page.md) | The praxis read page is a per-faction archetype surface with an interactive vote caster | Superseded | [ADR-0061](0061-praxis-detail-is-one-shared-page-every-faction-dresses.md) |
 | [0018](0018-comment-voice-reuses-task-card-atoms.md) | Each faction's comment voice reuses its task-card atoms at full fidelity | Amended | [ADR-0026](0026-ua-comment-adopts-the-gilt-salon.md), [ADR-0083](0083-albescent-is-one-ornament-vocabulary-over-na-not-a-skin-per-surface.md), [ADR-0093](0093-comment-timestamps-read-the-same-for-every-faction.md) |
 | [0019](0019-characters-start-unaffiliated-invite-gated-factions.md) | Characters start unaffiliated; faction membership is gated by account-pooled invitation | Accepted | — |
@@ -49,10 +49,10 @@
 | [0032](0032-react-i18next-copy-catalog.md) | UI copy lives in react-i18next JSON catalogs | Accepted | — |
 | [0033](0033-player-profile-contract-and-badge-registry.md) | Player profile: one faction-agnostic contract; badges are a code registry evaluated on read | Accepted | — |
 | [0034](0034-community-task-promotion-by-vote.md) | Community task promotion by vote (the level-5 unlock) | Accepted | — |
-| [0035](0035-mobile-form-factor-tinting-and-real-fields.md) | Mobile is a form-factor axis on the same surface seam, tinted by a theme×treatment cascade, showing only real domain fields | Amended | [ADR-0056](0056-task-cards-collapse-to-one-responsive-component-per-faction.md), [ADR-0058](0058-task-detail-collapses-to-one-responsive-component-per-faction.md), [ADR-0063](0063-praxis-detail-collapses-to-one-responsive-component-per-faction.md), [ADR-0065](0065-the-edit-praxis-composer-is-one-shared-layout-every-faction-dresses.md), [ADR-0067](0067-praxis-cards-collapse-to-one-responsive-component-per-faction.md), [ADR-0069](0069-the-character-profile-and-the-duel-seal-collapse-to-one-responsive-component-per-faction.md), [ADR-0078](0078-faction-detail-collapses-to-one-responsive-component-per-faction.md) |
+| [0035](0035-mobile-form-factor-tinting-and-real-fields.md) | Mobile is a form-factor axis on the same surface seam, tinted by a theme×treatment cascade, showing only real domain fields | Amended | [ADR-0053](0053-a-praxis-has-one-number-merit-is-retired.md), [ADR-0056](0056-task-cards-collapse-to-one-responsive-component-per-faction.md), [ADR-0058](0058-task-detail-collapses-to-one-responsive-component-per-faction.md), [ADR-0063](0063-praxis-detail-collapses-to-one-responsive-component-per-faction.md), [ADR-0065](0065-the-edit-praxis-composer-is-one-shared-layout-every-faction-dresses.md), [ADR-0067](0067-praxis-cards-collapse-to-one-responsive-component-per-faction.md), [ADR-0069](0069-the-character-profile-and-the-duel-seal-collapse-to-one-responsive-component-per-faction.md), [ADR-0076](0076-a-base-only-score-reads-as-a-bare-total.md), [ADR-0078](0078-faction-detail-collapses-to-one-responsive-component-per-faction.md) |
 | [0036](0036-feed-sources-are-a-registry-counts-derive-from-the-same-query.md) | Feed types are a registry; badge counts derive from the same query | Accepted | — |
 | [0037](0037-flag-reasons-are-a-fixed-shared-vocabulary.md) | Flag reasons are a fixed, shared vocabulary | Accepted | — |
-| [0038](0038-faction-identity-is-config-canonical.md) | Faction identity is config-canonical; the DB row is slug + status | Accepted | — |
+| [0038](0038-faction-identity-is-config-canonical.md) | Faction identity is config-canonical; the DB row is slug + status | Amended | [ADR-0087](0087-structural-faction-slugs-are-not-era-owned.md) |
 | [0039](0039-unaffiliated-fill-is-a-gradient-not-a-hue.md) | Unaffiliated's fill is a gradient, not a hue | Accepted | — |
 | [0040](0040-feed-controls-are-neutral-chrome.md) | Feed controls are neutral chrome; faction skinning stops at the card boundary | Amended | [ADR-0082](0082-albescent-is-redacted-not-hidden.md) |
 | [0041](0041-two-layer-identity-account-vs-character.md) | Two-layer identity: Account (private anchor) vs Character (public persona) | Accepted | — |
@@ -63,18 +63,18 @@
 | [0046](0046-albescent-is-frozen-new-surfaces-fall-through-to-na.md) | Albescent is frozen: new surfaces fall through to NA | Reversed | — |
 | [0047](0047-praxis-card-shows-computed-total-not-merit.md) | The praxis card shows the computed total, not Merit | Superseded | [ADR-0053](0053-a-praxis-has-one-number-merit-is-retired.md), [ADR-0076](0076-a-base-only-score-reads-as-a-bare-total.md) |
 | [0048](0048-albescent-unfreezes-per-surface-as-designs-land.md) | Albescent unfreezes one surface at a time, as designs land | Amended | [ADR-0083](0083-albescent-is-one-ornament-vocabulary-over-na-not-a-skin-per-surface.md) |
-| [0049](0049-the-score-stamp-is-a-manifest-surface.md) | The score stamp is a manifest surface, not a themed component | Accepted | — |
+| [0049](0049-the-score-stamp-is-a-manifest-surface.md) | The score stamp is a manifest surface, not a themed component | Amended | [ADR-0053](0053-a-praxis-has-one-number-merit-is-retired.md), [ADR-0076](0076-a-base-only-score-reads-as-a-bare-total.md) |
 | [0050](0050-wow-and-coven-visual-identity.md) | WOW and Coven visual identity, and why the design artifacts are mislabelled | Accepted | — |
 | [0051](0051-duel-acceptance-bypasses-the-task-level-gate.md) | Duel acceptance bypasses the task-level gate | Accepted | — |
 | [0052](0052-duels-resolve-at-era-close.md) | Duels resolve at era close | Accepted | — |
-| [0053](0053-a-praxis-has-one-number-merit-is-retired.md) | A praxis has one number; Merit is retired | Amended | [ADR-0086](0086-only-the-base-multiplies-a-metatask-is-flat.md) |
+| [0053](0053-a-praxis-has-one-number-merit-is-retired.md) | A praxis has one number; Merit is retired | Amended | [ADR-0061](0061-praxis-detail-is-one-shared-page-every-faction-dresses.md), [ADR-0063](0063-praxis-detail-collapses-to-one-responsive-component-per-faction.md), [ADR-0086](0086-only-the-base-multiplies-a-metatask-is-flat.md) |
 | [0054](0054-one-theme-aware-task-crown.md) | One theme-aware Task Crown (the flur is one mark) | Amended | [ADR-0066](0066-one-rainbow-the-brand-palette-retires-into-the-na-spectrum.md) |
 | [0055](0055-task-cards-show-base-points-and-a-live-multiplier-badge.md) | Task cards show base points + a live multiplier badge | Accepted | — |
 | [0056](0056-task-cards-collapse-to-one-responsive-component-per-faction.md) | Task cards collapse to one responsive component per faction | Accepted | — |
 | [0057](0057-task-detail-pages-carry-no-faction-voice.md) | Task detail pages carry no faction voice | Accepted | — |
 | [0058](0058-task-detail-collapses-to-one-responsive-component-per-faction.md) | Task detail collapses to one responsive component per faction | Accepted | — |
 | [0059](0059-submitting-a-collab-or-duel-part-holds-the-composer.md) | Submitting a collab or duel part holds the composer | Amended | [ADR-0062](0062-praxis-detail-is-published-only.md) |
-| [0060](0060-a-collab-that-loses-its-last-collaborator-becomes-solo.md) | A collab that loses its last collaborator becomes solo | Accepted | — |
+| [0060](0060-a-collab-that-loses-its-last-collaborator-becomes-solo.md) | A collab that loses its last collaborator becomes solo | Amended | [ADR-0053](0053-a-praxis-has-one-number-merit-is-retired.md), [ADR-0086](0086-only-the-base-multiplies-a-metatask-is-flat.md) |
 | [0061](0061-praxis-detail-is-one-shared-page-every-faction-dresses.md) | Praxis detail is one shared page; every faction dresses it | Accepted | — |
 | [0062](0062-praxis-detail-is-published-only.md) | Praxis detail is a published-only reading surface | Accepted | — |
 | [0063](0063-praxis-detail-collapses-to-one-responsive-component-per-faction.md) | Praxis detail collapses to one responsive component per faction | Accepted | — |
@@ -83,12 +83,12 @@
 | [0066](0066-one-rainbow-the-brand-palette-retires-into-the-na-spectrum.md) | One rainbow: the brand palette retires into the na spectrum | Accepted | — |
 | [0067](0067-praxis-cards-collapse-to-one-responsive-component-per-faction.md) | Praxis cards collapse to one responsive component per faction | Amended | [ADR-0069](0069-the-character-profile-and-the-duel-seal-collapse-to-one-responsive-component-per-faction.md) |
 | [0068](0068-taunts-are-a-subscription-the-recipients-foe-edge-creates.md) | Taunts are a subscription the recipient's foe edge creates | Accepted | — |
-| [0069](0069-the-character-profile-and-the-duel-seal-collapse-to-one-responsive-component-per-faction.md) | The character profile and the duel seal collapse to one responsive component per faction | Accepted | — |
+| [0069](0069-the-character-profile-and-the-duel-seal-collapse-to-one-responsive-component-per-faction.md) | The character profile and the duel seal collapse to one responsive component per faction | Amended | [ADR-0078](0078-faction-detail-collapses-to-one-responsive-component-per-faction.md) |
 | [0070](0070-an-unanswered-obligation-lives-in-the-queue-never-in-the-stream.md) | An unanswered obligation lives in the queue, never in the stream | Accepted | — |
 | [0071](0071-three-doors-lead-into-a-praxis-and-two-of-them-are-deliberate-carve-outs.md) | Three doors lead into a praxis, and two of them are deliberate carve-outs | Accepted | — |
 | [0072](0072-a-cached-read-names-its-staleness-class-and-one-epoch-outranks-them-all.md) | A cached read names its staleness class, and one epoch outranks them all | Amended | [ADR-0091](0091-the-latest-era-row-chooses-the-live-ruleset.md) |
-| [0073](0073-a-praxis-is-written-in-a-room-and-the-room-is-not-the-record.md) | A praxis is written in a room, and the room is not the record | Accepted | — |
-| [0074](0074-one-sky-serves-both-themes-the-meadow-is-retired.md) | One sky serves both themes; the Meadow is retired | Accepted | — |
+| [0073](0073-a-praxis-is-written-in-a-room-and-the-room-is-not-the-record.md) | A praxis is written in a room, and the room is not the record | Amended | [ADR-0079](0079-submitting-a-collab-is-three-signals-not-one-button.md) |
+| [0074](0074-one-sky-serves-both-themes-the-meadow-is-retired.md) | One sky serves both themes; the Meadow is retired | Superseded | [ADR-0096](0096-the-constellation-is-retired-the-players-page-is-a-podium-a-race-and-a-roster.md) |
 | [0075](0075-a-verified-email-is-one-account-whatever-provider-vouches-for-it.md) | A verified email is one Account, whatever provider vouches for it | Accepted | — |
 | [0076](0076-a-base-only-score-reads-as-a-bare-total.md) | A base-only score reads as a bare total | Accepted | — |
 | [0077](0077-a-block-is-its-own-record-not-a-status-on-a-friend-foe-edge.md) | A block is its own record, not a status on a friend/foe edge | Accepted | — |
@@ -110,4 +110,5 @@
 | [0093](0093-comment-timestamps-read-the-same-for-every-faction.md) | Comment timestamps read the same for every faction | Accepted | — |
 | [0094](0094-a-characters-location-is-a-three-letter-airport-code.md) | A character's location is a three-letter airport code, enforced by shape | Accepted | — |
 | [0095](0095-classes-own-paint-inline-style-is-for-computed-values.md) | Classes in the cascade own every nameable paint; inline style is for computed values | Accepted | — |
+| [0096](0096-the-constellation-is-retired-the-players-page-is-a-podium-a-race-and-a-roster.md) | The Constellation is retired; the Players page is a podium, a faction race and a roster | Accepted | — |
 | [0097](0097-secret-faction-state-is-per-account-and-per-faction-slug.md) | Secret-faction state is per account and per faction slug | Accepted | — |
