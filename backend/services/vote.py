@@ -11,7 +11,6 @@ from game_config import CURRENT_ERA, EraConfig
 from models.character import Character
 from models.character_stats import CharacterStats
 from models.duel import Duel, DuelStatus
-from models.era import Era
 from models.praxis import (
     UNSCORED_MODERATION_STATUSES,
     ModerationStatus,
@@ -70,7 +69,7 @@ async def cast_or_update_vote(
     you're in, and one vote per praxis per account — an alt's second rating
     updates it for free (#1150). The budget is per character (#1150).
 
-    No era gate (#1345): spends this era's budget, credited to the sealing era.
+    No era gate (#1345): spends and credits this era's budget and total (ADR-0099).
     Credited to every member, not ``created_by_id`` (#1465).
     """
     if not 1 <= value <= 5:
@@ -136,6 +135,13 @@ async def cast_or_update_vote(
     await session.refresh(stats)
 
     if existing is not None:
+        if existing.era_id != era_row.id:
+            # Re-rating would move points out of a closed era (ADR-0099).
+            raise_coded(
+                409,
+                ErrorCode.vote_cast_in_closed_era,
+                "This vote was cast in an earlier era and can't be changed.",
+            )
         # Free re-rate; ``voter_character_id`` follows the life that set the value.
         existing.voter_character_id = voter.id
         existing.value = value
@@ -153,6 +159,7 @@ async def cast_or_update_vote(
             voter_character_id=voter.id,
             voter_account_id=voter.account_id,
             value=value,
+            era_id=era_row.id,
         )
         stats.votes_spent_this_era += 1
         session.add(cast)
@@ -165,7 +172,13 @@ async def cast_or_update_vote(
 
     # ``tally_votes`` answers for every id given, so the key is always present (#1378).
     tallies = await tally_votes([praxis.id], session)
-    return VoteCast(vote=cast, tally=tallies[praxis.id], voter_stats=stats)
+    # The card scores the sealing era's votes only; the client swaps this in.
+    sealed = await tally_votes([praxis.id], session, cast_in="sealed")
+    tally = VoteTally(
+        points_from_votes=sealed[praxis.id].points_from_votes,
+        voter_count=tallies[praxis.id].voter_count,
+    )
+    return VoteCast(vote=cast, tally=tally, voter_stats=stats)
 
 
 async def account_has_received_vote(account_id: int, session: AsyncSession) -> bool:
@@ -214,8 +227,7 @@ async def void_account_vote_on_join(
 
     # Refund the budget (keeps ``recompute_votes_spent_this_era``'s identity) to
     # the era the vote was CAST in, never today's (#1345).
-    era_row = await _era_row_for_vote(vote, session)
-    stats = await get_or_create_stats(session, vote.voter_character_id, era_row.id)
+    stats = await get_or_create_stats(session, vote.voter_character_id, vote.era_id)
     if stats.votes_spent_this_era > 0:
         stats.votes_spent_this_era -= 1
 
@@ -224,17 +236,6 @@ async def void_account_vote_on_join(
     await session.flush()
     await recalculate_members_stats(praxis, session, era)
     return True
-
-
-async def _era_row_for_vote(vote: Vote, session: AsyncSession) -> Era:
-    """The era a vote was CAST in (budget is cast-time; scores are seal-time, #1345)."""
-    result = await session.execute(
-        select(Era)
-        .where(Era.started_at <= vote.created_at)
-        .order_by(Era.id.desc())
-        .limit(1)
-    )
-    return result.scalar_one_or_none() or await get_current_era_row(session)
 
 
 # Eligibility: permanent account-level rules A + B, shared by cast and UI (#998).

@@ -4,7 +4,7 @@
      script instead. backend/tests/test_adr_index.py fails if this file
      is out of step with docs/adr/. -->
 
-98 records, of which **90 still state a rule**.
+99 records, of which **91 still state a rule**.
 
 | Status | Meaning |
 |---|---|
@@ -28,7 +28,7 @@
 | [0011](0011-duel-is-two-linked-praxes.md) | A duel is two linked praxes, not one shared praxis | Amended | [ADR-0052](0052-duels-resolve-at-era-close.md) |
 | [0012](0012-collab-lazy-consensus-submission.md) | Collaborations publish by lazy consensus, not unanimous submission | Amended | [ADR-0079](0079-submitting-a-collab-is-three-signals-not-one-button.md) |
 | [0013](0013-collaborations-are-co-owned.md) | Collaborations are co-owned by all members | Accepted | — |
-| [0014](0014-praxis-scoring-is-per-character-contribution.md) | Praxis scoring is per-character Contribution; the card shows Merit | Amended | [ADR-0047](0047-praxis-card-shows-computed-total-not-merit.md), [ADR-0052](0052-duels-resolve-at-era-close.md), [ADR-0053](0053-a-praxis-has-one-number-merit-is-retired.md), [ADR-0086](0086-only-the-base-multiplies-a-metatask-is-flat.md) |
+| [0014](0014-praxis-scoring-is-per-character-contribution.md) | Praxis scoring is per-character Contribution; the card shows Merit | Amended | [ADR-0047](0047-praxis-card-shows-computed-total-not-merit.md), [ADR-0052](0052-duels-resolve-at-era-close.md), [ADR-0053](0053-a-praxis-has-one-number-merit-is-retired.md), [ADR-0086](0086-only-the-base-multiplies-a-metatask-is-flat.md), [ADR-0099](0099-votes-credit-the-era-they-are-cast-in.md) |
 | [0015](0015-metatask-is-its-own-model.md) | A metatask is its own model, not a Task subtype | Amended | [ADR-0086](0086-only-the-base-multiplies-a-metatask-is-flat.md) |
 | [0016](0016-per-faction-surfaces-share-one-data-contract.md) | Per-faction surfaces share one data contract; archetypes own only presentation | Amended | [ADR-0061](0061-praxis-detail-is-one-shared-page-every-faction-dresses.md), [ADR-0065](0065-the-edit-praxis-composer-is-one-shared-layout-every-faction-dresses.md) |
 | [0017](0017-praxis-read-page.md) | The praxis read page is a per-faction archetype surface with an interactive vote caster | Superseded | [ADR-0061](0061-praxis-detail-is-one-shared-page-every-faction-dresses.md), [ADR-0083](0083-albescent-is-one-ornament-vocabulary-over-na-not-a-skin-per-surface.md) |
@@ -56,7 +56,7 @@
 | [0039](0039-unaffiliated-fill-is-a-gradient-not-a-hue.md) | Unaffiliated's fill is a gradient, not a hue | Accepted | — |
 | [0040](0040-feed-controls-are-neutral-chrome.md) | Feed controls are neutral chrome; faction skinning stops at the card boundary | Amended | [ADR-0082](0082-albescent-is-redacted-not-hidden.md) |
 | [0041](0041-two-layer-identity-account-vs-character.md) | Two-layer identity: Account (private anchor) vs Character (public persona) | Accepted | — |
-| [0042](0042-era-as-ruleset-config-owns-rules-db-owns-history.md) | Era-as-ruleset: `game_config` owns the rules, the DB owns only history | Amended | [ADR-0087](0087-structural-faction-slugs-are-not-era-owned.md), [ADR-0091](0091-the-latest-era-row-chooses-the-live-ruleset.md) |
+| [0042](0042-era-as-ruleset-config-owns-rules-db-owns-history.md) | Era-as-ruleset: `game_config` owns the rules, the DB owns only history | Amended | [ADR-0087](0087-structural-faction-slugs-are-not-era-owned.md), [ADR-0091](0091-the-latest-era-row-chooses-the-live-ruleset.md), [ADR-0099](0099-votes-credit-the-era-they-are-cast-in.md) |
 | [0043](0043-vote-budget-is-recomputed-on-read.md) | Vote budget is recomputed on read; only `votes_spent_this_era` is stored | Accepted | — |
 | [0044](0044-characterstats-is-a-per-era-star-schema-split.md) | `CharacterStats` is a per-era star-schema split off `Character` | Accepted | — |
 | [0045](0045-pragmatic-ddd-posture.md) | Pragmatic DDD: implicit aggregates, anemic models, no repository layer, HTTPException in services | Accepted | — |
@@ -113,3 +113,4 @@
 | [0096](0096-the-constellation-is-retired-the-players-page-is-a-podium-a-race-and-a-roster.md) | The Constellation is retired; the Players page is a podium, a faction race and a roster | Accepted | — |
 | [0097](0097-secret-faction-state-is-per-account-and-per-faction-slug.md) | Secret-faction state is per account and per faction slug | Accepted | — |
 | [0098](0098-moderation-hides-votes-deletion-keeps-them.md) | Moderation hides votes; deletion keeps them | Accepted | — |
+| [0099](0099-votes-credit-the-era-they-are-cast-in.md) | Votes credit the era they are cast in; a closed era is frozen | Accepted | — |

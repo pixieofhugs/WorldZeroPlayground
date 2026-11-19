@@ -134,7 +134,7 @@ here. The rules that matter:
 - **The band is the border** — `border: 3px solid transparent` with the gradient painted
   into the border box, not a decorative stripe.
 - **Lora italic for titles, Courier Prime for everything else.**
-- Every colour through a `--faction-default-*` token, both themes, no hardcoded hex.
+- Every colour through a `--faction-default-*` token, no hardcoded hex; both themes everywhere but the flow (dark-only, below).
   The primary control takes na's card ink — a single rainbow stop used alone reads as a
   single-hue accent, which is precisely what `na` is not.
 
@@ -269,8 +269,11 @@ written at once because the account already exists (*Terms*). The OAuth resume
 (`utils/onboardingResume`) is not a cold open: it lands past the title, the beats and the
 contract, with the held contract click carried through the redirect.
 
-**Someone who already plays gets the "Welcome back" sign-in view** rather than the run from
-the top: a sign-in and nothing else, for a person who has a character already.
+**Someone who already plays gets the "Welcome back" sign-in view**: a sign-in and nothing
+else, for a person who has a character already. The flow cannot tell a returner before
+sign-in (a scan always re-runs from the top), so the view is reached from the header's Sign in
+on the title and the beats while signed out (#3461; #3514's `toSignIn` goes to step `'signin'`).
+Open for the owner: does it skip the contract?
 
 *2026-11-18, [#3457](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3457); #3452:* was written when sign-in came before the terms. The order is
 now title, seven beats, contract, sign-in, creation, arrival, and a signed-in person who opens

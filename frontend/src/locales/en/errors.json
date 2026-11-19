@@ -2,6 +2,7 @@
   "codes": {
     "VOTE_BUDGET_EXHAUSTED": "No votes remaining in your budget.",
     "VOTE_LEVEL_TOO_LOW": "Must reach level {{level}} to vote.",
+    "VOTE_CAST_IN_CLOSED_ERA": "This vote was cast in an earlier era and can't be changed.",
     "VOTE_NEEDS_RECEIVED_VOTE": "Your vote unlocks once another player rates your proof.",
 
     "TASK_LEVEL_TOO_LOW": "This task requires level {{level}}.",

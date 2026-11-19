@@ -1,6 +1,6 @@
 # ADR-0042 — Era-as-ruleset: `game_config` owns the rules, the DB owns only history
 
-**Status:** Amended by ADR-0087, ADR-0091
+**Status:** Amended by ADR-0087, ADR-0091, ADR-0099
 **Date:** 2026-07-17
 
 **Relates to:** CLAUDE.md "Config architecture", `backend/game_config.py`, `backend/eras/`
@@ -59,3 +59,8 @@ game design to migrations.
 every balance change a migration, make logic un-unit-testable without a DB, and
 blur the line between rules (design) and history (audit). The config *is* the
 game-design tool; the DB is the logbook.
+
+## Amendment (2026-11-19, #3484)
+
+History is frozen at the roll: a closed era's `CharacterStats` are never
+recomputed. See [ADR-0099](0099-votes-credit-the-era-they-are-cast-in.md).
