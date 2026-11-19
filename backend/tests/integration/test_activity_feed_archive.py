@@ -755,7 +755,7 @@ async def test_a_nudge_retires_when_the_recipient_files(
     await db_session.execute(
         update(PraxisMember)
         .where(PraxisMember.id == full_feed["viewer_member_id"])
-        .values(has_approved=True, submitted_at=datetime.now(timezone.utc))
+        .values(has_approved=True, approved_at=datetime.now(timezone.utc))
     )
     await db_session.commit()
 

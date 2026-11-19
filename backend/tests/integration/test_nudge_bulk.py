@@ -53,7 +53,7 @@ async def _set_cast(
         )
         .values(
             has_approved=cast,
-            submitted_at=datetime.now(timezone.utc) if cast else None,
+            approved_at=datetime.now(timezone.utc) if cast else None,
         )
     )
     await session.commit()
