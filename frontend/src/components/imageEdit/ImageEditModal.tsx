@@ -7,9 +7,10 @@
  *
  * Praxis media gets the crop-shape picker (#1713); avatars lock 1:1.
  * Chrome mirrors LevelUpPopup: role="dialog", Escape closes, primary
- * autofocuses, no focus trap.
+ * autofocuses; `useModal` traps focus.
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useModal } from '../../hooks/useModal'
 import type { CSSProperties } from 'react'
 import Cropper from 'react-easy-crop'
 import type { Area, MediaSize, Point } from 'react-easy-crop'
@@ -131,20 +132,13 @@ export default function ImageEditModal({
   const [naturalAspect, setNaturalAspect] = useState<number | undefined>(undefined)
   const [applying, setApplying] = useState(false)
   const croppedAreaRef = useRef<Area | null>(null)
+  const ref = useModal(onCancel)
 
   useEffect(() => {
     const url = URL.createObjectURL(file)
     setObjectUrl(url)
     return () => URL.revokeObjectURL(url)
   }, [file])
-
-  useEffect(() => {
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') onCancel()
-    }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [onCancel])
 
   const onCropComplete = useCallback((_area: Area, areaPixels: Area) => {
     croppedAreaRef.current = areaPixels
@@ -200,6 +194,7 @@ export default function ImageEditModal({
 
   const card = (
     <div
+      ref={ref}
       role="dialog"
       aria-modal="true"
       aria-label={t('imageEdit.dialogAria')}

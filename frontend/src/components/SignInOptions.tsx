@@ -1,7 +1,8 @@
-import { useEffect, type CSSProperties } from 'react'
+import { type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import { loginWith, type AuthProvider } from '../api/auth'
 import { useFormFactor } from '../hooks/useFormFactor'
+import { useModal } from '../hooks/useModal'
 import { drawAtRoot } from './ui/drawAtRoot'
 
 /**
@@ -60,21 +61,13 @@ export default function SignInOptions({
 export function SignInSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { t } = useTranslation('common')
   const isMobile = useFormFactor() === 'mobile'
-
-  // Escape dismisses: a mouse-only modal is not dismissible.
-  useEffect(() => {
-    if (!open) return
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [open, onClose])
+  const ref = useModal(onClose, open)
 
   if (!open) return null
 
   return drawAtRoot(
     <div
+      ref={ref}
       role="dialog"
       aria-modal="true"
       aria-label={t('signIn.title')}

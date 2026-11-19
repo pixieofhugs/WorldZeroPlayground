@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import { useModal } from '../hooks/useModal'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import { factionName } from '../utils/factions'
@@ -47,14 +48,7 @@ export default function InvitationLetterPopup({
   const [confirming, setConfirming] = useState(false)
   const [joining, setJoining] = useState(false)
   const [joinError, setJoinError] = useState<string | null>(null)
-
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [onClose])
+  const ref = useModal(onClose)
 
   const name = factionName(factionSlug)
   const base = `${factionSlug}.invitation`
@@ -105,6 +99,7 @@ export default function InvitationLetterPopup({
       }}
     >
       <div
+        ref={ref}
         role="dialog"
         aria-modal="true"
         aria-label={headline}

@@ -3,14 +3,15 @@
  * arrive as a `ConfirmRequest` (`composerConfirms.ts`). Same chrome as
  * `DuelSealConfirm`; `[dismiss] … [confirm]` order (#646); edge in the faction accent.
  *
- * A11y: labelled/described dialog, document-level Escape, focus on DISMISS (the
- * safe half), Tab trapped, focus restored on close (#2161), backdrop click
+ * A11y: labelled/described dialog, `useModal` (Escape, Tab trap, focus restore), focus on DISMISS (the
+ * safe half), backdrop click
  * dismisses. These need a DOM, so they are verified by hand.
  * Settings' delete-account uses `children` + `confirmDisabled` (#2161).
  */
 import { useEffect, useId, useRef, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
+import { useModal } from '../../hooks/useModal'
 import { useFormFactor } from '../../hooks/useFormFactor'
 import { factionCssVar } from '../../utils/factions'
 
@@ -27,10 +28,6 @@ export interface ConfirmRequest {
   confirmLabel: string
   danger?: boolean
 }
-
-/** Focusable now; disabled nodes excluded or the Tab wrap lands on a dead node. */
-const FOCUSABLE =
-  'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])'
 
 export default function ConfirmDialog({
   request,
@@ -53,46 +50,13 @@ export default function ConfirmDialog({
   const isMobile = useFormFactor() === 'mobile'
   const titleId = useId()
   const bodyId = useId()
-  const panelRef = useRef<HTMLDivElement>(null)
+  const panelRef = useModal(onDismiss)
   const dismissRef = useRef<HTMLButtonElement>(null)
-
-  // Restore focus on close (#2161). MUST be declared before the auto-focus effect:
-  // effects run in order, and after it `activeElement` is our own dismiss button.
-  useEffect(() => {
-    const opener = document.activeElement
-    return () => {
-      if (opener instanceof HTMLElement) opener.focus()
-    }
-  }, [])
 
   // Focus the safe action; keyed on `kind` so a replacing confirm re-focuses.
   useEffect(() => {
     dismissRef.current?.focus()
   }, [request.kind])
-
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onDismiss()
-    }
-    document.addEventListener('keydown', onKeyDown)
-    return () => document.removeEventListener('keydown', onKeyDown)
-  }, [onDismiss])
-
-  // Keep Tab inside the panel.
-  const keepTabInside = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    if (event.key !== 'Tab') return
-    const buttons = panelRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE)
-    if (!buttons || buttons.length === 0) return
-    const first = buttons[0]
-    const last = buttons[buttons.length - 1]
-    if (event.shiftKey && document.activeElement === first) {
-      event.preventDefault()
-      last.focus()
-    } else if (!event.shiftKey && document.activeElement === last) {
-      event.preventDefault()
-      first.focus()
-    }
-  }
 
   const accent = factionCssVar(factionSlug, 'card-accent')
 
@@ -119,7 +83,6 @@ export default function ConfirmDialog({
         aria-modal="true"
         aria-labelledby={titleId}
         aria-describedby={bodyId}
-        onKeyDown={keepTabInside}
         className="flex flex-col"
         style={{
           gap: 'var(--space-md)',
