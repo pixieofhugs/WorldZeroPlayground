@@ -77,6 +77,12 @@ export default function EraTab() {
           <p className="font-body content-text text-muted">
             {t("era.done.charactersReset", { count: result.characters_reset })}
           </p>
+          <p className="font-body content-text text-muted">
+            {t("era.done.tasksReactivated", { count: result.tasks_reactivated })}
+          </p>
+          <p className="font-body content-text text-muted">
+            {t("era.done.tasksCreated", { count: result.tasks_created })}
+          </p>
         </div>
       )}
 
