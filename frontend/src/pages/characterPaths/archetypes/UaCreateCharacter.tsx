@@ -371,6 +371,7 @@ export default function UaCreateCharacter({ state }: { state: CreateCharacterSta
                 <button
                   type="button"
                   onClick={() => navigate('/')}
+                  className="touch-target"
                   style={composerLabelStyle({
                     fontFamily: UA_TEXT,
                     background: 'none',
