@@ -5,6 +5,7 @@ from typing import Collection, Optional
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from models.account import Account, AccountStatus
 from models.character import Character
 from models.vote import Vote
 
@@ -32,9 +33,19 @@ async def tally_votes(
     if not praxis_ids:
         return {}
 
+    # Deferred: services.character -> services.era -> this module is a cycle.
+    from services.character import MOD_BANNED
+
     agg_result = await session.execute(
         select(Vote.praxis_id, func.sum(Vote.value), func.count(Vote.id))
-        .where(Vote.praxis_id.in_(praxis_ids))
+        .join(Character, Character.id == Vote.voter_character_id)
+        .join(Account, Account.id == Vote.voter_account_id)
+        .where(
+            Vote.praxis_id.in_(praxis_ids),
+            # Moderation hides votes, reversibly; deletion keeps them (ADR-0081).
+            Account.status != AccountStatus.suspended,
+            ~MOD_BANNED,
+        )
         .group_by(Vote.praxis_id)
     )
     tallies: dict[int, VoteTally] = {

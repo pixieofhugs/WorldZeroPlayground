@@ -31,7 +31,8 @@ const importLevelUpCopySheet = () => withAppCopy(import('./pages/admin/LevelUpCo
 const importCreateCharacter = () => withAppCopy(import('./pages/CreateCharacter'))
 const importProposeTask = () => withAppCopy(import('./pages/ProposeTask'))
 
-const withOnboardingCopy = <T,>(page: Promise<T>) => Promise.all([page, loadOnboardingCopy()]).then(([m]) => m)
+/** The flow's character step renders the create form, so it reads `forms:` too. */
+const withOnboardingCopy = <T,>(page: Promise<T>) => Promise.all([page, loadOnboardingCopy(), loadAppCopy()]).then(([m]) => m)
 const importOnboarding = () => withOnboardingCopy(import('./pages/Onboarding'))
 
 const FieldDesk = lazy(importFieldDesk)

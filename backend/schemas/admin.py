@@ -226,3 +226,20 @@ class AdminRow(WireModel):
 
 class AdminGrantIn(WireModel):
     username: str
+
+
+class RingRecipient(WireModel):
+    """One account an account's votes went to (admin-only)."""
+
+    account_id: int
+    display_name: str
+    votes: int
+    average_stars: float
+    share: float
+    reciprocal: bool
+
+
+class VoteRingOut(WireModel):
+    total_votes: int
+    top3_share: float
+    recipients: list[RingRecipient]

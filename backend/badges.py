@@ -6,6 +6,10 @@ doesn't. Add one entry to :data:`ALL_BADGES`. The frontend maps ``key`` to an im
 from dataclasses import dataclass
 from typing import Callable
 
+# Not per-era rules: a privacy bound (#3488), so a module constant, not EraConfig.
+PUPPETEER_MIN_DELAY_SECONDS = 46
+PUPPETEER_MAX_DELAY_SECONDS = 3 * 24 * 3600
+
 
 @dataclass(frozen=True)
 class BadgeContext:
@@ -16,6 +20,8 @@ class BadgeContext:
     account_character_count: int
     # By (created_at, id).
     is_earliest_on_account: bool
+    # False until the per-account random delay after the second life (#3488).
+    puppeteer_revealed: bool
     # Strictly ahead on votes in a *live* duel, or holding a forfeit win (#748).
     is_duel_winner: bool
     # Frozen winner of a duel resolved at the *previous* era's close (#823).
@@ -30,8 +36,12 @@ class Badge:
 
 
 def _is_sock_puppeteer(context: BadgeContext) -> bool:
-    """Earliest character on an account that owns more than one."""
-    return context.account_character_count > 1 and context.is_earliest_on_account
+    """Earliest character on an account that owns more than one, once revealed."""
+    return (
+        context.account_character_count > 1
+        and context.is_earliest_on_account
+        and context.puppeteer_revealed
+    )
 
 
 def _is_sock_puppet(context: BadgeContext) -> bool:
