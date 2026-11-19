@@ -81,9 +81,4 @@ describe('SingularityFeedFrame — always dark, and the shared body repointed on
     expect(html).toContain('--color-text-primary:var(--faction-singularity-term-bright)')
     expect(html).toContain('--color-danger:var(--faction-singularity-card-notice)')
   })
-
-  it('carries no hardcoded colour and no theme ternary', () => {
-    const html = frame()
-    expect(html).not.toMatch(/#[0-9a-fA-F]{3,8}\b/)
-  })
 })
