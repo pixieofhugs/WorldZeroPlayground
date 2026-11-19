@@ -25,7 +25,7 @@ locales/
 | `praxis.json` | Praxis composing/reading: submission, proof, praxis character limits |
 | `tasks.json` | Task cards, task detail, propose-task copy |
 | `feed.json` | Activity-feed cards and frames |
-| `home.json` | Home / landing page copy |
+| `home.json` | Field Desk copy and the login notice |
 | `admin.json` | Admin and moderation screens |
 | `progression.json` | Level-up ranks + unlock names/descriptions (backend emits keys — ADR-0031) |
 | `taunts.json` | Foe-taunt templates per faction/trigger (backend emits keys — ADR-0031) |

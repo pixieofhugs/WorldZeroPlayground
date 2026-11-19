@@ -29,12 +29,6 @@ interface LedgerEntry {
  */
 const LEDGER: LedgerEntry[] = [
   {
-    file: 'pages/Home.tsx',
-    calls: 1,
-    verdict: 'identity-changed',
-    why: 'POST /auth/dev-login sets the cookie and returns nothing — /auth/me is the only way to learn who that is.',
-  },
-  {
     file: 'pages/onboarding/ReturningCard.tsx',
     calls: 1,
     verdict: 'identity-changed',
@@ -114,8 +108,8 @@ describe('the useAuth().refetch() inventory matches the ledger', () => {
 
   it('totals the count this sweep reports', () => {
     const total = [...measured.values()].reduce((sum, calls) => sum + calls, 0)
-    expect(total).toBe(11)
-    expect(measured.size).toBe(7)
+    expect(total).toBe(10)
+    expect(measured.size).toBe(6)
   })
 
   it('leaves only identity reloads', () => {
