@@ -17,8 +17,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from models.account import Account
 from models.character import Character
 from models.character_stats import CharacterStats
+from models.comment import Comment, CommentMention
 from models.duel import Duel, DuelStatus
-from models.praxis import MediaItem, Praxis, PraxisType
+from models.flag import Flag
+from models.praxis import MediaItem, ModerationStatus, Praxis, PraxisType
 from models.task import Task
 from models.vote import Vote
 from services import media as media_service
@@ -316,3 +318,40 @@ async def test_deleting_a_duel_side_without_dissolving_the_duel_is_refused(
         "NO ACTION guard in migration 0006 has been weakened and a duel can be "
         "destroyed by one side dropping their task"
     )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("child", ["mention", "flag"])
+async def test_delete_praxis_whose_comment_has_a_mention_or_flag(
+    child: str,
+    client: AsyncClient,
+    character: Character,
+    active_task: Task,
+    auth_headers: dict,
+    db_session: AsyncSession,
+):
+    praxis_id = (
+        await client.post(
+            "/praxes",
+            json={"task_id": active_task.id, "type": "solo", "title": "Drop me"},
+            headers=auth_headers,
+        )
+    ).json()["id"]
+    comment = Comment(
+        praxis_id=praxis_id,
+        created_by_id=character.id,
+        body_text="hi",
+        moderation_status=ModerationStatus.visible,
+    )
+    db_session.add(comment)
+    await db_session.flush()
+    if child == "mention":
+        db_session.add(
+            CommentMention(comment_id=comment.id, mentioned_character_id=character.id)
+        )
+    else:
+        db_session.add(Flag(comment_id=comment.id, flagged_by=character.id))
+    await db_session.flush()
+
+    response = await client.delete(f"/praxes/{praxis_id}", headers=auth_headers)
+    assert response.status_code == 204, response.text
