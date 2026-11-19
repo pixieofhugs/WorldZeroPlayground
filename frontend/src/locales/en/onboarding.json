@@ -15,7 +15,8 @@
     "skip": "Skip",
     "rewind": "rewind",
     "signIn": "Sign in",
-    "stepOf": "{{n}} / 7"
+    "stepOf": "{{n}} / 7",
+    "loadFailed": "The next bit tripped on the way here. Tap to try again."
   },
   "beats": {
     "1": "World Zero is a game you play in real life.",

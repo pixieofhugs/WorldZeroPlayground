@@ -55,7 +55,7 @@ describe('character then arrival', () => {
     )
     fireEvent.click(screen.getByTestId('onboarding-start'))
     fireEvent.click(screen.getByTestId('onboarding-skip'))
-    fireEvent.click(screen.getByTestId('onboarding-accept-terms'))
+    fireEvent.click(await screen.findByTestId('onboarding-accept-terms'))
 
     const name = await screen.findByPlaceholderText(/name/i)
     expect(onAccepted).not.toHaveBeenCalled()
@@ -79,7 +79,7 @@ describe('character then arrival', () => {
     )
     fireEvent.click(screen.getByTestId('onboarding-start'))
     fireEvent.click(screen.getByTestId('onboarding-skip'))
-    fireEvent.click(screen.getByTestId('onboarding-accept-terms'))
+    fireEvent.click(await screen.findByTestId('onboarding-accept-terms'))
     fireEvent.change(await screen.findByPlaceholderText(/name/i), { target: { value: 'King Biscuit' } })
     fireEvent.click(await screen.findByRole('button', { name: /create|begin|born/i }))
     await screen.findByText('King Biscuit has entered World Zero.')
@@ -103,7 +103,7 @@ describe('consent is written once per mount', () => {
     )
     fireEvent.click(screen.getByTestId('onboarding-start'))
     fireEvent.click(screen.getByTestId('onboarding-skip'))
-    fireEvent.click(screen.getByTestId('onboarding-accept-terms'))
+    fireEvent.click(await screen.findByTestId('onboarding-accept-terms'))
     await screen.findByPlaceholderText(/name/i)
 
     fireEvent.click(screen.getByRole('button', { name: /back/i }))
