@@ -7,7 +7,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect } from 'vitest'
 
 import '../i18n'
-import { resources } from '../i18n'
+import { lazyShipped, resources } from '../i18n'
 import { ComposerControls } from '../components/comments/shared'
 
 function buttonNames(markup: string): string[] {
@@ -44,7 +44,7 @@ describe('a control in flight keeps a speakable name', () => {
   })
 
   it('no busy string in any catalog is punctuation alone', () => {
-    const punctuationOnly = busyStrings(resources.en).filter(([, value]) => !/\p{L}/u.test(value))
+    const punctuationOnly = busyStrings({ ...resources.en, ...lazyShipped }).filter(([, value]) => !/\p{L}/u.test(value))
     expect(punctuationOnly).toEqual([])
   })
 })

@@ -204,7 +204,8 @@ async def test_admin_list_flagged_comments_includes_flags(
 
     flag_resp = await client.post(
         f"/comments/{comment_id}/flag",
-        json={"reason": "other", "reason_detail": "reads like an ad"},
+        # A note spelling an enum value must not collapse into that reason (#3433).
+        json={"reason": "other", "reason_detail": "spam"},
         headers=auth_headers2,
     )
     assert flag_resp.status_code == 200, flag_resp.text
@@ -213,7 +214,7 @@ async def test_admin_list_flagged_comments_includes_flags(
     assert resp.status_code == 200
     row = next(c for c in resp.json() if c["id"] == comment_id)
     assert row["flags"][0]["reason"] == "other"
-    assert row["flags"][0]["reason_detail"] == "reads like an ad"
+    assert row["flags"][0]["reason_detail"] == "spam"
     assert row["flags"][0]["flagged_by_name"] == character2.display_name
 
 

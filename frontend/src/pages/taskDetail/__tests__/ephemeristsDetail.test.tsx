@@ -177,16 +177,34 @@ describe("the Valley plate's tokens", () => {
   const themes = readThemes(
     readIndexCss(),
   );
+  // Every plate token the page names or mounts, branches a single render never takes included.
   const referenced = [
-    ...new Set(
-      render(<EphemeristsTaskDetail state={baseState()} />).html.match(
-        /--faction-ephemerists-plate-[\w-]+/g,
-      ) ?? [],
-    ),
+    "--faction-ephemerists-plate-band",
+    "--faction-ephemerists-plate-band-ink",
+    "--faction-ephemerists-plate-bg",
+    "--faction-ephemerists-plate-brass",
+    "--faction-ephemerists-plate-brass-light",
+    "--faction-ephemerists-plate-cta-bg",
+    "--faction-ephemerists-plate-cta-ink",
+    "--faction-ephemerists-plate-disc",
+    "--faction-ephemerists-plate-ink",
+    "--faction-ephemerists-plate-inner",
+    "--faction-ephemerists-plate-line",
+    "--faction-ephemerists-plate-ochre",
+    "--faction-ephemerists-plate-quiet",
+    "--faction-ephemerists-plate-shadow",
+    // Drawn by the marks the page mounts, not named in its own source.
+    "--faction-ephemerists-plate-gold",
+    "--faction-ephemerists-plate-brass-rule",
+    "--faction-ephemerists-plate-band-quiet",
   ];
 
-  it("names at least the whole plate family", () => {
-    expect(referenced.length).toBeGreaterThan(10);
+  it("names the whole plate family, and a render draws none outside it", () => {
+    const drawn = render(<EphemeristsTaskDetail state={baseState()} />).html.match(
+      /--faction-ephemerists-plate-[\w-]+/g,
+    ) ?? [];
+    expect(drawn.length).toBeGreaterThan(0);
+    expect([...new Set(drawn)].filter((t) => !referenced.includes(t))).toEqual([]);
   });
 
   /**

@@ -743,13 +743,13 @@ from the **body text**, which is the text of record: what the site reads, render
 publishes. Working text becomes body text; the two are never separately authored.
 _Avoid_: treating body text as somewhere a member writes.
 
-**Freeze**:
-What submitting does to a collab's working text: seals it read-only for every member while
-the praxis is pending publish. The reopening verb is **`pullBack`** (ADR-0059), which is
-also what resets consensus — so ADR-0012's "an edit means we're not done" needs no separate
-notion of what counts as an edit. Nothing can change, so nothing must be detected.
-_Avoid_: "lock" (suggests one member holds it against the others; a freeze binds everyone
-equally, including whoever submitted).
+**Submitting (Done / Propose / Approve)**:
+How a collab's praxis reaches publish (ADR-0079). **Done** is "my part is finished": a social
+badge that gates nothing. **Propose** opens the publish window and its countdown. **Approve**
+is a vote on the live proposal; all approved publishes. Working text is never sealed:
+any edit during a proposal cancels it and clears every approval, and "Withdraw proposal"
+does the same without an edit. The old pending-freeze is retired.
+_Avoid_: "freeze", "lock".
 
 **Presence**:
 Who is in a room right now, and where their cursor sits — drawn in each member's own

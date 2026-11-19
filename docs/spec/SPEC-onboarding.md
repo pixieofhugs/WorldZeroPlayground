@@ -21,17 +21,25 @@ players voting. **Onboarding was never a rules problem. It is a legibility probl
 
 ## The arc
 
-    scan → intro → auth → terms → [ hand off ] → character creation → the task → level 1
+    scan → title → seven beats → contract → sign-in → character creation → arrival → the task → level 1
 
-Three net-new cards, then the flow **ends**. Everything after the hand-off is existing app,
-correctly sequenced. ([#1738](https://github.com/pixieofhugs/WorldZeroPlayground/issues/1738))
+The flow's stops are: the title, seven beats, the contract, sign-in, character creation and
+the arrival page. The first six of those are the flow; the task and level 1 are the existing
+app it lands in. Someone who already plays gets one more view, the "Welcome back" sign-in, in
+place of the whole run. ([#1738](https://github.com/pixieofhugs/WorldZeroPlayground/issues/1738))
 
 | Stop | Status |
 |---|---|
-| Intro, auth, terms cards | Net-new — three surfaces |
-| Character creation | Existing `CreateCharacter`; one navigation change |
+| Title and seven beats | Net-new |
+| Contract (the terms card) | Net-new surface, before sign-in |
+| Sign-in | Restyled; the "Welcome back" view for an existing player is net-new |
+| Character creation | Existing `CreateCharacter` form, rendered inside the flow |
+| Arrival page | Net-new; shows the first task |
 | The onboarding task | Existing; gains a derived mark |
 | Field Stamp at level 1 | Existing; untouched |
+
+*2026-11-18, [#3457](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3457):* was "three net-new cards, then the flow ends" with a hand-off to another
+route. The approved design keeps going through creation and arrival.
 
 **One flow, two entrances.** The QR code points at it; Home's logged-out CTA leads into it
 rather than straight to a provider. Not two explanations of the same game.
@@ -47,23 +55,43 @@ document says only what each slot must carry. Build with obvious placeholders �
 invent final copy, and never lift the throwaway wording from the prototype
 (`prototype/onboarding-flow`), which exists to be reacted to and is not a source.
 
-### What the intro must land — six things, in one paragraph
+### What the intro must land — six things, over a short run of beats
 
 ([#1735](https://github.com/pixieofhugs/WorldZeroPlayground/issues/1735))
 
 1. This is a game.
 2. The tasks happen in the real world, away from the screen.
 3. You photograph what you did, as proof.
-4. Other players rate that proof, and that is how you score.
+4. Other players rate that proof, and that is how you score. Voting is not part of
+   the pitch's promise: it unlocks only after another player has voted on your proof, not
+   at level 1 ([#3475](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3475)).
+   A beat that shows the player voting must not say they can do it from the start.
 5. It is free.
 6. A person made this; it is small and a bit silly.
 
-**Factions are cut** — invitation-gated (ADR-0022) and unreachable at level 0, so naming
-them pre-signup sells what the game cannot deliver for a long time.
+**Factions may be teased as flavour, never promised.** They stay invitation-gated
+(ADR-0022) and unreachable at level 0, so the intro may name the warring organizations
+(the last beat does, with a brawl) but must not offer them as something the player can
+reach or choose. Naming them as a destination would sell what the game cannot deliver for
+a long time.
 
-The frame, the ask and the whimsy are **one paragraph, not three beats** — the ordering
-question among them does not exist. The ask is **front-loaded, never buried**: the
-conversion cost is accepted deliberately.
+The intro is a **short sequence of beats** (seven, per the epic
+[#3457](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3457)), and together they
+land all six things above. The ask is **front-loaded, never buried**: the conversion cost
+is accepted deliberately.
+
+The spec still does not write the words. For the approved prototype only, its wording is
+the shipped default (#3457, standing rule 8), replacing the "never lift the prototype's
+wording" rule above for that prototype. That wording lives in
+`frontend/src/locales/en/onboarding.json`, and the owner still owns every string in it.
+
+*2026-11-18, [#3457](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3457):* the reviewed prototype wording is the shipped default; ownership of
+the strings is unchanged.
+
+*2026-11-18, [#3452](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3452):* was "one paragraph, not three beats" with factions cut. The owner
+approved the seven-beat prototype, so this section now describes a sequence and allows a
+faction tease. #3452 is the decision record. Knock-on from #3475: voting unlocks only
+after another player has voted on your proof; the era file and #3475 hold the rule.
 
 ### Vocabulary rules
 
@@ -99,6 +127,22 @@ here. The rules that matter:
 - Every colour through a `--faction-default-*` token, both themes, no hardcoded hex.
   The primary control takes na's card ink — a single rainbow stop used alone reads as a
   single-hue accent, which is precisely what `na` is not.
+
+Three rules the flow's build depends on:
+
+- **The flow is dark-only.** Its root sets `data-theme="dark"`; colours still come from
+  `--faction-default-*` and `--faction-<slug>` tokens, with no new hex. A light theme is out
+  of scope.
+- **Back sits at the bottom of the card that carries the next step**, on every step. There is
+  no Back in the page header.
+- **The mascot is a nameless wisp** that grows braver through the flow. It starts shy and
+  shows more of the spectrum as the steps go on.
+
+**`/start` keeps the app's normal top nav.** The flow is not full-bleed: the owner ruled that
+the site's navigation stays visible above it.
+
+*2026-11-18, [#3457](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3457):* added the three rules and the top-nav ruling for the approved
+prototype build.
 
 ## Authentication
 
@@ -140,12 +184,21 @@ arc**, which has exactly one destination.
   for their own safety and the legality of real-world actions. What it lacks is a version
   identifier, a statement of what agreeing binds you to, and any mention of the photographs
   the player is about to post publicly.
-- **Accepted after auth, before character creation.** Pre-auth acceptance was rejected on
-  what the record would be worth: with no identity yet, the server can bind the click only
-  to a browser session and must then trust a flag riding back through a redirect.
+- **Accepted before sign-in.** The contract comes after the intro and before the auth
+  card. Pre-auth acceptance was first rejected on what the record would be worth: with no
+  identity yet, the server can bind the click only to a browser session and must then trust
+  a flag riding back through a redirect. It stays honest this way: the click is held
+  client-side through the OAuth redirect (the same mechanism as *Authentication*), and the
+  consent row is written only once the account exists, so the server never records an
+  acceptance that has no identity behind it. If a new account arrives with no acceptance,
+  the player is sent back to the contract before character creation.
 - **Recorded as an append-only consent log** — one row per acceptance event, carrying the
   account, the version, and the time. Existing accounts have no rows, which is the honest
   record.
+
+*2026-11-18, [#3452](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3452):* was "accepted after auth, before character creation". The
+approved flow puts the contract before sign-in, and the owner accepts it. #3452 is the
+decision record.
 
 ## The hand-off
 
@@ -155,11 +208,15 @@ arc**, which has exactly one destination.
 claim enters the task bank (`max_task_signups`), and unwinding it means finding the withdraw
 path on day one.
 
-`CreateCharacter` is reached by **handing off, not wrapping**: the flow ends there and does
-not resume. Its one change is where it navigates. Today it goes to `/`; it should land a
-brand-new character on their one takeable task — **derived** from the character's own state
-(level 0, never completed the onboarding task), not from a flag onboarding passes in. That
-holds however they arrived: sticker, search engine, or a second character years from now.
+Character creation is a **step inside `/start`**, followed by an **arrival page** that shows
+the player's first task. The arrival page links to that task; it does not claim it. The
+creation form is the real `CreateCharacter` one, rendered in the flow, not a copy.
+
+A character created **outside `/start`** still lands where it does today. There, the
+destination is the brand-new character's one takeable task, **derived** from the character's
+own state (level 0, never completed the onboarding task), not from a flag onboarding passes
+in. That holds however they arrived: sticker, search engine, or a second character years
+from now.
 
 **The task marks itself.** The onboarding task carries a *start here* signal wherever it
 appears, derived and never hand-set, shown only to a character that has **never completed
@@ -176,12 +233,16 @@ needed; and admin is an account-level role while the mark is a character-level d
 (ADR-0041 keeps that boundary clean). The seeded `pixie` character is unaffiliated at level
 0 with no onboarding praxis, so the only current admin carries the mark. That is honest.
 
+*2026-11-18, [#3457](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3457):* was "the flow ends there and does not resume" at a hand-off to
+`CreateCharacter`. Creation and arrival are now steps of the flow; the never-claims rule, the
+derived mark and the outside-`/start` landing are unchanged.
+
 ## Coming back
 
 ([#1856](https://github.com/pixieofhugs/WorldZeroPlayground/issues/1856))
 
-**A scan always re-runs the cards from the top.** No resume, no bookmark. Terms simply shows
-again and writes another row; the append-only log absorbs the duplicate. The one exception is
+**A scan always re-runs the flow from the top.** No resume, no bookmark. The contract simply
+shows again and writes another row; the append-only log absorbs the duplicate. The one exception is
 the OAuth round trip, which is the same visit interrupted rather than a new scan
 (*Authentication*, above).
 
@@ -189,9 +250,21 @@ Consequently **`CurrentUser` gains nothing** — no terms flag, no new field, an
 the flow and the server to disagree about where someone stands. The intro is not waste on a
 returner either: someone who bailed is by definition a person the pitch did not land on.
 
-**The auth card is skipped when a session exists.** The one asymmetry — re-asking for
+**The sign-in card is skipped when a session exists.** The one asymmetry — re-asking for
 agreement is free and honest, re-authenticating is a full round trip, and bouncing a
-signed-in person out to a provider looks like the site has lost them.
+signed-in person out to a provider looks like the site has lost them. With the contract
+before sign-in, a signed-in person who opens `/start` cold still sees the title, the beats and
+the contract; they go from the contract straight to character creation, and the consent row is
+written at once because the account already exists (*Terms*). The OAuth resume
+(`utils/onboardingResume`) is not a cold open: it lands past the title, the beats and the
+contract, with the held contract click carried through the redirect.
+
+**Someone who already plays gets the "Welcome back" sign-in view** rather than the run from
+the top: a sign-in and nothing else, for a person who has a character already.
+
+*2026-11-18, [#3457](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3457); #3452:* was written when sign-in came before the terms. The order is
+now title, seven beats, contract, sign-in, creation, arrival, and a signed-in person who opens
+`/start` cold skips only the sign-in step; the OAuth resume lands past the title, beats and contract.
 
 **The flow stops applying once that character has completed the onboarding task** — the same
 predicate as the mark. One rule, two consumers, consistent by construction: the flow can
@@ -209,6 +282,18 @@ The existing **Field Stamp** pop-up, unchanged — it already fires at the right
 announces rank `trailhead` and its unlocks. No bespoke ending: by then the player has done a
 real thing in the world and photographed it, which does not need a surface congratulating
 them for it.
+
+Voting is not among the level-1 unlocks to promise. It unlocks only after another player
+has voted on your proof ([#3475](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3475)),
+so any beat that shows the first level-up must not imply the player can vote at level 1.
+The rule's values live in the era file and #3475, not here.
+
+The arrival page celebrates the **character**, not the level. Level 1 is reached later, by
+doing the task, and the Field Stamp marks it.
+
+*2026-11-18, [#3457](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3457):* the arrival-page line is new; the Field Stamp is unchanged.
+
+*2026-11-18, [#3452](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3452):* added with the vote-unlock knock-on. #3452 is the decision record.
 
 ## Before this can ship
 

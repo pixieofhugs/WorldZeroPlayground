@@ -30,13 +30,12 @@ from models.era import Era
 from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.task import Task, TaskStatus
 from seed import upsert_era_factions
-from services.character_capabilities import compute_capabilities
 from services.character_stats import recalculate_character_stats
 from services.habit_bonus import stamp_habit_bonus
-from services.meta_task import faction_bypasses_metatask_level
 from services.praxis import evaluate_signup
 from services.praxis_scoring import compute_contributions
 from tests.integration.eras._shared import (
+    assert_albescent_alone_bypasses_metatask_level,
     rejoin_after_defection,
     signup_on_task_already_held,
     signup_one_level_up,
@@ -314,14 +313,7 @@ async def test_only_an_always_rejoinable_faction_reopens_after_a_defection(
 def test_albescent_applies_a_metatask_below_the_level_gate():
     """Gate and capability flag must agree, or the UI offers a control that 403s
     (#1973)."""
-    assert faction_bypasses_metatask_level("albescent", ERA_1) is True
-    assert faction_bypasses_metatask_level("coven", ERA_1) is False
-    assert ERA_1.metatask_apply_level > 0
-
-    albescent = compute_capabilities(0, False, ERA_1, faction_slug="albescent")
-    coven = compute_capabilities(0, False, ERA_1, faction_slug="coven")
-    assert albescent.can_apply_metatask is True
-    assert coven.can_apply_metatask is False
+    assert_albescent_alone_bypasses_metatask_level(ERA_1, "coven")
 
 
 # Singularity: reads_the_array

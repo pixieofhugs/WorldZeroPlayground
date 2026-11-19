@@ -353,7 +353,7 @@ export function ProfileSkin({
     year: 'numeric',
   })
 
-  // ⑤ FDL laurel target: highest earned points (PraxisCardOut.score is base+vote).
+  // ⑤ FDL laurel target: highest full `score` (the number the card shows), not base+vote.
   const topScore = submissions.reduce((max, p) => Math.max(max, p.score ?? 0), 0)
   const laurelId = submissions.find((p) => (p.score ?? 0) === topScore)?.id ?? null
 

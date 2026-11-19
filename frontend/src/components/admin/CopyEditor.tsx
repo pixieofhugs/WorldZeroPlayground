@@ -16,7 +16,7 @@ import { useTranslation } from 'react-i18next'
 import { deleteCopyOverride, putCopyOverride } from '../../api/copy'
 import { extractError } from '../../utils/errors'
 import { useFormFactor } from '../../hooks/useFormFactor'
-import i18n, { resources } from '../../i18n'
+import i18n, { lazyShipped, resources } from '../../i18n'
 import { drawAtRoot } from '../ui/drawAtRoot'
 import { candidatesShownIn } from './copyProbe'
 import { isFactionScopedKey } from '../../utils/copyScope'
@@ -33,7 +33,7 @@ import {
  * Exported for `copyOverrides.test.ts`.
  */
 export function shippedValue(ns: string, key: string): string {
-  const table: unknown = (resources.en as Record<string, unknown>)[ns]
+  const table: unknown = (resources.en as Record<string, unknown>)[ns] ?? lazyShipped[ns]
   const found = key.split('.').reduce<unknown>((node, part) => {
     if (node && typeof node === 'object') return (node as Record<string, unknown>)[part]
     return undefined

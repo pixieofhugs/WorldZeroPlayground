@@ -22,6 +22,7 @@ from services.character import (
 )
 from services.character_capabilities import compute_capabilities
 from services.era import get_current_era_row_safe, load_era_stats
+from services.vote import account_has_received_vote
 
 
 async def build_current_user(
@@ -72,6 +73,7 @@ async def build_current_user(
         faction_slug=character.faction_slug if character else None,
         level_jump_used_at_level=level_jump_used_at_level,
         peak_level=character.peak_level if character else None,
+        has_received_vote=await account_has_received_vote(account.id, session),
     )
 
     return CurrentUser(
@@ -92,5 +94,6 @@ async def build_current_user(
         albescent_level_required=era.albescent_level_required,
         vote_level_required=era.vote_level_required,
         era_name=era.name,
+        era_id=era_row.id if era_row is not None else 0,
         **asdict(capabilities),
     )

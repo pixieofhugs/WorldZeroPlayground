@@ -38,3 +38,10 @@ special-case carve-out for kicking.
 
 Collab only. A solo praxis has one member. A duel is two independent `type=solo` praxes
 (ADR-0011), each owned by its own author — co-ownership does not apply.
+
+## Amendment (2026-11-18, #3427): delete is creator-only
+
+`created_by_id` "carries no special powers" except one. `delete_praxis`
+(`backend/services/praxis.py`) is **creator-only**: any other member, including a
+collab member, gets a 403. Edit, reopen, invite, kick and leave stay open to any
+member as above. ADR-0060 relies on the creator-only delete.

@@ -77,11 +77,13 @@ const secondaryControl: CSSProperties = {
 export default function OnboardingCard({
   step,
   title,
+  onBack,
   actions,
   children,
 }: {
   step: number
   title: string
+  onBack?: () => void
   /** The look-around escape is added by the shell, not passed here. */
   actions: ReactNode
   children: ReactNode
@@ -194,6 +196,11 @@ export default function OnboardingCard({
             marginTop: 'var(--space-2xl)',
           }}
         >
+          {onBack && (
+            <button type="button" onClick={onBack} style={secondaryControl} data-testid="onboarding-back">
+              {t('flow.back')}
+            </button>
+          )}
           {actions}
           {/* A plain link out (public surfaces need no session); `/tasks`, not
               `/`, which logged out re-explains the game. */}

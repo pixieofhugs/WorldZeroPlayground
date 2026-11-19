@@ -7,6 +7,13 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, it, expect } from "vitest";
 
+import {
+  SelectCardBand,
+  SelectCardBody,
+  SelectCardFrame,
+  SelectCardMotto,
+  SelectCardPitch,
+} from "../selectCardBlocks";
 import FactionSelectCard, { type SelectState } from "../FactionSelectCard";
 import { surfaceMap } from "../../../factions";
 import {
@@ -135,5 +142,28 @@ describe("a redacted tile leaves every slot standing (#3130, ADR-0082)", () => {
     }
     expect(element(html, "data-select-seal")).not.toBe("");
     expect(element(html, 'data-select-slot="call"')).toMatch(/^<button[^>]*\bdisabled\b/);
+  });
+});
+
+describe("the blocks branch on no faction (ADR-0090)", () => {
+  it("draws identical markup under every faction's slug", () => {
+    const under = (slug: string, state: SelectState) =>
+      renderToStaticMarkup(
+        <div data-faction={slug}>
+          <SelectCardFrame>
+            <SelectCardBand form="row" state={state} mark={<i />} seal={<b />} sealSize={16}>
+              Name
+            </SelectCardBand>
+            <SelectCardBody>
+              <SelectCardMotto>motto</SelectCardMotto>
+              <SelectCardPitch>pitch</SelectCardPitch>
+            </SelectCardBody>
+          </SelectCardFrame>
+        </div>,
+      ).replace(/data-faction="[^"]*"/, "");
+    for (const state of STATES) {
+      const seen = new Set(SLUGS.map((slug) => under(slug, state)));
+      expect(seen.size, `${state} varies with the slug`).toBe(1);
+    }
   });
 });

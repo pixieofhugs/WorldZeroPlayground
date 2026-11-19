@@ -37,7 +37,7 @@ from services.character import (
     resolve_active_character,
 )
 from services.current_user import build_current_user
-from services.dev_fixture import albescent_floor, apply_dev_fixture
+from services.dev_fixture import albescent_floor, apply_dev_fixture, seed_received_vote
 from services.era import get_current_era_row, get_or_create_stats
 
 router = APIRouter()
@@ -376,6 +376,7 @@ async def dev_login(
     faction: Optional[str] = None,
     invited: Optional[str] = None,
     albescent: Optional[Literal["glimpsed", "unlocked"]] = None,
+    received_vote: bool = False,
 ):
     """Dev-only bot login (bypasses Google OAuth). Disabled in production.
 
@@ -387,6 +388,8 @@ async def dev_login(
       invited — comma list of faction slugs to deliver invitation letters for
       albescent — "glimpsed" or "unlocked": stamp that state on the account
                   (raises the level to the era's floor for it if lower)
+      received_vote — true: another character rates a praxis of the account's,
+                  so voting is unlocked without the admin exemption (#3475)
 
     `faction` deliberately bypasses the join gate rather than replaying it.
     Players start unaffiliated and most factions are invite-gated
@@ -420,10 +423,11 @@ async def dev_login(
         character = result.character
 
     invited_slugs = [slug for slug in (invited or "").split(",") if slug]
-    if character is None and (faction is not None or invited_slugs or albescent):
+    needs_character = faction is not None or invited_slugs or albescent or received_vote
+    if character is None and needs_character:
         raise HTTPException(
             status_code=400,
-            detail="faction, invited and albescent need a character — pass name=.",
+            detail="these params need a character: pass name=.",
         )
 
     if faction is not None:
@@ -457,6 +461,9 @@ async def dev_login(
             character, era_row.id, level, session,
             invited=invited_slugs, albescent=albescent,
         )
+
+    if received_vote:
+        await seed_received_vote(character, session)
 
     jwt_token = create_jwt(account.id)
     response.set_cookie(

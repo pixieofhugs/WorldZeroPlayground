@@ -10,10 +10,14 @@ from httpx import AsyncClient
 from PIL import Image
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from game_config import CURRENT_ERA
+from models.account import Account
 from models.character import Character
+from models.era import Era
 from models.praxis import MediaItem
 from models.task import Task
 from services import media as media_service
+from tests.integration.factories import make_character
 
 
 def _jpeg_bytes(width: int = 32, height: int = 32) -> bytes:
@@ -234,7 +238,8 @@ async def test_unknown_praxis_gets_404_before_any_file_is_processed(
 async def test_collab_batch_cancels_pending_publish_only_when_a_file_lands(
     client: AsyncClient,
     character: Character,
-    character2: Character,
+    account2: Account,
+    era: Era,
     active_task: Task,
     auth_headers: dict,
     auth_headers2: dict,
@@ -244,7 +249,12 @@ async def test_collab_batch_cancels_pending_publish_only_when_a_file_lands(
 ):
     """ADR-0012: a pending publish is cancelled only when a file is stored, so a
     batch of all-failing files is not an edit."""
-    # character2 creates: collabs need level 1; `character` is level 0.
+    # A level-1 creator: collabs need level 1; `character` is level 0.
+    await make_character(
+        db_session, era, username="collabauthor", account=account2,
+        level=CURRENT_ERA.collaboration_level_required,
+    )
+    await db_session.commit()
     create = await client.post(
         "/praxes",
         json={"task_id": active_task.id, "type": "collab", "title": "C", "body_text": "proof"},

@@ -15,7 +15,7 @@ from models.faction import Faction, FactionStatus
 from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.task import Task, TaskStatus
 from schemas.task import TaskSignupOut
-from tests.integration.factories import DEFAULT_FACTION_SLUG
+from tests.integration.factories import DEFAULT_FACTION_SLUG, make_character
 from tests.integration.query_capture import capture_selects
 
 #: Any live faction other than the fixtures' default; derived, never named (#2708).
@@ -1728,8 +1728,10 @@ async def test_task_signups_carry_current_era_level(
     client: AsyncClient,
     db_session: AsyncSession,
     active_task: Task,
-    character2: Character,
+    era: Era,
 ):
+    character2 = await make_character(db_session, era, username="leveled", level=5)
+    await db_session.commit()
     await _add_praxis_member(
         db_session, active_task.id, character2.id, PraxisStatus.in_progress
     )
@@ -1739,7 +1741,7 @@ async def test_task_signups_carry_current_era_level(
     rows = resp.json()
     assert len(rows) == 1
     assert rows[0]["character_id"] == character2.id
-    assert rows[0]["level"] == 5  # character2 fixture is level 5
+    assert rows[0]["level"] == 5
 
 
 # #1051: pin the signups response to TaskSignupOut so they cannot drift.

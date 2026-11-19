@@ -604,6 +604,8 @@ export interface paths {
          *       invited — comma list of faction slugs to deliver invitation letters for
          *       albescent — "glimpsed" or "unlocked": stamp that state on the account
          *                   (raises the level to the era's floor for it if lower)
+         *       received_vote — true: another character rates a praxis of the account's,
+         *                   so voting is unlocked without the admin exemption (#3475)
          *
          *     `faction` deliberately bypasses the join gate rather than replaying it.
          *     Players start unaffiliated and most factions are invite-gated
@@ -2796,6 +2798,11 @@ export interface components {
              */
             email: string;
             /**
+             * Era Id
+             * @default 0
+             */
+            era_id: number;
+            /**
              * Era Name
              * @default
              */
@@ -2840,6 +2847,8 @@ export interface components {
              * @default 0
              */
             vote_level_required: number;
+            /** Vote Lock Reason */
+            vote_lock_reason: ("level" | "no_received_vote") | null;
         };
         /**
          * DevLoginOut
@@ -3234,7 +3243,7 @@ export interface components {
          * FlagOut
          * @description One moderator-queue flag (ADR-0037).
          *
-         *     Legacy free text surfaces as ``other`` + ``reason_detail``. Reporter is
+         *     ``reason_detail`` is the optional ``other`` note. Reporter is
          *     character-scoped, never account/email.
          */
         FlagOut: {
@@ -3612,6 +3621,8 @@ export interface components {
             collab_auto_submit_days: number;
             /** Duel Level Required */
             duel_level_required: number;
+            /** Era Id */
+            era_id: number;
             /** Era Name */
             era_name: string;
             /** Factions */
@@ -6021,6 +6032,7 @@ export interface operations {
                 faction?: string | null;
                 invited?: string | null;
                 albescent?: ("glimpsed" | "unlocked") | null;
+                received_vote?: boolean;
             };
             header?: never;
             path?: never;

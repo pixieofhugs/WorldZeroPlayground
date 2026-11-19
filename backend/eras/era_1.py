@@ -238,6 +238,7 @@ ERA_1 = EraConfig(
     metatask_apply_level=5,
     flag_level_required=4,
     vote_level_required=1,
+    vote_requires_received_vote=True,
     metatasks_per_praxis_base=1,
     metatasks_per_praxis_max=3,
     metatasks_per_praxis_max_level=7,

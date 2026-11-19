@@ -36,6 +36,10 @@ NOT_A_LEVEL_GATE = {
         "Depends on level_jump_used_at_level, which is character state, not an "
         "era threshold."
     ),
+    "vote_lock_reason": (
+        "Why can_vote is false (#3475): a label for the UI, computed by "
+        "vote_lock_reason, the same predicate may_vote reads."
+    ),
     "task_browse_defaults_to_eligible": (
         "A default, not a gate (#2025): GET /tasks still takes can_sign_up from "
         "the client, so there is no server branch paired with it to enforce. "

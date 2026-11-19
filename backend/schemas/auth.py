@@ -1,6 +1,7 @@
 from datetime import date
 from typing import Optional
 
+from game_config import VoteLockReason
 from schemas.base import WireModel
 
 from schemas.character import CharacterOut
@@ -36,6 +37,8 @@ class CurrentUser(WireModel):
     # A CEILING (#2399): a life at this level may no longer take Albescent.
     albescent_level_required: int = 0
     era_name: str = ""
+    # The live Era row (0 when unseeded); the frontend cache epoch keys on it.
+    era_id: int = 0
     can_propose_task: bool = False
     can_propose_metatask: bool = False
     can_see_retired_tasks: bool = False
@@ -44,6 +47,8 @@ class CurrentUser(WireModel):
     # False until the character ever reached `era.vote_level_required` (#3102).
     # Distinct from per-praxis `viewer_can_vote`.
     can_vote: bool = False
+    # Set when `can_vote` is false; the vote control picks its lock copy from it.
+    vote_lock_reason: Optional[VoteLockReason] = None
     vote_level_required: int = 0
     # May pin an existing metatask (#1973); not admin-forced.
     can_apply_metatask: bool = False
