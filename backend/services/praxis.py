@@ -1029,12 +1029,11 @@ async def invite_to_praxis(
     existing_result = await session.execute(
         select(PraxisInvite).where(
             PraxisInvite.praxis_id == praxis_id,
-            PraxisInvite.inviter_id == inviter_id,
             PraxisInvite.invitee_id == invitee_id,
             PraxisInvite.status == PraxisInviteStatus.pending,
         )
     )
-    if existing_result.scalar_one_or_none() is not None:
+    if existing_result.first() is not None:
         raise_coded(
             409,
             ErrorCode.invite_already_pending,

@@ -51,12 +51,7 @@ import {
 import { UaBand } from '../../../components/cardMasthead/factionBands'
 import { Lotus } from '../../../components/factionMarks'
 import { UaSigil } from '../../../components/sigil/UaSigil'
-import { UA_DISPLAY, UA_TEXT } from '../../../components/factionMarks/uaAtoms'
-
-export const LOTUS = {
-  color: 'var(--faction-ua-card-lotus)',
-  opacity: 'var(--faction-ua-card-lotus-opacity)',
-} as const
+import { LOTUS, UA_DISPLAY, UA_TEXT } from '../../../components/factionMarks/uaAtoms'
 
 const SLUG = 'ua'
 

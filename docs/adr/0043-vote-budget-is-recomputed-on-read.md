@@ -26,3 +26,10 @@ character earns points and would need write-time bookkeeping on every scoring
 event to stay correct. Recomputing on read makes the budget a pure function of
 current score and spend — no reconciliation, no drift. Do not reintroduce a
 stored budget column.
+
+## Amendment (2026-11-18, #3427): the budget reset depends on the era
+
+`votes_spent_this_era` is not always "reset to 0 on era reset". The new stats row
+copies the previous spend unless `era.reset_vote_budget` is set
+(`apply_era_reset`, `backend/services/era.py`; field in `game_config.py`). Era 1
+and Era 2 both set it, so today it does reset. Read `era.reset_vote_budget`.

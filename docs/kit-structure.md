@@ -6,7 +6,7 @@ cannot say out loud. Everything the code *can* say lives in
 
 ## The shape
 
-**20 dispatched surfaces × 9 faction identities.**
+**24 dispatched surfaces × 9 faction identities.**
 
 A **surface** is a place where a faction may look like itself: a task card, a
 vote widget, a comment voice, a whole page. The list is
@@ -21,11 +21,8 @@ An **identity** is a faction slug. All nine ship a manifest
 
 Do not maintain those two numbers here. Count them with
 `SURFACE_KEYS.length` and `FACTION_MANIFESTS.length`; this section exists to
-say what the numbers *mean*, not to cache them. (They were 21 and 9 when this
-file was written, which is worth stating only because the epic that commissioned
-it went in believing the second number was 10. The first fell to 20 when ADR-0078
-retired `mobileFactionPage`, and has risen since — a surface count falls when a
-collapse lands, and that is the only reason it may fall.)
+say what the numbers *mean*, not to cache them. (`SURFACE_KEYS` is 24 today; the count moves when a surface lands or a collapse
+retires one, so this is the only place that states it.)
 
 ## Why a bespoke component per faction, and not a props-driven skin
 
@@ -49,7 +46,7 @@ renders correctly everywhere, including on surfaces that do not exist yet. An
 undeclared surface is not a hole: the surface map simply has no row under that
 slug, and `resolveSlug` reads `na`'s row instead. **That is a lookup in the
 ninth manifest, not a fallback mechanism behind the manifests** — `na` declares
-all twenty-three surfaces itself (`frontend/src/factions/default.ts`), which is why
+every surface itself (`frontend/src/factions/default.ts`), which is why
 there is only one way a surface gets drawn.
 
 ## `Default` ≡ `na` ≡ Unaffiliated is one identity
@@ -69,7 +66,7 @@ lookup fails".
 `na` used to be the one faction with no manifest, reached instead by a second
 mechanism — a `Default*` handed to `pickVariant` as a third argument, spelled
 out by hand at ~20 dispatchers. **#2530 retired that.** `frontend/src/factions/default.ts`
-declares all twenty-three na surfaces the way the other eight declare theirs, and
+declares every na surface the way the other eight declare theirs, and
 `defaultManifest.test.tsx` fails the build if a key is missing.
 
 `Default*` still names an **archetype, not necessarily a module of that name**.
@@ -98,30 +95,20 @@ read as a hole in the na kit by four separate audits.** It is a file-layout
 observation. If you are about to file "the na kit is missing a backdrop", it is
 not — read `default.ts`, which is now the one place that answers the question.
 
-## Albescent's partial coverage is the steady state, not a gap
+## Albescent registers surfaces like any other faction
 
-Albescent declares a minority of the 23 surfaces, and that is correct and
-deliberate. It is a secret society hiding in plain sight (ADR-0027), so it must
-be indistinguishable from an unaffiliated player unless you already know what you
-are looking at.
-
-- **ADR-0046** freezes it: new surfaces fall through to na rather than getting an
-  Albescent skin by default.
-- **ADR-0048** unfreezes it *per surface, as designs land* — and every row it
-  gains is `Default` **plus a flourish** (a drifting spectrum wash, a turning
-  prism ring), never a repaint in its own colours. A repaint would put it back in
-  the spectrum and un-hide it.
-
-So the count rises one design at a time and is never expected to reach 22. **This
-has been re-derived as a coverage gap at least twice.** It is not one. The
-per-surface reasoning is in the docblocks in `frontend/src/factions/albescent.ts`,
-which is the only place that stays current.
+`albescent.ts` declares every `SURFACE_KEYS` entry. ADR-0046's freeze (new
+surfaces fall through to na) is Reversed; ADR-0048 governs the look. Albescent is
+a secret society hiding in plain sight (ADR-0027), so each row is `Default` **plus
+a flourish** (a drifting spectrum wash, a turning prism ring), never a repaint in
+its own colours, which would put it back in the spectrum and un-hide it. The
+per-surface reasoning is in the docblocks in `frontend/src/factions/albescent.ts`.
 
 ## Responsive or split by form factor
 
-**The rule, and it covers all 20 surfaces: a surface is one responsive component
+**The rule, and it covers every surface: a surface is one responsive component
 per faction unless its `SURFACE_KEYS` entry is prefixed `mobile`.** The key name
-*is* the status, so this document does not keep a 20-row table that would be
+*is* the status, so this document does not keep a per-surface table that would be
 wrong the day a surface lands. Grep the prefix.
 
 A skin that needs to know the viewport reads `useFormFactor()` internally, or
