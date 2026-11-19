@@ -14,10 +14,13 @@ This used to be the main hazard on this page: `.claude/launch.json` ran
 backend preview died instantly in exactly the situation CLAUDE.md tells agents
 to work in.
 
-The backend now runs in a container with `./backend` bind-mounted and its
+The backend now runs in a container with the whole repo (`.`) bind-mounted at `/repo` and its
 dependencies baked into the image (`backend/Dockerfile`, `dev` stage). There is
 nothing to activate, and `scripts/wz` — including `wz test`, `wz migrate` and
-`wz seed` — behaves identically from every worktree.
+`wz seed` — works from every worktree. `wz test` runs on your own tree, but the
+live API serves whichever checkout last ran `wz up`: to show a worktree's
+backend, run `wz up` there, then re-run it from the main checkout afterwards.
+A second frontend must use :3000 (the only other CORS origin); Vite refuses :5174.
 
 A venv is still fine to keep for editor tooling, and `frontend/e2e/run-e2e.sh`
 still prefers one if it finds it. Neither is required to run the app.
