@@ -228,9 +228,9 @@ async def admin_cli_token(
     """Return a JWT for the first admin account when the CLI secret matches."""
     # One refusal for "unset" and "wrong" so probers can't tell which; this
     # header is the whole boundary for a 7-day admin JWT. compare_digest, not
-    # `!=`, to avoid a timing leak.
+    # `!=`, to avoid a timing leak; bytes because str raises on non-ASCII.
     if not settings.ADMIN_CLI_SECRET or not hmac.compare_digest(
-        x_admin_cli_secret, settings.ADMIN_CLI_SECRET
+        x_admin_cli_secret.encode(), settings.ADMIN_CLI_SECRET.encode()
     ):
         raise HTTPException(status_code=403, detail="Invalid CLI secret.")
 
