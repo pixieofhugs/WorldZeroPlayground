@@ -99,7 +99,7 @@ export default function Beat1({ confidence }: BeatProps) {
       <svg className="gls" viewBox="0 0 440 250" width="440" height="250" aria-hidden="true">
         <path className="sheen" d="M96 23 h46 l-74 204 h-39 v-22 Z" />
         {B1_ART.cracks.map((c, i) => (
-          <path key={i} className={`ck ck${c.k}`} pathLength="1" d={c.d} style={{ animationDelay: c.delay }} />
+          <path key={i} className={c.k === 1 ? 'ck ck1' : 'ck ck2'} pathLength="1" d={c.d} style={{ animationDelay: c.delay }} />
         ))}
         {B1_ART.shards.map((s, i) => (
           <polygon
