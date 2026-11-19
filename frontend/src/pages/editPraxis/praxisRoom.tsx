@@ -30,7 +30,8 @@ import {
   samePresence,
 } from "./roomPresence";
 import { shouldReconnectRoom } from "./roomReconnect";
-import { roomStoreName, trackRoomStore } from "./roomStore";
+import { proveRoomDelivery } from "./roomDelivery";
+import { roomStoreName, trackRoomDelivery, trackRoomStore } from "./roomStore";
 import { API_BASE_URL } from "../../api/baseUrl";
 
 /** Must match `ROOM_BODY_KEY` in `praxis_room.py`; a mismatch is a silent empty doc. */
@@ -76,6 +77,8 @@ export interface PraxisRoom {
    * read-only.
    */
   unreachable: boolean;
+  /** The server's document is in step with ours; false while offline or reconnecting. */
+  synced: boolean;
 }
 
 const PraxisRoomContext = createContext<PraxisRoom | null>(null);
@@ -109,6 +112,7 @@ export function PraxisRoomProvider({
   } | null>(null);
   const [seeded, setSeeded] = useState(false);
   const [unreachable, setUnreachable] = useState(false);
+  const [synced, setSynced] = useState(false);
   const [present, setPresent] = useState<readonly number[]>([]);
   // Narrowed fields: `/auth/me` mints a fresh object per refetch (#1390).
   const character = useAuth().user?.character ?? null;
@@ -124,6 +128,7 @@ export function PraxisRoomProvider({
       setTypes(null);
       setSeeded(false);
       setUnreachable(false);
+      setSynced(false);
       setPresent([]);
       return;
     }
@@ -175,8 +180,10 @@ export function PraxisRoomProvider({
     const markSeeded = () => setSeeded(true);
     if (provider.synced) markSeeded();
     const onSync = (isSynced: boolean) => {
+      setSynced(isSynced);
       if (isSynced) markSeeded();
     };
+    setSynced(provider.synced);
     provider.on("sync", onSync);
 
     // The offline store counts as the seed ONLY if it restored something: an
@@ -186,11 +193,17 @@ export function PraxisRoomProvider({
     };
     offline.on("synced", onOfflineLoaded);
 
-    const onDocUpdate = () => onUpdateRef.current?.(new Date());
+    const onDocUpdate = () => {
+      onUpdateRef.current?.(new Date());
+    };
     doc.on("update", onDocUpdate);
+    const untrackDelivery = trackRoomDelivery(praxisId, (timeoutMs) =>
+      proveRoomDelivery(provider, doc, timeoutMs),
+    );
 
     return () => {
       doc.off("update", onDocUpdate);
+      untrackDelivery();
       provider.off("sync", onSync);
       provider.off("status", onStatus);
       provider.off("closed", onClosed);
@@ -205,6 +218,7 @@ export function PraxisRoomProvider({
       setTypes(null);
       setSeeded(false);
       setUnreachable(false);
+      setSynced(false);
       setPresent([]);
     };
   }, [praxisId]);
@@ -222,8 +236,8 @@ export function PraxisRoomProvider({
   }, [types, characterId, characterName, characterFaction]);
 
   const room = useMemo<PraxisRoom | null>(
-    () => (types === null ? null : { ...types, seeded, unreachable, present }),
-    [types, seeded, unreachable, present],
+    () => (types === null ? null : { ...types, seeded, unreachable, synced, present }),
+    [types, seeded, unreachable, synced, present],
   );
 
   return (
