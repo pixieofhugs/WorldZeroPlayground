@@ -221,6 +221,7 @@ export const aCurrentUser = (over: Partial<CurrentUser> = {}): CurrentUser => ({
   can_see_pending_tasks: false,
   can_comment: true,
   can_vote: true,
+  vote_lock_reason: null,
   vote_level_required: 1,
   albescent_level_required: 8,
   second_character_level_required: 5,

@@ -2840,6 +2840,8 @@ export interface components {
              * @default 0
              */
             vote_level_required: number;
+            /** Vote Lock Reason */
+            vote_lock_reason: ("level" | "no_received_vote") | null;
         };
         /**
          * DevLoginOut

@@ -1892,6 +1892,21 @@
             "default": 0,
             "title": "Vote Level Required",
             "type": "integer"
+          },
+          "vote_lock_reason": {
+            "anyOf": [
+              {
+                "enum": [
+                  "level",
+                  "no_received_vote"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vote Lock Reason"
           }
         },
         "required": [
@@ -1914,6 +1929,7 @@
           "can_see_pending_tasks",
           "can_comment",
           "can_vote",
+          "vote_lock_reason",
           "vote_level_required",
           "can_apply_metatask",
           "level_jump_reach",
