@@ -100,14 +100,14 @@
 .ob-hold{padding:0 14px}
 
 /* contract: the quill wants a signature */
-.ob-contract{display:flex;flex-direction:column;align-items:center}
+.ob-contract{display:flex;flex-direction:column}
 .ob-cardback{display:block;margin-top:var(--space-md);margin-left:-14px}
-.ob-sigstrip{position:relative;width:min(100%,560px);height:62px;margin-top:calc(-1 * var(--space-3xl));margin-bottom:var(--space-lg);box-sizing:border-box}
+.ob-sigstrip{position:relative;align-self:center;width:min(100%,560px);height:62px;margin-top:var(--space-xl);margin-bottom:var(--space-lg);box-sizing:border-box}
 .ob-sigx{position:absolute;left:18px;bottom:14px;font-size:22px;line-height:1;color:var(--faction-default-card-muted)}
 .ob-sigline{position:absolute;left:40px;right:18px;bottom:12px;border-bottom:1px dashed var(--faction-default-card-muted)}
 .ob-sig{position:absolute;left:46px;bottom:10px;overflow:visible}
 .ob-sig path{fill:none;stroke:var(--faction-default-card-text);stroke-width:2.5;stroke-linecap:round;stroke-dasharray:300 1000;stroke-dashoffset:300}
-.ob-quill{position:absolute;left:43px;bottom:18px;transform-origin:7px 68px;animation:ob-tap 1.4s ease-in-out infinite}
+.ob-quill{position:absolute;left:43px;bottom:6px;transform-origin:7px 68px;animation:ob-tap 1.4s ease-in-out infinite}
 @keyframes ob-tap{0%,100%{transform:translateY(-5px) rotate(-5deg)}50%{transform:translateY(-13px) rotate(4deg)}}
 @keyframes ob-scrib{0%{transform:none}10%{transform:translate(14px,-20px) rotate(8deg)}20%{transform:translate(18px,-4px)}32%{transform:translate(44px,-12px) rotate(10deg)}46%{transform:translate(62px,-12px)}60%{transform:translate(76px,-14px) rotate(4deg)}76%{transform:translate(118px,-10px)}100%{transform:translate(194px,-6px) rotate(12deg)}}
 @keyframes ob-sign{to{stroke-dashoffset:0}}
