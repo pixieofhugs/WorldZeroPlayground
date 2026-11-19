@@ -342,6 +342,7 @@ table praxis_invite
   constraint fk_praxis_invite_inviter_id_character FOREIGN KEY (inviter_id) REFERENCES "character"(id)
   constraint fk_praxis_invite_praxis_id_praxis FOREIGN KEY (praxis_id) REFERENCES praxis(id) ON DELETE CASCADE
   constraint pk_praxis_invite PRIMARY KEY (id)
+  index ix_praxis_invite_invitee_id CREATE INDEX ix_praxis_invite_invitee_id ON public.praxis_invite USING btree (invitee_id)
   index uq_praxis_invite_pending CREATE UNIQUE INDEX uq_praxis_invite_pending ON public.praxis_invite USING btree (praxis_id, invitee_id) WHERE (status = 'pending'::praxisinvitestatus)
 
 table praxis_member
@@ -357,6 +358,7 @@ table praxis_member
   constraint fk_praxis_member_praxis_id_praxis FOREIGN KEY (praxis_id) REFERENCES praxis(id) ON DELETE CASCADE
   constraint pk_praxis_member PRIMARY KEY (id)
   constraint uq_praxis_member UNIQUE (praxis_id, character_id)
+  index ix_praxis_member_character_id CREATE INDEX ix_praxis_member_character_id ON public.praxis_member USING btree (character_id)
 
 table praxis_meta_task
   column applied_at timestamp with time zone NOT NULL DEFAULT now()
@@ -386,6 +388,7 @@ table relationship
   constraint fk_relationship_to_character_id_character FOREIGN KEY (to_character_id) REFERENCES "character"(id)
   constraint pk_relationship PRIMARY KEY (id)
   constraint uq_relationship_from_character_id_to_character_id UNIQUE (from_character_id, to_character_id)
+  index ix_relationship_to_character_id CREATE INDEX ix_relationship_to_character_id ON public.relationship USING btree (to_character_id)
 
 table role
   column created_at timestamp with time zone NOT NULL DEFAULT now()
@@ -427,6 +430,7 @@ table taunt_message
   constraint fk_taunt_message_from_character_id_character FOREIGN KEY (from_character_id) REFERENCES "character"(id)
   constraint fk_taunt_message_to_character_id_character FOREIGN KEY (to_character_id) REFERENCES "character"(id)
   constraint pk_taunt_message PRIMARY KEY (id)
+  index ix_taunt_message_to_character_id CREATE INDEX ix_taunt_message_to_character_id ON public.taunt_message USING btree (to_character_id)
 
 table terms_acceptance
   column account_id bigint NOT NULL
@@ -449,3 +453,4 @@ table vote
   constraint fk_vote_voter_character_id_character FOREIGN KEY (voter_character_id) REFERENCES "character"(id)
   constraint pk_vote PRIMARY KEY (id)
   constraint uq_vote_praxis_account UNIQUE (praxis_id, voter_account_id)
+  index ix_vote_voter_account_id CREATE INDEX ix_vote_voter_account_id ON public.vote USING btree (voter_account_id)

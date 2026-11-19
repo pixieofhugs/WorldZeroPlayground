@@ -180,6 +180,7 @@ class PraxisMember(Base):
     __tablename__ = "praxis_member"
     __table_args__ = (
         UniqueConstraint("praxis_id", "character_id", name="uq_praxis_member"),
+        Index("ix_praxis_member_character_id", "character_id"),
     )
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
@@ -254,6 +255,7 @@ class PraxisInvite(CreatedAtMixin, Base):
             unique=True,
             postgresql_where=text("status = 'pending'"),
         ),
+        Index("ix_praxis_invite_invitee_id", "invitee_id"),
     )
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)

@@ -6,6 +6,7 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Identity,
+    Index,
     Integer,
     UniqueConstraint,
     func,
@@ -24,6 +25,7 @@ class Vote(Base):
         # One vote per ACCOUNT per praxis so alts can't stack (ADR-0041, #1150).
         # ``voter_character_id`` is attribution only.
         UniqueConstraint("praxis_id", "voter_account_id", name="uq_vote_praxis_account"),
+        Index("ix_vote_voter_account_id", "voter_account_id"),
     )
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
