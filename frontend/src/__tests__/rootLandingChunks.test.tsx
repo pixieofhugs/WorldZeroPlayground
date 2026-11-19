@@ -20,18 +20,18 @@ import type { CurrentUser } from '../api/auth'
 import { RootLanding } from '../App'
 
 /** Set by the mock factories the first time each page module is imported. */
-const imported = vi.hoisted(() => ({ home: false, fieldDesk: false }))
+const imported = vi.hoisted(() => ({ flow: false, fieldDesk: false }))
 
-vi.mock('../pages/Home', () => {
-  imported.home = true
-  return { default: () => <div data-page="home" /> }
+vi.mock('../pages/Onboarding', () => {
+  imported.flow = true
+  return { default: () => <div data-page="flow" /> }
 })
 vi.mock('../pages/FieldDesk', () => {
   imported.fieldDesk = true
   return { default: () => <div data-page="field-desk" /> }
 })
 
-const SIGNED_IN = { account_id: 1, character: null, is_admin: false } as unknown as CurrentUser
+const SIGNED_IN = { account_id: 1, character: { id: 7 }, is_admin: false } as unknown as CurrentUser
 
 /** Node has no `localStorage`; unstubbed means "no hint". */
 function withSessionHint(hint: string | null): void {
@@ -66,13 +66,13 @@ async function renderResolved(session: { user: CurrentUser | null; loading: bool
 
 // Order matters: "not imported" must be asserted before any test imports it.
 describe('the root route warms one landing before the auth answer (#1380)', () => {
-  it('warms Home, and only Home, for a browser with no session hint', async () => {
-    expect({ ...imported }).toEqual({ home: false, fieldDesk: false })
+  it('warms the flow, and only the flow, for a browser with no session hint', async () => {
+    expect({ ...imported }).toEqual({ flow: false, fieldDesk: false })
 
     renderRoot({ user: null, loading: true })
     await nextTick()
 
-    expect({ ...imported }).toEqual({ home: true, fieldDesk: false })
+    expect({ ...imported }).toEqual({ flow: true, fieldDesk: false })
   })
 
   it('warms FieldDesk instead when the last visit had a session', async () => {
@@ -92,7 +92,7 @@ describe('the root route shows no signed-in surface it should not', () => {
     const markup = renderRoot({ user: null, loading: true })
 
     expect(markup).not.toContain('data-page="field-desk"')
-    expect(markup).not.toContain('data-page="home"')
+    expect(markup).not.toContain('data-page="flow"')
     expect(markup).toContain('Loading')
   })
 
@@ -107,12 +107,12 @@ describe('the root route shows no signed-in surface it should not', () => {
     vi.unstubAllGlobals()
   })
 
-  it('renders Home for a resolved signed-out viewer, hint or no hint', async () => {
+  it('renders the flow for a resolved signed-out viewer, hint or no hint', async () => {
     withSessionHint('true')
 
     const markup = await renderResolved({ user: null, loading: false })
 
-    expect(markup).toContain('data-page="home"')
+    expect(markup).toContain('data-page="flow"')
     expect(markup).not.toContain('data-page="field-desk"')
     vi.unstubAllGlobals()
   })
@@ -121,6 +121,6 @@ describe('the root route shows no signed-in surface it should not', () => {
     const markup = await renderResolved({ user: SIGNED_IN, loading: false })
 
     expect(markup).toContain('data-page="field-desk"')
-    expect(markup).not.toContain('data-page="home"')
+    expect(markup).not.toContain('data-page="flow"')
   })
 })

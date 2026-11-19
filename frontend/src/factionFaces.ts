@@ -6,7 +6,7 @@
  *
  * `factions/lazyArchetype.tsx` imports it dynamically (it is in the entry chunk;
  * static would make it render-blocking). Lazy modules drawing a faction face
- * without an archetype (`pages/Home.tsx`, `AlbescentInvitation.tsx`,
+ * without an archetype (`AlbescentInvitation.tsx`,
  * `AlbescentSecretPlaceholder.tsx`) import it statically: no fallback flash.
  *
  * Guards: `utils/__tests__/factionFaceSplit.test.ts` (reachability; a stranded
