@@ -1387,6 +1387,9 @@ async def _run_source_fetch(
     ]
 
 
+ANSWERED_KEY_PREFIX = "answered:"
+
+
 def _stream_ctx(ctx: FeedContext) -> FeedContext:
     return replace(ctx, unanswered_requests_only=False, answered_requests_only=True)
 
@@ -1419,8 +1422,12 @@ async def _count_sources(
     ctx: FeedContext,
     archive_view: FeedArchiveView,
     session_factory: Callable,
+    with_answered: bool = False,
 ) -> dict[str, int]:
     """Every source's COUNT in ONE round trip (ADR-0036, #1532).
+
+    ``with_answered`` adds the request sources' answered counts to the same
+    UNION, keyed ``ANSWERED_KEY_PREFIX + item_type`` (the stream badges).
 
     Each count wraps the source's own scoped Select, so badge == fan-out. A
     ``UNION ALL`` so badges never take a connection per source. ``None`` scopes
@@ -1428,13 +1435,20 @@ async def _count_sources(
     """
     counts = {source.item_type: 0 for source in sources}
     branches = []
-    for source in sources:
-        query = _scoped_query(source, ctx, archive_view)
+    scopes = [(source.item_type, source, ctx) for source in sources]
+    if with_answered:
+        scopes += [
+            (ANSWERED_KEY_PREFIX + source.item_type, source, _stream_ctx(ctx))
+            for source in sources
+            if source.item_type in REQUEST_ITEM_TYPES
+        ]
+    for key, source, scope_ctx in scopes:
+        query = _scoped_query(source, scope_ctx, archive_view)
         if query is None:
             continue
         branches.append(
             select(
-                literal(source.item_type, String).label("item_type"),
+                literal(key, String).label("item_type"),
                 func.count().label("count"),
             ).select_from(query.subquery())
         )
@@ -1462,9 +1476,12 @@ async def _count_by_type(
     ctx: FeedContext,
     archive_view: FeedArchiveView,
     session_factory: Callable,
+    with_answered: bool = False,
 ) -> dict[str, int]:
     """Every registry source's COUNT, in one statement (ADR-0036, #1532)."""
-    return await _count_sources(FEED_SOURCES, ctx, archive_view, session_factory)
+    return await _count_sources(
+        FEED_SOURCES, ctx, archive_view, session_factory, with_answered=with_answered
+    )
 
 
 async def _compute_counts(
@@ -1484,22 +1501,26 @@ async def _compute_counts(
     """
     live_ctx = replace(fetch_ctx, unanswered_requests_only=True)
     live_view = replace(archive_view, archived_only=False)
-    request_sources = [s for s in FEED_SOURCES if s.item_type in REQUEST_ITEM_TYPES]
 
     if archive_view.archived_only:
         # Sequential: tests inject a factory returning the one request session.
-        live_counts = await _count_by_type(live_ctx, live_view, session_factory)
+        live_counts = await _count_by_type(
+            live_ctx, live_view, session_factory, with_answered=True
+        )
         facet_counts = await _count_by_type(fetch_ctx, archive_view, session_factory)
     else:
-        live_counts = await _count_by_type(live_ctx, live_view, session_factory)
+        live_counts = await _count_by_type(
+            live_ctx, live_view, session_factory, with_answered=True
+        )
         facet_counts = live_counts
 
     # The stream tabs count requests answered, the queue counts them unanswered.
     stream_counts = {
         **live_counts,
-        **await _count_sources(
-            request_sources, _stream_ctx(live_ctx), live_view, session_factory
-        ),
+        **{
+            item_type: live_counts.get(ANSWERED_KEY_PREFIX + item_type, 0)
+            for item_type in REQUEST_ITEM_TYPES
+        },
     }
     if not archive_view.archived_only and active_filter in STREAM_FILTERS:
         facet_counts = stream_counts
