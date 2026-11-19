@@ -72,7 +72,7 @@ export default function FactionBuddy({ slug, size = 24, blinkPeriod = 4.3, blink
   } as CSSProperties
   return (
     <span className="fb" data-faction={slug} style={vars} aria-hidden="true">
-      <span className="bud buddy-still">
+      <span className="bud">
         <i className="e l" />
         <i className="e r" />
         <i className="mth" />
