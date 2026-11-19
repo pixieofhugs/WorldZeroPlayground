@@ -17,11 +17,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from errors import ErrorCode
 from game_config import CURRENT_ERA
 from models.account import Account
-from tests.stamps import stamp, stamped
 from models.character import Character
 from models.character_stats import CharacterStats
 from models.era import Era
 from models.faction import Faction, FactionStatus
+from tests.stamps import stamp, stamped
 
 
 async def _seed_faction(session: AsyncSession, slug: str) -> None:

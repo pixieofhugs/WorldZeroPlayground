@@ -5,11 +5,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from errors import ErrorCode
 from models.account import Account
-from tests.stamps import stamp, stamped
 from models.character import Character
 from models.era import Era
 from models.faction import Faction, FactionStatus
 from tests.integration.factories import DEFAULT_FACTION_SLUG
+from tests.stamps import stamp, stamped
 
 
 @pytest.mark.asyncio
@@ -137,8 +137,9 @@ async def test_choose_faction_with_invitation_succeeds(
     era: Era,
     db_session: AsyncSession,
 ):
-    from models.faction import Faction as FactionModel
     from sqlalchemy import select
+
+    from models.faction import Faction as FactionModel
 
     existing = await db_session.execute(select(FactionModel).where(FactionModel.slug == "wow"))
     if existing.scalar_one_or_none() is None:

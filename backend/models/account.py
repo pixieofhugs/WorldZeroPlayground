@@ -2,15 +2,14 @@ import enum
 from typing import TYPE_CHECKING, List
 
 from sqlalchemy import (
-    event,
     BigInteger,
-    Boolean,
     Enum,
     ForeignKey,
     Identity,
     Index,
     String,
     UniqueConstraint,
+    event,
     func,
     text,
 )

@@ -11,10 +11,10 @@ import pytest
 
 from game_config import CURRENT_ERA
 from models.account import Account
-from tests.stamps import stamp, stamped
 from models.character import Character
 from services.albescent_reveal import is_albescent_glimpsed, is_albescent_revealed
 from services.character import stamp_albescent_glimpse
+from tests.stamps import stamp, stamped
 
 pytestmark = pytest.mark.asyncio
 

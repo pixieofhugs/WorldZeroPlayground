@@ -5,9 +5,8 @@ joining: see ``tests/integration/test_albescent_admin_reveal.py``.
 """
 
 from models.account import Account
-from tests.stamps import account_with, stamped
-from tests.stamps import stamped
 from services.albescent_reveal import is_albescent_revealed
+from tests.stamps import account_with, stamped
 
 
 def _account(*, revealed: bool, unlocked: bool = False) -> Account:

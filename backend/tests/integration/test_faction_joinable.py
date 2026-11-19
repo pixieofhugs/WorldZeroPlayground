@@ -15,7 +15,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from faction_slugs import UNAFFILIATED_FACTION_SLUG
 from game_config import CURRENT_ERA
 from models.account import Account
-from tests.stamps import stamp
 from models.character import Character
 from models.character_stats import CharacterStats
 from models.era import Era
@@ -24,6 +23,7 @@ from models.faction_defection_history import FactionDefectionHistory
 from models.invitation_letter import InvitationLetter
 from services.character import ALBESCENT_FACTION_SLUG
 from services.faction_service import defect_to_faction, load_move_facts, move_refusal
+from tests.stamps import stamp
 
 CEILING = CURRENT_ERA.secret_faction_join_level
 REJOINER = "wow"  # any non-Albescent faction; made always-rejoin in `FUTURE_ERA`

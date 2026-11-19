@@ -1,10 +1,10 @@
 """The ladder's visibility filter, ``visible_level_profiles`` (#1891)."""
 from game_config import CURRENT_ERA, LevelProfile, LevelUnlock, LevelUnlockKind
-from tests.stamps import account_with
 from services.progression import (
     HIDDEN_UNTIL_REVEALED_UNLOCK_KEY,
     visible_level_profiles,
 )
+from tests.stamps import account_with
 
 
 def _unlock_keys(profiles: list[LevelProfile]) -> set[str]:

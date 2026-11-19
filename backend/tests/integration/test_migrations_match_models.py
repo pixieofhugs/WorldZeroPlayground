@@ -428,7 +428,8 @@ async def test_albescent_booleans_become_secret_faction_rows(migration_db: str) 
     conn = await asyncpg.connect(_dsn(migration_db))
     try:
         stamped_id = await conn.fetchval(
-            "INSERT INTO account (email, status, albescent_unlocked, albescent_glimpsed)"
+            "INSERT INTO account"
+            " (email, status, albescent_unlocked, albescent_glimpsed)"
             " VALUES ('stamped@example.com', 'active', true, true) RETURNING id"
         )
         await conn.execute(

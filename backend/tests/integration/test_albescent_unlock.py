@@ -18,7 +18,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from errors import ErrorCode
 from game_config import CURRENT_ERA, EraConfig
 from models.account import Account
-from tests.stamps import stamp, stamped
 from models.character import Character, CharacterStatus
 from models.character_stats import CharacterStats
 from models.era import Era
@@ -36,6 +35,7 @@ from services.character import (
 )
 from services.character_stats import recalculate_character_stats
 from services.faction_service import defect_to_faction
+from tests.stamps import stamp, stamped
 
 
 def _joinable_faction_slugs(era: EraConfig = CURRENT_ERA) -> list[str]:

@@ -15,7 +15,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from errors import ErrorCode
 from faction_slugs import ALBESCENT_FACTION_SLUG, UNAFFILIATED_FACTION_SLUG
 from models.account import Account
-from tests.stamps import stamped
 from models.era import Era
 from models.faction import Faction, FactionStatus
 from services.auth import create_jwt
@@ -27,6 +26,7 @@ from tests.integration.factories import (
     make_solo_praxis,
     make_task,
 )
+from tests.stamps import stamped
 
 OTHER_FACTION_SLUG = DEFAULT_FACTION_SLUG
 

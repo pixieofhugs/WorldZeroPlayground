@@ -30,7 +30,8 @@ async def test_an_era_with_no_secret_faction_surfaces_nothing(
 ):
     stamp(account, "revealed")
     stamp(account, "unlocked")
-    assert await stamp_albescent_glimpse(character, FLOOR, db_session, NO_SECRET) is False
+    glimpsed = await stamp_albescent_glimpse(character, FLOOR, db_session, NO_SECRET)
+    assert glimpsed is False
     assert is_albescent_revealed(account, is_admin=True, era=NO_SECRET) is False
     assert is_albescent_glimpsed(account, is_admin=True, era=NO_SECRET) is False
     assert await can_start_as_albescent(account.id, db_session, NO_SECRET) is False

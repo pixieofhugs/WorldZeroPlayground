@@ -16,9 +16,9 @@ from models.faction_defection_history import FactionDefectionHistory
 from models.invitation_letter import InvitationLetter
 from models.task import Task
 from services.character import ALBESCENT_FACTION_SLUG, can_start_as_albescent  # noqa: F401
-from services.secret_faction import set_stamp
 from services.era import get_current_era_row, load_era_stats
 from services.era_gates import meets_albescent_level
+from services.secret_faction import set_stamp
 
 
 def faction_permits(

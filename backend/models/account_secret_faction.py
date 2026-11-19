@@ -2,7 +2,14 @@
 later era with the same secret faction inherits them. Written only by
 ``services.secret_faction``."""
 
-from sqlalchemy import BigInteger, Boolean, ForeignKey, Identity, String, UniqueConstraint
+from sqlalchemy import (
+    BigInteger,
+    Boolean,
+    ForeignKey,
+    Identity,
+    String,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column
 
 from models.base import Base

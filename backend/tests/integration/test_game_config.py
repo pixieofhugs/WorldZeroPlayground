@@ -5,10 +5,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from game_config import CURRENT_ERA
 from models.account import Account
-from tests.stamps import stamp, stamped
 from models.era import Era
 from services.progression import HIDDEN_UNTIL_REVEALED_UNLOCK_KEY
 from services.scoring import sole_tie_taker_slug
+from tests.stamps import stamp, stamped
 
 
 @pytest.mark.asyncio

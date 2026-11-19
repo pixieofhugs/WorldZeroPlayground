@@ -253,7 +253,8 @@ def test_an_era_that_drops_na_will_not_construct():
 
 def test_an_era_may_have_no_secret_faction():
     """ADR-0097: Albescent is Era 1's secret faction, not a fixture of every era."""
-    assert dataclasses.replace(ERA_1, secret_faction_slug=None).secret_faction_slug is None
+    no_secret = dataclasses.replace(ERA_1, secret_faction_slug=None)
+    assert no_secret.secret_faction_slug is None
 
 
 def test_an_era_whose_secret_faction_is_not_in_its_roster_will_not_construct():
