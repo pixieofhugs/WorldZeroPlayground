@@ -63,7 +63,7 @@ async def current_era(db_session: AsyncSession, prior_era: Era, account) -> Era:
     row = Era(
         name=CURRENT_ERA.name,
         config_key=CURRENT_ERA.config_key,
-        started_by=account.id,
+        started_by_id=account.id,
         started_at=prior_era.started_at + timedelta(days=30),
     )
     db_session.add(row)
@@ -98,7 +98,7 @@ async def _sealed_praxis(
             point_value=points,
             level_required=0,
             status=TaskStatus.active,
-            created_by=character.id,
+            created_by_id=character.id,
             primary_faction_slug=faction_slug,
         )
         db_session.add(task)
@@ -227,7 +227,7 @@ async def test_a_real_era_reset_survives_the_backfill_recalc(
     new_era = Era(
         name=CURRENT_ERA.name,
         config_key=CURRENT_ERA.config_key,
-        started_by=account.id,
+        started_by_id=account.id,
     )
     db_session.add(new_era)
     await db_session.flush()
@@ -355,7 +355,7 @@ async def test_past_era_recalc_delivers_no_invitation(
         point_value=PRIOR_ERA_POINTS,
         level_required=0,
         status=TaskStatus.active,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=OTHER_FACTION_SLUG,
     )
     second_task = Task(
@@ -364,7 +364,7 @@ async def test_past_era_recalc_delivers_no_invitation(
         point_value=PRIOR_ERA_POINTS,
         level_required=0,
         status=TaskStatus.active,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=OTHER_FACTION_SLUG,
     )
     db_session.add_all([first_task, second_task])
@@ -416,7 +416,7 @@ async def test_era_start_zeroes_lifetime_score_only_when_the_era_says_so(
     new_era = Era(
         name=CURRENT_ERA.name,
         config_key=CURRENT_ERA.config_key,
-        started_by=account.id,
+        started_by_id=account.id,
     )
     db_session.add(new_era)
     await db_session.flush()

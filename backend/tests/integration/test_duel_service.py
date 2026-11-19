@@ -29,7 +29,7 @@ async def test_accept_duel_at_duel_level_but_below_task_level_succeeds(
         point_value=10,
         level_required=CURRENT_ERA.duel_level_required + 20,
         status=TaskStatus.active,
-        created_by=character2.id,
+        created_by_id=character2.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(task)

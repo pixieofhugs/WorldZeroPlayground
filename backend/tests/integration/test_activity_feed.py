@@ -423,7 +423,7 @@ async def test_a_malformed_payload_is_dropped_and_its_siblings_still_serve(
         point_value=5,
         level_required=0,
         status=TaskStatus.active,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(sibling_task)

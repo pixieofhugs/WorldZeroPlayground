@@ -64,7 +64,7 @@ async def test_resubmitting_restamps_the_era(
     later_era = Era(
         name="Era Two",
         config_key=era.config_key,
-        started_by=era.started_by,
+        started_by_id=era.started_by_id,
     )
     db_session.add(later_era)
     await db_session.commit()

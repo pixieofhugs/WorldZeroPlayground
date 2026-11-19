@@ -48,7 +48,7 @@ async def make_admin(session: AsyncSession, account: Account, *, commit: bool = 
     role = Role(name="admin", description="Administrator")
     session.add(role)
     await session.flush()
-    session.add(AccountRole(account_id=account.id, role_id=role.id, granted_by=account.id))
+    session.add(AccountRole(account_id=account.id, role_id=role.id, granted_by_id=account.id))
     if commit:
         await session.commit()
     else:
@@ -123,7 +123,7 @@ async def make_task(
         level_required=level_required,
         status=status,
         task_type=task_type,
-        created_by=creator.id,
+        created_by_id=creator.id,
         primary_faction_slug=faction_slug,
     )
     session.add(task)

@@ -350,7 +350,7 @@ async def test_delete_praxis_whose_comment_has_a_mention_or_flag(
             CommentMention(comment_id=comment.id, mentioned_character_id=character.id)
         )
     else:
-        db_session.add(Flag(comment_id=comment.id, flagged_by=character.id))
+        db_session.add(Flag(comment_id=comment.id, flagged_by_id=character.id))
     await db_session.flush()
 
     response = await client.delete(f"/praxes/{praxis_id}", headers=auth_headers)

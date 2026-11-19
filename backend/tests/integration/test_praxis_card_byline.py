@@ -25,7 +25,7 @@ async def _make_solo_praxis(session: AsyncSession, author: Character) -> Praxis:
         point_value=10,
         level_required=0,
         status=TaskStatus.active,
-        created_by=author.id,
+        created_by_id=author.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     session.add(task)

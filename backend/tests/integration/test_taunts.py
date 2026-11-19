@@ -340,7 +340,7 @@ async def test_era_reset_produces_no_taunts(
     new_era_row = Era(
         name=CURRENT_ERA.name,
         config_key=CURRENT_ERA.config_key,
-        started_by=character.account_id,
+        started_by_id=character.account_id,
     )
     db_session.add(new_era_row)
     await db_session.flush()

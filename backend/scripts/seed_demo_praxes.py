@@ -236,7 +236,7 @@ async def get_or_create_metatask(
         level_required=0,
         status=TaskStatus.active,
         task_type=TaskType.metatask,
-        created_by=created_by.id,
+        created_by_id=created_by.id,
         primary_faction_slug=faction_slug,
         metatask_faction_slug=faction_slug,
     )

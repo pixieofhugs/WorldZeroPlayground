@@ -7,7 +7,7 @@ from models.base import Base
 
 
 class ContactMessage(Base):
-    __tablename__ = "contact_messages"
+    __tablename__ = "contact_message"
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
     name: Mapped[str] = mapped_column(String(100), nullable=False)

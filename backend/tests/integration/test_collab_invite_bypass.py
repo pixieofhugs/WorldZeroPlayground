@@ -129,7 +129,7 @@ async def high_level_task(db_session: AsyncSession, inviter: Character) -> Task:
         point_value=100,
         level_required=TASK_LEVEL_REQUIRED,
         status=TaskStatus.active,
-        created_by=inviter.id,
+        created_by_id=inviter.id,
         primary_faction_slug=TASK_FACTION_SLUG,
     )
     db_session.add(task)

@@ -50,7 +50,7 @@ async def _make_metatask(db_session: AsyncSession, character: Character) -> Task
         level_required=0,
         status=TaskStatus.active,
         task_type=TaskType.metatask,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
         metatask_faction_slug=DEFAULT_FACTION_SLUG,
     )
@@ -177,7 +177,7 @@ async def test_list_praxes_filter_by_task_id(
         point_value=10,
         level_required=0,
         status=TaskStatus.active,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(other_task)
@@ -233,7 +233,7 @@ async def test_list_praxes_filter_by_faction(
         point_value=10,
         level_required=0,
         status=TaskStatus.active,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug="wow",
     )
     db_session.add(wow_task)
@@ -300,7 +300,7 @@ async def _submitted_praxis(
         point_value=10,
         level_required=0,
         status=TaskStatus.active,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(task)
@@ -881,7 +881,7 @@ async def test_create_praxis_bank_cap(
             point_value=1,
             level_required=0,
             status=TaskStatus.active,
-            created_by=character2.id,
+            created_by_id=character2.id,
             primary_faction_slug=DEFAULT_FACTION_SLUG,
         )
         db_session.add(task)
@@ -904,7 +904,7 @@ async def test_create_praxis_bank_cap(
         point_value=1,
         level_required=0,
         status=TaskStatus.active,
-        created_by=character2.id,
+        created_by_id=character2.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(overflow_task)
@@ -1222,7 +1222,7 @@ async def test_list_praxes_member_id_filters_by_membership(
         point_value=10,
         level_required=0,
         status=TaskStatus.active,
-        created_by=character2.id,
+        created_by_id=character2.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(second_task)
@@ -1779,7 +1779,7 @@ async def test_create_praxis_below_required_level_returns_403(
         point_value=10,
         level_required=5,
         status=TaskStatus.active,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(high_task)
@@ -2035,7 +2035,7 @@ async def test_create_praxis_non_active_task_returns_403(
         point_value=10,
         level_required=0,
         status=task_status,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(task)
@@ -2073,7 +2073,7 @@ async def test_create_praxis_retired_task_allowed_for_the_task_vision_faction(
         point_value=10,
         level_required=0,
         status=TaskStatus.retired,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(retired_task)

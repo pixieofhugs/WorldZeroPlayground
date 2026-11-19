@@ -22,7 +22,7 @@ async def test_list_overrides_is_public(
             ns="common",
             key="nav.adminMode.badge",
             value="Backstage",
-            updated_by=account.id,
+            updated_by_id=account.id,
         )
     )
     await db_session.commit()
@@ -77,7 +77,7 @@ async def test_put_twice_updates_in_place(
     rows = (await db_session.execute(select(CopyOverride))).scalars().all()
     assert len(rows) == 1
     assert rows[0].value == "Homestead"
-    assert rows[0].updated_by == account.id
+    assert rows[0].updated_by_id == account.id
 
 
 @pytest.mark.asyncio

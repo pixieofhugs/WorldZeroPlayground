@@ -112,7 +112,7 @@ async def bootstrap_admin(session, era, pixie_acc) -> Character:
     era_row = Era(
         name=era.name,
         config_key=era.config_key,
-        started_by=pixie_acc.id,
+        started_by_id=pixie_acc.id,
     )
     session.add(era_row)
     await session.flush()
@@ -125,7 +125,7 @@ async def bootstrap_admin(session, era, pixie_acc) -> Character:
     session.add(AccountRole(
         account_id=pixie_acc.id,
         role_id=admin_role.id,
-        granted_by=pixie_acc.id,
+        granted_by_id=pixie_acc.id,
     ))
 
     session.add(CharacterStats(
@@ -155,7 +155,7 @@ async def sync_era_tasks(session, era, created_by_id: int) -> int:
             point_value=task_def.point_value,
             level_required=task_def.level_required,
             status=TaskStatus.active,
-            created_by=created_by_id,
+            created_by_id=created_by_id,
             primary_faction_slug=task_def.faction_slug,
         ))
         added += 1
@@ -197,7 +197,7 @@ async def ensure_onboarding_task(session, created_by_id: int) -> bool:
             level_required=0,
             status=TaskStatus.active,
             task_type=TaskType.standard,
-            created_by=created_by_id,
+            created_by_id=created_by_id,
             primary_faction_slug=ONBOARDING_TASK_FACTION_SLUG,
         ))
         await session.flush()
@@ -268,7 +268,7 @@ async def ensure_duel_fixture_task(session, created_by_id: int) -> bool:
             level_required=CURRENT_ERA.duel_level_required,
             status=TaskStatus.active,
             task_type=TaskType.standard,
-            created_by=created_by_id,
+            created_by_id=created_by_id,
             primary_faction_slug=slug,
         ))
         await session.flush()

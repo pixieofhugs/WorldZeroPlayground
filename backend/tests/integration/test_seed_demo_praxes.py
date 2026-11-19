@@ -49,7 +49,7 @@ async def _board(
             level_required=0,
             status=TaskStatus.active,
             task_type=TaskType.standard,
-            created_by=author.id,
+            created_by_id=author.id,
             primary_faction_slug=slug,
         ))
     await db_session.flush()

@@ -202,7 +202,7 @@ async def test_auth_me_surfaces_gate_copy_fields(
     assert data["era_id"] == era.id
 
     # A same-name rollover appends a row; the id must move with it.
-    db_session.add(Era(name=era.name, config_key=era.config_key, started_by=account.id))
+    db_session.add(Era(name=era.name, config_key=era.config_key, started_by_id=account.id))
     await db_session.commit()
     resp = await client.get("/auth/me", headers=auth_headers)
     assert resp.json()["era_id"] > era.id

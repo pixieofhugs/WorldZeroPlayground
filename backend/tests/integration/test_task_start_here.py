@@ -61,7 +61,7 @@ async def _complete(
 async def _roll_the_era(
     db_session: AsyncSession, account: Account, characters: list[Character]
 ) -> None:
-    new_era_row = Era(name="Era 2", config_key="era_1", started_by=account.id)
+    new_era_row = Era(name="Era 2", config_key="era_1", started_by_id=account.id)
     db_session.add(new_era_row)
     await db_session.flush()
     await apply_era_reset(characters, new_era_row, db_session)
@@ -185,7 +185,7 @@ async def test_a_player_task_sharing_the_onboarding_title_carries_no_mark(
         level_required=1,
         status=TaskStatus.active,
         task_type=TaskType.standard,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(player_task)

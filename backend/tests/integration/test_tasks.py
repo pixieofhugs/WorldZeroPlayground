@@ -94,7 +94,7 @@ async def test_list_tasks_filter_by_status_active(
         point_value=5,
         level_required=0,
         status=TaskStatus.retired,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(retired)
@@ -120,7 +120,7 @@ async def test_list_tasks_filter_by_status_all(
         point_value=5,
         level_required=0,
         status=TaskStatus.pending,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(pending_task)
@@ -148,7 +148,7 @@ async def test_list_tasks_filter_by_created_by(
         point_value=5,
         level_required=0,
         status=TaskStatus.retired,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     pending_task = Task(
@@ -157,7 +157,7 @@ async def test_list_tasks_filter_by_created_by(
         point_value=5,
         level_required=0,
         status=TaskStatus.pending,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     other_task = Task(
@@ -166,7 +166,7 @@ async def test_list_tasks_filter_by_created_by(
         point_value=5,
         level_required=0,
         status=TaskStatus.active,
-        created_by=character2.id,
+        created_by_id=character2.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add_all([retired_task, pending_task, other_task])
@@ -201,7 +201,7 @@ async def test_list_tasks_filter_by_min_max_points(
         point_value=5,
         level_required=0,
         status=TaskStatus.active,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(cheap)
@@ -233,7 +233,7 @@ async def test_list_tasks_filter_by_faction(
         point_value=10,
         level_required=0,
         status=TaskStatus.active,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=OTHER_FACTION_SLUG,
     )
     db_session.add(other)
@@ -261,7 +261,7 @@ async def test_list_tasks_filter_by_multiple_factions(
         point_value=10,
         level_required=0,
         status=TaskStatus.active,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=CROSS_FACTION_SLUG,
     )
     ephemerist_task = Task(
@@ -270,7 +270,7 @@ async def test_list_tasks_filter_by_multiple_factions(
         point_value=10,
         level_required=0,
         status=TaskStatus.active,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=OTHER_FACTION_SLUG,
     )
     db_session.add_all([unaffiliated_task, ephemerist_task])
@@ -322,7 +322,7 @@ async def test_list_tasks_sort_oldest_reverses_newest(
                 point_value=5 + index,
                 level_required=0,
                 status=TaskStatus.active,
-                created_by=character.id,
+                created_by_id=character.id,
                 primary_faction_slug=DEFAULT_FACTION_SLUG,
             )
         )
@@ -357,7 +357,7 @@ async def test_list_tasks_default_sort_is_level_then_point_value(
         point_value=30,
         level_required=2,
         status=TaskStatus.active,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     cheap = Task(
@@ -366,7 +366,7 @@ async def test_list_tasks_default_sort_is_level_then_point_value(
         point_value=5,
         level_required=0,
         status=TaskStatus.active,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     rich = Task(
@@ -375,7 +375,7 @@ async def test_list_tasks_default_sort_is_level_then_point_value(
         point_value=20,
         level_required=0,
         status=TaskStatus.active,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add_all([high_level, cheap, rich])
@@ -413,7 +413,7 @@ async def test_unknown_sort_is_rejected_and_absent_sort_still_defaults(
         point_value=5,
         level_required=0,
         status=TaskStatus.active,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     hard = Task(
@@ -422,7 +422,7 @@ async def test_unknown_sort_is_rejected_and_absent_sort_still_defaults(
         point_value=50,
         level_required=3,
         status=TaskStatus.active,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add_all([easy, hard])
@@ -556,7 +556,7 @@ async def test_list_tasks_includes_unaffiliated_tasks(
         point_value=10,
         level_required=0,
         status=TaskStatus.active,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=CROSS_FACTION_SLUG,
     )
     hidden_task = Task(
@@ -565,7 +565,7 @@ async def test_list_tasks_includes_unaffiliated_tasks(
         point_value=10,
         level_required=0,
         status=TaskStatus.active,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug="hiddenfaction",
     )
     db_session.add_all([unaffiliated_task, hidden_task])
@@ -593,7 +593,7 @@ async def test_list_tasks_filter_by_can_sign_up(
         point_value=5,
         level_required=0,
         status=TaskStatus.active,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     high_task = Task(
@@ -602,7 +602,7 @@ async def test_list_tasks_filter_by_can_sign_up(
         point_value=5,
         level_required=5,
         status=TaskStatus.active,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(low_task)
@@ -636,7 +636,7 @@ async def test_list_tasks_can_sign_up_is_empty_for_anonymous(
         point_value=5,
         level_required=0,
         status=TaskStatus.active,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(task)
@@ -700,7 +700,7 @@ async def test_list_tasks_default_returns_only_active(
         point_value=5,
         level_required=0,
         status=TaskStatus.pending,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(pending_task)
@@ -729,7 +729,7 @@ async def test_list_tasks_limit_and_offset(
             point_value=5,
             level_required=0,
             status=TaskStatus.active,
-            created_by=character.id,
+            created_by_id=character.id,
             primary_faction_slug=DEFAULT_FACTION_SLUG,
         )
         db_session.add(extra_task)
@@ -806,7 +806,7 @@ async def test_admin_bypass_propose_level_gate(
     db_session.add(role)
     await db_session.flush()
     account_role = AccountRole(
-        account_id=account.id, role_id=role.id, granted_by=account.id
+        account_id=account.id, role_id=role.id, granted_by_id=account.id
     )
     db_session.add(account_role)
     await db_session.commit()
@@ -838,7 +838,7 @@ async def test_my_tasks_with_status_filter(
             point_value=5,
             level_required=0,
             status=TaskStatus.active,
-            created_by=character2.id,
+            created_by_id=character2.id,
             primary_faction_slug=DEFAULT_FACTION_SLUG,
         )
         db_session.add(task)
@@ -912,7 +912,7 @@ async def _seed_standard_and_metatask(
         level_required=0,
         status=TaskStatus.active,
         task_type=TaskType.standard,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     meta_task = Task(
@@ -922,7 +922,7 @@ async def _seed_standard_and_metatask(
         level_required=0,
         status=TaskStatus.active,
         task_type=TaskType.metatask,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
         metatask_faction_slug=DEFAULT_FACTION_SLUG,
     )
@@ -1110,7 +1110,7 @@ async def test_get_task_metatask_eligibility_under_level(
         level_required=5,
         status=TaskStatus.active,
         task_type=TaskType.metatask,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
         metatask_faction_slug=DEFAULT_FACTION_SLUG,
     )
@@ -1153,7 +1153,7 @@ async def test_get_task_metatask_eligibility_meets_level_same_faction(
         level_required=5,
         status=TaskStatus.active,
         task_type=TaskType.metatask,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
         metatask_faction_slug=DEFAULT_FACTION_SLUG,
     )
@@ -1210,7 +1210,7 @@ async def test_get_task_metatask_eligibility_cross_faction_is_open(
         level_required=5,
         status=TaskStatus.active,
         task_type=TaskType.metatask,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug="snide",
         metatask_faction_slug="snide",
     )
@@ -1248,7 +1248,7 @@ async def test_get_task_metatask_eligibility_anonymous(
         level_required=0,
         status=TaskStatus.active,
         task_type=TaskType.metatask,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
         metatask_faction_slug=DEFAULT_FACTION_SLUG,
     )
@@ -1285,7 +1285,7 @@ async def _seed_search_tasks(db_session: AsyncSession, character: Character) -> 
         point_value=10,
         level_required=0,
         status=TaskStatus.active,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     description_match = Task(
@@ -1294,7 +1294,7 @@ async def _seed_search_tasks(db_session: AsyncSession, character: Character) -> 
         point_value=50,
         level_required=0,
         status=TaskStatus.active,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add_all([title_match, description_match])
@@ -1364,7 +1364,7 @@ async def test_list_tasks_search_matches_proposer_name(
         point_value=10,
         level_required=0,
         status=TaskStatus.active,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     theirs = Task(
@@ -1373,7 +1373,7 @@ async def test_list_tasks_search_matches_proposer_name(
         point_value=10,
         level_required=0,
         status=TaskStatus.active,
-        created_by=character2.id,
+        created_by_id=character2.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add_all([mine, theirs])
@@ -1411,7 +1411,7 @@ async def test_list_tasks_proposer_search_ands_with_other_filters(
         point_value=10,
         level_required=0,
         status=TaskStatus.active,
-        created_by=character2.id,
+        created_by_id=character2.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     pricey = Task(
@@ -1420,7 +1420,7 @@ async def test_list_tasks_proposer_search_ands_with_other_filters(
         point_value=50,
         level_required=0,
         status=TaskStatus.active,
-        created_by=character2.id,
+        created_by_id=character2.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add_all([cheap, pricey])
@@ -1531,7 +1531,7 @@ async def test_list_tasks_in_progress_count_grouped_per_task(
         point_value=10,
         level_required=0,
         status=TaskStatus.active,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     quiet_task = Task(
@@ -1540,7 +1540,7 @@ async def test_list_tasks_in_progress_count_grouped_per_task(
         point_value=10,
         level_required=0,
         status=TaskStatus.active,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add_all([busy_task, quiet_task])
@@ -1608,7 +1608,7 @@ async def _make_author_with_task(
         point_value=10,
         level_required=0,
         status=TaskStatus.active,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(task)
@@ -1653,7 +1653,7 @@ async def test_task_author_faction_is_the_authors_not_the_tasks(
         point_value=10,
         level_required=0,
         status=TaskStatus.active,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=CROSS_FACTION_SLUG,
     )
     db_session.add(task)

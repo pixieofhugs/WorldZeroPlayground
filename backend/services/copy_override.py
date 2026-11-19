@@ -32,10 +32,10 @@ async def upsert_override(
     is explicit: ``onupdate`` does not fire on the ``ON CONFLICT`` arm."""
     statement = (
         pg_insert(CopyOverride)
-        .values(ns=ns, key=key, value=value, updated_by=account_id)
+        .values(ns=ns, key=key, value=value, updated_by_id=account_id)
         .on_conflict_do_update(
             index_elements=["ns", "key"],
-            set_={"value": value, "updated_by": account_id, "updated_at": func.now()},
+            set_={"value": value, "updated_by_id": account_id, "updated_at": func.now()},
         )
         .returning(CopyOverride)
     )

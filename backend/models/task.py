@@ -48,7 +48,7 @@ class Task(TimestampMixin, Base):
     notes: Mapped[str] = mapped_column(
         Text, nullable=False, default="", server_default=""
     )
-    created_by: Mapped[int] = mapped_column(
+    created_by_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("character.id"), nullable=False
     )
     # "na" = cross-faction. Slug PK (ADR-0038).

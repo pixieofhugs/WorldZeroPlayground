@@ -107,7 +107,7 @@ async def run(username: str, env: str, revoke: bool) -> None:
         account_role = AccountRole(
             account_id=account_id,
             role_id=admin_role.id,
-            granted_by=account_id,
+            granted_by_id=account_id,
         )
         session.add(account_role)
         await session.commit()

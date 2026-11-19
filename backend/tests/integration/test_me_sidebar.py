@@ -155,7 +155,7 @@ async def test_activity_count_is_the_whole_panel_not_the_five_item_glance(
             point_value=10,
             level_required=0,
             status=TaskStatus.active,
-            created_by=character.id,
+            created_by_id=character.id,
             primary_faction_slug=DEFAULT_FACTION_SLUG,
         )
         for n in range(12)
