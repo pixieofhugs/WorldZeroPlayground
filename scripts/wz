@@ -84,6 +84,15 @@ prepare_database() {
     run_in_backend python seed.py
 }
 
+# `compose up` builds only a MISSING image, so a Dockerfile or requirements bump
+# never reached a long-lived local stack (#3581). Layer cache makes this a
+# seconds-long no-op when nothing moved. Before prepare_database: its throwaway
+# containers use the same image.
+build_backend() {
+    echo '==> backend image (rebuilds only if the Dockerfile or requirements changed)'
+    $DC build backend
+}
+
 cmd_up() {
     profile=''
     [ "${1:-}" = '--full' ] && profile='--profile full'
@@ -93,6 +102,7 @@ cmd_up() {
     # shellcheck disable=SC2086
     $DC up -d db
     wait_for_db
+    build_backend
     prepare_database
     echo '==> backend (and frontend, if --full)'
     # shellcheck disable=SC2086
@@ -114,6 +124,7 @@ cmd_up() {
 cmd_serve() {
     $DC up -d db
     wait_for_db
+    build_backend
     prepare_database
     exec $DC up backend
 }

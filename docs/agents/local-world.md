@@ -25,6 +25,11 @@ checkout: whichever last ran `wz up` (compose pins `name: worldzero`). To show a
 worktree's backend, run `wz up` there, then re-run it from the main checkout
 afterwards.
 
+`wz up` (and `reset`, `serve`) run `docker compose build backend` first, so a
+changed `Dockerfile` or `requirements*.txt` reaches the local stack and
+`wz test`; with nothing changed the layer cache makes it a no-op. It prints
+`==> backend image` each time (#3581).
+
 The frontend is deliberately outside the default stack. Run `npm run dev` on the
 host for reliable HMR, or `scripts/wz up --full` to put Vite in a container too
 when you have no `npm` (a fresh machine, or a worktree with no install).
