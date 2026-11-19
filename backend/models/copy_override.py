@@ -21,7 +21,7 @@ class CopyOverride(Base):
     key: Mapped[str] = mapped_column(String(255), primary_key=True)
     value: Mapped[str] = mapped_column(Text, nullable=False)
     #: Audit trail.
-    updated_by: Mapped[int] = mapped_column(
+    updated_by_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("account.id"), nullable=False
     )
     updated_at: Mapped[datetime] = mapped_column(

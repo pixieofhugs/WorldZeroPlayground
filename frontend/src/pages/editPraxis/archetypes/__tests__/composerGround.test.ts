@@ -8,9 +8,7 @@
  * Not in `factionContrast.test.ts`: that file measures flat pairs; these are
  * second grounds for inks it already carries.
  */
-import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import {
   AA_NORMAL,
   compositeOver,
@@ -28,13 +26,13 @@ import {
   type Theme,
 } from '../../../../utils/__tests__/cssVars'
 import { readIndexCss } from '../../../../test/indexCss'
+import { renderComposer } from './renderComposer'
 
 const CSS = readIndexCss()
 const THEMES = readThemes(CSS)
 const BOTH_THEMES: Theme[] = ['light', 'dark']
 
-const source = (file: string): string =>
-  readFileSync(fileURLToPath(new URL(`../${file}`, import.meta.url)), 'utf8')
+vi.mock('../../../../hooks/useFormFactor', () => ({ useFormFactor: () => 'desktop' }))
 
 function resolve(token: string, theme: Theme): Rgba {
   const raw = resolveVar(token, theme, THEMES)
@@ -211,10 +209,10 @@ describe('the wash is the tighter reading, not the flatterer', () => {
 
 describe('Coven washes at the strength its own faction minted', () => {
   // A minted wash strength applies to every surface the wash lands on.
-  it('the composer no longer states a bare opacity for its bloom layer', () => {
-    const composer = source('CovenEditPraxis.tsx')
-    expect(composer).toContain('opacity="var(--faction-coven-ward-haze)"')
-    expect(composer).not.toContain('opacity={0.7}')
+  it('the composer no longer states a bare opacity for its bloom layer', async () => {
+    const composer = await renderComposer('CovenEditPraxis')
+    expect(composer).toContain('opacity:var(--faction-coven-ward-haze)')
+    expect(composer).not.toContain('opacity:0.7')
   })
 })
 
@@ -241,12 +239,11 @@ describe('the Singularity composer re-points the label seam (#2831)', () => {
     return match?.[1] ?? null
   }
 
-  it('sets the seam on its own root, the way the other near-black composer does', () => {
-    // Inline on `dress.pageStyle` (no className on `ComposerPage`), a `var()`.
+  it('sets the seam on its own root, the way the other near-black composer does', async () => {
     expect(
-      source('SingularityEditPraxis.tsx'),
+      await renderComposer('SingularityEditPraxis'),
       'without this every .label-caption in the composer reads the global tertiary at 1.81:1 on the washed chassis',
-    ).toContain('["--label-ink" as string]: INK')
+    ).toContain(`--label-ink:var(${CHASSIS_RUNG})`)
   })
 
   it('and steps it back down to the quiet rung inside the live write-up box', () => {
@@ -298,32 +295,34 @@ describe('keeps each ground in step with the skin that draws it', () => {
   // Transcribed grounds rot: the skin must still name what's composited here.
   const ANCHORS: Record<string, { names: string[]; absent: string[] }> = {
     ua: {
-      names: ['var(--faction-ua-card-lotus)', 'var(--faction-ua-card-lotus-opacity)'],
-      absent: ['--faction-ua-card-muted'],
+      names: [
+        'var(--faction-ua-card-lotus)',
+        'var(--faction-ua-card-lotus-opacity)',
+        'var(--faction-ua-card-body)',
+      ],
+      absent: [],
     },
-    everymen: { names: ['className="em-burst"'], absent: ['var(--everymen-muted)'] },
+    everymen: { names: ['class="em-burst"'], absent: ['var(--everymen-muted)'] },
     coven: {
       names: ['var(--faction-coven-slip-lav)', 'var(--faction-coven-ward-haze)'],
       absent: [],
     },
     singularity: {
-      // Plus the chassis rung for the roster chip and leave link.
-      names: ['${SCAN} 0 1px', 'className="sg-scan"', 'quiet: INK'],
+      names: ['var(--faction-singularity-term-scan) 0 1px', 'class="sg-scan"'],
       absent: [],
     },
     na: {
-      // Plus the section label on the composer's own quiet token.
       names: [
         'var(--faction-default-aurora)',
         'var(--faction-default-aurora-opacity)',
-        'const labelStyle = { color: FAINT };',
+        'var(--faction-default-composer-faint)',
       ],
       absent: [],
     },
   }
 
-  it.each(Object.entries(ANCHORS))('%s', (key, anchor) => {
-    const composer = source(SKINS[key].file)
+  it.each(Object.entries(ANCHORS))('%s', async (key, anchor) => {
+    const composer = await renderComposer(SKINS[key].file.replace('.tsx', ''))
     for (const name of anchor.names) expect(composer).toContain(name)
     for (const name of anchor.absent) expect(composer).not.toContain(name)
   })

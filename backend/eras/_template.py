@@ -92,7 +92,6 @@ ERA_N_FACTIONS = {
 #   faction_slug   -- a key above; "na" for cross-faction
 #   level_required -- 0 = anyone
 #   point_value    -- before modifiers
-#   is_task_vision_eligible -- Ephemerists see it after retirement
 #
 # DECIDE FIRST: tasks here are re-added by `seed.py::sync_era_tasks` on EVERY
 # deploy, so an admin-UI delete won't stick. Era 1 leaves this EMPTY and
@@ -181,7 +180,10 @@ ERA_N = EraConfig(
     collab_invite_bypasses_task_bank=False,
 
     second_character_level_required=4,
-    albescent_level_required=8,
+    # None for an era with no secret faction (ADR-0097); else a key of `factions`.
+    secret_faction_slug=None,
+    secret_faction_join_level=8,
+    secret_faction_glimpse_level=6,
     invitation_point_threshold=50,   # ADR-0022
     invitation_task_threshold=2,
     # starting_faction_slug / reset_faction_slug: OMIT — pinned to `na` (ADR-0087).

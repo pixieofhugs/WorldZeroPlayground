@@ -49,7 +49,7 @@ def upgrade() -> None:
         ).bindparams(
             na_slug=UNAFFILIATED_FACTION_SLUG,
             albescent_slug=ALBESCENT_FACTION_SLUG,
-            ceiling=CURRENT_ERA.albescent_level_required,
+            ceiling=CURRENT_ERA.secret_faction_join_level,
         )
     )
 

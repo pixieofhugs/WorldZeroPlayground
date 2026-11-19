@@ -141,7 +141,7 @@ def meets_albescent_level(
     is_admin: bool,
     era: EraConfig = CURRENT_ERA,
 ) -> bool:
-    """``era.albescent_level_required`` — a level FACT, not a permission (#2868).
+    """``era.secret_faction_join_level`` — a level FACT, not a permission (#2868).
 
     Read in opposite directions: a **floor** in ``character_earns_albescent``
     (only half that rule; it also needs every faction covered) and a
@@ -150,7 +150,7 @@ def meets_albescent_level(
     """
     if level is None:
         return False
-    return level >= era.albescent_level_required
+    return level >= era.secret_faction_join_level
 
 
 def vote_lock_reason(

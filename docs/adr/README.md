@@ -4,7 +4,7 @@
      script instead. backend/tests/test_adr_index.py fails if this file
      is out of step with docs/adr/. -->
 
-96 records, of which **88 still state a rule**.
+97 records, of which **89 still state a rule**.
 
 | Status | Meaning |
 |---|---|
@@ -41,7 +41,7 @@
 | [0024](0024-in-progress-praxis-is-private.md) | An in-progress praxis is private (member-only) | Amended | [ADR-0011](0011-duel-is-two-linked-praxes.md) |
 | [0025](0025-active-character-is-the-actor.md) | The active character is the actor for every write path | Amended | [ADR-0041](0041-two-layer-identity-account-vs-character.md) |
 | [0026](0026-ua-comment-adopts-the-gilt-salon.md) | The UA comment adopts the gilt-salon identity | Amended | [ADR-0093](0093-comment-timestamps-read-the-same-for-every-faction.md) |
-| [0027](0027-albescent-is-a-secret-society.md) | Albescent is a secret society, revealed by a sticky per-account flag | Amended | [ADR-0080](0080-one-life-earns-albescent-its-siblings-take-it-and-the-earner-never-can.md), [ADR-0082](0082-albescent-is-redacted-not-hidden.md) |
+| [0027](0027-albescent-is-a-secret-society.md) | Albescent is a secret society, revealed by a sticky per-account flag | Amended | [ADR-0080](0080-one-life-earns-albescent-its-siblings-take-it-and-the-earner-never-can.md), [ADR-0082](0082-albescent-is-redacted-not-hidden.md), [ADR-0097](0097-secret-faction-state-is-per-account-and-per-faction-slug.md) |
 | [0028](0028-task-crown-replaces-faction-distinction-laurel.md) | The Task Crown replaces the Faction Distinction Laurel | Amended | [ADR-0054](0054-one-theme-aware-task-crown.md), [ADR-0033](0033-player-profile-contract-and-badge-registry.md) |
 | [0029](0029-faction-permits-is-the-single-faction-rules-seam.md) | `faction_permits` is the single faction-rules seam | Accepted | — |
 | [0030](0030-default-faction-behaviour-ua-is-ordinary-grid-is-a-directory.md) | Default faction behaviour: UA is an ordinary faction; the grid is a directory, not a join surface | Amended | [ADR-0087](0087-structural-faction-slugs-are-not-era-owned.md) |
@@ -101,7 +101,7 @@
 | [0084](0084-a-page-wears-a-faction-when-it-has-exactly-one-faction-to-wear.md) | A page wears a faction when it has exactly one faction to wear | Accepted | — |
 | [0085](0085-snide-is-not-an-always-dark-faction.md) | S.N.I.D.E. is not an always-dark faction; it has three registers | Accepted | — |
 | [0086](0086-only-the-base-multiplies-a-metatask-is-flat.md) | Only the base multiplies; a metatask is flat | Accepted | — |
-| [0087](0087-structural-faction-slugs-are-not-era-owned.md) | Structural faction slugs are not era-owned; a dropped faction is retired, not deleted | Accepted | — |
+| [0087](0087-structural-faction-slugs-are-not-era-owned.md) | Structural faction slugs are not era-owned; a dropped faction is retired, not deleted | Amended | [ADR-0097](0097-secret-faction-state-is-per-account-and-per-faction-slug.md) |
 | [0088](0088-albescent-wears-its-own-mark-for-a-revealed-viewer.md) | Albescent wears its own mark for a revealed viewer | Accepted | — |
 | [0089](0089-the-role-map-answers-for-every-slug-and-the-rail-keeps-its-guard.md) | The role map answers for every slug; the rail keeps its own guard | Accepted | — |
 | [0090](0090-a-per-faction-difference-is-classified-before-it-is-designed.md) | A per-faction difference is classified before it is designed: paint, tree, behaviour, or content | Accepted | — |
@@ -111,3 +111,4 @@
 | [0094](0094-a-characters-location-is-a-three-letter-airport-code.md) | A character's location is a three-letter airport code, enforced by shape | Accepted | — |
 | [0095](0095-classes-own-paint-inline-style-is-for-computed-values.md) | Classes in the cascade own every nameable paint; inline style is for computed values | Accepted | — |
 | [0096](0096-the-constellation-is-retired-the-players-page-is-a-podium-a-race-and-a-roster.md) | The Constellation is retired; the Players page is a podium, a faction race and a roster | Accepted | — |
+| [0097](0097-secret-faction-state-is-per-account-and-per-faction-slug.md) | Secret-faction state is per account and per faction slug | Accepted | — |

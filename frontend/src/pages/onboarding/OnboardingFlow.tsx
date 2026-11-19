@@ -1,16 +1,21 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthContext'
 import { acceptTerms } from '../../api/terms'
+import type { TaskOut } from '../../api/tasks'
+import { resolveHandoffTask } from '../../utils/onboardingHandoff'
 import { clearTermsAcceptance, holdTermsAcceptance, termsAcceptanceHeld } from '../../utils/onboardingResume'
+import Arrival from './Arrival'
 import AuthCard from './AuthCard'
+import CharacterStep from './CharacterStep'
 import Declined from './Declined'
 import SignInView from './SignInView'
 import TermsCard from './TermsCard'
 import Wisp from './Wisp'
 import { BEATS } from './beats'
 import { HoldNextContext } from './beats/holdNext'
-import { back, decline, initialFlow, isBeat, next, skip, toSignIn, type Flow, type Step } from './flowSteps'
+import { back, decline, initialFlow, isBeat, next, skip, toArrival, toCharacter, toSignIn, type Flow, type Step } from './flowSteps'
 import './flow.css'
 
 const TYPE_MS = 28
@@ -98,11 +103,19 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
   const [leaving, setLeaving] = useState(false)
   const [cameFrom, setCameFrom] = useState<Step | null>(null)
   const [held, setHeld] = useState<string | null>(null)
+  const [arrival, setArrival] = useState<{ name: string; task: TaskOut } | null>(null)
+  const navigate = useNavigate()
   // After an OAuth round trip a held click is written once, before creation; a failure shows the contract again.
   const [recording, setRecording] = useState(() => resumed && termsAcceptanceHeld())
   const recordedOnce = useRef(false)
+  // Back from a later step re-mounts the contract; one mount writes one row.
+  const wrote = useRef(false)
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
   useEffect(() => () => clearTimeout(timer.current), [])
+
+  // A player with a character goes where the hand-off sends them; one without creates it here.
+  const hasCharacter = !!user?.character || arrival !== null
+  const handOff = () => (hasCharacter ? onAccepted() : move((f) => toCharacter(f, hasCharacter)))
 
   useEffect(() => {
     if (!recording || loading || recordedOnce.current) return
@@ -110,17 +123,18 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
     recordedOnce.current = true
     acceptTerms().then(
       async () => {
+        wrote.current = true
         clearTermsAcceptance()
         // Layout gates on `has_accepted_terms`; hand off only once it can see the row.
         await refetch()
-        onAccepted()
+        handOff()
       },
       () => {
         clearTermsAcceptance()
         setRecording(false)
       },
     )
-  }, [recording, loading, user, onAccepted, refetch])
+  }, [recording, loading, user, handOff, refetch])
 
   const { step } = flow
   const n = isBeat(step) ? step : null
@@ -155,7 +169,7 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
     if (leaving || !flow.history.length) return
     const land = () => {
       window.scrollTo(0, 0)
-      setFlow(back)
+      setFlow((f) => back(f, hasCharacter))
       setReveal(Infinity)
       setCameFrom(step)
       setLeaving(false)
@@ -262,6 +276,26 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
 
       {step === 'signin' && <div className={screenCls}><AuthCard onBack={onBack} /></div>}
 
+      {step === 'character' && (
+        <div className={screenCls}>
+          <CharacterStep
+            onBack={onBack}
+            onCreated={async (c) => {
+              const task = await resolveHandoffTask()
+              if (!task) return navigate('/tasks')
+              setArrival({ name: c.display_name, task })
+              move(toArrival)
+            }}
+          />
+        </div>
+      )}
+
+      {step === 'arrival' && arrival && (
+        <div className={screenCls}>
+          <Arrival name={arrival.name} task={arrival.task} onBack={onBack} />
+        </div>
+      )}
+
       {step === 'returning' && (
         <div className={screenCls}>
           <SignInView onRestart={() => move(() => initialFlow(false))} />
@@ -281,8 +315,16 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
           ) : (
             <TermsCard
               // A session writes the row now; a guest holds the click through sign-in.
-              record={user ? acceptTerms : async () => void holdTermsAcceptance()}
-              onAccepted={() => (user ? void refetch().then(onAccepted) : move(next))}
+              record={
+                user
+                  ? async () => {
+                      if (wrote.current) return
+                      await acceptTerms()
+                      wrote.current = true
+                    }
+                  : async () => void holdTermsAcceptance()
+              }
+              onAccepted={() => (user ? void refetch().then(handOff) : move(next))}
               onDecline={() => {
                 clearTermsAcceptance()
                 move(decline)

@@ -1,7 +1,7 @@
 /**
  * The unsubmit confirm says what `unsubmit_praxis` (`backend/services/praxis.py`)
  * actually does (#1094):
- *  - published collab: every member's `has_submitted` clears.
+ *  - published collab: every member's `has_approved` clears.
  *  - collab `pending`: only the caller's part comes back; pending is unscored.
  *  - duel `pending` and `active`: pre-settlement (ADR-0011 §Forfeit), paired in
  *    `_LIVE_INCOMPLETE_DUEL_STATUSES`, so no consequence language.
@@ -35,7 +35,7 @@ const member = (
     id: characterId * 10,
     character_id: characterId,
     character_display_name: name,
-    has_submitted: hasSubmitted,
+    has_approved: hasSubmitted,
   })
 
 const praxis = (overrides: Partial<PraxisOut> = {}): PraxisOut =>

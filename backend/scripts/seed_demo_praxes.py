@@ -236,7 +236,7 @@ async def get_or_create_metatask(
         level_required=0,
         status=TaskStatus.active,
         task_type=TaskType.metatask,
-        created_by=created_by.id,
+        created_by_id=created_by.id,
         primary_faction_slug=faction_slug,
         metatask_faction_slug=faction_slug,
     )
@@ -276,7 +276,7 @@ async def seed_metatask_fixture(
         session.add(praxis)
         await session.flush()
         session.add(PraxisMember(
-            praxis_id=praxis.id, character_id=owner.id, has_submitted=True
+            praxis_id=praxis.id, character_id=owner.id, has_approved=True
         ))
         session.add(PraxisMetaTask(praxis_id=praxis.id, task_id=metatask.id))
         voters = [c for c in players.values() if c.account_id != owner.account_id]
@@ -307,7 +307,7 @@ async def seed_metatask_fixture(
         session.add(open_praxis)
         await session.flush()
         session.add(PraxisMember(
-            praxis_id=open_praxis.id, character_id=owner.id, has_submitted=False
+            praxis_id=open_praxis.id, character_id=owner.id, has_approved=False
         ))
         print(f"  + in-progress praxis for the apply flow by {owner.display_name}")
     await session.flush()
@@ -354,7 +354,7 @@ async def seed_duel_fixture(
         session.add(praxis)
         await session.flush()
         session.add(PraxisMember(
-            praxis_id=praxis.id, character_id=author.id, has_submitted=True
+            praxis_id=praxis.id, character_id=author.id, has_approved=True
         ))
         if metatask is not None:
             session.add(PraxisMetaTask(praxis_id=praxis.id, task_id=metatask.id))
@@ -424,7 +424,7 @@ async def seed_collab_fixture(
     await session.flush()
     for member in (author, second):
         session.add(PraxisMember(
-            praxis_id=praxis.id, character_id=member.id, has_submitted=True
+            praxis_id=praxis.id, character_id=member.id, has_approved=True
         ))
 
     member_account_ids = {author.account_id, second.account_id}
@@ -547,13 +547,13 @@ async def _repair_corrupt_submitted(session) -> int:
             await session.execute(
                 select(PraxisMember).where(
                     PraxisMember.praxis_id == praxis.id,
-                    PraxisMember.has_submitted.is_(True),
-                    PraxisMember.submitted_at.is_(None),
+                    PraxisMember.has_approved.is_(True),
+                    PraxisMember.approved_at.is_(None),
                 )
             )
         ).scalars().all()
         for member in members:
-            member.submitted_at = praxis.created_at
+            member.approved_at = praxis.created_at
     if rows:
         await session.flush()
         print(
@@ -630,8 +630,8 @@ async def seed(session, era: EraConfig = CURRENT_ERA) -> None:
         session.add(PraxisMember(
             praxis_id=praxis.id,
             character_id=author.id,
-            has_submitted=True,
-            submitted_at=now,
+            has_approved=True,
+            approved_at=now,
         ))
         voters = [c for c in players.values() if c.id != author.id][: len(stars)]
         for voter, star in zip(voters, stars):

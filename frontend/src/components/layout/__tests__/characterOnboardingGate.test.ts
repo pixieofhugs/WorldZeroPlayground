@@ -65,6 +65,12 @@ describe('characterRedirectTarget', () => {
     expect(characterRedirectTarget(false, true, false, true, '/characters/create')).toBeNull()
   })
 
+  it('leaves an accepted, character-less account to the flow while the hand-off mark is pending', () => {
+    expect(characterRedirectTarget(false, true, false, true, '/', true)).toBeNull()
+    expect(characterRedirectTarget(false, true, false, true, '/', false)).toBe('/characters/create')
+    expect(characterRedirectTarget(false, true, false, false, '/', true)).toBe('/start')
+  })
+
   it('never fires while loading, signed out, or with a character', () => {
     expect(characterRedirectTarget(true, true, false, false, '/tasks')).toBeNull()
     expect(characterRedirectTarget(false, false, false, false, '/tasks')).toBeNull()

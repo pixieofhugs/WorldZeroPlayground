@@ -24,6 +24,7 @@ from models.invitation_letter import InvitationLetter
 from models.praxis import Praxis, PraxisMember, PraxisStatus
 from schemas.character import BadgeOut, CharacterCreate, CharacterOut, CharacterUpdate
 from services.albescent_reveal import is_albescent_revealed
+from services.secret_faction import has_stamp, set_stamp
 from services.era import get_current_era_row, get_current_era_row_safe, get_or_create_stats
 from services.era_gates import meets_albescent_level
 from services.media import delete_stored_avatar
@@ -91,6 +92,10 @@ _ALBESCENT_SENTINEL_SLUGS: frozenset[str] = frozenset(
 )
 
 
+def _sentinel_slugs(era: EraConfig) -> frozenset[str]:
+    return frozenset({UNAFFILIATED_FACTION_SLUG, era.secret_faction_slug})
+
+
 async def account_peak_character_level(
     account_id: int,
     era_id: int,
@@ -126,7 +131,7 @@ async def _character_covers_every_faction(
     Era-scoped, hence the result is stamped (:func:`stamp_albescent_unlock`).
     """
     required_faction_slugs = frozenset(
-        slug for slug in era.factions if slug not in _ALBESCENT_SENTINEL_SLUGS
+        slug for slug in era.factions if slug not in _sentinel_slugs(era)
     )
     if not required_faction_slugs:
         return True
@@ -183,13 +188,13 @@ async def stamp_albescent_unlock(
 
     ``Character.account`` is ``lazy="raise"``, so the account is fetched by id.
     """
+    slug = era.secret_faction_slug
     account = await session.get(Account, character.account_id)
-    if account is None or account.albescent_unlocked:
+    if account is None or slug is None or has_stamp(account, slug, "unlocked"):
         return False
     if not await character_earns_albescent(character, era_id, session, era):
         return False
-    account.albescent_unlocked = True
-    return True
+    return set_stamp(account, slug, "unlocked")
 
 
 async def stamp_albescent_glimpse(
@@ -204,13 +209,13 @@ async def stamp_albescent_glimpse(
     account-scoped so it does not blink with the character switcher. Returns
     True if this call flipped it.
     """
-    if level < era.albescent_glimpse_level:
+    slug = era.secret_faction_slug
+    if slug is None or level < era.secret_faction_glimpse_level:
         return False
     account = await session.get(Account, character.account_id)
-    if account is None or account.albescent_glimpsed:
+    if account is None:
         return False
-    account.albescent_glimpsed = True
-    return True
+    return set_stamp(account, slug, "glimpsed")
 
 
 @dataclasses.dataclass(frozen=True)
@@ -237,7 +242,7 @@ async def load_account_eligibility(
         can_create_additional_character=(
             peak_level >= era.second_character_level_required
         ),
-        can_start_as_albescent=bool(account is not None and account.albescent_unlocked),
+        can_start_as_albescent=has_stamp(account, era.secret_faction_slug, "unlocked"),
     )
 
 
@@ -300,9 +305,9 @@ async def get_account_invited_faction_slugs(
             ),
         )
     )
-    slugs = {row[0] for row in result.all()} - _ALBESCENT_SENTINEL_SLUGS
+    slugs = {row[0] for row in result.all()} - _sentinel_slugs(era)
     if await can_start_as_albescent(account_id, session, era):
-        slugs.add(ALBESCENT_FACTION_SLUG)
+        slugs.add(era.secret_faction_slug)
     return sorted(slugs)
 
 

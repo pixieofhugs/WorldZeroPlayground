@@ -131,7 +131,7 @@ def test_duel_no_character_is_false() -> None:
 # Albescent: one level fact, read as floor and ceiling (#2868)
 
 def test_albescent_level_meets_and_misses_the_threshold() -> None:
-    threshold = ERA_1.albescent_level_required
+    threshold = ERA_1.secret_faction_join_level
     assert meets_albescent_level(threshold - 1, None, False, ERA_1) is False
     assert meets_albescent_level(threshold, None, False, ERA_1) is True
     assert meets_albescent_level(threshold + 1, None, False, ERA_1) is True
@@ -146,7 +146,7 @@ def test_albescent_level_admin_does_not_bypass() -> None:
     """The ``defect_to_faction`` ceiling: a bypass would let admins in."""
     assert meets_albescent_level(0, None, True, ERA_1) is False
     assert (
-        meets_albescent_level(ERA_1.albescent_level_required, None, True, ERA_1)
+        meets_albescent_level(ERA_1.secret_faction_join_level, None, True, ERA_1)
         is True
     )
 
@@ -157,7 +157,7 @@ def test_reads_thresholds_off_the_era_argument() -> None:
         level_to_propose_task=10,
         collaboration_level_required=10,
         duel_level_required=10,
-        albescent_level_required=10,
+        secret_faction_join_level=10,
     )
     assert may_propose_task(9, None, False, strict_era) is False
     assert may_create_collab_praxis(9, None, False, strict_era) is False

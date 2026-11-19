@@ -281,7 +281,7 @@ async def import_tasks_from_csv(
                 level_required=parsed.task.level_required,
                 primary_faction_slug=parsed.task.primary_faction_slug,
                 task_type=TaskType.standard,
-                created_by=character.id,
+                created_by_id=character.id,
                 status=TaskStatus.active,
             )
         )

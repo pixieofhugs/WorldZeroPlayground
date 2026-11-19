@@ -8,6 +8,7 @@ from models.account import Account
 from models.era import Era
 from services.progression import HIDDEN_UNTIL_REVEALED_UNLOCK_KEY
 from services.scoring import sole_tie_taker_slug
+from tests.stamps import stamp, stamped
 
 
 @pytest.mark.asyncio
@@ -141,7 +142,7 @@ async def test_join_albescent_rung_hidden_from_unrevealed_account(
     account: Account,
     auth_headers: dict,
 ):
-    assert account.albescent_revealed is False
+    assert stamped(account, "revealed") is False
     data = (await client.get("/game-config", headers=auth_headers)).json()
     assert HIDDEN_UNTIL_REVEALED_UNLOCK_KEY not in _ladder_unlock_keys(data)
 
@@ -153,7 +154,7 @@ async def test_join_albescent_rung_shown_to_revealed_account(
     auth_headers: dict,
     db_session: AsyncSession,
 ):
-    account.albescent_revealed = True
+    stamp(account, "revealed", True)
     await db_session.flush()
 
     data = (await client.get("/game-config", headers=auth_headers)).json()
@@ -183,7 +184,9 @@ async def test_era_id_follows_a_new_era_row_with_the_same_name(
     assert before == era.id
 
     # A same-era reset / name-keeping switch (ADR-0091) appends a row.
-    db_session.add(Era(name=era.name, config_key=era.config_key, started_by=account.id))
+    db_session.add(
+        Era(name=era.name, config_key=era.config_key, started_by_id=account.id)
+    )
     await db_session.commit()
 
     after = (await client.get("/game-config")).json()["era_id"]

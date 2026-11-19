@@ -90,7 +90,7 @@ async def test_sidebar_returns_all_three_panels(
 
 #: SELECTs for one rail read on a character with no activity (measured). One
 #: more fan-out, or a badge count the rail never draws, breaks the exact pin.
-SIDEBAR_SELECT_BUDGET = 20
+SIDEBAR_SELECT_BUDGET = 21
 
 
 @pytest.mark.asyncio
@@ -155,7 +155,7 @@ async def test_activity_count_is_the_whole_panel_not_the_five_item_glance(
             point_value=10,
             level_required=0,
             status=TaskStatus.active,
-            created_by=character.id,
+            created_by_id=character.id,
             primary_faction_slug=DEFAULT_FACTION_SLUG,
         )
         for n in range(12)
@@ -230,7 +230,7 @@ async def four_request_types(
 
     ``collab_invite``      ``pending`` AND room still joinable
     ``duel_challenge``     ``pending``
-    ``awaiting_submission``  ``has_submitted`` false
+    ``awaiting_submission``  ``has_approved`` false
     ``invitation_letter``  faction is not the one you stand in
 
     ``collab_invite`` has a second twin (#2279): pending but its praxis is
@@ -293,17 +293,17 @@ async def four_request_types(
             status=DuelStatus.active,
         ),
         PraxisMember(
-            praxis_id=my_turn.id, character_id=character.id, has_submitted=False
+            praxis_id=my_turn.id, character_id=character.id, has_approved=False
         ),
         PraxisMember(
-            praxis_id=my_turn.id, character_id=character2.id, has_submitted=False
+            praxis_id=my_turn.id, character_id=character2.id, has_approved=False
         ),
         PraxisMember(
-            praxis_id=already_filed.id, character_id=character.id, has_submitted=True
+            praxis_id=already_filed.id, character_id=character.id, has_approved=True
         ),
-        # Must differ from ``my_turn`` only in ``has_submitted``.
+        # Must differ from ``my_turn`` only in ``has_approved``.
         PraxisMember(
-            praxis_id=already_filed.id, character_id=character2.id, has_submitted=False
+            praxis_id=already_filed.id, character_id=character2.id, has_approved=False
         ),
         InvitationLetter(
             character_id=character.id, faction_slug=OTHER_FACTION_SLUG, era_id=era.id

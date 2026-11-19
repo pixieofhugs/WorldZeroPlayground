@@ -32,7 +32,7 @@ async def dressed_viewer(
     db_session.add(role)
     await db_session.flush()
     db_session.add(
-        AccountRole(account_id=account.id, role_id=role.id, granted_by=account.id)
+        AccountRole(account_id=account.id, role_id=role.id, granted_by_id=account.id)
     )
 
     stats = await db_session.scalar(
@@ -41,7 +41,7 @@ async def dressed_viewer(
             CharacterStats.era_id == era.id,
         )
     )
-    stats.level = CURRENT_ERA.albescent_level_required
+    stats.level = CURRENT_ERA.secret_faction_join_level
     stats.score = 1000
 
     db_session.add(

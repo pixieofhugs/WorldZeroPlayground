@@ -205,7 +205,7 @@ async def test_second_row_with_the_onboarding_seed_key_is_rejected_by_the_databa
         level_required=0,
         status=TaskStatus.active,
         task_type=TaskType.standard,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=CROSS_FACTION_SLUG,
     ))
     with pytest.raises(IntegrityError):
@@ -231,7 +231,7 @@ async def test_onboarding_seed_survives_a_player_task_with_the_same_title(
         level_required=0,
         status=TaskStatus.pending,
         task_type=TaskType.standard,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=CROSS_FACTION_SLUG,
     ))
     await db_session.flush()
