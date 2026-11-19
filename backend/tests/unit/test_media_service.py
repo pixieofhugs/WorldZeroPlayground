@@ -2,6 +2,7 @@
 
 import io
 import os
+import subprocess
 
 import pytest
 from fastapi import HTTPException, UploadFile
@@ -255,28 +256,29 @@ async def test_same_filename_uploads_keep_their_own_bytes(tmp_path, monkeypatch)
     monkeypatch.setattr(media.settings, "MEDIA_ROOT", str(tmp_path))
 
     first = await media.process_and_save_media(
-        _make_upload("proof.jpg", b"FIRST-UPLOAD-BYTES", "image/jpeg"),
+        _make_upload("proof.jpg", _jpeg_bytes(8, 8), "image/jpeg"),
         praxis_id=11,
         character_id=3,
         display_order=0,
     )
     second = await media.process_and_save_media(
-        _make_upload("proof.jpg", b"SECOND-UPLOAD-BYTES", "image/jpeg"),
+        _make_upload("proof.jpg", _jpeg_bytes(9, 9), "image/jpeg"),
         praxis_id=11,
         character_id=3,
         display_order=1,
     )
 
     assert first.file_path != second.file_path
-    with open(os.path.join(str(tmp_path), first.file_path), "rb") as handle:
-        assert handle.read() == b"FIRST-UPLOAD-BYTES"
-    with open(os.path.join(str(tmp_path), second.file_path), "rb") as handle:
-        assert handle.read() == b"SECOND-UPLOAD-BYTES"
+    with Image.open(os.path.join(str(tmp_path), first.file_path)) as saved:
+        assert saved.size == (8, 8)
+    with Image.open(os.path.join(str(tmp_path), second.file_path)) as saved:
+        assert saved.size == (9, 9)
 
 
 @pytest.mark.asyncio
 async def test_stored_path_keeps_the_player_visible_basename(tmp_path, monkeypatch):
     """The composer renders ``file_path.split("/").pop()`` — keep it readable."""
+    monkeypatch.setattr(media, "_strip_av", lambda contents, extension: contents)
     monkeypatch.setattr(media.settings, "MEDIA_ROOT", str(tmp_path))
 
     media_item = await media.process_and_save_media(
@@ -295,7 +297,7 @@ async def test_stored_path_is_relative_and_stays_under_media_root(tmp_path, monk
 
     for hostile in ("../../../../etc/passwd", "..", "/etc/passwd", "nul\x00.jpg"):
         media_item = await media.process_and_save_media(
-            _make_upload(hostile, b"bytes", "image/jpeg"),
+            _make_upload(hostile, _jpeg_bytes(8, 8), "image/jpeg"),
             praxis_id=11,
             character_id=3,
             display_order=0,
@@ -317,3 +319,133 @@ async def test_process_and_save_media_unsupported_type_rejected(tmp_path, monkey
             upload, praxis_id=1, character_id=1, display_order=0
         )
     assert exc_info.value.status_code == 422
+
+
+# --- location stripping (#3486, #3487) ---------------------------------------
+
+GPS_IFD = 0x8825
+PORTLAND = "+45.5200-122.6800"
+
+
+def _gps_exif() -> Image.Exif:
+    exif = Image.Exif()
+    gps = exif.get_ifd(GPS_IFD)
+    gps[1], gps[2], gps[3], gps[4] = "N", (45.0, 31.0, 12.34), "W", (122.0, 40.0, 56.78)
+    exif[GPS_IFD] = gps
+    return exif
+
+
+def _image_bytes(fmt: str, exif: Image.Exif | None = None) -> bytes:
+    buffer = io.BytesIO()
+    Image.new("RGB", (64, 32), "red").save(buffer, fmt, exif=exif or _gps_exif())
+    return buffer.getvalue()
+
+
+async def _store(tmp_path, monkeypatch, name, content, content_type) -> str:
+    monkeypatch.setattr(media.settings, "MEDIA_ROOT", str(tmp_path))
+    item = await media.process_and_save_media(
+        _make_upload(name, content, content_type), 1, 2, 0
+    )
+    return os.path.join(str(tmp_path), item.file_path)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "fmt,name,mime",
+    [("JPEG", "a.jpg", "image/jpeg"), ("WEBP", "a.webp", "image/webp")],
+)
+async def test_image_exif_gps_is_stripped(tmp_path, monkeypatch, fmt, name, mime):
+    original = _image_bytes(fmt)
+    assert Image.open(io.BytesIO(original)).getexif().get_ifd(GPS_IFD)
+
+    path = await _store(tmp_path, monkeypatch, name, original, mime)
+
+    with Image.open(path) as saved:
+        assert not saved.getexif().get_ifd(GPS_IFD)
+        assert not saved.getexif()
+        assert saved.size == (64, 32)
+
+
+@pytest.mark.asyncio
+async def test_orientation_applied_before_exif_dropped(tmp_path, monkeypatch):
+    exif = _gps_exif()
+    exif[0x0112] = 6  # rotate 90 CW on display
+
+    path = await _store(
+        tmp_path, monkeypatch, "a.jpg", _image_bytes("JPEG", exif), "image/jpeg"
+    )
+
+    with Image.open(path) as saved:
+        assert saved.size == (32, 64)
+        assert not saved.getexif()
+
+
+@pytest.mark.asyncio
+async def test_heic_is_stored_as_jpeg_without_location(tmp_path, monkeypatch):
+    original = _image_bytes("HEIF")
+    assert b"Exif" in original
+
+    path = await _store(tmp_path, monkeypatch, "IMG_1.HEIC", original, "image/heic")
+
+    assert path.endswith(".jpg")
+    with Image.open(path) as saved:
+        assert saved.format == "JPEG"
+        assert not saved.getexif()
+
+
+@pytest.mark.asyncio
+async def test_animated_gif_stays_animated(tmp_path, monkeypatch):
+    buffer = io.BytesIO()
+    frames = [Image.new("RGB", (8, 8), c) for c in ("red", "blue")]
+    frames[0].save(buffer, "GIF", save_all=True, append_images=frames[1:])
+
+    path = await _store(tmp_path, monkeypatch, "a.gif", buffer.getvalue(), "image/gif")
+
+    with Image.open(path) as saved:
+        assert saved.n_frames == 2
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "name,mime,source",
+    [
+        ("v.mp4", "video/mp4", "color=c=red:s=64x64:d=0.2"),
+        ("a.m4a", "audio/mp4", "anullsrc=d=0.2"),
+    ],
+)
+async def test_av_location_is_stripped(tmp_path, monkeypatch, name, mime, source):
+    fixture = tmp_path / "fixture" / name
+    fixture.parent.mkdir()
+    subprocess.run(
+        ["ffmpeg", "-v", "error", "-f", "lavfi", "-i", source,
+         "-metadata", f"location={PORTLAND}/", "-metadata", f"comment={PORTLAND}",
+         str(fixture)],
+        check=True,
+    )
+    original = fixture.read_bytes()
+    assert PORTLAND.encode() in original
+
+    path = await _store(tmp_path / "media", monkeypatch, name, original, mime)
+
+    stored = open(path, "rb").read()
+    assert stored
+    assert PORTLAND.encode() not in stored
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "name,content_type",
+    [("a.jpg", "image/jpeg"), ("v.mp4", "video/mp4"), ("a.mp3", "audio/mpeg")],
+)
+async def test_unstrippable_file_is_refused_not_stored(
+    tmp_path, monkeypatch, name, content_type
+):
+    monkeypatch.setattr(media.settings, "MEDIA_ROOT", str(tmp_path))
+
+    with pytest.raises(HTTPException) as exc_info:
+        await media.process_and_save_media(
+            _make_upload(name, b"not really media", content_type), 1, 2, 0
+        )
+
+    assert exc_info.value.status_code == 422
+    assert list(tmp_path.rglob("*")) == []

@@ -6,13 +6,17 @@ Never calls ``session.commit``; routers do.
 import io
 import logging
 import os
+import asyncio
 import re
 import shutil
+import subprocess
+import tempfile
 import uuid
 from typing import Iterable
 
 from fastapi import HTTPException, UploadFile
-from PIL import Image
+from pillow_heif import register_heif_opener
+from PIL import Image, ImageOps
 
 from config import settings
 from errors import ErrorCode, raise_coded
@@ -20,6 +24,8 @@ from models.praxis import MediaItem, MediaType
 
 
 logger = logging.getLogger(__name__)
+
+register_heif_opener()
 
 
 #: Limits are stated in MB for both prose and catalog ``params`` (#1401).
@@ -33,6 +39,50 @@ AVATAR_MAX_BYTES = AVATAR_MAX_MEGABYTES * BYTES_PER_MEGABYTE
 MEDIA_MAX_MEGABYTES = 100
 MEDIA_MAX_BYTES = MEDIA_MAX_MEGABYTES * BYTES_PER_MEGABYTE
 MEDIA_FILENAME_MAX_LEN = 100
+
+
+FFMPEG_TIMEOUT_SECONDS = 120
+_HEIF_EXTENSIONS = (".heic", ".heif")
+
+
+def _strip_image(contents: bytes) -> tuple[bytes, str | None]:
+    """Re-encode without EXIF/XMP/GPS; returns (bytes, forced extension or None).
+
+    Orientation is applied to the pixels first. HEIC is written back as JPEG
+    (Pillow can't write a clean HEIF); animated images skip the transpose so
+    they keep their frames.
+    """
+    with Image.open(io.BytesIO(contents)) as source:
+        fmt = source.format
+        animated = getattr(source, "is_animated", False)
+        image = source if animated else ImageOps.exif_transpose(source)
+        extension = None
+        options: dict = {"save_all": True} if animated else {}
+        if fmt in ("HEIF", "HEIC"):
+            fmt, extension = "JPEG", ".jpg"
+        if fmt == "JPEG":
+            options.update(quality=95)
+            if image.mode not in ("RGB", "L", "CMYK"):
+                image = image.convert("RGB")
+        buffer = io.BytesIO()
+        image.save(buffer, format=fmt, **options)
+    return buffer.getvalue(), extension
+
+
+def _strip_av(contents: bytes, extension: str) -> bytes:
+    """Drop container metadata (location atoms, tags) without re-encoding."""
+    with tempfile.TemporaryDirectory() as scratch:
+        source = os.path.join(scratch, "in" + extension)
+        target = os.path.join(scratch, "out" + extension)
+        with open(source, "wb") as handle:
+            handle.write(contents)
+        subprocess.run(
+            ["ffmpeg", "-nostdin", "-v", "error", "-i", source, "-map_metadata", "-1",
+             "-map_chapters", "-1", "-c", "copy", target],
+            check=True, capture_output=True, timeout=FFMPEG_TIMEOUT_SECONDS,
+        )
+        with open(target, "rb") as handle:
+            return handle.read()
 
 
 def _sanitize_filename(raw: str) -> str:
@@ -335,7 +385,6 @@ async def process_and_save_media(
     relative_path = os.path.join(relative_directory, filename)
 
     try:
-        os.makedirs(absolute_directory, exist_ok=True)
         contents = await upload.read()
         if len(contents) > MEDIA_MAX_BYTES:
             raise_coded(
@@ -344,6 +393,26 @@ async def process_and_save_media(
                 f"File too large (max {MEDIA_MAX_MEGABYTES} MB).",
                 {"max_megabytes": MEDIA_MAX_MEGABYTES},
             )
+        try:
+            if media_type is MediaType.image:
+                contents, forced = _strip_image(contents)
+                if forced:
+                    filename = os.path.splitext(filename)[0] + forced
+            else:
+                contents = await asyncio.to_thread(
+                    _strip_av, contents, os.path.splitext(filename)[1].lower()
+                )
+        except Exception:
+            # Never store a file whose location data we couldn't remove.
+            logger.exception("Could not strip metadata for praxis %s", praxis_id)
+            raise_coded(
+                422,
+                ErrorCode.media_unreadable,
+                "We couldn't read that file. Try a different one.",
+            )
+        absolute_path = os.path.join(absolute_directory, filename)
+        relative_path = os.path.join(relative_directory, filename)
+        os.makedirs(absolute_directory, exist_ok=True)
         with open(absolute_path, "wb") as file_handle:
             file_handle.write(contents)
     except HTTPException:
