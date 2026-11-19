@@ -11,6 +11,6 @@ export function planLoadedPraxis(
   viewerId: number | null | undefined,
 ): LoadedPraxisPlan {
   return isViewerMember(loaded, viewerId)
-    ? { kind: "edit", title: loaded.title ?? "", body: loaded.body_text ?? "" }
+    ? { kind: "edit", title: loaded.title, body: loaded.body_text }
     : { kind: "redirect" };
 }

@@ -90,15 +90,21 @@ class Praxis(TimestampMixin, Base):
         default=PraxisStatus.in_progress,
         server_default="in_progress",
     )
-    title: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    body_text: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    title: Mapped[str] = mapped_column(
+        Text, nullable=False, default="", server_default=""
+    )
+    body_text: Mapped[str] = mapped_column(
+        Text, nullable=False, default="", server_default=""
+    )
     moderation_status: Mapped[ModerationStatus] = mapped_column(
         string_enum(ModerationStatus),
         nullable=False,
         default=ModerationStatus.visible,
         server_default="visible",
     )
-    admin_note: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    admin_note: Mapped[str] = mapped_column(
+        Text, nullable=False, default="", server_default=""
+    )
     flagged_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )

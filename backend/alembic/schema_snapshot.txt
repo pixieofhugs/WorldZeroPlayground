@@ -302,8 +302,8 @@ table oauth_provider
   constraint uq_oauth_provider_provider_provider_user_id UNIQUE (provider, provider_user_id)
 
 table praxis
-  column admin_note text
-  column body_text text
+  column admin_note text NOT NULL DEFAULT ''::text
+  column body_text text NOT NULL DEFAULT ''::text
   column created_at timestamp with time zone NOT NULL DEFAULT now()
   column created_by_id bigint NOT NULL
   column era_id bigint
@@ -314,7 +314,7 @@ table praxis
   column submit_proposed_at timestamp with time zone
   column submitted_at timestamp with time zone
   column task_id bigint NOT NULL
-  column title text
+  column title text NOT NULL DEFAULT ''::text
   column type character varying(32) NOT NULL
   column updated_at timestamp with time zone NOT NULL DEFAULT now()
   constraint ck_praxis_moderationstatus CHECK (((moderation_status)::text = ANY ((ARRAY['visible'::character varying, 'flagged'::character varying, 'hidden'::character varying, 'failed'::character varying, 'deleted'::character varying])::text[])))

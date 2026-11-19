@@ -455,7 +455,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
       {sectionHead('writeup', t('detail.sections.writeUp'))}
       <div style={{ ...plate, padding: size.panelPad }}>
         <MarkdownPreview
-          source={praxis.body_text ?? ''}
+          source={praxis.body_text}
           className="markdown-preview content-text"
           style={{ ...QUIET, lineHeight: 1.75, color: INK }}
         />

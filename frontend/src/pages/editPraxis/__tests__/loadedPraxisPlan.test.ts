@@ -17,7 +17,7 @@ describe("what the composer does with a loaded praxis", () => {
   });
 
   it("falls back to empty strings for a null title or body", () => {
-    const praxis = aPraxis({ members: [member], title: null, body_text: null });
+    const praxis = aPraxis({ members: [member], title: "", body_text: "" });
     expect(planLoadedPraxis(praxis, 5)).toEqual({
       kind: "edit",
       title: "",

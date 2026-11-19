@@ -27,6 +27,7 @@ import sys
 from pathlib import Path
 
 import asyncpg
+import pytest
 import pytest_asyncio
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy.engine import make_url
@@ -539,3 +540,70 @@ async def test_check_constraint_migration_refuses_a_violating_row(
     refused = _alembic("upgrade", "head")
     assert refused.returncode != 0
     assert "relationship has 1 rows violating" in refused.stderr
+
+
+async def _insert_task_and_character(conn: asyncpg.Connection) -> tuple[int, int]:
+    await conn.execute("INSERT INTO faction (slug, status) VALUES ('na', 'visible')")
+    account_id = await conn.fetchval(
+        "INSERT INTO account (email, status) VALUES ('p@example.com', 'active') RETURNING id"
+    )
+    character_id = await conn.fetchval(
+        "INSERT INTO character (account_id, username, display_name, faction_slug, status)"
+        " VALUES ($1, 'pat', 'Pat', 'na', 'active') RETURNING id",
+        account_id,
+    )
+    task_id = await conn.fetchval(
+        "INSERT INTO task (title, point_value, level_required, status, created_by_id)"
+        " VALUES ('t', 10, 0, 'active', $1) RETURNING id",
+        character_id,
+    )
+    return task_id, character_id
+
+
+async def test_enum_and_praxis_text_migrations_convert_real_rows(
+    migration_db: str,
+) -> None:
+    """#3448/#3449: from the native-enum shape, rows survive and NULL text becomes ''."""
+    assert _alembic("upgrade", "head").returncode == 0
+    back = _alembic("downgrade", "0036_check_constraints")
+    assert back.returncode == 0, _report("downgrade to 0036", back)
+    conn = await asyncpg.connect(_dsn(migration_db))
+    try:
+        assert await conn.fetchval(
+            "SELECT udt_name FROM information_schema.columns"
+            " WHERE table_name = 'praxis' AND column_name = 'status'"
+        ) == "praxisstatus"
+        task_id, character_id = await _insert_task_and_character(conn)
+        praxis_id = await conn.fetchval(
+            "INSERT INTO praxis (task_id, type, created_by_id, title, body_text, admin_note)"
+            " VALUES ($1, 'solo', $2, NULL, NULL, NULL) RETURNING id",
+            task_id,
+            character_id,
+        )
+    finally:
+        await conn.close()
+
+    up = _alembic("upgrade", "head")
+    assert up.returncode == 0, _report("upgrade head", up)
+    conn = await asyncpg.connect(_dsn(migration_db))
+    try:
+        row = await conn.fetchrow(
+            "SELECT status, title, body_text, admin_note FROM praxis WHERE id = $1",
+            praxis_id,
+        )
+        assert tuple(row) == ("in_progress", "", "", "")
+        assert await conn.fetchval(
+            "SELECT count(*) FROM pg_type WHERE typname = 'praxisstatus'"
+        ) == 0
+        for statement in (
+            "INSERT INTO praxis (task_id, type, created_by_id, status)"
+            f" VALUES ({task_id}, 'solo', {character_id}, 'bogus')",
+            "INSERT INTO praxis (task_id, type, created_by_id, title)"
+            f" VALUES ({task_id}, 'solo', {character_id}, NULL)",
+        ):
+            with pytest.raises(asyncpg.PostgresError):
+                await conn.execute(statement)
+    finally:
+        await conn.close()
+    check = _alembic("check")
+    assert check.returncode == 0, _report("check", check)

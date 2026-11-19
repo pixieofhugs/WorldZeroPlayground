@@ -1981,7 +1981,7 @@ async def test_create_praxis_minimal_body_starts_as_draft(
     assert data["task_id"] == active_task.id
     assert data["type"] == "solo"
     assert data["status"] == "in_progress"
-    assert data["title"] is None
+    assert data["title"] == ""
     assert data["body_text"] == ""
     assert data["moderation_status"] == "visible"
     assert len(data["members"]) == 1
