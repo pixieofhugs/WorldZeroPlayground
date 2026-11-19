@@ -175,6 +175,9 @@ class ErrorCode(str, enum.Enum):
     # -- Owner-only admin roster (#3258) ------------------------------------
     #: A non-owner on the roster routes. 403, like ``require_admin``.
     admin_owner_required = "ADMIN_OWNER_REQUIRED"
+    #: 409: the handle is taken, compared case-insensitively.
+    username_taken = "USERNAME_TAKEN"
+
     admin_unknown_username = "ADMIN_UNKNOWN_USERNAME"
     #: The service is idempotent; this tells a typo from a real grant.
     admin_already_admin = "ADMIN_ALREADY_ADMIN"
