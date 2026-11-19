@@ -28,6 +28,7 @@ from models.faction import Faction, FactionStatus
 from models.praxis import ModerationStatus, Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.roles import AccountRole, Role
 from models.task import Task, TaskStatus, TaskType
+from services.era_tasks import sync_era_tasks
 
 
 HIDDEN_FACTION_SLUGS = frozenset({"aged_out", UNAFFILIATED_FACTION_SLUG})
@@ -137,30 +138,6 @@ async def bootstrap_admin(session, era, pixie_acc) -> Character:
     ))
     await session.flush()
     return pixie_char
-
-
-async def sync_era_tasks(session, era, created_by_id: int) -> int:
-    """Per-task sync keyed on title, so later config additions reach seeded DBs.
-    Returns rows added."""
-    existing_titles = set(
-        (await session.execute(select(Task.title))).scalars().all()
-    )
-    added = 0
-    for task_def in era.tasks:
-        if task_def.title in existing_titles:
-            continue
-        session.add(Task(
-            title=task_def.title,
-            description=task_def.description,
-            point_value=task_def.point_value,
-            level_required=task_def.level_required,
-            status=TaskStatus.active,
-            created_by_id=created_by_id,
-            primary_faction_slug=task_def.faction_slug,
-        ))
-        added += 1
-    await session.flush()
-    return added
 
 
 # The single game-wide level-0 task (#511): not era content, seeded every run.
@@ -448,7 +425,7 @@ async def seed(env: str, yes: bool) -> None:
         pixie_char = await bootstrap_admin(session, era, pixie_acc)
 
         # Phase 3: era-config tasks (none in Era 1, #1398)
-        new_tasks = await sync_era_tasks(session, era, pixie_char.id)
+        new_tasks, _ = await sync_era_tasks(session, era, pixie_char.id)
         if new_tasks > 0:
             print(f"  >Tasks ({new_tasks} new from the era config)")
         else:

@@ -25,8 +25,8 @@ from seed import (
     duel_fixture_task_faction_slug,
     ensure_duel_fixture_task,
     ensure_onboarding_task,
-    sync_era_tasks,
 )
+from services.era_tasks import sync_era_tasks
 from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 
@@ -52,13 +52,13 @@ async def test_task_sync_propagates_new_era_task_on_seeded_db(
     character: Character,
     some_faction: Faction,
 ):
-    added = await sync_era_tasks(
+    added, _ = await sync_era_tasks(
         db_session, _era_with_tasks(_standard_task("Alpha Task")), character.id
     )
     assert added == 1
 
     v2 = _era_with_tasks(_standard_task("Alpha Task"), _standard_task("Beta Task"))
-    added_on_reseed = await sync_era_tasks(db_session, v2, character.id)
+    added_on_reseed, _ = await sync_era_tasks(db_session, v2, character.id)
 
     assert added_on_reseed == 1
 

@@ -209,6 +209,8 @@ class EraRollOut(WireModel):
     config_key: str
     name: str
     characters_reset: int
+    tasks_reactivated: int
+    tasks_created: int
 
 
 class AdminRow(WireModel):

@@ -437,3 +437,72 @@ async def test_an_era_roll_leaves_a_self_deleted_life_alone(
     await soft_delete_character(gone.id, db_session)
 
     assert gone.id not in {c.id for c in await list_characters_to_reset(db_session)}
+
+
+# --- the incoming era's task list ---
+
+
+def _era_listing(monkeypatch, *titles: str):
+    import dataclasses
+
+    import services.admin_service as admin_service
+    from game_config import TaskDef
+
+    listed = dataclasses.replace(
+        era_config_for_key("era_2"),
+        tasks=tuple(
+            TaskDef(
+                title=title,
+                description="d",
+                faction_slug=real_faction_slugs(game_config.CURRENT_ERA)[0],
+                level_required=1,
+                point_value=5,
+            )
+            for title in titles
+        ),
+    )
+    real = admin_service.era_config_for_key
+    monkeypatch.setattr(
+        admin_service,
+        "era_config_for_key",
+        lambda key: listed if key == "era_2" else real(key),
+    )
+    return listed
+
+
+async def test_the_roll_opens_the_new_era_with_its_task_list(
+    db_session: AsyncSession,
+    account: Account,
+    era: Era,
+    character: Character,
+    some_faction: Faction,
+    monkeypatch,
+):
+    from models.task import Task, TaskStatus
+    from seed import ensure_onboarding_task
+    from services.admin_service import roll_into_era
+    from services.era_tasks import sync_era_tasks
+    from tests.integration.factories import make_task
+
+    slug = real_faction_slugs(game_config.CURRENT_ERA)[0]
+    await make_admin(db_session, account)
+    await ensure_onboarding_task(db_session, character.id)
+    await make_task(
+        db_session, character, title="Alpha", faction_slug=slug
+    )
+    await make_task(
+        db_session, character, title="Other", faction_slug=slug
+    )
+    listed = _era_listing(monkeypatch, "Alpha", "Beta")
+
+    out = await roll_into_era("era_2", account, db_session)
+
+    assert (out.tasks_reactivated, out.tasks_created) == (1, 1)
+    rows = (await db_session.execute(select(Task))).scalars().all()
+    active = {task.title for task in rows if task.status == TaskStatus.active}
+    assert active == {"Alpha", "Beta", "Introduce Yourself"}
+    other = next(task for task in rows if task.title == "Other")
+    assert other.status == TaskStatus.retired
+
+    again = await sync_era_tasks(db_session, listed, character.id, reactivate=True)
+    assert again == (0, 0)

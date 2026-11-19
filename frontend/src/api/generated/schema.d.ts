@@ -3140,6 +3140,10 @@ export interface components {
             era_id: number;
             /** Name */
             name: string;
+            /** Tasks Created */
+            tasks_created: number;
+            /** Tasks Reactivated */
+            tasks_reactivated: number;
         };
         /** FactionChoiceRequest */
         FactionChoiceRequest: {
