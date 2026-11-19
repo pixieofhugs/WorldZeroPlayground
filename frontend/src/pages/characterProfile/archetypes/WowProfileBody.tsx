@@ -36,7 +36,7 @@ function heading(title: ReactNode, eyebrow: string): ReactNode {
         style={{
           fontFamily: DISPLAY,
           letterSpacing: '0.14em',
-          color: 'var(--faction-wow-accent-deep)',
+          color: 'var(--faction-wow-ground-quiet)',
           marginBottom: 'var(--space-xs)',
         }}
       >
@@ -150,7 +150,7 @@ const dress: ProfileDress = {
     fontSize: 'var(--text-md)',
     letterSpacing: '0.14em',
     textTransform: 'uppercase',
-    color: 'var(--faction-wow-accent-deep)',
+    color: 'var(--faction-wow-ground-quiet)',
     marginLeft: 'auto',
     border: `1px solid ${PLATE_BORDER}`,
     borderRadius: 999,
