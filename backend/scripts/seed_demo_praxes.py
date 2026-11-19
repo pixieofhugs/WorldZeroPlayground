@@ -25,6 +25,7 @@ from models.task import Task, TaskStatus, TaskType
 from models.praxis import ModerationStatus, Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.vote import Vote
 from services.character import record_level_reached
+from services.era import get_current_era_row
 
 TITLE_MARKER = "[demo] "
 
@@ -133,10 +134,7 @@ COLLAB_STARS = [("demo_quill", 5), ("demo_vesper", 4), ("demo_unit", 4)]
 
 
 async def _current_era_id(session) -> int:
-    """The live era, for the ``era_id`` a sealed praxis must carry (#3450)."""
-    return (
-        await session.execute(select(Era.id).order_by(Era.id.desc()).limit(1))
-    ).scalar_one()
+    return (await get_current_era_row(session)).id
 
 
 async def _praxis_exists(session, title: str) -> bool:

@@ -129,7 +129,7 @@ async def test_era_scope_keeps_unsealed_drafts(
 
 
 @pytest.mark.asyncio
-async def test_era_scope_falls_through_when_the_era_is_unseeded(
+async def test_era_scope_lists_cleanly_when_nothing_is_sealed(
     db_session: AsyncSession,
     character: Character,
     era: Era,

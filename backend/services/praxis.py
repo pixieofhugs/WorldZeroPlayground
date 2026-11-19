@@ -349,9 +349,7 @@ async def list_praxes(
         query = query.where(Praxis.status == status)
 
     if status == PraxisStatus.submitted:
-        # Invariant (``_apply_seal``): submitted ⟹ submitted_at set; corrupt rows
-        # are hidden. Only here: drafts have NULL by definition. Also keeps the
-        # sort free of NULLS-FIRST traps.
+        # Drafts have NULL submitted_at; this keeps the sort free of NULLS-FIRST traps.
         query = query.where(Praxis.submitted_at.isnot(None))
 
     if era_scope == PraxisEraScope.this_era:
