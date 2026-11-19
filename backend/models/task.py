@@ -1,7 +1,7 @@
 import enum
 from typing import TYPE_CHECKING, List, Optional
 
-from sqlalchemy import BigInteger, Enum, ForeignKey, Identity, Integer, String, Text
+from sqlalchemy import BigInteger, CheckConstraint, Enum, ForeignKey, Identity, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from models.base import Base
@@ -28,6 +28,9 @@ class TaskType(enum.Enum):
 
 class Task(TimestampMixin, Base):
     __tablename__ = "task"
+    __table_args__ = (
+        CheckConstraint("point_value >= 0", name="point_value_nonnegative"),
+    )
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
     title: Mapped[str] = mapped_column(String, nullable=False)

@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     BigInteger,
+    CheckConstraint,
     DateTime,
     ForeignKey,
     Identity,
@@ -26,6 +27,7 @@ class Vote(Base):
         # ``voter_character_id`` is attribution only.
         UniqueConstraint("praxis_id", "voter_account_id", name="uq_vote_praxis_account"),
         Index("ix_vote_voter_account_id", "voter_account_id"),
+        CheckConstraint("value > 0", name="value_positive"),
     )
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)

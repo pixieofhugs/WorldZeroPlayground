@@ -1,6 +1,6 @@
 import enum
 
-from sqlalchemy import BigInteger, Enum, ForeignKey, Identity, Index, UniqueConstraint
+from sqlalchemy import BigInteger, CheckConstraint, Enum, ForeignKey, Identity, Index, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from models.base import Base
@@ -17,6 +17,7 @@ class Relationship(TimestampMixin, Base):
     __table_args__ = (
         UniqueConstraint("from_character_id", "to_character_id"),
         Index("ix_relationship_to_character_id", "to_character_id"),
+        CheckConstraint("from_character_id <> to_character_id", name="no_self_relationship"),
     )
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
