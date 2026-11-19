@@ -4,17 +4,26 @@ Writes the rows the real paths write; the stamps re-check the earn rules. The
 route owns the production guard.
 """
 
+from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from game_config import CURRENT_ERA, EraConfig
+from models.account import AuthProvider
 from models.character import Character
 from models.invitation_letter import InvitationLetter
+from models.praxis import Praxis, PraxisMember, PraxisType
+from models.task import Task
+from models.vote import Vote
+from schemas.character import CharacterCreate
+from services.auth import create_or_get_account
 from services.character import (
     _ALBESCENT_SENTINEL_SLUGS,
+    create_character,
     stamp_albescent_glimpse,
     stamp_albescent_unlock,
 )
+from services.vote import account_has_received_vote
 
 
 def albescent_floor(state: str | None, level: int, era: EraConfig = CURRENT_ERA) -> int:
@@ -24,6 +33,49 @@ def albescent_floor(state: str | None, level: int, era: EraConfig = CURRENT_ERA)
     if state == "glimpsed":
         return max(level, era.albescent_glimpse_level)
     return level
+
+
+async def seed_received_vote(character: Character, session: AsyncSession) -> None:
+    """Idempotently make another character vote on a praxis of ``character``'s
+    account, so the vote-needs-a-received-vote lock (#3475) is open for it."""
+    if await account_has_received_vote(character.account_id, session):
+        return
+    task = await session.scalar(select(Task).limit(1))
+    if task is None:
+        raise HTTPException(status_code=400, detail="received_vote needs a task.")
+    seeder = await create_or_get_account(
+        provider=AuthProvider.DEV,
+        provider_user_id=f"dev-seed-voter-{character.account_id}",
+        email=f"dev-seed-voter-{character.account_id}@localhost",
+        email_verified=True,
+        session=session,
+    )
+    voter = (
+        await create_character(
+            seeder.id,
+            CharacterCreate(display_name=f"Seed Voter {character.account_id}"),
+            session,
+        )
+    ).character
+    praxis = Praxis(
+        task_id=task.id,
+        created_by_id=character.id,
+        type=PraxisType.solo,
+        title="Seeded proof",
+        body_text="seeded by dev-login",
+    )
+    session.add(praxis)
+    await session.flush()
+    session.add(PraxisMember(praxis_id=praxis.id, character_id=character.id))
+    session.add(
+        Vote(
+            praxis_id=praxis.id,
+            voter_character_id=voter.id,
+            voter_account_id=voter.account_id,
+            value=3,
+        )
+    )
+    await session.flush()
 
 
 async def apply_dev_fixture(
