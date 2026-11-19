@@ -93,3 +93,4 @@ class DevLoginOut(WireModel):
     character_id: Optional[int] = None
     character_name: Optional[str] = None
     faction_slug: Optional[str] = None
+    draft_praxis_id: Optional[int] = None

@@ -606,6 +606,8 @@ export interface paths {
          *                   (raises the level to the era's floor for it if lower)
          *       received_vote — true: another character rates a praxis of the account's,
          *                   so voting is unlocked without the admin exemption (#3475)
+         *       draft_praxis — true: the account's character holds an in-progress praxis,
+         *                   returned as draft_praxis_id (composer shots, #3533)
          *
          *     `faction` deliberately bypasses the join gate rather than replaying it.
          *     Players start unaffiliated and most factions are invite-gated
@@ -2863,6 +2865,8 @@ export interface components {
             character_id: number | null;
             /** Character Name */
             character_name: string | null;
+            /** Draft Praxis Id */
+            draft_praxis_id: number | null;
             /** Faction Slug */
             faction_slug: string | null;
             /** Message */
@@ -6033,6 +6037,7 @@ export interface operations {
                 invited?: string | null;
                 albescent?: ("glimpsed" | "unlocked") | null;
                 received_vote?: boolean;
+                draft_praxis?: boolean;
             };
             header?: never;
             path?: never;

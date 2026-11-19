@@ -12,7 +12,7 @@ from game_config import CURRENT_ERA, EraConfig
 from models.account import AuthProvider
 from models.character import Character
 from models.invitation_letter import InvitationLetter
-from models.praxis import Praxis, PraxisMember, PraxisType
+from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.task import Task
 from models.vote import Vote
 from schemas.character import CharacterCreate
@@ -76,6 +76,35 @@ async def seed_received_vote(character: Character, session: AsyncSession) -> Non
         )
     )
     await session.flush()
+
+
+async def seed_draft_praxis(character: Character, session: AsyncSession) -> int:
+    """Idempotently give ``character`` an in-progress praxis (a draft, so
+    ``/praxis/:id/edit`` opens the composer) and return its id."""
+    existing = await session.scalar(
+        select(Praxis.id).where(
+            Praxis.created_by_id == character.id,
+            Praxis.status == PraxisStatus.in_progress,
+        )
+    )
+    if existing is not None:
+        return existing
+    task = await session.scalar(select(Task).order_by(Task.level_required, Task.id).limit(1))
+    if task is None:
+        raise_coded(400, ErrorCode.task_not_found, "draft_praxis needs a task.")
+    praxis = Praxis(
+        task_id=task.id,
+        created_by_id=character.id,
+        type=PraxisType.solo,
+        status=PraxisStatus.in_progress,
+        title="Seeded draft",
+        body_text="",
+    )
+    session.add(praxis)
+    await session.flush()
+    session.add(PraxisMember(praxis_id=praxis.id, character_id=character.id))
+    await session.flush()
+    return praxis.id
 
 
 async def apply_dev_fixture(

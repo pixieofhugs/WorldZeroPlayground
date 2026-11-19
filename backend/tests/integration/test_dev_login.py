@@ -18,6 +18,7 @@ from models.character import Character
 from models.era import Era
 from models.faction import Faction
 from models.invitation_letter import InvitationLetter
+from models.praxis import Praxis, PraxisStatus
 from tests.integration.factories import DEFAULT_FACTION_SLUG, make_task
 
 #: Any real faction other than the fixtures'; derived, never named (#2708).
@@ -241,3 +242,22 @@ async def test_dev_login_received_vote_without_character_is_rejected(
 ) -> None:
     resp = await client.post("/auth/dev-login?key=rv-nochar&received_vote=true")
     assert resp.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_dev_login_draft_praxis_is_one_in_progress_praxis(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    era: Era,
+    some_faction: Faction,
+) -> None:
+    first = await client.post("/auth/dev-login?key=dp&name=Dp%20Bot&level=1")
+    creator = await db_session.get(Character, first.json()["character_id"])
+    await make_task(db_session, creator, commit=True)
+    ids = set()
+    for _ in range(2):
+        resp = await client.post("/auth/dev-login?key=dp&draft_praxis=true")
+        ids.add(resp.json()["draft_praxis_id"])
+    assert len(ids) == 1 and None not in ids
+    praxis = await db_session.get(Praxis, ids.pop())
+    assert praxis.status == PraxisStatus.in_progress

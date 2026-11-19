@@ -1974,6 +1974,17 @@
             ],
             "title": "Character Name"
           },
+          "draft_praxis_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Draft Praxis Id"
+          },
           "faction_slug": {
             "anyOf": [
               {
@@ -1995,7 +2006,8 @@
           "account_id",
           "character_id",
           "character_name",
-          "faction_slug"
+          "faction_slug",
+          "draft_praxis_id"
         ],
         "title": "DevLoginOut",
         "type": "object"
@@ -9096,7 +9108,7 @@
     },
     "/auth/dev-login": {
       "post": {
-        "description": "Dev-only bot login (bypasses Google OAuth). Disabled in production.\n\nOptional query params turn it into a one-call e2e fixture:\n  key     — distinct dev account selector (\"1\" = the legacy dev account)\n  name    — if set, ensure the account carries a character with this display name\n  level   — if >0, seed the carried character's current-era level (collab needs >=1)\n  faction — if set, place the carried character in that faction directly\n  invited — comma list of faction slugs to deliver invitation letters for\n  albescent — \"glimpsed\" or \"unlocked\": stamp that state on the account\n              (raises the level to the era's floor for it if lower)\n  received_vote — true: another character rates a praxis of the account's,\n              so voting is unlocked without the admin exemption (#3475)\n\n`faction` deliberately bypasses the join gate rather than replaying it.\nPlayers start unaffiliated and most factions are invite-gated\n(ADR-0030), so there is no real flow that puts a test character in all\nseven — and the contrast sweep (#651) needs exactly that. This is the\nsame dev-only seam as `key`/`name`/`level`, behind the same production\nguard; it is not a second enabler.\n\nReturns account_id + character_id so tests can invite/credit by id.",
+        "description": "Dev-only bot login (bypasses Google OAuth). Disabled in production.\n\nOptional query params turn it into a one-call e2e fixture:\n  key     — distinct dev account selector (\"1\" = the legacy dev account)\n  name    — if set, ensure the account carries a character with this display name\n  level   — if >0, seed the carried character's current-era level (collab needs >=1)\n  faction — if set, place the carried character in that faction directly\n  invited — comma list of faction slugs to deliver invitation letters for\n  albescent — \"glimpsed\" or \"unlocked\": stamp that state on the account\n              (raises the level to the era's floor for it if lower)\n  received_vote — true: another character rates a praxis of the account's,\n              so voting is unlocked without the admin exemption (#3475)\n  draft_praxis — true: the account's character holds an in-progress praxis,\n              returned as draft_praxis_id (composer shots, #3533)\n\n`faction` deliberately bypasses the join gate rather than replaying it.\nPlayers start unaffiliated and most factions are invite-gated\n(ADR-0030), so there is no real flow that puts a test character in all\nseven — and the contrast sweep (#651) needs exactly that. This is the\nsame dev-only seam as `key`/`name`/`level`, behind the same production\nguard; it is not a second enabler.\n\nReturns account_id + character_id so tests can invite/credit by id.",
         "operationId": "dev_login_auth_dev_login_post",
         "parameters": [
           {
@@ -9194,6 +9206,16 @@
             "schema": {
               "default": false,
               "title": "Received Vote",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "draft_praxis",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Draft Praxis",
               "type": "boolean"
             }
           }
