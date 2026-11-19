@@ -40,9 +40,12 @@ export function characterRedirectTarget(
   hasCharacter: boolean,
   hasAcceptedTerms: boolean,
   pathname: string,
+  handoffPending = false,
 ): '/start' | '/characters/create' | null {
   if (loading || !hasUser || hasCharacter) return null
   if (!hasAcceptedTerms) return CONTRACT_EXEMPT_PATHS.has(pathname) ? null : '/start'
+  // The flow is about to mount at /start and owns creation; a competing navigate would strand its mark.
+  if (handoffPending) return null
   return CHARACTER_REDIRECT_EXEMPT_PATHS.has(pathname) ? null : '/characters/create'
 }
 

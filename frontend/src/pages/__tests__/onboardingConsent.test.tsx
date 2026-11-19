@@ -13,7 +13,7 @@ import OnboardingFlow from '../onboarding/OnboardingFlow'
 vi.mock('../../api/terms', () => ({ acceptTerms: vi.fn() }))
 vi.mock('../../api/auth', () => ({ loginWith: () => {} }))
 
-const USER = { account_id: 1, character: null, is_admin: false } as unknown as CurrentUser
+const USER = { account_id: 1, character: { id: 1 }, is_admin: false } as unknown as CurrentUser
 
 function mount(user: CurrentUser | null, resumed: boolean, onAccepted = vi.fn()) {
   render(
