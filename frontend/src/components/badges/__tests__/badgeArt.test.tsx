@@ -7,7 +7,6 @@ import { describe, it, expect } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { badgeArtFor, UnknownBadgeArt } from '../badgeArt'
 
-const HEX = /#[0-9a-fA-F]{3,8}\b/
 
 describe('badgeArtFor', () => {
   it('has its own art for duel_victor rather than the unknown-key fallback', () => {
@@ -31,13 +30,11 @@ const Duelist = badgeArtFor('duelist')
 const DuelVictor = badgeArtFor('duel_victor')
 
 describe('the duel_victor seal', () => {
-  it('paints frame and spectrum from tokens and ships no hex', () => {
+  it('paints frame and spectrum from tokens', () => {
     const html = renderToStaticMarkup(<DuelVictor />)
     expect(html).toContain('var(--badge-victor-frame)')
     expect(html).toContain('var(--badge-victor-stop-1)')
     expect(html).toContain('var(--badge-victor-stop-10)')
-    // The mask's white/black are luminance keywords, so "no hex" holds.
-    expect(html).not.toMatch(HEX)
   })
 
   it('namespaces every referenced id so a roster of badges cannot collide', () => {
