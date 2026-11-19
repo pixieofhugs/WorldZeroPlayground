@@ -69,3 +69,15 @@ monochrome-per-theme pair for everyone.
   now repaints the crown along with the nav rule and the page titles. That is the
   blast radius of one rainbow, and it is deliberate: the crown appears on every
   faction card, so any stop change owes it a look in both themes.
+
+## Amendment (2026-11-18, #3424)
+
+**#2134 reversed the ring clause that #1213 and ADR-0066 set.** The crown no longer
+reads `--faction-default-rainbow-conic`. `TaskCrown.tsx` paints the rim with
+`var(--fdl-ring)`, a theme-invariant conic of the bright (dark-theme) stops, declared
+once in `03-faction-chrome-1.css` with no dark entry. The flipping rainbow's darkened
+light stops read as one muddy band on a 4px rim. `taskCrownRing.test.tsx` pins this.
+
+So "the crown has no private colour beyond the inner pair" no longer holds: the ring
+is a second private token. A re-cut of `--faction-default-stop-*` does not repaint it.
+The disc and fleur still flip with the theme, and there is still no per-faction recolour.
