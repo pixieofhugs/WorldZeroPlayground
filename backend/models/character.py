@@ -74,7 +74,12 @@ class Character(TimestampMixin, Base):
     peak_level: Mapped[int] = mapped_column(
         Integer, nullable=False, default=0, server_default="0"
     )
-    # Scores and levels live in CharacterStats.
+    # Lifetime score, all eras (#3434). Moved by delta so a reset baseline
+    # survives; one writer: ``services.character_stats``.
+    all_time_score: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default="0"
+    )
+    # Per-era score and level live in CharacterStats.
 
     account: Mapped["Account"] = relationship(
         "Account",

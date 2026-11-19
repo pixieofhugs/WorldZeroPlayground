@@ -54,7 +54,6 @@ async def _seed_solo_praxes_with_votes(
                 character_id=voter_character.id,
                 era_id=era.id,
                 score=100,
-                all_time_score=100,
                 level=1,
                 votes_spent_this_era=0,
             )

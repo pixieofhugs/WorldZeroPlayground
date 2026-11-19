@@ -246,6 +246,7 @@ async def _seed_scored_character(
         username=username,
         display_name=username.capitalize(),
         faction_slug=DEFAULT_FACTION_SLUG,
+        all_time_score=score,
     )
     db_session.add(ch)
     await db_session.flush()
@@ -254,7 +255,6 @@ async def _seed_scored_character(
             character_id=ch.id,
             era_id=era.id,
             score=score,
-            all_time_score=score,
             level=0,
             votes_spent_this_era=0,
         )
@@ -360,7 +360,6 @@ async def test_list_characters_excludes_own_account(
             character_id=alt.id,
             era_id=era.id,
             score=0,
-            all_time_score=0,
             level=0,
             votes_spent_this_era=0,
         )

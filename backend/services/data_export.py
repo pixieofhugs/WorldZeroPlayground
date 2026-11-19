@@ -49,7 +49,8 @@ WHAT IS IN HERE
 {media_line}
 READING export.json
   characters       Every life on this account, with its per-era stats: score is
-                   the current era's, all_time_score is every era added up.
+                   the current era's; all_time_score is the lifetime total on
+                   the character, zeroed only when an era resets it.
   praxes           The proof you posted, with the task it answered. Praxis
                    you created and praxis you joined as a collaborator are both
                    here.
@@ -303,11 +304,11 @@ async def _characters(
             "status": character.status.value,
             "created_at": character.created_at.isoformat(),
             "departed_at": _stamp(character.departed_at),
+            "all_time_score": character.all_time_score,
             "stats": [
                 {
                     "era_id": row.era_id,
                     "score": row.score,
-                    "all_time_score": row.all_time_score,
                     "level": row.level,
                     "votes_spent_this_era": row.votes_spent_this_era,
                 }
