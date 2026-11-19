@@ -1,8 +1,12 @@
-import { useEffect } from 'react'
+import { useContext, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../auth/AuthContext'
 import { extractError } from '../../utils/errors'
 import { flushPendingCast, queueCast, usePendingCast } from './pendingCasts'
+import { VoteSandboxContext } from './voteSandbox'
+
+// Every widget only null-checks `user`; a sandbox viewer with no session needs it truthy.
+const SANDBOX_VIEWER = {} as NonNullable<ReturnType<typeof useAuth>['user']>
 
 /**
  * Shared vote interaction for every faction vote UI. Casts go through
@@ -15,11 +19,13 @@ import { flushPendingCast, queueCast, usePendingCast } from './pendingCasts'
  */
 export function useVote(praxisId: number, currentValue?: number) {
   const { t } = useTranslation('votes')
-  const { user } = useAuth()
+  const { user: sessionUser } = useAuth()
+  const sandbox = useContext(VoteSandboxContext)
+  const user = sandbox ? (sessionUser ?? SANDBOX_VIEWER) : sessionUser
   // Not seeded from `currentValue`, so a payload arriving after mount still
   // pre-highlights.
   const pending = usePendingCast(praxisId)
-  const selected = pending?.value ?? currentValue ?? 0
+  const selected = (sandbox ? sandbox.value : pending?.value) ?? currentValue ?? 0
   // Never disabled for a request (#3093): it would drop focus and block a
   // mid-flight change of mind, which `pendingCasts` handles.
   //
@@ -33,6 +39,7 @@ export function useVote(praxisId: number, currentValue?: number) {
   useEffect(() => () => flushPendingCast(praxisId), [praxisId])
 
   const vote = (stars: number) => {
+    if (sandbox) return sandbox.cast(stars)
     queueCast(
       praxisId,
       stars,

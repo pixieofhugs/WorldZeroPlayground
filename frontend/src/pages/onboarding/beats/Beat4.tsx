@@ -1,8 +1,11 @@
 import PraxisCard from '../../../components/praxisCard/PraxisCard'
+import { VoteSandboxContext } from '../../../components/vote/voteSandbox'
 import { stickPraxis } from '../fixtures'
 import Wisp, { K, S, T } from '../Wisp'
 import '../beat4.css'
 import type { BeatProps } from './types'
+
+const PICTURE = { value: null, cast: () => {} }
 
 /** The card is a picture here (`inert`); the generated `b4*` loop is one clock, so it ends where it starts. */
 export default function Beat4({ confidence }: BeatProps) {
@@ -10,7 +13,9 @@ export default function Beat4({ confidence }: BeatProps) {
     <div className="b4w">
       <span className="flash" />
       <div className="swing" inert>
-        <PraxisCard praxis={stickPraxis} />
+        <VoteSandboxContext.Provider value={PICTURE}>
+          <PraxisCard praxis={stickPraxis} />
+        </VoteSandboxContext.Provider>
       </div>
       <span className="drop crit cL b4-d1">
         <svg className="camhop b4a" viewBox="0 0 56 46" width="56" height="46" overflow="visible" aria-hidden="true">
