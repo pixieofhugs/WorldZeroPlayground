@@ -16,6 +16,11 @@ const CARD_CLEARANCE = 24
 /* Measured on the S.N.I.D.E. rail: 8-10px from the heading to the crown. */
 const RAIL_CLEARANCE = 8
 
+/* Composer task slip, measured the same way: S.N.I.D.E. 38px from the status row to the stamp (desktop). */
+const SLIP_CLEARANCE = 38
+/* Phone: the stamp stacks under the copy, a `--space-lg` flex gap. */
+const SLIP_STACK_GAP = 16
+
 test.use({ storageState: { cookies: [], origins: [] } })
 
 const VIEWPORTS = [
@@ -27,6 +32,8 @@ const VIEWPORTS = [
 test.describe('Ephemerists stamp clearance (#2820)', () => {
   test.describe.configure({ mode: 'serial', retries: 0 })
   let praxisId: number
+  let draftId: number
+  let draftState: Awaited<ReturnType<import('@playwright/test').BrowserContext['storageState']>>
   let storageState: Awaited<ReturnType<import('@playwright/test').BrowserContext['storageState']>>
 
   test.beforeAll(async ({ browser }) => {
@@ -41,10 +48,16 @@ test.describe('Ephemerists stamp clearance (#2820)', () => {
     praxisId = praxis.id
     storageState = await author.ctx.storageState()
     await author.ctx.close()
+
+    // A second author's unsubmitted draft on the same task: no crown, no vote on the first.
+    const drafter = await loginPlayer(scenarioFor(browser), 'ed', 9)
+    draftId = (await createPraxis(drafter, { task_id: task!.id, type: 'solo', title: TITLE, body_text: 'x' })).id
+    draftState = await drafter.ctx.storageState()
+    await drafter.ctx.close()
   })
 
   for (const { name, size, touch } of VIEWPORTS) {
-    test(`${name} · card and rail keep the crown clear`, async ({ browser }) => {
+    test(`${name} · card, rail and composer slip keep the stamp clear`, async ({ browser }) => {
       const context = await browser.newContext({ viewport: size, hasTouch: touch, storageState })
       const page = await context.newPage()
 
@@ -81,6 +94,31 @@ test.describe('Ephemerists stamp clearance (#2820)', () => {
       expect(rail.gap, 'rail: Score heading to crown').toBeGreaterThanOrEqual(RAIL_CLEARANCE)
       expect(rail.overflow, 'rail overflows the viewport').toBe(false)
       await context.close()
+
+      const slipContext = await browser.newContext({ viewport: size, hasTouch: touch, storageState: draftState })
+      const slipPage = await slipContext.newPage()
+      await slipPage.goto(`/praxis/${draftId}/edit`)
+      await slipPage.waitForLoadState('networkidle')
+      await slipPage.evaluate(() => document.fonts.ready.then(() => undefined))
+      const slip = await slipPage.evaluate(() => {
+        const link = Array.from(document.querySelectorAll('a')).find(
+          (a) => a.getAttribute('href')?.startsWith('/tasks/') && a.closest('div[style*=flex-wrap]'),
+        )!
+        const slipRow = link.closest('div[style*=flex-wrap]')!
+        const stamp = slipRow.lastElementChild!.getBoundingClientRect()
+        return {
+          fromStatus: stamp.top - slipRow.previousElementSibling!.getBoundingClientRect().bottom,
+          fromCopy: stamp.top - slipRow.firstElementChild!.getBoundingClientRect().bottom,
+          overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth,
+        }
+      })
+      if (touch) {
+        expect(slip.fromCopy, 'slip: copy to stacked stamp').toBeGreaterThanOrEqual(SLIP_STACK_GAP - 0.5)
+      } else {
+        expect(slip.fromStatus, 'slip: status row to stamp (S.N.I.D.E.)').toBeGreaterThanOrEqual(SLIP_CLEARANCE - 0.5)
+      }
+      expect(slip.overflow, 'slip overflows the viewport').toBe(false)
+      await slipContext.close()
     })
   }
 })
