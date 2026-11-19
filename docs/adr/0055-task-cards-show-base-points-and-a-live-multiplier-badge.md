@@ -31,7 +31,7 @@ separately rather than pre-multiplied.
   to `{ task, basePoints, multiplier, inProgressCount, onSignup }`. `basePoints` is
   `task.point_value`.
 - A new `displayMultiplierFor(task)` helper sits beside `displayPointsFor` in
-  `utils/points.ts` and returns the **raw** `own_task_modifier`/`other_task_modifier`
+  `utils/points.ts` *[2026-11-18, #3425: both helpers are gone from `utils/points.ts`; since #2865 the multiplier is server-resolved, `task => task.viewer_faction_multiplier` in `pages/tasks/useTasks.ts`, so "No backend work" below no longer holds. The visible rules stand]* and returns the **raw** `own_task_modifier`/`other_task_modifier`
   factor for the viewer — never a derived `effective / base` ratio (that reconstruction
   was the ADR-0053 dead-arithmetic trap).
 - The multiplier badge renders **only when the factor ≠ 1.0**. At `era_1` every faction

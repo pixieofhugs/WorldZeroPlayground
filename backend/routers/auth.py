@@ -452,7 +452,7 @@ async def dev_login(
         stats.level = level
         record_level_reached(character, level)
         stats.score = thresholds[level] if level < len(thresholds) else thresholds[-1]
-        stats.all_time_score = max(stats.all_time_score, stats.score)
+        character.all_time_score = max(character.all_time_score, stats.score)
         await session.flush()
 
     if character is not None and (invited_slugs or albescent):

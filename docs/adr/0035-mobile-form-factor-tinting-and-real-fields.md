@@ -53,7 +53,7 @@ shared page slot so a breakpoint crossing no longer remounts the tree), and page
 from a parallel `MOBILE_ARCHETYPE_BY_SLUG` registry with a `Default*` fallback — exactly
 mirroring the desktop `ARCHETYPE_BY_SLUG` / `pickVariant` model (ADR-0016).
 
-The Mobile Field Kit designs (vendored in `docs/design/mobile/`) make the visual language
+The Mobile Field Kit designs (vendored in `docs/design/mobile/` *[2026-11-18, #3425: that directory is gone]*) make the visual language
 concrete: **one markup layer painted by a token cascade** — `data-theme` (light/dark) sets
 neutral surfaces, `data-treatment` (faction slug) overrides accent, headline face, paper and
 voice. Two pilot treatments prove the seam across very different identities: **Everymen**
@@ -79,7 +79,7 @@ theme×treatment token cascade, and every mobile surface renders only real domai
 2. **Tinting is a two-attribute cascade.** `data-theme ∈ {light, dark}` supplies neutral
    surface/text/border tokens; `data-treatment = <faction slug>` overrides `--accent`,
    `--headline`, `--cta-*`, paper texture and voice. Every value resolves to a `--faction-*`
-   or theme token already in `frontend/src/index.css`; **no colors are invented in a skin.**
+   or theme token already in `frontend/src/index.css` *[2026-11-18, #3425: tokens now live in `frontend/src/css/*.css`, #2891]*; **no colors are invented in a skin.**
    Always-fixed factions (WOW native-light, Albescent light, Singularity dark) scope
    identical light/dark values to their own container — never by mutating global
    `[data-theme]`.
@@ -100,7 +100,7 @@ theme×treatment token cascade, and every mobile surface renders only real domai
 
 - A mobile skin that introduces a field with no hook/contract backing is rejected; the field
   goes into the shared contract first (per ADR-0016) or it isn't shown.
-- The vendored mockups are intent, not spec: `docs/design/mobile/README.md` carries the
+- The vendored mockups are intent, not spec: `docs/design/mobile/README.md` *[2026-11-18, #3425: gone, see above]* carries the
   concept-vs-literal correction table; build issues cite it.
 - Reviews reject a skin that hardcodes hex instead of `--faction-*`/theme tokens, or mutates
   global `[data-theme]` for an always-fixed faction.
