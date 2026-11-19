@@ -63,7 +63,7 @@ def _alembic(*args: str) -> "subprocess.CompletedProcess[str]":
     return subprocess.run(
         [sys.executable, "-m", "alembic", *args],
         cwd=BACKEND_DIR,
-        env={**os.environ, "DATABASE_URL": _dsn(MIGRATION_TEST_DB)},
+        env={**os.environ, "DATABASE_URL": _dsn(MIGRATION_TEST_DB).replace("postgresql://", "postgresql+asyncpg://", 1)},
         capture_output=True,
         text=True,
     )
