@@ -54,3 +54,23 @@ export function discardRoomStore(praxisId: number): void {
   if (typeof indexedDB === "undefined") return;
   indexedDB.deleteDatabase(roomStoreName(praxisId));
 }
+
+/** Rooms with edits the server may lack: publishing seals its document and the discard deletes our only copy. */
+const unsent = new Set<number>();
+
+export function setRoomUnsent(praxisId: number, hasUnsent: boolean): void {
+  if (hasUnsent) unsent.add(praxisId);
+  else unsent.delete(praxisId);
+}
+
+export async function whenRoomFlushed(
+  praxisId: number,
+  timeoutMs: number,
+): Promise<boolean> {
+  const deadline = Date.now() + timeoutMs;
+  while (unsent.has(praxisId)) {
+    if (Date.now() >= deadline) return false;
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  return true;
+}

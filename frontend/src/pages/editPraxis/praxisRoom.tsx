@@ -30,7 +30,7 @@ import {
   samePresence,
 } from "./roomPresence";
 import { shouldReconnectRoom } from "./roomReconnect";
-import { roomStoreName, trackRoomStore } from "./roomStore";
+import { roomStoreName, setRoomUnsent, trackRoomStore } from "./roomStore";
 import { API_BASE_URL } from "../../api/baseUrl";
 
 /** Must match `ROOM_BODY_KEY` in `praxis_room.py`; a mismatch is a silent empty doc. */
@@ -76,6 +76,8 @@ export interface PraxisRoom {
    * read-only.
    */
   unreachable: boolean;
+  /** The server's document is in step with ours; false while offline or reconnecting. */
+  synced: boolean;
 }
 
 const PraxisRoomContext = createContext<PraxisRoom | null>(null);
@@ -109,6 +111,7 @@ export function PraxisRoomProvider({
   } | null>(null);
   const [seeded, setSeeded] = useState(false);
   const [unreachable, setUnreachable] = useState(false);
+  const [synced, setSynced] = useState(false);
   const [present, setPresent] = useState<readonly number[]>([]);
   // Narrowed fields: `/auth/me` mints a fresh object per refetch (#1390).
   const character = useAuth().user?.character ?? null;
@@ -124,6 +127,7 @@ export function PraxisRoomProvider({
       setTypes(null);
       setSeeded(false);
       setUnreachable(false);
+      setSynced(false);
       setPresent([]);
       return;
     }
@@ -175,8 +179,14 @@ export function PraxisRoomProvider({
     const markSeeded = () => setSeeded(true);
     if (provider.synced) markSeeded();
     const onSync = (isSynced: boolean) => {
-      if (isSynced) markSeeded();
+      setSynced(isSynced);
+      // Our step-2 reply precedes this event on the same socket, so the server has our edits.
+      if (isSynced) {
+        markSeeded();
+        setRoomUnsent(praxisId, false);
+      }
     };
+    setSynced(provider.synced);
     provider.on("sync", onSync);
 
     // The offline store counts as the seed ONLY if it restored something: an
@@ -186,11 +196,19 @@ export function PraxisRoomProvider({
     };
     offline.on("synced", onOfflineLoaded);
 
-    const onDocUpdate = () => onUpdateRef.current?.(new Date());
+    const onDocUpdate = (_update: Uint8Array, origin: unknown) => {
+      // A live socket relays a local edit at once; anything else (offline,
+      // restored from the store) waits for the next sync.
+      if (origin !== provider && !(provider.wsconnected && provider.synced)) {
+        setRoomUnsent(praxisId, true);
+      }
+      onUpdateRef.current?.(new Date());
+    };
     doc.on("update", onDocUpdate);
 
     return () => {
       doc.off("update", onDocUpdate);
+      setRoomUnsent(praxisId, false);
       provider.off("sync", onSync);
       provider.off("status", onStatus);
       provider.off("closed", onClosed);
@@ -205,6 +223,7 @@ export function PraxisRoomProvider({
       setTypes(null);
       setSeeded(false);
       setUnreachable(false);
+      setSynced(false);
       setPresent([]);
     };
   }, [praxisId]);
@@ -222,8 +241,8 @@ export function PraxisRoomProvider({
   }, [types, characterId, characterName, characterFaction]);
 
   const room = useMemo<PraxisRoom | null>(
-    () => (types === null ? null : { ...types, seeded, unreachable, present }),
-    [types, seeded, unreachable, present],
+    () => (types === null ? null : { ...types, seeded, unreachable, synced, present }),
+    [types, seeded, unreachable, synced, present],
   );
 
   return (
