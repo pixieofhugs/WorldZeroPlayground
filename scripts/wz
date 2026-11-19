@@ -261,7 +261,12 @@ cmd_test() {
         | grep -q 1 || $DC exec -T db createdb -U worldzero "$WZ_TEST_DB" </dev/null
     # sh -c: DATABASE_URL only exists inside the container. `-e VAR` forwards
     # the host's value (empty when unset, which `:-` treats as unset).
-    inner='export TEST_DATABASE_URL="${TEST_DATABASE_URL:-${DATABASE_URL%/*}/$WZ_TEST_DB}"; exec "$@"'
+    # alembic first, as CI does (#3585): the enum types exist only via migrations,
+    # and `upgrade head` is a no-op once the DB is at head. DATABASE_URL is
+    # pointed at the test DB for alembic alone, so the dev DB is never touched.
+    inner='export TEST_DATABASE_URL="${TEST_DATABASE_URL:-${DATABASE_URL%/*}/$WZ_TEST_DB}"
+        DATABASE_URL="$TEST_DATABASE_URL" python -m alembic upgrade head >&2 || exit 1
+        exec "$@"'
 
     # In a git worktree, `.git` is a FILE holding an absolute path to metadata
     # that lives under the MAIN checkout — outside this bind mount, so no git
