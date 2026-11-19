@@ -1,3 +1,4 @@
+import { useCommentGate } from '../../hooks/useCommentGate'
 import type { ReactNode } from 'react'
 import type { ActivityFeedItem } from '../../api/activityFeed'
 import i18n from '../../i18n'
@@ -46,7 +47,7 @@ interface Props {
 }
 
 export default function FeedCardRouter({ item, archivedView = false, onArchiveChange }: Props) {
-  const row = normalizeFeedItem(item)
+  const row = normalizeFeedItem(item, useCommentGate())
   // Own-property-only (#1821): a bracket read of `constructor` reached `Object`.
   const Companion = hasOwnKey(COMPANION_BODIES, item.type)
     ? COMPANION_BODIES[item.type]
