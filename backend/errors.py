@@ -69,6 +69,10 @@ class ErrorCode(str, enum.Enum):
     avatar_must_be_image = "AVATAR_MUST_BE_IMAGE"
     avatar_too_large = "AVATAR_TOO_LARGE"
 
+    # -- Praxis proof (#3473) ---------------------------------------------------
+    #: A praxis needs one photo, video or audio file to submit or to keep.
+    praxis_needs_proof = "PRAXIS_NEEDS_PROOF"
+
     # -- Praxis reads: filters and missing rows (#1652) ----------------------
     #: Worded per filter via :data:`DETAIL_CONTEXT_PARAM`.
     praxis_filter_value_invalid = "PRAXIS_FILTER_VALUE_INVALID"

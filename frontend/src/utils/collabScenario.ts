@@ -12,6 +12,7 @@ import {
   invite,
   loginPlayer,
   respondToInvite,
+  attachProof,
   submitPraxis,
   type E2EContext,
   type Player,
@@ -96,6 +97,7 @@ export async function seedCollabDraft<Ctx extends E2EContext>(
 export async function bothSubmit<Ctx extends E2EContext>(
   draft: CollabDraft<Ctx>,
 ): Promise<PraxisOut['status']> {
+  await attachProof(draft.creator, draft.praxisId)
   await submitPraxis(draft.creator, draft.praxisId)
   const last = await submitPraxis(draft.invitee, draft.praxisId)
   return last.status

@@ -303,6 +303,7 @@ export const anEditPraxisState = (
 
   title: 'The Long Way Round',
   setTitle: noop,
+  needsProof: false,
   body: 'Walked the whole ridge before dark.',
   setBody: noop,
 

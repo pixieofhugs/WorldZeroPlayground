@@ -1,6 +1,6 @@
 import { expect, type Browser, type BrowserContext, type Page } from '@playwright/test'
 
-import type { Scenario } from '../src/utils/e2eScenario'
+import { proofPng, type Scenario } from '../src/utils/e2eScenario'
 
 /**
  * Duel UI actions, each through a real clicked button (#953); only account,
@@ -77,6 +77,14 @@ export async function sealViaUi(page: Page, title = `Duel entry ${RUN}`): Promis
   // Title first: `accept_duel` mints an untitled praxis and publish() refuses it
   // client-side, after closing the sheet, so `toBeHidden()` alone is a false green (#2453).
   await page.getByTestId('praxis-title').fill(title)
+
+  // A submit needs proof (#3473): attach through the real file input; the
+  // primary stays disabled until the upload lands.
+  await page
+    .locator('input[type="file"]')
+    .first()
+    .setInputFiles({ name: 'proof.png', mimeType: 'image/png', buffer: Buffer.from(proofPng()) })
+  await expect(page.getByTestId('composer-primary')).toBeEnabled()
 
   await page.getByTestId('composer-primary').click()
   const sheet = page.getByTestId('duel-seal-sheet')

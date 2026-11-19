@@ -819,6 +819,20 @@ async def delete_media_item(
         except OSError:
             pass
 
+    if praxis.status == PraxisStatus.submitted:
+        remaining = await session.scalar(
+            select(func.count())
+            .select_from(MediaItem)
+            .where(MediaItem.praxis_id == praxis.id)
+        )
+        if remaining <= 1:
+            raise_coded(
+                422,
+                ErrorCode.praxis_needs_proof,
+                "A published praxis keeps at least one photo, video or audio file.",
+                {DETAIL_CONTEXT_PARAM: "delete"},
+            )
+
     await session.delete(media_item)
     await session.flush()
     # Cancels a pending publish (ADR-0012).
@@ -1297,7 +1311,7 @@ async def submit_praxis(
 
     Collab: first call opens the ``collab_auto_submit_days`` window; later calls
     approve. All approved, or the window lapses → Live. Solo/duel publish at once.
-    See ``collab_consensus.on_submit``.
+    See ``collab_consensus.on_submit`` for the proof and daily-cap guards.
     """
     # Plain read on purpose (#2874): settling first would seal twice (double
     # taunts, habit re-stamp, new submitted_at). The settling read below seals.

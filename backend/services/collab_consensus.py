@@ -11,11 +11,19 @@ Also owns ``collab → solo`` (ADR-0060). Duel settling lives in
 """
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from errors import ErrorCode, raise_coded
 from game_config import CURRENT_ERA, EraConfig
-from models.praxis import Praxis, PraxisInviteStatus, PraxisStatus, PraxisType
+from models.character import Character
+from models.praxis import (
+    MediaItem,
+    Praxis,
+    PraxisInviteStatus,
+    PraxisStatus,
+    PraxisType,
+)
 from models.taunt_message import TauntTriggerType
 from services.character_stats import (
     recalculate_character_stats,
@@ -57,8 +65,41 @@ async def _apply_seal(praxis: Praxis, session: AsyncSession, era: EraConfig) -> 
         await fan_out_taunt(member.character_id, TauntTriggerType.praxis_complete, session)
 
 
+async def _admin_among(character_ids: list[int], session: AsyncSession) -> bool:
+    """Is any of these characters' accounts an admin? Admins skip the proof and
+    daily-cap rules (#3473, #3474) so mods can post test praxes."""
+    # Local import: dependencies imports services at module load.
+    from dependencies import account_has_admin_role
+
+    account_ids = (
+        await session.scalars(
+            select(Character.account_id).where(Character.id.in_(character_ids))
+        )
+    ).all()
+    for account_id in account_ids:
+        if await account_has_admin_role(account_id, session):
+            return True
+    return False
+
+
+async def _has_proof(
+    praxis: Praxis, character_ids: list[int], session: AsyncSession
+) -> bool:
+    """One media item from any member, or an admin among ``character_ids`` (#3473)."""
+    count = await session.scalar(
+        select(func.count()).select_from(MediaItem).where(MediaItem.praxis_id == praxis.id)
+    )
+    return bool(count) or await _admin_among(character_ids, session)
+
+
 async def seal_to_live(praxis: Praxis, session: AsyncSession, era: EraConfig) -> None:
-    """Seal a collab to Live and recalc members. Used by timeout and leave."""
+    """Seal a collab to Live and recalc members. Used by timeout and leave.
+
+    A collab with no proof stays unsealed (a read path must not raise).
+    """
+    member_ids = [member.character_id for member in praxis.members]
+    if not await _has_proof(praxis, member_ids, session):
+        return
     await _apply_seal(praxis, session, era)
     await session.flush()
     await recalculate_members_stats(praxis, session, era)
@@ -148,7 +189,15 @@ async def on_submit(
 
     Solo and duel have one member, so they seal on first submit. Returns True
     iff just sealed, so the caller settles duels and recalcs.
+
+    Refuses without proof (#3473); admins are exempt.
     """
+    if not await _has_proof(praxis, [character_id], session):
+        raise_coded(
+            422,
+            ErrorCode.praxis_needs_proof,
+            "Add a photo, video or audio file before you submit.",
+        )
     for member in praxis.members:
         if member.character_id == character_id:
             member.has_approved = True
