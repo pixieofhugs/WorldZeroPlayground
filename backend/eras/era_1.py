@@ -245,9 +245,10 @@ ERA_1 = EraConfig(
     comment_level_required=2,
     comment_flag_review_threshold=1,
     second_character_level_required=4,
-    albescent_level_required=8,
+    secret_faction_slug="albescent",
+    secret_faction_join_level=8,
     # Moves together with the level-6 `albescent_glimpse` rung (#2770).
-    albescent_glimpse_level=6,
+    secret_faction_glimpse_level=6,
     invitation_point_threshold=50,   # ADR-0022
     invitation_task_threshold=2,
     # Stated though it matches the default: the cadence is the era's (#1617).

@@ -1,6 +1,6 @@
 # Albescent is a secret society, revealed by a sticky per-account flag
 
-**Status:** Amended by ADR-0080, ADR-0082
+**Status:** Amended by ADR-0080, ADR-0082, ADR-0097
 **Date:** 2026-07-03
 
 ## Amendment
@@ -90,3 +90,7 @@ Two clauses above no longer hold as written, both owned by [ADR-0082](0082-albes
 
 - **The early game re-hides.** ADR-0082 restores this ADR's hiding posture below `albescent_glimpse_level` (6 in `ERA_1`): the row is not drawn and leaves no trace (`is_albescent_glimpsed`, `services/albescent_reveal.py`). The amendment block's "no longer describe the code" is true only from the glimpse level up.
 - **The reveal is monotonic for players, not for admins.** `is_admin` (#2400) also reveals, and is not sticky: an admin who loses the role loses the reveal. The reveal now also follows `albescent_unlocked` (#2518), so it is no longer set only at the join site.
+
+## Amendment (2026-11-19, #3435)
+
+Storage moved: the sticky flags are rows in `account_secret_faction` keyed by faction slug, not columns on `account` ([ADR-0097](0097-secret-faction-state-is-per-account-and-per-faction-slug.md)). Albescent is one era's secret faction. The reveal rules above are unchanged.

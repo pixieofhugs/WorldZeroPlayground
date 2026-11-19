@@ -13,7 +13,6 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from faction_slugs import ALBESCENT_FACTION_SLUG, UNAFFILIATED_FACTION_SLUG
-from models.account import Account
 from models.era import Era
 from models.faction import Faction, FactionStatus
 from services.auth import create_jwt
@@ -23,6 +22,7 @@ from tests.integration.factories import (
     make_solo_praxis,
     make_task,
 )
+from tests.stamps import account_with
 
 #: Neither half of the unaffiliated bucket; ``some_faction`` seeds its row.
 OTHER_FACTION_SLUG = DEFAULT_FACTION_SLUG
@@ -75,7 +75,7 @@ async def _ids(client: AsyncClient, url: str, headers: dict | None = None) -> se
 @pytest_asyncio.fixture
 async def revealed_headers(db_session: AsyncSession) -> dict:
     """Sets the sticky flag directly instead of running the join flow."""
-    acc = Account(email="revealed@example.com", albescent_revealed=True)
+    acc = account_with("revealed@example.com", revealed=True)
     db_session.add(acc)
     await db_session.commit()
     return {"Authorization": f"Bearer {create_jwt(acc.id)}"}

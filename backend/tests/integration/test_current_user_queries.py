@@ -41,7 +41,7 @@ async def dressed_viewer(
             CharacterStats.era_id == era.id,
         )
     )
-    stats.level = CURRENT_ERA.albescent_level_required
+    stats.level = CURRENT_ERA.secret_faction_join_level
     stats.score = 1000
 
     db_session.add(
