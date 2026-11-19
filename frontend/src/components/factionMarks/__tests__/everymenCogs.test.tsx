@@ -13,9 +13,17 @@ import { EVERYMEN_COG_PATH } from "../everymenCogs";
 import { readStripped, sourceFiles, toRelative } from "../../../test/sourceScan";
 
 vi.mock("../../../hooks/useFormFactor", () => ({ useFormFactor: () => "desktop" }));
+vi.mock("../../vote/useVote", () => ({
+  useVote: () => ({ user: { id: 1 }, selected: 0, saving: false, error: "", vote: vi.fn() }),
+}));
+vi.mock("../../../auth/AuthContext", () => ({
+  useAuth: () => ({ user: { id: 1 }, refetch: vi.fn() }),
+}));
 
 // Imported after the mock is registered.
 import EverymenTaskCard from "../../taskCard/EverymenTaskCard";
+import EverymenVote from "../../vote/EverymenVote";
+import { VOTE_REFRAMES } from "../../vote/voteReframes";
 import { aTask } from "../../../test/fixtures";
 
 /** Built from its codepoint, so this file is not itself a hit for it. */
@@ -96,5 +104,11 @@ describe("what the shared mark actually renders", () => {
       [...markup.matchAll(/<path d="(M[^"]*A9\.5,9\.5[^"]*Z)"/g)].map((m) => m[1]),
     );
     expect([...drawn]).toEqual([EVERYMEN_COG_PATH]);
+  });
+
+  it("leaves the vote row on its own gear: eight rect teeth per tier, never the shared path", () => {
+    const markup = renderToStaticMarkup(<EverymenVote praxisId={1} />);
+    expect(markup).not.toContain(EVERYMEN_COG_PATH);
+    expect(markup.match(/<rect /g)).toHaveLength(8 * VOTE_REFRAMES["everymen"].tiers.length);
   });
 });

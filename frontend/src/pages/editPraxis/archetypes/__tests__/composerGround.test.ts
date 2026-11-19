@@ -295,7 +295,11 @@ describe('keeps each ground in step with the skin that draws it', () => {
   // Transcribed grounds rot: the skin must still name what's composited here.
   const ANCHORS: Record<string, { names: string[]; absent: string[] }> = {
     ua: {
-      names: ['var(--faction-ua-card-lotus)', 'var(--faction-ua-card-lotus-opacity)'],
+      names: [
+        'var(--faction-ua-card-lotus)',
+        'var(--faction-ua-card-lotus-opacity)',
+        'var(--faction-ua-card-body)',
+      ],
       absent: [],
     },
     everymen: { names: ['class="em-burst"'], absent: ['var(--everymen-muted)'] },
