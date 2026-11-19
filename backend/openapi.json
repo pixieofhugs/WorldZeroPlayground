@@ -2608,13 +2608,23 @@
           "name": {
             "title": "Name",
             "type": "string"
+          },
+          "tasks_created": {
+            "title": "Tasks Created",
+            "type": "integer"
+          },
+          "tasks_reactivated": {
+            "title": "Tasks Reactivated",
+            "type": "integer"
           }
         },
         "required": [
           "era_id",
           "config_key",
           "name",
-          "characters_reset"
+          "characters_reset",
+          "tasks_reactivated",
+          "tasks_created"
         ],
         "title": "EraRollOut",
         "type": "object"

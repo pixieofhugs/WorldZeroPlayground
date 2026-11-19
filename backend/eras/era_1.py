@@ -128,7 +128,7 @@ ERA_1_FACTIONS = {
 # =============================================================================
 
 # Must stay EMPTY: the board is curated in the admin UI, and
-# `seed.py::sync_era_tasks` re-adds config tasks on every deploy, undoing
+# `services/era_tasks.py::sync_era_tasks` re-adds config tasks on every deploy, undoing
 # deletes. The level-0 onboarding task is seeded separately (#511).
 ERA_1_TASKS: tuple[TaskDef, ...] = ()
 
