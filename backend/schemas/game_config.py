@@ -31,6 +31,8 @@ class LevelProfileOut(WireModel):
 class GameConfigOut(WireModel):
     # Only fields with a frontend reader (#1387); vote budget: `VoteCastOut`.
     era_name: str
+    # The live Era row; moves on every rollover, even one keeping the name.
+    era_id: int
     level_thresholds: list[int]
     duel_level_required: int
     collab_auto_submit_days: int
