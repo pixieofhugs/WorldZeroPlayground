@@ -307,6 +307,23 @@ numbered on collision), so read it from the database, e.g.
 The API answers on `api.dev.worldzero.org` and `api.worldzero.org`, not on the
 site's hostnames. A request to `dev.worldzero.org/auth/…` gets the SPA's 200.
 
+### Scrubbing location from media stored before #3486/#3487
+
+`scrub_stored_media.py` runs every file under `MEDIA_ROOT` through the upload
+strip and rewrites it in place (idempotent; HEIC keeps its `.heic` path, now
+holding JPEG bytes, so no URL or `MediaItem` row changes). Run it on the host,
+inside the backend container (it reads the `media` volume), **dry run first**:
+
+    ssh -i ~/.ssh/wz_deploy deploy@<server-ip> \
+      'cd /srv/worldzero/prod && docker compose exec -T backend python scripts/scrub_stored_media.py --env prod'
+
+Read the list, then add `--apply`. Files it could not strip are listed and left
+untouched (exit code 1). Take a backup first (§8); the rewrite has no undo.
+Run it on dev first, the same way.
+
+- Ran on dev: (date)
+- Ran on prod: (date)
+
 Each stack runs **one** uvicorn process (`backend/start.sh` passes no
 `--workers`). That's deliberate: see the praxis room under §11.
 
