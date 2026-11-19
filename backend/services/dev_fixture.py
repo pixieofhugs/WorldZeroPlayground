@@ -4,10 +4,10 @@ Writes the rows the real paths write; the stamps re-check the earn rules. The
 route owns the production guard.
 """
 
-from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from errors import ErrorCode, raise_coded
 from game_config import CURRENT_ERA, EraConfig
 from models.account import AuthProvider
 from models.character import Character
@@ -42,7 +42,7 @@ async def seed_received_vote(character: Character, session: AsyncSession) -> Non
         return
     task = await session.scalar(select(Task).limit(1))
     if task is None:
-        raise HTTPException(status_code=400, detail="received_vote needs a task.")
+        raise_coded(400, ErrorCode.task_not_found, "received_vote needs a task.")
     seeder = await create_or_get_account(
         provider=AuthProvider.DEV,
         provider_user_id=f"dev-seed-voter-{character.account_id}",
