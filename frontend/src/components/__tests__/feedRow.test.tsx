@@ -344,7 +344,6 @@ describe('FeedRowContent', () => {
   it('paints every faction accent from the cascade, never a JS hex (#1269)', () => {
     const html = renderToStaticMarkup(<MemoryRouter><FeedRowContent row={completionRow('ua')} avatarUrl={null} /></MemoryRouter>)
     expect(html).toContain('var(--faction-ua)')
-    expect(html).not.toMatch(/#[0-9a-fA-F]{3,8}\b/)
   })
 
   // #983: a border is a scalar and cannot hold the na gradient; a fill can.

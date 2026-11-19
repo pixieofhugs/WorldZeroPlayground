@@ -18,7 +18,6 @@ async def reset_e2e_database() -> None:
         sys.exit("DATABASE_URL is not set — export it before running (alembic reads it too).")
 
     plain_url = database_url.replace("postgresql+asyncpg://", "postgresql://", 1)
-    plain_url = plain_url.replace("postgres://", "postgresql://", 1)
     parts = urlsplit(plain_url)
     database_name = parts.path.lstrip("/").split("?")[0]
 
