@@ -451,7 +451,8 @@
         "seenInvites": "Which invitation letters a character has already been shown, so none is announced twice. One entry for each of your characters.",
         "lastSeenLevel": "The last level a character was congratulated on, so the celebration does not repeat. One entry for each of your characters.",
         "onboardingHandoff": "A mark that this tab left for Google or Discord partway through signing up, so you come back where you were.",
-        "heldTerms": "A mark that you agreed to the terms before signing in, kept until your account exists so the agreement can be recorded against it."
+        "heldTerms": "A mark that you agreed to the terms before signing in, kept until your account exists so the agreement can be recorded against it.",
+        "titleSeen": "A mark that this browser has seen the welcome title, so a later visit shows it at once instead of playing it again."
       },
       "deletion": {
         "title": "If you delete your account",

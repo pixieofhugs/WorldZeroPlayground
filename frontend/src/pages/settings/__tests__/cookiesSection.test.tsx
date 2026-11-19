@@ -30,7 +30,7 @@ import { SIDEBAR_COLLAPSED_STORAGE_KEY } from '../../../hooks/useSidebarCollapse
 import { SIDEBAR_PANEL_LAYOUT_STORAGE_KEY } from '../../../hooks/useSidebarPanelLayout'
 import { THEME_STORAGE_KEY } from '../../../hooks/useTheme'
 import { FACTION_SECTIONS, PROFILE_SECTIONS } from '../../factionDetail/sectionDisclosure'
-import { HELD_TERMS_KEY, ONBOARDING_HANDOFF_KEY } from '../../../utils/onboardingResume'
+import { HELD_TERMS_KEY, ONBOARDING_HANDOFF_KEY, TITLE_SEEN_KEY } from '../../../utils/onboardingResume'
 import { SETTINGS_SECTIONS } from '../../Settings'
 import { readStripped, sourceFiles, stripComments } from '../../../test/sourceScan'
 import CookiesSection, {
@@ -166,8 +166,8 @@ describe('no writer holds a key the card does not disclose', () => {
 })
 
 describe('the inventory is pinned to the keys the app really writes', () => {
-  it('discloses all twelve storage entries and the one cookie', () => {
-    expect(names).toHaveLength(13)
+  it('discloses all thirteen storage entries and the one cookie', () => {
+    expect(names).toHaveLength(14)
   })
 
   it.each([
@@ -184,6 +184,7 @@ describe('the inventory is pinned to the keys the app really writes', () => {
     ['last seen level', LAST_SEEN_LEVEL_KEY_PREFIX],
     ['onboarding handoff', ONBOARDING_HANDOFF_KEY],
     ['held terms', HELD_TERMS_KEY],
+    ['title seen', TITLE_SEEN_KEY],
   ])('discloses the %s key', (_label, key) => {
     expect(names).toContain(key)
   })
