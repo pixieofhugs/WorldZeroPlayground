@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ComponentType, type CSSProperties } from 'react'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import type { ParseKeys } from 'i18next'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
@@ -120,6 +121,7 @@ const NAV_ITEM: CSSProperties = {
 
 export default function Settings() {
   const { t } = useTranslation('common')
+  useDocumentTitle(t('settings.title'))
   const { user } = useAuth()
   const isMobile = useFormFactor() === 'mobile'
   const [active, setActive] = useState(SETTINGS_SECTIONS[0]?.key ?? '')

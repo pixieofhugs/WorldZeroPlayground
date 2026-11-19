@@ -164,6 +164,8 @@ class FeedContext:
     ``unanswered_requests_only`` (#1301): every live tab shows only requests
     still awaiting an answer; only the Archived view sets it False, so an item
     archived while pending stays listed there. "Answered" is per type (ADR-0070).
+    ``answered_requests_only`` is the stream's side of the same line: the live
+    ``all``/``your_stuff`` views show a request only once it is answered.
 
     ``sees_metatasks`` is the resolved boolean from
     :func:`services.meta_task.character_sees_metatasks` (#2280), not a level, so
@@ -177,6 +179,7 @@ class FeedContext:
     before: Optional[datetime]
     unanswered_requests_only: bool
     sees_metatasks: bool
+    answered_requests_only: bool = False
 
 
 @dataclass(frozen=True)
@@ -535,6 +538,8 @@ def _collab_invites_query(ctx: FeedContext) -> Select:
             PraxisInvite.status == PraxisInviteStatus.pending,
             Praxis.status != PraxisStatus.submitted,
         )
+    elif ctx.answered_requests_only:
+        query = query.where(PraxisInvite.status != PraxisInviteStatus.pending)
     if ctx.before is not None:
         query = query.where(PraxisInvite.created_at < ctx.before)
     return query.order_by(PraxisInvite.created_at.desc()).limit(SUB_QUERY_LIMIT)
@@ -584,6 +589,8 @@ def _duel_challenges_query(ctx: FeedContext) -> Select:
     )
     if ctx.unanswered_requests_only:
         query = query.where(Duel.status == DuelStatus.pending)
+    elif ctx.answered_requests_only:
+        query = query.where(Duel.status != DuelStatus.pending)
     if ctx.before is not None:
         query = query.where(Duel.created_at < ctx.before)
     return query.order_by(Duel.created_at.desc()).limit(SUB_QUERY_LIMIT)
@@ -672,6 +679,13 @@ def _invitation_letters_query(ctx: FeedContext) -> Select:
         query = query.where(
             InvitationLetter.faction_slug
             != select(Character.faction_slug)
+            .where(Character.id == ctx.character_id)
+            .scalar_subquery()
+        )
+    elif ctx.answered_requests_only:
+        query = query.where(
+            InvitationLetter.faction_slug
+            == select(Character.faction_slug)
             .where(Character.id == ctx.character_id)
             .scalar_subquery()
         )
@@ -1215,10 +1229,10 @@ def _visible_types(
 ) -> set[str]:
     """Which feed types this view may return — the one authority for both.
 
-    ADR-0070: unanswered requests live in the queue, never the stream. They are
-    dropped from live ``all``/``your_stuff`` here, not in ``FEED_SOURCES``,
-    because the Archived view reads ``all`` and must still list them. Read
-    ADR-0070 before "fixing" this.
+    ADR-0070: unanswered requests live in the queue, never the stream. Request
+    types stay in live ``all``/``your_stuff``; their sources are run in answered
+    mode there (``_stream_ctx``), so only answered ones appear. Read ADR-0070
+    before "fixing" this.
 
     Fan-out and ``_sum_counts_for_tab`` both call this, so badge == list
     (ADR-0036). ``muted`` (#1047) is enforced here: request types are never
@@ -1228,7 +1242,8 @@ def _visible_types(
         return set(FILTER_QUERIES[FILTER_ALL])
     types = set(FILTER_QUERIES[active_filter])
     if active_filter in STREAM_FILTERS:
-        types -= REQUEST_ITEM_TYPES
+        # Answering clears it, so the stream never has one to show.
+        types.discard(FEED_ITEM_TYPE_AWAITING_SUBMISSION)
     return types - (muted - REQUEST_ITEM_TYPES)
 
 
@@ -1302,6 +1317,10 @@ def _scoped_query(
     """
     if not _needs_satisfied(source, ctx):
         return None
+    awaiting = source.item_type == FEED_ITEM_TYPE_AWAITING_SUBMISSION
+    if ctx.answered_requests_only and awaiting:
+        # Answering clears the row; there is no answered state to show.
+        return None
     dismissed_ids = archive_view.dismissed_source_ids.get(source.item_type, frozenset())
     query = source.query(ctx)
     if archive_view.archived_only:
@@ -1363,13 +1382,23 @@ async def _run_source_fetch(
     ]
 
 
+ANSWERED_KEY_PREFIX = "answered:"
+
+
+def _stream_ctx(ctx: FeedContext) -> FeedContext:
+    return replace(ctx, unanswered_requests_only=False, answered_requests_only=True)
+
+
 async def _fetch_sources(
     sources: Sequence[FeedSource],
     ctx: FeedContext,
     archive_view: FeedArchiveView,
     session: AsyncSession,
+    stream: bool = False,
 ) -> list[ActivityFeedItemDC]:
     """Every source's rows, one after another on the request's OWN session (#1532).
+
+    ``stream``: the live ``all``/``your_stuff`` view, where requests show answered only.
 
     Don't parallelise with a session per source: it exhausts the pool, and
     sequential on one warm connection measured 9× faster. Order is irrelevant;
@@ -1377,7 +1406,9 @@ async def _fetch_sources(
     """
     items: list[ActivityFeedItemDC] = []
     for source in sources:
-        items.extend(await _run_source_fetch(source, ctx, archive_view, session))
+        is_request = source.item_type in REQUEST_ITEM_TYPES
+        source_ctx = _stream_ctx(ctx) if stream and is_request else ctx
+        items.extend(await _run_source_fetch(source, source_ctx, archive_view, session))
     return items
 
 
@@ -1386,8 +1417,12 @@ async def _count_sources(
     ctx: FeedContext,
     archive_view: FeedArchiveView,
     session_factory: Callable,
+    with_answered: bool = False,
 ) -> dict[str, int]:
     """Every source's COUNT in ONE round trip (ADR-0036, #1532).
+
+    ``with_answered`` adds the request sources' answered counts to the same
+    UNION, keyed ``ANSWERED_KEY_PREFIX + item_type`` (the stream badges).
 
     Each count wraps the source's own scoped Select, so badge == fan-out. A
     ``UNION ALL`` so badges never take a connection per source. ``None`` scopes
@@ -1395,13 +1430,20 @@ async def _count_sources(
     """
     counts = {source.item_type: 0 for source in sources}
     branches = []
-    for source in sources:
-        query = _scoped_query(source, ctx, archive_view)
+    scopes = [(source.item_type, source, ctx) for source in sources]
+    if with_answered:
+        scopes += [
+            (ANSWERED_KEY_PREFIX + source.item_type, source, _stream_ctx(ctx))
+            for source in sources
+            if source.item_type in REQUEST_ITEM_TYPES
+        ]
+    for key, source, scope_ctx in scopes:
+        query = _scoped_query(source, scope_ctx, archive_view)
         if query is None:
             continue
         branches.append(
             select(
-                literal(source.item_type, String).label("item_type"),
+                literal(key, String).label("item_type"),
                 func.count().label("count"),
             ).select_from(query.subquery())
         )
@@ -1429,9 +1471,12 @@ async def _count_by_type(
     ctx: FeedContext,
     archive_view: FeedArchiveView,
     session_factory: Callable,
+    with_answered: bool = False,
 ) -> dict[str, int]:
     """Every registry source's COUNT, in one statement (ADR-0036, #1532)."""
-    return await _count_sources(FEED_SOURCES, ctx, archive_view, session_factory)
+    return await _count_sources(
+        FEED_SOURCES, ctx, archive_view, session_factory, with_answered=with_answered
+    )
 
 
 async def _compute_counts(
@@ -1454,17 +1499,32 @@ async def _compute_counts(
 
     if archive_view.archived_only:
         # Sequential: tests inject a factory returning the one request session.
-        live_counts = await _count_by_type(live_ctx, live_view, session_factory)
+        live_counts = await _count_by_type(
+            live_ctx, live_view, session_factory, with_answered=True
+        )
         facet_counts = await _count_by_type(fetch_ctx, archive_view, session_factory)
     else:
-        live_counts = await _count_by_type(live_ctx, live_view, session_factory)
+        live_counts = await _count_by_type(
+            live_ctx, live_view, session_factory, with_answered=True
+        )
         facet_counts = live_counts
 
+    # The stream tabs count requests answered, the queue counts them unanswered.
+    stream_counts = {
+        **live_counts,
+        **{
+            item_type: live_counts.get(ANSWERED_KEY_PREFIX + item_type, 0)
+            for item_type in REQUEST_ITEM_TYPES
+        },
+    }
+    if not archive_view.archived_only and active_filter in STREAM_FILTERS:
+        facet_counts = stream_counts
+
     return FeedCountsDC(
-        all=_sum_counts_for_tab(FILTER_ALL, live_counts, muted),
+        all=_sum_counts_for_tab(FILTER_ALL, stream_counts, muted),
         friends=_sum_counts_for_tab(FILTER_FRIENDS, live_counts, muted),
         foes=_sum_counts_for_tab(FILTER_FOES, live_counts, muted),
-        your_stuff=_sum_counts_for_tab(FILTER_YOUR_STUFF, live_counts, muted),
+        your_stuff=_sum_counts_for_tab(FILTER_YOUR_STUFF, stream_counts, muted),
         global_count=_sum_counts_for_tab(FILTER_GLOBAL, live_counts, muted),
         # Effectively unmuted: `_visible_types` strips request types from
         # `muted` (#1047).
@@ -1536,9 +1596,9 @@ async def get_sidebar_feed(
     Returns ``(pending_requests_count, recent_activity, activity_count)``, the
     list newest-first and sliced to :data:`SIDEBAR_ACTIVITY_LIMIT`.
 
-    Activity = the live ``all`` view minus obligations (#1556), via
-    :func:`_visible_types`, so panel and Requests queue partition the feed
-    exactly (ADR-0070). Requests are only a count (#1456), computed like
+    Activity = the live ``all`` view: news plus answered requests, so panel
+    and Requests queue partition the feed exactly (ADR-0070). Requests are only a
+    count (#1456), computed like
     ``counts.requests`` (pinned by
     ``test_sidebar_badge_equals_the_requests_queue_card_count``).
 
@@ -1557,7 +1617,7 @@ async def get_sidebar_feed(
         return [source for source in FEED_SOURCES if source.item_type in visible]
 
     recent_activity = await _fetch_sources(
-        sources_for(FILTER_ALL), fetch_ctx, archive_view, session
+        sources_for(FILTER_ALL), fetch_ctx, archive_view, session, stream=True
     )
     request_counts = await _count_sources(
         sources_for(FILTER_REQUESTS), fetch_ctx, archive_view, session_factory
@@ -1614,7 +1674,13 @@ async def get_activity_feed(
     allowed_sources = [s for s in FEED_SOURCES if s.item_type in allowed_types]
 
     # Two connections per page (#1532). Not gathered: see `session_factory`.
-    all_items = await _fetch_sources(allowed_sources, fetch_ctx, archive_view, session)
+    all_items = await _fetch_sources(
+        allowed_sources,
+        fetch_ctx,
+        archive_view,
+        session,
+        stream=not archived and active_filter in STREAM_FILTERS,
+    )
     counts = await _compute_counts(
         fetch_ctx, archive_view, session_factory, active_filter, muted_types
     )

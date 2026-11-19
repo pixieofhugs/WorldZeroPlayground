@@ -3,10 +3,11 @@
  * whose cast closed the gate. Transient client state derived from
  * `praxis.members[]`; no API, no persistence. Mobile full-screen, desktop a
  * centred panel (#494); continue is manual, never a timer. Chrome mirrors
- * LevelUpPopup: dim overlay, role="dialog", autofocused primary, no trap.
+ * LevelUpPopup: dim overlay, role="dialog", autofocused primary, `useModal` trap.
  */
 import type { PraxisMemberOut } from '../../api/praxis'
 import { drawAtRoot } from '../ui/drawAtRoot'
+import { useModal } from '../../hooks/useModal'
 import { useFormFactor } from '../../hooks/useFormFactor'
 import { factionCssVar } from '../../utils/factions'
 import { collabCopy } from './collabCopy'
@@ -30,11 +31,14 @@ export function CollabSuccess({
   const gate = deriveCollabGate(members, currentCharacterId)
   const accent = factionCssVar(factionSlug, 'card-accent')
   const isMobile = formFactor === 'mobile'
+  // No onClose: continue is manual only, never an Escape.
+  const ref = useModal()
 
   // Drawn at the root (#2244) so the shell's `z-index: 5` band can't cover it.
   return drawAtRoot(
     <div
       // The closing beat's e2e anchor (#2453).
+      ref={ref}
       data-testid="collab-success"
       role="dialog"
       aria-modal="true"

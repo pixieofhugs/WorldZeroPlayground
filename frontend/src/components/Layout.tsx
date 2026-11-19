@@ -1,5 +1,6 @@
-import { useEffect, type ReactNode } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import { useFormFactor } from '../hooks/useFormFactor'
 import { useSidebarCollapsed } from '../hooks/useSidebarCollapsed'
@@ -30,6 +31,16 @@ export default function Layout({ children }: { children: ReactNode }) {
   // Held here: `ShellContent` is called as a plain function by tests, so owns no hook (#1191).
   const { collapsed: sidebarCollapsed, toggle: toggleSidebar } = useSidebarCollapsed()
 
+  const { t } = useTranslation('common')
+
+  // A page load resets focus for free; a router push doesn't. Pathname only, so a query or hash change keeps focus where it is.
+  const lastPath = useRef(pathname)
+  useEffect(() => {
+    if (lastPath.current === pathname) return
+    lastPath.current = pathname
+    document.getElementById('content')?.focus({ preventScroll: true })
+  }, [pathname])
+
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
   }, [pathname])
@@ -58,6 +69,12 @@ export default function Layout({ children }: { children: ReactNode }) {
   return (
     <BackdropProvider>
     <div className="min-h-screen flex flex-col relative">
+      <a
+        href="#content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:p-2 bg-[var(--color-surface)]"
+      >
+        {t('skipToContent')}
+      </a>
       <FactionBackdrop />
       <LevelUpWatcher />
       <InvitationWatcher />

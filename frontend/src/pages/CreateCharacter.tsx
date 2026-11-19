@@ -5,6 +5,8 @@
  * slugs resolve to the `na` kit, never UA or the viewer's faction (#796).
  * Archetypes handle form factor themselves.
  */
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
+import { useTranslation } from 'react-i18next'
 import { useCreateCharacter } from './characterPaths/useCreateCharacter'
 import { resolveVariant } from '../utils/factionDispatch'
 import { surfaceMap } from '../factions'
@@ -12,6 +14,8 @@ import { useAuth } from '../auth/AuthContext'
 import CreationBannedNotice from '../components/CreationBannedNotice'
 
 export default function CreateCharacter() {
+  const { t } = useTranslation('forms')
+  useDocumentTitle(t('createCharacter.heading'))
   const state = useCreateCharacter()
   const { user } = useAuth()
   const Archetype = resolveVariant(
