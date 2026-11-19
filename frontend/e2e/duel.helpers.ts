@@ -1,6 +1,6 @@
 import { expect, type Browser, type BrowserContext, type Page } from '@playwright/test'
 
-import { proofPng, type Scenario } from '../src/utils/e2eScenario'
+import { attachProof, type Player, type Scenario } from '../src/utils/e2eScenario'
 
 /**
  * Duel UI actions, each through a real clicked button (#953); only account,
@@ -74,16 +74,15 @@ export async function waitForDuelAttached(page: Page, opponentName: string): Pro
  * been reworded repeatedly.
  */
 export async function sealViaUi(page: Page, title = `Duel entry ${RUN}`): Promise<void> {
-  // Title first: `accept_duel` mints an untitled praxis and publish() refuses it
+  // A submit needs proof (#3473). The file picker opens an image-edit step, so attach
+  // over the API (as collaboration.spec does) and reload before touching the title.
+  const praxisId = Number(/\/praxis\/(\d+)\/edit/.exec(page.url())?.[1])
+  await attachProof({ ctx: page.context(), api: API } as Player<BrowserContext>, praxisId)
+  await page.reload()
+
+  // Title: `accept_duel` mints an untitled praxis and publish() refuses it
   // client-side, after closing the sheet, so `toBeHidden()` alone is a false green (#2453).
   await page.getByTestId('praxis-title').fill(title)
-
-  // A submit needs proof (#3473): attach through the real file input; the
-  // primary stays disabled until the upload lands.
-  await page
-    .locator('input[type="file"]')
-    .first()
-    .setInputFiles({ name: 'proof.png', mimeType: 'image/png', buffer: Buffer.from(proofPng()) })
   await expect(page.getByTestId('composer-primary')).toBeEnabled()
 
   await page.getByTestId('composer-primary').click()
