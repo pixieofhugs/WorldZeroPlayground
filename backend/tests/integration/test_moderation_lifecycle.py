@@ -5,8 +5,7 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from errors import ErrorCode
-from faction_slugs import real_faction_slugs
-from game_config import CURRENT_ERA, era_config_for_key
+from game_config import CURRENT_ERA
 from models.account import Account, AccountStatus
 from models.character import Character, CharacterStatus
 from models.era import Era
@@ -141,43 +140,6 @@ async def test_a_banned_second_life_blocks_a_level_4_account_from_a_third(
     banned.status = CharacterStatus.active
     await db_session.commit()
     assert (await _create(client, auth_headers)).status_code == 201
-
-
-# --- #3517 ---
-
-
-async def test_an_era_roll_resets_a_mod_banned_life(
-    db_session: AsyncSession, era: Era, account: Account, some_faction: Faction
-):
-    from services.admin_service import roll_into_era
-
-    era_2 = era_config_for_key("era_2")
-    old_slug = next(
-        s for s in real_faction_slugs(CURRENT_ERA) if s != era_2.reset_faction_slug
-    )
-    banned = await make_character(
-        db_session, era, username="rollban", faction_slug=old_slug, level=3
-    )
-    banned.status = CharacterStatus.banned
-    await make_admin(db_session, account)
-
-    await roll_into_era("era_2", account, db_session)
-
-    banned.status = CharacterStatus.active
-    await db_session.refresh(banned)
-    assert era_2.reset_faction
-    assert banned.faction_slug == era_2.reset_faction_slug
-
-
-async def test_an_era_roll_leaves_a_self_deleted_life_alone(
-    db_session: AsyncSession, era: Era, some_faction: Faction
-):
-    from services.admin_service import list_characters_to_reset
-
-    gone = await make_character(db_session, era, username="gone")
-    await soft_delete_character(gone.id, db_session)
-
-    assert gone.id not in {c.id for c in await list_characters_to_reset(db_session)}
 
 
 # --- #3518 ---

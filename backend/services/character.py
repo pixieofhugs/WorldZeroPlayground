@@ -101,26 +101,33 @@ def _sentinel_slugs(era: EraConfig) -> frozenset[str]:
     return frozenset({UNAFFILIATED_FACTION_SLUG, era.secret_faction_slug})
 
 
-async def account_peak_character_level(
+async def account_peak_level_and_ban(
     account_id: int,
     era_id: int,
     session: AsyncSession,
-) -> int:
-    """Highest level among the account's active characters in ``era_id``, or 0."""
-    peak = await session.scalar(
-        select(func.max(CharacterStats.level))
-        .select_from(Character)
-        .join(
-            CharacterStats,
-            (CharacterStats.character_id == Character.id)
-            & (CharacterStats.era_id == era_id),
+) -> tuple[int, bool]:
+    """Highest level among the active characters in ``era_id`` (or 0), and
+    whether a moderator ban stands, in one round trip."""
+    row = (
+        await session.execute(
+            select(
+                select(func.max(CharacterStats.level))
+                .select_from(Character)
+                .join(
+                    CharacterStats,
+                    (CharacterStats.character_id == Character.id)
+                    & (CharacterStats.era_id == era_id),
+                )
+                .where(
+                    Character.account_id == account_id,
+                    Character.status == CharacterStatus.active,
+                )
+                .scalar_subquery(),
+                exists().where(Character.account_id == account_id, MOD_BANNED),
+            )
         )
-        .where(
-            Character.account_id == account_id,
-            Character.status == CharacterStatus.active,
-        )
-    )
-    return peak or 0
+    ).one()
+    return row[0] or 0, bool(row[1])
 
 
 async def _character_covers_every_faction(
@@ -241,12 +248,13 @@ async def load_account_eligibility(
     era: EraConfig = CURRENT_ERA,
 ) -> AccountEligibility:
     """Second-life gate is a live level query; Albescent is the stamped column."""
-    peak_level = await account_peak_character_level(account_id, era_id, session)
+    peak_level, mod_banned = await account_peak_level_and_ban(
+        account_id, era_id, session
+    )
     account = await session.get(Account, account_id)
     return AccountEligibility(
         can_create_additional_character=(
-            peak_level >= era.second_character_level_required
-            and not await has_mod_banned_life(account_id, session)
+            peak_level >= era.second_character_level_required and not mod_banned
         ),
         can_start_as_albescent=has_stamp(account, era.secret_faction_slug, "unlocked"),
     )
