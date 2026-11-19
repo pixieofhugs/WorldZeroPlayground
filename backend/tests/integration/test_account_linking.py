@@ -564,3 +564,17 @@ async def test_an_expired_state_says_so_rather_than_something_went_wrong(
     assert _login_error_code(resp) != ErrorCode.oauth_failed.value
     assert resp.cookies.get("access_token") is None
     assert await _account_count(db_session) == accounts_before
+
+
+@pytest.mark.asyncio
+async def test_case_variant_email_signs_into_the_same_account(
+    db_session: AsyncSession, account: Account
+):
+    again = await create_or_get_account(
+        provider=_GOOGLE,
+        provider_user_id="google-sub-case",
+        email=account.email.upper(),
+        email_verified=True,
+        session=db_session,
+    )
+    assert again.id == account.id

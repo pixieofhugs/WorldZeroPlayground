@@ -21,3 +21,9 @@ faction facts — names, colors, slugs, which surfaces vary. Authority is split 
 The seam: "what it is and how it looks" (vault) vs. "how it's wired" (code).
 
 Supersedes the session's first draft, which wrongly put color on the code side.
+
+## Amendment (2026-11-18, #3502)
+
+Colour is no longer vault-canon. The CSS tokens in `frontend/src/css/*.css` are the source
+of truth for faction colour (as `WORLD_ZERO_STYLE.md` line 3 says); the off-repo vault doc is
+history. The rest of the split (aesthetic, lore, wiring) is unchanged. Owner ruling on #3502.

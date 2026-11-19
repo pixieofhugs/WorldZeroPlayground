@@ -72,24 +72,6 @@ def _era_window_condition(
     )
 
 
-async def _credit_all_time_score(
-    character_id: int, from_era_id: int, delta: int, session: AsyncSession
-) -> None:
-    """Move ``all_time_score`` by ``delta`` on ``from_era_id``'s row and every later one.
-
-    Lifetime cumulative across eras (#1345). A delta, not ``SUM(score)``, so a
-    ``reset_all_time_score`` baseline written by ``apply_era_reset`` survives.
-    """
-    result = await session.execute(
-        select(CharacterStats).where(
-            CharacterStats.character_id == character_id,
-            CharacterStats.era_id >= from_era_id,
-        )
-    )
-    for stats in result.scalars():
-        stats.all_time_score += delta
-
-
 async def _deliver_earned_invitations(
     character: Character,
     praxes: list[Praxis],
@@ -231,7 +213,7 @@ async def recalculate_character_stats(
     stats.level = compute_level(total_score, era)
     record_level_reached(author, stats.level)
     if score_delta:
-        await _credit_all_time_score(character_id, era_row.id, score_delta, session)
+        author.all_time_score += score_delta
 
     if next_era_row is not None:
         # Closed era: no invitations (ADR-0022) or taunts (ADR-0068).

@@ -21,7 +21,7 @@ fragile, and expensive to build. A purely mechanical, self-contained, per-charac
 
 - Invite delivery becomes a per-character count/sum check against the character's completed
   X-tasks — no vote-state or praxis-type coupling.
-- The `InvitationLetter` docstring and the `SPEC-game-rules.md` invitation section both need
+- The `InvitationLetter` docstring and the `SPEC-game-rules.md` *[2026-11-18, #3425: retired, ADR-0043]* invitation section both need
   updating to this rule (kill the level≥3/score≥20 and the pledge variants).
 - Earning stays **per-character**; account-pooling applies only later, at the *join* gate
   (ADR-0019).

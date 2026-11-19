@@ -78,12 +78,15 @@ export default function OnboardingCard({
   step,
   title,
   onBack,
+  onLookAround,
   actions,
   children,
 }: {
   step: number
   title: string
   onBack?: () => void
+  /** Replaces the `/tasks` link with a button (the contract's decline). */
+  onLookAround?: () => void
   /** The look-around escape is added by the shell, not passed here. */
   actions: ReactNode
   children: ReactNode
@@ -196,18 +199,26 @@ export default function OnboardingCard({
             marginTop: 'var(--space-2xl)',
           }}
         >
-          {onBack && (
-            <button type="button" onClick={onBack} style={secondaryControl} data-testid="onboarding-back">
-              {t('flow.back')}
-            </button>
-          )}
           {actions}
           {/* A plain link out (public surfaces need no session); `/tasks`, not
               `/`, which logged out re-explains the game. */}
-          <Link to="/tasks" style={secondaryControl} data-testid="onboarding-look-around">
-            {t('card.lookAround')}
-          </Link>
+          {onLookAround ? (
+            <button type="button" onClick={onLookAround} className="ob-decl" style={secondaryControl} data-testid="onboarding-look-around">
+              {t('card.lookAround')}
+            </button>
+          ) : (
+            <Link to="/tasks" style={secondaryControl} data-testid="onboarding-look-around">
+              {t('card.lookAround')}
+            </Link>
+          )}
         </div>
+
+        {/* Rule 10: Back sits at the bottom of the card, under its buttons. */}
+        {onBack && (
+          <button type="button" onClick={onBack} className="ob-ghost ob-cap ob-bk ob-prev ob-cardback" data-testid="onboarding-back">
+            {t('flow.back')}
+          </button>
+        )}
       </article>
     </div>
   )

@@ -52,7 +52,7 @@ Builds on ADR-0002 (a surface composes the fine-grained dispatchers; content slo
   (`PlaceholderPraxisBody` + `PraxisSeal`/`PraxisStats` slots) with a placeholder score "seal"
   hero and a faction-voiced label (`sealed` / `case` / `concord` / `verified`). `ponytail:`
   tagged in `frontend/src/components/praxisCard/PraxisCard.tsx`.
-- **Designs for the missing three** (Everymen, WoW, UA): `docs/design-briefs/praxis-card-missing.md`.
+- **Designs for the missing three** (Everymen, WoW, UA): `docs/design-briefs/praxis-card-missing.md`. *[2026-11-18, #3425: that brief, `PlaceholderPraxisBody` and `PraxisSeal` no longer exist]*
 - **Backend data + the real vote-reframe hero:** GitHub #159
   (`task_level_required`, `average_stars`, `total_votes`, `submitted_at` column).
 - **Slot-invariant guard test:** GitHub #151.

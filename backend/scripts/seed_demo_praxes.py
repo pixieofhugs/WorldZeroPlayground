@@ -205,14 +205,13 @@ async def get_or_create_metatask_owner(
             character_id=existing.id,
             era_id=era_row.id,
             score=score,
-            all_time_score=score,
             level=level,
             votes_spent_this_era=0,
         ))
     else:
         stats.level = level
         stats.score = max(stats.score, score)
-        stats.all_time_score = max(stats.all_time_score, stats.score)
+    existing.all_time_score = max(existing.all_time_score, score)
     record_level_reached(existing, level)
     await session.flush()
     return existing

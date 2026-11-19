@@ -27,15 +27,32 @@
     "6": "When you get enough points, you can level up and have access to more interesting, more difficult tasks, and vote to give points to tasks others have completed well.",
     "7": "Along the way there will be warring organizations, mysteries and most likely character development. World Zero will always be free and have no ads."
   },
+  "beat5": {
+    "hint": "Your turn: vote on the card",
+    "thanks": "You voted {{stars}} of 5 · thanks!",
+    "turn": "your turn",
+    "nice": "nice one",
+    "hold": "Vote to continue"
+  },
   "auth": {
     "title": "Login Logistics",
     "body": "World Zero doesn't store any personal information except your email and whatever you post yourself. This means we ask someone else to confirm that your email belongs to you. Choose your way in."
+  },
+  "signin": {
+    "title": "Welcome back.",
+    "restart": "Back to start"
   },
   "terms": {
     "title": "Terms and Conditions",
     "body": "You understand and agree to the following",
     "accept": "Yeah yeah, let me play",
     "error": "Whoops! That didn't work. Try again?"
+  },
+  "declined": {
+    "title": "Unsigned. That's allowed.",
+    "body": "The world will keep doing strange things without you. The quill will get over it.",
+    "reconsider": "Reconsider",
+    "lookAround": "Just look around"
   },
   "returning": {
     "title": "Welcome back",

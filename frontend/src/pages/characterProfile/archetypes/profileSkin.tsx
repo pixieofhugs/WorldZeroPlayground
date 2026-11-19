@@ -353,7 +353,7 @@ export function ProfileSkin({
     year: 'numeric',
   })
 
-  // ⑤ FDL laurel target: highest earned points (PraxisCardOut.score is base+vote).
+  // ⑤ FDL laurel target: highest full `score` (the number the card shows), not base+vote.
   const topScore = submissions.reduce((max, p) => Math.max(max, p.score ?? 0), 0)
   const laurelId = submissions.find((p) => (p.score ?? 0) === topScore)?.id ?? null
 
@@ -414,7 +414,7 @@ export function ProfileSkin({
         ) : (
           <div className="flex flex-wrap gap-4 items-start">
             {submissions.map((praxis) => (
-              <div key={praxis.id} style={{ position: 'relative' }}>
+              <div key={praxis.id} style={{ position: 'relative' }} data-laurel={praxis.id === laurelId || undefined}>
                 {praxis.id === laurelId && kit.laurel}
                 {/* The laurel covers the card's own crown corner (#1960). */}
                 <PraxisCard praxis={praxis} showCrown={praxis.id !== laurelId} />

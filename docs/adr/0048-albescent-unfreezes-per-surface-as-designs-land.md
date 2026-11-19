@@ -55,3 +55,7 @@ against a design rather than invented — but the *mode* is closed: there is now
 one design for the whole identity, so a surface **adopts** the vocabulary
 instead of commissioning its own. The last bullet above, "future Albescent
 surfaces follow this ADR", is the clause that changes.
+
+## Amendment (2026-11-18, #3423)
+
+[ADR-0046](0046-albescent-is-frozen-new-surfaces-fall-through-to-na.md) is Reversed, so "every other Albescent surface stays frozen (falls through to NA)" and "Albescent gains exactly one registry row" describe the state at 2026-07-19 only. `factions/albescent.ts` now registers every surface, most as wrappers over Default. See [ADR-0083](0083-albescent-is-one-ornament-vocabulary-over-na-not-a-skin-per-surface.md).

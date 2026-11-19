@@ -32,7 +32,7 @@
 | [0015](0015-metatask-is-its-own-model.md) | A metatask is its own model, not a Task subtype | Amended | [ADR-0086](0086-only-the-base-multiplies-a-metatask-is-flat.md) |
 | [0016](0016-per-faction-surfaces-share-one-data-contract.md) | Per-faction surfaces share one data contract; archetypes own only presentation | Accepted | — |
 | [0017](0017-praxis-read-page.md) | The praxis read page is a per-faction archetype surface with an interactive vote caster | Superseded | [ADR-0061](0061-praxis-detail-is-one-shared-page-every-faction-dresses.md) |
-| [0018](0018-comment-voice-reuses-task-card-atoms.md) | Each faction's comment voice reuses its task-card atoms at full fidelity | Amended | [ADR-0026](0026-ua-comment-adopts-the-gilt-salon.md), [ADR-0093](0093-comment-timestamps-read-the-same-for-every-faction.md) |
+| [0018](0018-comment-voice-reuses-task-card-atoms.md) | Each faction's comment voice reuses its task-card atoms at full fidelity | Amended | [ADR-0026](0026-ua-comment-adopts-the-gilt-salon.md), [ADR-0083](0083-albescent-is-one-ornament-vocabulary-over-na-not-a-skin-per-surface.md), [ADR-0093](0093-comment-timestamps-read-the-same-for-every-faction.md) |
 | [0019](0019-characters-start-unaffiliated-invite-gated-factions.md) | Characters start unaffiliated; faction membership is gated by account-pooled invitation | Accepted | — |
 | [0020](0020-unaffiliated-scoring-grace-cliff.md) | Unaffiliated characters score full until a level-3 grace cliff | Reversed | — |
 | [0021](0021-albescent-unlock-is-account-collective.md) | Albescent unlock is account-collective, with level and coverage decoupled | Superseded | [ADR-0080](0080-one-life-earns-albescent-its-siblings-take-it-and-the-earner-never-can.md) |
@@ -42,7 +42,7 @@
 | [0025](0025-active-character-is-the-actor.md) | The active character is the actor for every write path | Amended | [ADR-0041](0041-two-layer-identity-account-vs-character.md) |
 | [0026](0026-ua-comment-adopts-the-gilt-salon.md) | The UA comment adopts the gilt-salon identity | Amended | [ADR-0093](0093-comment-timestamps-read-the-same-for-every-faction.md) |
 | [0027](0027-albescent-is-a-secret-society.md) | Albescent is a secret society, revealed by a sticky per-account flag | Amended | [ADR-0080](0080-one-life-earns-albescent-its-siblings-take-it-and-the-earner-never-can.md), [ADR-0082](0082-albescent-is-redacted-not-hidden.md) |
-| [0028](0028-task-crown-replaces-faction-distinction-laurel.md) | The Task Crown replaces the Faction Distinction Laurel | Amended | [ADR-0054](0054-one-theme-aware-task-crown.md) |
+| [0028](0028-task-crown-replaces-faction-distinction-laurel.md) | The Task Crown replaces the Faction Distinction Laurel | Amended | [ADR-0054](0054-one-theme-aware-task-crown.md), [ADR-0033](0033-player-profile-contract-and-badge-registry.md) |
 | [0029](0029-faction-permits-is-the-single-faction-rules-seam.md) | `faction_permits` is the single faction-rules seam | Accepted | — |
 | [0030](0030-default-faction-behaviour-ua-is-ordinary-grid-is-a-directory.md) | Default faction behaviour: UA is an ordinary faction; the grid is a directory, not a join surface | Amended | [ADR-0087](0087-structural-faction-slugs-are-not-era-owned.md) |
 | [0031](0031-backend-emits-keys-frontend-catalog-resolves.md) | Backend emits copy keys; the frontend catalog resolves them | Accepted | — |
@@ -54,7 +54,7 @@
 | [0037](0037-flag-reasons-are-a-fixed-shared-vocabulary.md) | Flag reasons are a fixed, shared vocabulary | Accepted | — |
 | [0038](0038-faction-identity-is-config-canonical.md) | Faction identity is config-canonical; the DB row is slug + status | Accepted | — |
 | [0039](0039-unaffiliated-fill-is-a-gradient-not-a-hue.md) | Unaffiliated's fill is a gradient, not a hue | Accepted | — |
-| [0040](0040-feed-controls-are-neutral-chrome.md) | Feed controls are neutral chrome; faction skinning stops at the card boundary | Accepted | — |
+| [0040](0040-feed-controls-are-neutral-chrome.md) | Feed controls are neutral chrome; faction skinning stops at the card boundary | Amended | [ADR-0082](0082-albescent-is-redacted-not-hidden.md) |
 | [0041](0041-two-layer-identity-account-vs-character.md) | Two-layer identity: Account (private anchor) vs Character (public persona) | Accepted | — |
 | [0042](0042-era-as-ruleset-config-owns-rules-db-owns-history.md) | Era-as-ruleset: `game_config` owns the rules, the DB owns only history | Amended | [ADR-0087](0087-structural-faction-slugs-are-not-era-owned.md), [ADR-0091](0091-the-latest-era-row-chooses-the-live-ruleset.md) |
 | [0043](0043-vote-budget-is-recomputed-on-read.md) | Vote budget is recomputed on read; only `votes_spent_this_era` is stored | Accepted | — |
@@ -79,7 +79,7 @@
 | [0062](0062-praxis-detail-is-published-only.md) | Praxis detail is a published-only reading surface | Accepted | — |
 | [0063](0063-praxis-detail-collapses-to-one-responsive-component-per-faction.md) | Praxis detail collapses to one responsive component per faction | Accepted | — |
 | [0064](0064-the-praxis-read-page-owns-its-chrome.md) | The praxis read page owns its chrome (duel + comments become layout slots) | Accepted | — |
-| [0065](0065-the-edit-praxis-composer-is-one-shared-layout-every-faction-dresses.md) | The edit-praxis composer is one shared layout every faction dresses | Accepted | — |
+| [0065](0065-the-edit-praxis-composer-is-one-shared-layout-every-faction-dresses.md) | The edit-praxis composer is one shared layout every faction dresses | Amended | [ADR-0083](0083-albescent-is-one-ornament-vocabulary-over-na-not-a-skin-per-surface.md) |
 | [0066](0066-one-rainbow-the-brand-palette-retires-into-the-na-spectrum.md) | One rainbow: the brand palette retires into the na spectrum | Accepted | — |
 | [0067](0067-praxis-cards-collapse-to-one-responsive-component-per-faction.md) | Praxis cards collapse to one responsive component per faction | Amended | [ADR-0069](0069-the-character-profile-and-the-duel-seal-collapse-to-one-responsive-component-per-faction.md) |
 | [0068](0068-taunts-are-a-subscription-the-recipients-foe-edge-creates.md) | Taunts are a subscription the recipient's foe edge creates | Accepted | — |
@@ -96,8 +96,8 @@
 | [0079](0079-submitting-a-collab-is-three-signals-not-one-button.md) | Submitting a collab is three signals, not one button | Accepted | — |
 | [0080](0080-one-life-earns-albescent-its-siblings-take-it-and-the-earner-never-can.md) | One life earns Albescent, its siblings take it, and the earner never can | Accepted | — |
 | [0081](0081-account-deletion-is-a-tombstone-not-an-erasure.md) | Account deletion is a tombstone, not an erasure | Accepted | — |
-| [0082](0082-albescent-is-redacted-not-hidden.md) | Albescent is redacted, not hidden | Accepted | — |
-| [0083](0083-albescent-is-one-ornament-vocabulary-over-na-not-a-skin-per-surface.md) | Albescent is one ornament vocabulary over na, not a skin per surface | Accepted | — |
+| [0082](0082-albescent-is-redacted-not-hidden.md) | Albescent is redacted, not hidden | Amended | [ADR-0083](0083-albescent-is-one-ornament-vocabulary-over-na-not-a-skin-per-surface.md) |
+| [0083](0083-albescent-is-one-ornament-vocabulary-over-na-not-a-skin-per-surface.md) | Albescent is one ornament vocabulary over na, not a skin per surface | Amended | [ADR-0088](0088-albescent-wears-its-own-mark-for-a-revealed-viewer.md) |
 | [0084](0084-a-page-wears-a-faction-when-it-has-exactly-one-faction-to-wear.md) | A page wears a faction when it has exactly one faction to wear | Accepted | — |
 | [0085](0085-snide-is-not-an-always-dark-faction.md) | S.N.I.D.E. is not an always-dark faction; it has three registers | Accepted | — |
 | [0086](0086-only-the-base-multiplies-a-metatask-is-flat.md) | Only the base multiplies; a metatask is flat | Accepted | — |

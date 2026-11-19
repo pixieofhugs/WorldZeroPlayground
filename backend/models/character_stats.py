@@ -31,7 +31,6 @@ class CharacterStats(Base):
         BigInteger, ForeignKey("era.id"), nullable=False
     )
     score: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
-    all_time_score: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
     level: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
     votes_spent_this_era: Mapped[int] = mapped_column(
         Integer, nullable=False, server_default="0"

@@ -19,6 +19,14 @@ ROOT=$(cd "$(dirname "$0")/.." && pwd)
 cd "$ROOT"
 
 DC="docker compose"
+# A worktree has no `.env` (it is ignored), and compose without one builds
+# DATABASE_URL from the default password, which the running db rejects. Borrow
+# the main checkout's for EVERY compose call; never copied, never printed.
+# No .env in main either means the db was built with the defaults too.
+if [ -f .git ] && [ ! -f .env ]; then
+    main_env="$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")/.env"
+    [ -f "$main_env" ] && DC="docker compose --env-file $main_env"
+fi
 
 # One-off command in a throwaway backend container. Used for anything that must
 # run BEFORE the long-lived backend can boot (migrations especially): the app's
@@ -215,14 +223,9 @@ cmd_task() {
 # project, so `exec` would land in the running backend, which mounts whichever
 # checkout ran `wz up`: a worktree's edits would never run. Running as you keeps
 # __pycache__ and the caches yours, so `git worktree remove` still works. The
-# worktree has no `.env` (it is ignored), so borrow the main checkout's: compose
-# reads POSTGRES_PASSWORD from it to build DATABASE_URL, and the default would
-# not match the running db.
+# `.env` comes from $DC above.
 run_on_tree() {
-    env_file="$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")/.env"
-    [ -f "$env_file" ] || env_file=''
-    # shellcheck disable=SC2086
-    $DC ${env_file:+--env-file "$env_file"} run --rm -T --user "$(id -u):$(id -g)" -e HOME=/tmp \
+    $DC run --rm -T --user "$(id -u):$(id -g)" -e HOME=/tmp \
         -e WZ_TEST_DB -e TEST_DATABASE_URL backend "$@" </dev/null
 }
 
@@ -295,7 +298,7 @@ cmd_test() {
 # when the workflow gains a step, add it to .bros.toml.
 cmd_check() {
     command -v bros >/dev/null || {
-        echo 'bros is missing: uv tool install git+https://github.com/pixieofhugs/bot-bros@367d93632d8794604c925bbe1bf4da757b96a8d9' >&2
+        echo 'bros is missing: uv tool install git+https://github.com/pixieofhugs/bot-bros@v0.8.0 --with ruff==0.17.4' >&2
         exit 1
     }
     exec bros check "$@"

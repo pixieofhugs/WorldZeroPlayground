@@ -194,7 +194,7 @@ def test_era_2_inherits_every_other_rule_from_era_1():
 
 
 def test_era_2_albescent_gate_is_inherited_knowingly():
-    """Coverage (``_account_covers_every_faction``) is far cheaper here:
+    """Coverage (``_character_covers_every_faction``) is far cheaper here:
     three non-sentinel factions vs seven. Accepted (#1618)."""
     assert ERA_2.albescent_level_required == ERA_1.albescent_level_required
     sentinels = {"na", "albescent"}

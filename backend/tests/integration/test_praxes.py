@@ -2251,7 +2251,7 @@ async def test_in_progress_collab_member_cannot_be_invited_again(
     )
     db_session.add(ch3)
     await db_session.flush()
-    db_session.add(CharacterStats(character_id=ch3.id, era_id=era_row.id, score=500, all_time_score=500, level=5, votes_spent_this_era=0))
+    db_session.add(CharacterStats(character_id=ch3.id, era_id=era_row.id, score=500, level=5, votes_spent_this_era=0))
 
     acc4 = Account(email="collab-b-owner@example.com")
     db_session.add(acc4)
@@ -2264,7 +2264,7 @@ async def test_in_progress_collab_member_cannot_be_invited_again(
     )
     db_session.add(ch4)
     await db_session.flush()
-    db_session.add(CharacterStats(character_id=ch4.id, era_id=era_row.id, score=500, all_time_score=500, level=5, votes_spent_this_era=0))
+    db_session.add(CharacterStats(character_id=ch4.id, era_id=era_row.id, score=500, level=5, votes_spent_this_era=0))
 
     await db_session.commit()
     await db_session.refresh(ch3)
@@ -2407,8 +2407,8 @@ async def test_everymen_can_be_invited_despite_active_collab(
     db_session.add(ch_a)
     db_session.add(ch_b)
     await db_session.flush()
-    db_session.add(CharacterStats(character_id=ch_a.id, era_id=era_row.id, score=500, all_time_score=500, level=5, votes_spent_this_era=0))
-    db_session.add(CharacterStats(character_id=ch_b.id, era_id=era_row.id, score=500, all_time_score=500, level=5, votes_spent_this_era=0))
+    db_session.add(CharacterStats(character_id=ch_a.id, era_id=era_row.id, score=500, level=5, votes_spent_this_era=0))
+    db_session.add(CharacterStats(character_id=ch_b.id, era_id=era_row.id, score=500, level=5, votes_spent_this_era=0))
     await db_session.commit()
     await db_session.refresh(ch_a)
     await db_session.refresh(ch_b)
