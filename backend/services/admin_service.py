@@ -855,8 +855,6 @@ async def roll_into_era(
 
     await apply_era_reset(characters, new_era_row, session, era=era_config)
 
-    # The board was just emptied; open the new era with its own list. Same
-    # transaction as the reset, so a failure here rolls the whole roll back.
     # ponytail: an operator with no character fails the roll (NOT NULL) only if
     # the era lists new tasks; every mod holds a character in practice.
     creator_id = (
