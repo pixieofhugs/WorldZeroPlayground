@@ -281,6 +281,7 @@ export default function DefaultCreateCharacter({ state, leadAction }: { state: C
                 <button
                   type="button"
                   onClick={() => navigate('/')}
+                  className="touch-target"
                   style={composerLabelStyle({
                     background: 'none',
                     border: 'none',
@@ -302,7 +303,7 @@ export default function DefaultCreateCharacter({ state, leadAction }: { state: C
                 type="submit"
                 disabled={!canSubmit}
                 /* `.control-off`, not an opacity fade (#2486). */
-                className="control-off"
+                className="control-off touch-target"
                 style={{ ...primaryStyle, cursor: submitting ? 'wait' : 'pointer' }}
               >
                 {submitting ? t('createCharacter.submitBusy') : (<>{t('createCharacter.submitIdle')}<span aria-hidden="true"> {t('createCharacter.submitGlyph')}</span></>)}

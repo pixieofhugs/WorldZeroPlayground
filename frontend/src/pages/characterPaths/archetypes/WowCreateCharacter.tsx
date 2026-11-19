@@ -348,6 +348,7 @@ export default function WowCreateCharacter({ state }: { state: CreateCharacterSt
                 <button
                   type="button"
                   onClick={() => navigate('/')}
+                  className="touch-target"
                   style={composerLabelStyle({
                     fontFamily: LORA,
                     background: 'none',

@@ -412,6 +412,7 @@ export default function CovenCreateCharacter({ state }: { state: CreateCharacter
                 <button
                   type="button"
                   onClick={() => navigate('/')}
+                  className="touch-target"
                   style={composerLabelStyle({
                     fontFamily: CHROME,
                     fontWeight: 700,

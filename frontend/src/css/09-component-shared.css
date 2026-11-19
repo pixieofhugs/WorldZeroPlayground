@@ -238,3 +238,11 @@
   min-width: 100%;
   margin-inline: auto;
 }
+
+.touch-target {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--touch-target);
+  min-width: var(--touch-target);
+}

@@ -400,6 +400,7 @@ export default function EverymenCreateCharacter({ state }: { state: CreateCharac
                 <button
                   type="button"
                   onClick={() => navigate('/')}
+                  className="touch-target"
                   style={stencil({
                     background: 'transparent',
                     border: 'none',
