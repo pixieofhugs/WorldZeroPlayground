@@ -2,7 +2,6 @@ import type { ActivityFeedItem } from '../../api/activityFeed'
 import i18n from '../../i18n'
 import { factionName } from '../../utils/factions'
 import { resolveTaunt } from '../../utils/taunts'
-import { collabCopy } from '../collab/collabCopy'
 
 /**
  * Activity feed rows (#376): every faction-owned event type normalizes into ONE
@@ -231,14 +230,13 @@ export function normalizeFeedItem(
     case 'nudge':
       // Someone poked you to file (#1083). Sits beside the
       // `awaiting_submission` row for the same praxis, so it borrows its badge
-      // and editor link. Action copy comes from `collabCopy` (composer
-      // vocabulary), in the SENDER's voice (`context_faction_slug` = actor's).
+      // and editor link. Eager `feed` copy: the Sidebar reads this outside any loader.
       return {
         slug,
         actor,
         actorHref:
           p.from_character_id != null ? `/characters/${p.from_character_id}` : null,
-        action: collabCopy(slug, 'nudgeFeedAction'),
+        action: i18n.t('feed:row.action.nudgedYou'),
         badge:
           p.praxis_type === 'collab'
             ? { type: 'collab', label: i18n.t('feed:badge.collab') }

@@ -217,6 +217,10 @@ class EraConfig:
     # Era files state it explicitly: the cadence is the era's (#1617).
     habit_window_days: int = 7
 
+    # Hours an account waits between first-time praxis posts (#3474); 24 = one a
+    # day, rolling from the last post. Admins are exempt.
+    praxis_post_cooldown_hours: int = 24
+
     # PINNED to `na` in every era (ADR-0087), validated in __post_init__ rather
     # than deleted so the rule is explained where someone tries to break it.
     # Kept separate from reset_faction_slug on purpose (#1559, #1580).

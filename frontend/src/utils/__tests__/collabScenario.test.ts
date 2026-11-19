@@ -88,6 +88,7 @@ describe('bothSubmit', () => {
     // Consensus seals on the last submit.
     let submits = 0
     const fake = fakeScenario((call) => {
+      if (call.url.endsWith('/media')) return ok({})
       if (call.url.endsWith('/submit')) {
         submits += 1
         return ok({ id: 1, status: submits === 1 ? 'in_progress' : 'submitted' })
@@ -97,6 +98,9 @@ describe('bothSubmit', () => {
     const draft = await seedCollabDraft(fake.scenario, 'seal')
 
     expect(await bothSubmit(draft)).toBe('submitted')
+    // A submit needs proof (#3473): the creator attaches before either submits.
+    const urls = fake.calls.map((call) => call.url.split('/').pop())
+    expect(urls.indexOf('media')).toBeLessThan(urls.indexOf('submit'))
     const posts = fake.calls.filter((call) => call.url.endsWith('/submit'))
     expect(posts.map((call) => call.context)).toEqual([
       draft.creator.ctx.index,

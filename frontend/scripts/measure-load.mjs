@@ -67,7 +67,11 @@ const CPU_SLOWDOWN = PROFILE.cpu
  * ENVIRONMENT=development, so this route is skipped (not faked) if it does.
  */
 const ROUTES = [
-  { path: '/', name: 'home (guest)' },
+  // `flow: true` = the welcome flow. Its title types and fades in on a fixed
+  // script (~4.5s of choreography), so "260 chars of text" is the wrong signal:
+  // load = `.ob-title` mounted; START tappable is reported beside it, unjudged.
+  { path: '/', name: 'welcome flow (guest /)', flow: true },
+  { path: '/start', name: 'welcome flow (/start)', flow: true },
   { path: '/', name: 'home (logged in — FieldDesk)', authenticate: true },
   { path: '/tasks', name: 'tasks list' },
   { path: '/praxis', name: 'praxis list' },
@@ -130,7 +134,7 @@ async function authenticate(context) {
  * succeed — the caller decides how to report that, this function never
  * silently measures a guest load and calls it authenticated.
  */
-async function measureOnce(browser, url, { requireAuth = false } = {}) {
+async function measureOnce(browser, url, { requireAuth = false, flow = false } = {}) {
   const context = await browser.newContext()
   if (requireAuth && !(await authenticate(context))) {
     await context.close()
@@ -163,6 +167,19 @@ async function measureOnce(browser, url, { requireAuth = false } = {}) {
       requestAnimationFrame(tick)
     }
     requestAnimationFrame(tick)
+
+    window.__mountedAt = 0
+    window.__startAt = 0
+    const flowTick = () => {
+      if (!window.__mountedAt && document.querySelector('.ob-title')) window.__mountedAt = performance.now()
+      const start = document.querySelector('[data-testid=onboarding-start]')
+      if (start && Number(getComputedStyle(start).opacity) >= 0.9) {
+        window.__startAt = performance.now()
+        return
+      }
+      requestAnimationFrame(flowTick)
+    }
+    requestAnimationFrame(flowTick)
   })
 
   let requests = 0
@@ -173,11 +190,17 @@ async function measureOnce(browser, url, { requireAuth = false } = {}) {
   // under-measures (content arrives later) and hides failure (content never
   // arrives, and the run still reports a number).
   await page
-    .waitForFunction(() => window.__contentAt > 0, undefined, { timeout: 25_000 })
+    .waitForFunction(
+      (isFlow) => (isFlow ? window.__startAt > 0 : window.__contentAt > 0),
+      flow,
+      { timeout: 25_000 },
+    )
     .catch(() => {})
   const result = await page.evaluate(() => ({
     lcp: Math.round(window.__lcp),
     content: Math.round(window.__contentAt),
+    mounted: Math.round(window.__mountedAt),
+    startAt: Math.round(window.__startAt),
     text: document.body.innerText.length,
   }))
   await context.close()
@@ -194,21 +217,24 @@ if (ids.character) ROUTES.push({ path: `/characters/${ids.character}`, name: 'CH
 const browser = await chromium.launch()
 const headerLine = `Load time — ${PROFILE_NAME} (${PROFILE.throughputMbps} Mbps, ${PROFILE.latency}ms RTT) + ${CPU_SLOWDOWN}x CPU slowdown, median of ${RUNS}`
 console.log(`\n${headerLine}`)
-console.log(`Metric: Largest Contentful Paint. Budget ${BUDGET_MS}ms, hard fail ${FAIL_MS}ms.\n`)
+console.log(`Metric: time-to-route-content (flow rows: .ob-title mounted; START tappable is choreography, not judged). Budget ${BUDGET_MS}ms, hard fail ${FAIL_MS}ms.\n`)
 
 const rows = []
 const skipped = []
-for (const route of ROUTES) {
+const ONLY = argValue('--only', '')
+for (const route of ROUTES.filter((r) => r.name.includes(ONLY))) {
   const samples = []
+  const startSamples = []
   let last = null
   let routeSkipped = false
   for (let run = 0; run < RUNS; run++) {
-    last = await measureOnce(browser, BASE + route.path, { requireAuth: route.authenticate })
+    last = await measureOnce(browser, BASE + route.path, { requireAuth: route.authenticate, flow: route.flow })
     if (last.skipped) {
       routeSkipped = true
       break
     }
-    samples.push(last.content || Number.POSITIVE_INFINITY)
+    samples.push((route.flow ? last.mounted : last.content) || Number.POSITIVE_INFINITY)
+    if (route.flow) startSamples.push(last.startAt || Number.POSITIVE_INFINITY)
   }
   if (routeSkipped) {
     skipped.push(route.name)
@@ -219,10 +245,12 @@ for (const route of ROUTES) {
   const verdict = content > FAIL_MS ? 'FAIL' : content > BUDGET_MS ? 'OVER' : 'ok'
   rows.push({ ...route, content, verdict, requests: last.requests, text: last.text })
   const shown = Number.isFinite(content) ? `${content}ms` : 'NO CONTENT'
+  const startShown = route.flow ? `  START tappable ${Number.isFinite(median(startSamples)) ? `${median(startSamples)}ms` : 'never'}` : `  ${last.text} chars`
   console.log(
     `  ${verdict.padEnd(4)} ${shown.padStart(10)}  ${route.name.padEnd(24)} ` +
-      `${String(last.requests).padStart(3)} reqs  lcp ${String(last.lcp).padStart(5)}ms  ${last.text} chars`,
+      `${String(last.requests).padStart(3)} reqs  lcp ${String(last.lcp).padStart(5)}ms${startShown}`,
   )
+  if (route.flow) rows[rows.length - 1].startTappable = median(startSamples)
 }
 await browser.close()
 
@@ -248,11 +276,11 @@ if (process.env.GITHUB_STEP_SUMMARY) {
     '',
     'Metric: time-to-route-content (not raw LCP — the shell paints before the route does; see script header).',
     '',
-    '| Route | Median (ms) | Budget (ms) | Verdict |',
-    '| --- | --- | --- | --- |',
+    '| Route | Median (ms) | START tappable (ms) | Budget (ms) | Verdict |',
+    '| --- | --- | --- | --- | --- |',
     ...rows.map((row) => {
       const shown = Number.isFinite(row.content) ? row.content : 'NO CONTENT'
-      return `| ${row.name} | ${shown} | ${BUDGET_MS} | ${row.verdict.toUpperCase()} |`
+      return `| ${row.name} | ${shown} | ${row.startTappable ?? '-'} | ${BUDGET_MS} | ${row.verdict.toUpperCase()} |`
     }),
   ]
   if (skipped.length > 0) {
