@@ -4,7 +4,10 @@ Evaluates :data:`badges.ALL_BADGES` against a per-character
 :class:`badges.BadgeContext`. List paths must never cost a query per character:
 :func:`build_badge_contexts` uses a fixed number of set-based queries (#655).
 """
+import hashlib
+import hmac
 from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
 from typing import Iterable, Optional
 
 from sqlalchemy import func, or_, select
@@ -12,7 +15,13 @@ from sqlalchemy.dialects.postgresql import aggregate_order_by, array_agg
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
-from badges import ALL_BADGES, BadgeContext
+from badges import (
+    ALL_BADGES,
+    PUPPETEER_MAX_DELAY_SECONDS,
+    PUPPETEER_MIN_DELAY_SECONDS,
+    BadgeContext,
+)
+from config import settings
 from game_config import CURRENT_ERA, EraConfig
 from models.character import Character
 from models.duel import Duel, DuelStatus
@@ -40,6 +49,27 @@ class DuelWinnerFacts:
     # `duel_victor` (#823): frozen winner at the previous era's close. Subset of
     # `winners`.
     last_era_winners: frozenset[int] = frozenset()
+
+
+def _utcnow() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def puppeteer_delay(earliest_id: int) -> timedelta:
+    """Stable per-account delay before ``sock_puppeteer`` shows (#3488).
+
+    Keyed on SECRET_KEY so public data can't recompute it; rotating the key
+    re-rolls every delay once, which is harmless.
+    """
+    digest = hmac.new(
+        settings.SECRET_KEY.encode(),
+        f"puppeteer:{earliest_id}".encode(),
+        hashlib.sha256,
+    ).digest()
+    span = PUPPETEER_MAX_DELAY_SECONDS - PUPPETEER_MIN_DELAY_SECONDS + 1
+    return timedelta(
+        seconds=PUPPETEER_MIN_DELAY_SECONDS + int.from_bytes(digest[:8], "big") % span
+    )
 
 
 async def _previous_era_id(session: AsyncSession) -> Optional[int]:
@@ -209,27 +239,37 @@ async def build_badge_contexts(
                     Character.id.asc(),
                 )
             )[1].label("earliest_id"),
+            array_agg(
+                aggregate_order_by(
+                    Character.created_at,
+                    Character.created_at.asc(),
+                    Character.id.asc(),
+                )
+            )[2].label("second_created_at"),
         )
         .where(Character.account_id.in_(account_ids))
         .group_by(Character.account_id)
     )
     by_account = {
-        account_id: (character_count, earliest_id)
-        for account_id, character_count, earliest_id in result.all()
+        account_id: (character_count, earliest_id, second_created_at)
+        for account_id, character_count, earliest_id, second_created_at in result.all()
     }
 
     duel_facts = await _duel_winner_facts(
         {character.id for character in characters}, session
     )
 
+    now = _utcnow()
     contexts: dict[int, BadgeContext] = {}
     for character in characters:
-        character_count, earliest_id = by_account.get(
-            character.account_id, (1, character.id)
+        character_count, earliest_id, second_created_at = by_account.get(
+            character.account_id, (1, character.id, None)
         )
         contexts[character.id] = BadgeContext(
             account_character_count=character_count,
             is_earliest_on_account=character.id == earliest_id,
+            puppeteer_revealed=second_created_at is not None
+            and now >= second_created_at + puppeteer_delay(earliest_id),
             is_duel_winner=character.id in duel_facts.winners,
             won_duel_last_era=character.id in duel_facts.last_era_winners,
         )

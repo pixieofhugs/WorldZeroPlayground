@@ -1,4 +1,4 @@
-/* Step 12 and the frame around step 11. Ported from .design-sync/onboarding-arc/src.html; ar- prefixed because this sheet stays loaded once /start has been visited. */
+/* Step 12 and the frame around step 11. ar- prefixed because this sheet stays loaded once /start has been visited. */
 @keyframes ar-fall{0%{opacity:0;transform:translate(0,-40px) rotate(0)}10%{opacity:1}100%{opacity:0;transform:translate(var(--fx),110vh) rotate(var(--fr))}}
 .ar-conf{position:fixed;top:0;width:9px;height:14px;border-radius:2px;opacity:0;pointer-events:none;z-index:30;animation:ar-fall var(--fd) cubic-bezier(.3,.2,.6,1) var(--fdl) forwards}
 .ar-create{position:relative;z-index:1;flex:1;padding:8px 0 32px}
