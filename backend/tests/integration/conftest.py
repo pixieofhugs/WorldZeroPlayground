@@ -5,11 +5,12 @@ One connection per test inside a transaction that rolls back; handler commits
 only release a SAVEPOINT.
 """
 import os
+from datetime import datetime, timezone
 
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy import event
+from sqlalchemy import event, func, select
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     create_async_engine,
@@ -25,6 +26,7 @@ from models.account import Account
 from models.base import Base
 from models.character import Character
 from models.character_stats import CharacterStats
+from models.duel import Duel, DuelStatus
 from models.era import Era
 from models.faction import Faction
 from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
@@ -32,6 +34,35 @@ from models.task import Task
 from models.vote import Vote
 from services.auth import create_jwt
 from tests.integration.factories import DEFAULT_FACTION_SLUG, attach_proof
+
+
+@event.listens_for(Praxis, "before_insert")
+@event.listens_for(Praxis, "before_update")
+def _stamp_sealed_praxis_era(mapper, connection, praxis: Praxis) -> None:
+    """Fixtures seal praxes directly; the CHECK wants the seal's stamps."""
+    if praxis.status != PraxisStatus.submitted:
+        return
+    if praxis.submitted_at is None:
+        praxis.submitted_at = datetime.now(timezone.utc)
+    if praxis.era_id is None:
+        praxis.era_id = connection.scalar(select(func.max(Era.id)))
+
+
+@event.listens_for(Duel, "before_insert")
+@event.listens_for(Duel, "before_update")
+def _stamp_duel_lifecycle(mapper, connection, duel: Duel) -> None:
+    """Fixtures set a duel's status directly; stamp what that status implies."""
+    now = datetime.now(timezone.utc)
+    if duel.status == DuelStatus.declined and duel.declined_at is None:
+        duel.declined_at = now
+    if duel.status in (DuelStatus.active, DuelStatus.settled, DuelStatus.resolved):
+        duel.accepted_at = duel.accepted_at or now
+    if duel.status == DuelStatus.resolved:
+        duel.resolved_at = duel.resolved_at or now
+        duel.resolved_era_id = duel.resolved_era_id or connection.scalar(
+            select(func.max(Era.id))
+        )
+
 
 # Level-0 fixture voters have a past peak at the vote level (#3102).
 CURRENT_ERA_VOTE_LEVEL: int = CURRENT_ERA.vote_level_required

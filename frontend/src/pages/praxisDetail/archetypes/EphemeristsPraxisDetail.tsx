@@ -538,7 +538,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
           }}
         />
         <MarkdownPreview
-          source={praxis.body_text ?? ''}
+          source={praxis.body_text}
           className="markdown-preview content-text"
           style={{ fontFamily: READING, lineHeight: 1.85, color: INK }}
         />
