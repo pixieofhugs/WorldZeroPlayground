@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { I18nextProvider } from 'react-i18next'
 import App from './App'
-import { AuthProvider } from './auth/AuthContext'
+import { AuthProvider, warmMe } from './auth/AuthContext'
 import { AdminModeProvider } from './auth/AdminModeContext'
 import { SidebarProvider } from './hooks/useSidebarPanels'
 import { ThemeProvider } from './hooks/useTheme'
@@ -13,6 +13,7 @@ import './index.css'
 
 // Deliberately not awaited: first paint must not wait on copy overrides.
 void loadCopyOverrides()
+warmMe()
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
