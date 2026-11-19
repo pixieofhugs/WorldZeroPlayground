@@ -319,7 +319,8 @@ inside the backend container (it reads the `media` volume), **dry run first**:
     ssh -i ~/.ssh/wz_deploy deploy@<server-ip> \
       'cd /srv/worldzero/prod && docker compose exec -T backend python scripts/scrub_stored_media.py --env prod'
 
-Read the list, then add `--apply`. Files it could not strip are listed and left
+Read the list, then add `--apply`. Then run `sweep_orphan_media.py` (dry run
+first) to clear any unreferenced `.heic` the script reported. Files it could not strip are listed and left
 untouched (exit code 1). Take a backup first (§8); the rewrite has no undo.
 Run it on dev first, the same way.
 

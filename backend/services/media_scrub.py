@@ -23,7 +23,7 @@ from services.media import (
     _strip_image,
     resolve_stored_media_path,
 )
-from services.media_sweep import scan_media_root
+from services.media_sweep import load_known_paths, scan_media_root
 
 
 @dataclass
@@ -141,4 +141,35 @@ async def convert_heic_rows(
             report.cleaned.append(f"{stem + extension} -> {new_relative}")
         except Exception as exc:
             report.failed.append((item.file_path, repr(exc)))
+    await _sweep_unclaimed_heic(session, media_root, apply, report, to_unlink)
     return report, to_unlink
+
+
+async def _sweep_unclaimed_heic(
+    session: AsyncSession,
+    media_root: str,
+    apply: bool,
+    report: ScrubReport,
+    to_unlink: list[str],
+) -> None:
+    """A .heic no row claims still serves its GPS from /media.
+
+    With a claimed .jpg beside it, it is an interrupted run's leftover: remove
+    it. Otherwise only the orphan sweep may delete it, so fail loudly.
+    """
+    claimed = (await load_known_paths(session, media_root)).claimed_paths
+    files, _escaping = scan_media_root(media_root)
+    for scanned in files:
+        stem, extension = os.path.splitext(scanned.absolute_path)
+        if extension.lower() not in HEIC_EXTENSIONS or scanned.absolute_path in claimed:
+            continue
+        if scanned.absolute_path in to_unlink:
+            continue
+        if stem + ".jpg" in claimed:
+            if apply:
+                to_unlink.append(scanned.absolute_path)
+            report.cleaned.append(f"{scanned.relative_path} (leftover, removed)")
+        else:
+            report.failed.append(
+                (scanned.relative_path, "unreferenced .heic; run sweep_orphan_media.py")
+            )

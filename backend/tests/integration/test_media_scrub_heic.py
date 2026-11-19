@@ -52,3 +52,32 @@ async def test_heic_row_converted_old_file_unlinked_second_run_noop(
 
     again, leftover = await convert_heic_rows(db_session, str(tmp_path), apply=True)
     assert again.cleaned == [] and leftover == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("apply", [False, True])
+async def test_interrupted_run_leftover_heic_removed_only_on_apply(
+    db_session: AsyncSession, character: Character, praxis_solo: Praxis, tmp_path, apply
+):
+    directory = os.path.join(str(character.id), str(praxis_solo.id), "abc")
+    os.makedirs(os.path.join(str(tmp_path), directory))
+    leftover = os.path.join(str(tmp_path), directory, "IMG_1.HEIC")
+    orphan = os.path.join(str(tmp_path), directory, "LOST.heic")
+    for path in (leftover, orphan, os.path.join(str(tmp_path), directory, "IMG_1.jpg")):
+        with open(path, "wb") as handle:
+            handle.write(_heic_bytes())
+    db_session.add(
+        MediaItem(
+            praxis_id=praxis_solo.id,
+            type=MediaType.image,
+            file_path=os.path.join(directory, "IMG_1.jpg"),
+            display_order=0,
+        )
+    )
+    await db_session.flush()
+
+    report, to_unlink = await convert_heic_rows(db_session, str(tmp_path), apply)
+
+    assert to_unlink == ([leftover] if apply else [])
+    assert [path for path, _ in report.failed] == [os.path.join(directory, "LOST.heic")]
+    assert os.path.exists(leftover) and os.path.exists(orphan)

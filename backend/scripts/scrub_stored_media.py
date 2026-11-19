@@ -25,7 +25,7 @@ async def convert_heic(database_url: str, media_root: str, apply: bool):
     try:
         async with async_sessionmaker(engine, expire_on_commit=False)() as session:
             report, to_unlink = await convert_heic_rows(session, media_root, apply)
-            await session.commit()
+            await (session.commit() if apply else session.rollback())
         for path in to_unlink:
             os.unlink(path)
     finally:
