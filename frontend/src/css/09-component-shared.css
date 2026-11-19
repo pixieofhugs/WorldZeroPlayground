@@ -224,12 +224,13 @@
 }
 
 /* Snide's amp (~270px) outgrows the panel; components/vote is frozen, so the slot fits it. */
-.duel-vote-slot {
-  overflow-x: auto;
-}
 @media (max-width: 479px) {
   .duel-vote-slot {
     margin-inline: calc(-1 * var(--space-md));
+    /* overflow-x:auto makes y scroll too; the padding keeps confetti and the cheer bounce unclipped. */
+    overflow-x: auto;
+    padding-block: var(--space-xl);
+    margin-block: calc(-1 * var(--space-xl));
   }
 }
 .duel-vote-slot-fit {
