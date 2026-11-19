@@ -1,6 +1,7 @@
 """Admin-only service functions for ad-hoc database management."""
 
 import logging
+from dataclasses import dataclass
 from typing import Optional
 
 from fastapi import HTTPException
@@ -334,6 +335,42 @@ async def flags_for_comments(
             _build_flag_out(flag, flagged_by_name)
         )
     return flags_by_comment
+
+
+@dataclass(frozen=True)
+class PraxisAuthorModeration:
+    account_id: int
+    username: str
+    character_status: str
+    account_status: str
+
+
+async def authors_for_moderation(
+    character_ids: set[int], session: AsyncSession
+) -> dict[int, PraxisAuthorModeration]:
+    """Account and moderation state per author character, for the queue's cards."""
+    if not character_ids:
+        return {}
+    result = await session.execute(
+        select(
+            Character.id,
+            Character.account_id,
+            Character.username,
+            Character.status,
+            Account.status,
+        )
+        .join(Account, Account.id == Character.account_id)
+        .where(Character.id.in_(character_ids))
+    )
+    return {
+        character_id: PraxisAuthorModeration(
+            account_id=account_id,
+            username=username,
+            character_status=character_status.value,
+            account_status=account_status.value,
+        )
+        for character_id, account_id, username, character_status, account_status in result.all()
+    }
 
 
 async def apply_ban(

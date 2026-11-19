@@ -199,6 +199,10 @@
     "created": "Imported {{total}} task(s).",
     "rejected": "Nothing was imported. {{total}} row(s) need fixing:"
   },
+  "moderateConfirm": {
+    "working": "working…",
+    "cancel": "cancel, keep as is"
+  },
   "moderation": {
     "loadError": "Couldn't load moderation data.",
     "actionError": "Moderation action failed.",
@@ -206,6 +210,10 @@
     "reportedByOne": "reported by {{name}}",
     "reportedByMany": "reported by {{count}} members",
     "log": {
+      "bannedAuthor": "Banned {{name}}",
+      "unbannedAuthor": "Unbanned {{name}}",
+      "suspendedAuthor": "Suspended the account of {{name}}",
+      "unsuspendedAuthor": "Unsuspended the account of {{name}}",
       "keptPraxis": "Kept praxis \"{{title}}\"",
       "removedPraxis": "Removed praxis \"{{title}}\"",
       "failedPraxis": "Failed praxis \"{{title}}\"",
@@ -232,6 +240,25 @@
         "comments": "Comments"
       },
       "byline": "by {{author}}",
+      "author": {
+        "banned": "banned",
+        "suspended": "suspended",
+        "ban": "ban character",
+        "unban": "unban character",
+        "suspend": "suspend account",
+        "unsuspend": "unsuspend account",
+        "viewAccount": "view account →",
+        "banConfirm": {
+          "heading": "Ban {{name}}?",
+          "lead": "{{name}} (@{{username}}) will be banned. You can unban them later.",
+          "submit": "confirm — ban character"
+        },
+        "suspendConfirm": {
+          "heading": "Suspend this account?",
+          "lead": "The account behind {{name}} (@{{username}}) will be suspended, with every character on it. You can unsuspend it later.",
+          "submit": "confirm — suspend account"
+        }
+      },
       "flags_one": "{{count}} flag",
       "flags_other": "{{count}} flags",
       "viewPraxis": "View praxis →",

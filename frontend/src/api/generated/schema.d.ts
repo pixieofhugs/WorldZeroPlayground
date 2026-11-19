@@ -3341,6 +3341,14 @@ export interface components {
              * @default []
              */
             applied_metatasks: components["schemas"]["TaskOut"][];
+            /** Author Account Id */
+            author_account_id: number;
+            /** Author Account Status */
+            author_account_status: string;
+            /** Author Status */
+            author_status: string;
+            /** Author Username */
+            author_username: string;
             /** Body Text */
             body_text: string | null;
             /**

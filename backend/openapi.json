@@ -3069,6 +3069,22 @@
             "title": "Applied Metatasks",
             "type": "array"
           },
+          "author_account_id": {
+            "title": "Author Account Id",
+            "type": "integer"
+          },
+          "author_account_status": {
+            "title": "Author Account Status",
+            "type": "string"
+          },
+          "author_status": {
+            "title": "Author Status",
+            "type": "string"
+          },
+          "author_username": {
+            "title": "Author Username",
+            "type": "string"
+          },
           "body_text": {
             "anyOf": [
               {
@@ -3334,7 +3350,11 @@
           "can_flag",
           "viewer_can_vote",
           "viewer_vote",
-          "flags"
+          "flags",
+          "author_account_id",
+          "author_username",
+          "author_status",
+          "author_account_status"
         ],
         "title": "FlaggedPraxisOut",
         "type": "object"

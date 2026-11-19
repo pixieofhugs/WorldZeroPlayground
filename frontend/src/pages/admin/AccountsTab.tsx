@@ -40,12 +40,12 @@ export function statusLabel(
   return known ? t(`accounts.status.${known}`) : status;
 }
 
-export default function AccountsTab() {
+export default function AccountsTab({ initialSearch = "" }: { initialSearch?: string }) {
   const { t } = useTranslation(["admin", "common"]);
   const { user } = useAuth();
   const [page, setPage] = useState<AccountPage | null>(null);
   const accounts = page?.items ?? [];
-  const [searchText, setSearchText] = useState("");
+  const [searchText, setSearchText] = useState(initialSearch);
   const [offset, setOffset] = useState(0);
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [detail, setDetail] = useState<AccountDetail | null>(null);

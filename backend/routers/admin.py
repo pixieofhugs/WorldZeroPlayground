@@ -53,6 +53,7 @@ from services.admin_service import (
     admin_edit_task,
     apply_ban,
     archive_message,
+    authors_for_moderation,
     delete_unreferenced_task,
     find_admin_accounts,
     grant_admin,
@@ -308,6 +309,9 @@ async def admin_list_flagged_praxes(
     flags_by_praxis = await flags_for_praxes(
         {praxis.id for praxis in praxis_list}, session
     )
+    authors = await authors_for_moderation(
+        {praxis.created_by_id for praxis in praxis_list}, session
+    )
     return [
         FlaggedPraxisOut(
             **(
@@ -316,6 +320,10 @@ async def admin_list_flagged_praxes(
                 )
             ).model_dump(),
             flags=flags_by_praxis.get(praxis.id, []),
+            author_account_id=authors[praxis.created_by_id].account_id,
+            author_username=authors[praxis.created_by_id].username,
+            author_status=authors[praxis.created_by_id].character_status,
+            author_account_status=authors[praxis.created_by_id].account_status,
         )
         for praxis in praxis_list
     ]

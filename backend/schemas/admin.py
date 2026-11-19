@@ -79,6 +79,11 @@ class FlaggedPraxisOut(PraxisOut):
     """PraxisOut plus its flag rows."""
 
     flags: list[FlagOut] = []
+    # Admin-only: the queue needs the account to suspend and link to.
+    author_account_id: int
+    author_username: str
+    author_status: str
+    author_account_status: str
 
 
 class FlaggedCommentOut(CommentOut):

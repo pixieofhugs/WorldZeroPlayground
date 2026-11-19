@@ -140,6 +140,11 @@ async def test_admin_list_flagged_praxes(
     assert [flag["reason"] for flag in row["flags"]] == ["harassment"]
     assert row["flags"][0]["reason_detail"] is None
     assert row["flags"][0]["flagged_by_name"] == character2.display_name
+    # The card moderates its author through the existing ban/suspend routes.
+    assert row["author_account_id"] == character.account_id
+    assert row["author_username"] == character.username
+    assert row["author_status"] == "active"
+    assert row["author_account_status"] == "active"
 
 
 @pytest.mark.asyncio
