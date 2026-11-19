@@ -621,7 +621,7 @@ async def suspend_account(
     if account is None:
         raise HTTPException(status_code=404, detail="Account not found.")
     if account.status == AccountStatus.deleted:
-        raise HTTPException(status_code=409, detail="Account was deleted.")
+        raise_coded(409, ErrorCode.account_deleted, "Account was deleted.")
     account.status = AccountStatus.suspended if suspended else AccountStatus.active
     await session.flush()
     await recalculate_for_account_votes(account_id, session, era)
