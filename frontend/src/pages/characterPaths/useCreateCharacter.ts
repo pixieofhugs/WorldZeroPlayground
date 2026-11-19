@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthContext'
-import { createCharacter, uploadCharacterAvatar, type CharacterCreate } from '../../api/characters'
+import { createCharacter, uploadCharacterAvatar, type CharacterCreate, type CharacterOut } from '../../api/characters'
 import { getInvitedFactions } from '../../api/me'
 import { extractError } from '../../utils/errors'
 import { resolveHandoffDestination } from '../../utils/onboardingHandoff'
@@ -88,7 +88,8 @@ export interface CreateCharacterState {
   showPicker: boolean
 }
 
-export function useCreateCharacter(): CreateCharacterState {
+/** `onCreated` replaces the hand-off navigation: `/start` shows its own arrival page. */
+export function useCreateCharacter(onCreated?: (character: CharacterOut) => Promise<void>): CreateCharacterState {
   const { refetch } = useAuth()
   const navigate = useNavigate()
 
@@ -133,7 +134,8 @@ export function useCreateCharacter(): CreateCharacterState {
       // The hand-off (#1861, SPEC-onboarding): land on the one takeable task,
       // never claiming it. Derived from `task.start_here`, not an onboarding
       // flag, so it holds however they arrived. Fallback: the task board (#1972).
-      navigate(await resolveHandoffDestination('/tasks'))
+      if (onCreated) await onCreated(character)
+      else navigate(await resolveHandoffDestination('/tasks'))
     } catch (err) {
       setError(extractError(err))
     } finally {

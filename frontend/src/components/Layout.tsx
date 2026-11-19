@@ -11,7 +11,7 @@ import TheArray from './TheArray'
 import NavBar from './NavBar'
 import { flushPendingCasts } from './vote/pendingCasts'
 import { characterRedirectTarget } from './layout/characterOnboardingGate'
-import { markOnboardingHandoff } from '../utils/onboardingResume'
+import { markOnboardingHandoff, onboardingHandoffPending } from '../utils/onboardingResume'
 import MobileHeader from './layout/MobileHeader'
 import MobileTabBar from './layout/MobileTabBar'
 import ShellContent from './layout/ShellContent'
@@ -46,6 +46,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       Boolean(user?.character),
       Boolean(user?.has_accepted_terms),
       pathname,
+      onboardingHandoffPending(),
     )
     if (!target) return
     // Landing at the contract is the flow's resume mark.
