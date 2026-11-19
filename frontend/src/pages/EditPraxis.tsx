@@ -3,6 +3,7 @@
  * archetype by `task.primary_faction_slug`. Shared overlays mount here so one
  * mount covers every archetype and both form factors.
  */
+import { useDocumentTitle } from "../hooks/useDocumentTitle"
 import { Navigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PageTitle from "../components/ui/PageTitle";
@@ -24,6 +25,7 @@ import MetataskRemoveConfirm from "../components/metataskSeal/MetataskRemoveConf
 
 export default function EditPraxis() {
   const { t } = useTranslation(["forms", "common"]);
+  useDocumentTitle("Edit Praxis")
   const { id } = useParams<{ id: string }>();
   const state = useEditPraxis(id);
   // Whole route (#3172): a drop while loading/failed must not navigate away.

@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { useDocumentTitle } from "../hooks/useDocumentTitle"
 import { useParams, Link } from "react-router-dom";
 import { factionName } from "../utils/factions";
 import { resolveVariant } from "../utils/factionDispatch";
@@ -30,6 +31,7 @@ export default function FactionDetail({ slug: slugProp }: { slug?: string } = {}
   const slug = slugProp ?? slugParam;
   const state = useFactionDetail(slug);
   const { loading, faction, fetchError, members, tasks, recentPraxis } = state;
+  useDocumentTitle(faction ? factionName(faction.slug) : null)
 
   if (loading)
     return <div className="py-8 font-body text-muted">{t("index.loading")}</div>;
