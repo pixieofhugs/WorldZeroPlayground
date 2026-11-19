@@ -142,7 +142,7 @@ known ceiling rather than a second form-factor mechanism.
   granted here is scoped to the character profile and the duel seal and **does
   not generalise** — unifying either survivor needs its own record, on evidence,
   the same way each collapse so far has.
-- `surfaceDispatch.test.ts` and `wowRendersDefault.test.tsx` *[2026-11-18, #3425: gone; nearest is `factions/__tests__/wowIsThemed.test.ts`]* walk `SURFACE_KEYS`
+- `surfaceDispatch.test.ts` (`frontend/src/factions/__tests__/`) and `wowRendersDefault.test.tsx` *[2026-11-18, #3425: `wowRendersDefault.test.tsx` is gone; nearest is `factions/__tests__/wowIsThemed.test.ts`]* walk `SURFACE_KEYS`
   and were updated by dropping the retired rows, not weakened.
   `duelSkinSlots.test.tsx` previously walked two registries; it now walks one at
   **both** form factors, so it newly catches a phone shell that drops a slot —
