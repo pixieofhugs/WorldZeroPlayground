@@ -1,11 +1,9 @@
 """Admin ring view: where one account's votes went this era (#3546)."""
 from collections import defaultdict
 
-from fastapi import HTTPException
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from models.account import Account
 from models.character import Character
 from models.praxis import PraxisMember
 from models.vote import Vote
@@ -16,8 +14,6 @@ _TOP_N = 3
 
 
 async def get_vote_ring(account_id: int, session: AsyncSession) -> VoteRingOut:
-    if await session.get(Account, account_id) is None:
-        raise HTTPException(status_code=404, detail="Account not found.")
     era_row = await get_current_era_row(session)
     in_era = Vote.created_at >= era_row.started_at
 
