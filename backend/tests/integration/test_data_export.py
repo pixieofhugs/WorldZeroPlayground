@@ -77,6 +77,23 @@ async def test_export_is_a_readable_zip_carrying_the_account_and_its_praxes(
 
 
 @pytest.mark.asyncio
+async def test_export_keeps_all_time_score_on_each_stats_row(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    auth_headers: dict,
+):
+    character.all_time_score = 77
+    await db_session.commit()
+
+    exported = _manifest(await _fetch_zip(client, auth_headers))["characters"][0]
+
+    assert "all_time_score" not in exported
+    assert exported["stats"]
+    assert {row["all_time_score"] for row in exported["stats"]} == {77}
+
+
+@pytest.mark.asyncio
 async def test_export_embeds_the_bytes_of_media_this_account_uploaded(
     client: AsyncClient,
     db_session: AsyncSession,

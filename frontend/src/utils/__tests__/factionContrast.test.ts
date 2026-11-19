@@ -664,6 +664,25 @@ const ARCHETYPE_PAIRS: Pair[] = [
     text: `--faction-wow-${ink}`,
     veil: "--faction-wow-court-glow",
   })),
+  // Eyebrow and chip paint ground-quiet: accent-deep is 4.14 under the hatch in light.
+  // Glow paints over hatch, so on ground-from they stack (outermost-last).
+  {
+    what: "wow profile ground-to, Proposed eyebrow ink",
+    surface: "--faction-wow-ground-to",
+    text: "--faction-wow-ground-quiet",
+  },
+  {
+    what: "wow profile ground-from, Badges chip ink under court glow",
+    surface: "--faction-wow-ground-from",
+    text: "--faction-wow-ground-quiet",
+    veil: "--faction-wow-court-glow",
+  },
+  ...["card-text", "ground-quiet"].map((ink) => ({
+    what: `wow profile ground-from, ${ink} under hatch and court glow stacked`,
+    surface: "--faction-wow-ground-from",
+    text: `--faction-wow-${ink}`,
+    veil: ["--faction-wow-hatch", "--faction-wow-court-glow"],
+  })),
 
   // WOW lists (#895), duel seal and rail. The kit's contrast table is wrong both
   // ways, so these hold the measurement. The opponent's accent is absent: it

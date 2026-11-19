@@ -8,6 +8,7 @@ generated.css by hand. `--check` exits 1 if the checked-in file is stale.
 Ported from .design-sync/onboarding-arc/build.py, CSS only: b1()'s glass and
 flowers are returned, b6()'s ledge/card HTML is left for the beat issues.
 """
+import json
 import math
 import pathlib
 import sys
@@ -116,11 +117,15 @@ def b1():
     def jag(a,b,k):
         mx,my=(a[0]+b[0])/2,(a[1]+b[1])/2; d=math.hypot(b[0]-a[0],b[1]-a[1]) or 1; o=((k*37)%9-4)*min(1,d/40)
         return f'M{P(a)} L{mx-(b[1]-a[1])/d*o:.1f} {my+(b[0]-a[0])/d*o:.1f} L{P(b)}'
-    svg=''.join(f'<path class="ck ck1" pathLength="1" d="{jag(I,M[i],i)}" style="animation-delay: {K1+(i%3)*.03:.2f}s, {SH}s;"/>' for i in range(n))
-    svg+=''.join(f'<path class="ck ck2" pathLength="1" d="{jag(M[i],H[i],i+3)}" style="animation-delay: {K2+(i%4)*.025:.3f}s, {SH}s;"/><path class="ck ck2" pathLength="1" d="{jag(M[i],M[(i+1)%n],i+5)}" style="animation-delay: {K2+.05+(i%3)*.03:.2f}s, {SH}s;"/>' for i in range(n))
+    D2=lambda t:f'{t:.2f}s, {SH}s'
+    cracks=[{'k':1,'d':jag(I,M[i],i),'delay':D2(K1+(i%3)*.03)} for i in range(n)]
+    for i in range(n):
+        cracks+=[{'k':2,'d':jag(M[i],H[i],i+3),'delay':D2(K2+(i%4)*.025)},{'k':2,'d':jag(M[i],M[(i+1)%n],i+5),'delay':D2(K2+.05+(i%3)*.03)}]
+    shards=[]
     for i,pg in enumerate(polys):
         cx=sum(p[0] for p in pg)/len(pg); cy=sum(p[1] for p in pg)/len(pg); vx,vy=cx-I[0],cy-I[1]
-        svg+=f'<polygon class="shard" points="{" ".join(P(p).replace(" ",",") for p in pg)}" style="--dx: {vx*.75+((i*29)%21-10):.0f}px; --dy: {vy*.75-30:.0f}px; --dr: {((i*73)%170-85)}deg; animation-delay: {SH+math.hypot(vx,vy)/1400:.2f}s;"/>'
+        shards.append({'points':' '.join(P(p).replace(' ',',') for p in pg),'dx':round(vx*.75+((i*29)%21-10)),'dy':round(vy*.75-30),'dr':(i*73)%170-85,'delay':round(SH+math.hypot(vx,vy)/1400,2)})
+    svg={'cracks':cracks,'shards':shards}
     # the wisp: half its 44px width; in the phone it stands on the bottom edge of the screen (y=8), outside on the meadow (y=0)
     r=Rig(22); r.x(0,220); r.y(0,8); r.sq(0,z=.8)
     r.hop(.95,1.2,(220,8),(220,8),9,z=.8,settle=False)                  # notices the glass
@@ -147,8 +152,9 @@ def b1():
     css+=kf('b1blush',T,[(0,'opacity:.25'),(4.45+D,'opacity:.25'),(4.8+D,'opacity:.95'),(T,'opacity:.95')])
     css+=kf('b1jolt',T,[(0,'translate:0 0')]+[(NT+.06+i*.05,f'translate:{1.6 if i%2 else -1.6}px 0') for i in range(7)]+[(NT+.42,'translate:0 0')]+[x for t,d in ((K1,2),(K2,4)) for x in ((t-.01,'translate:0 0'),(t+.03,f'translate:{-d}px {d}px'),(t+.07,f'translate:{d}px {-d*.6:.1f}px'),(t+.12,f'translate:{-d*.4:.1f}px 0'),(t+.2,'translate:0 0'))]+[(T,'translate:0 0')])
     css+=f'.b1{{--sh:{SH}s;--nt:{NT}s;--t:{T}s}}'
-    flowers=[(144,5.22+D,1),(224,5.94+D,6),(392,6.36+D,7)]   # one where it took off each time, one shaken up by the last landing
-    return css,svg,flowers
+    flowers=[{'x':x,'d':round(d,2),'c':c} for x,d,c in ((144,5.22+D,1),(224,5.94+D,6),(392,6.36+D,7))]   # one where it took off each time, one shaken up by the last landing
+    svg['flowers']=flowers
+    return css,svg
 
 # ── beat 4: the three ways to prove it land on the card, and the wisp tries each one: a pose for the camera (the flash goes off in its face),
 #    a song into the microphone, then a jump onto the clapperboard, which snaps shut under it. One loop; everything is on the same clock. ──
@@ -188,14 +194,42 @@ def b4():
     css+=f'.b4s .eyes{{animation:b4eyes {L}s linear {D0}s infinite both,blink2 9.7s {D0}s infinite}}'
     return css
 
+# ── beat 1, 900px and wider: the world outside is bigger. Placement and clocks only; Beat1Wide.tsx draws the pieces. ──
+def b1wide():
+    pl=lambda x,y,d:{'x':x,'y':y,'d':d}
+    buddy=lambda i:{'period':round(3.7+i*.6,1),'offset':-round(i*1.3,1)}   # each buddy blinks on its own clock
+    return {
+        'rainbow':[{'d':f'M{250-r} 250 A {r} {r} 0 0 1 {250+r} 250','stop':i+1,'delay':round(1.1+i*.09,2)} for i,r in enumerate(range(240,184,-8))],
+        'birds':[{'top':t,'dur':d,'delay':dl} for t,d,dl in ((66,19,1.6),(92,23,6.5),(40,27,11))],
+        'clouds':[{'x':x,'top':t,'w':w,'dur':d} for x,t,w,d in ((9,104,72,19),(24,48,50,14),(79,62,78,22),(91,124,52,17))],
+        'tree':pl(11,22,.7), 'kite':pl(76,26,1.1), 'windmill':pl(90,34,1.5),
+        'wow':pl(25,-16,1.9), 'everymen':pl(84,-4,2.2), 'ua':pl(37,-14,2.0), 'snide':pl(63,-24,2.5), 'ephemerists':pl(64,33,2.9),
+        'pines':[{**pl(x,y,d),'scale':sc} for x,y,d,sc in ((30,44,.9,1),(33.5,40,1.05,.74),(70,46,1.2,.9),(4,30,1.7,1.15),(97,30,1.9,1))],
+        'buddies':{'coven':buddy(0),'singularity':buddy(1),'wow':buddy(2),'everymen':buddy(3),'ua':buddy(4),'snide':buddy(5),'ephemerists':buddy(6)},
+        # the meadow blooms outwards from where the wisp came through: the further out, the later
+        'flowers':[{**pl(x,y,round(.5+abs(x-50)/50*1.6,2)),'stop':(1,6,7,2,5,3)[i%6]} for i,(x,y) in enumerate(((6,-24),(10,6),(16,-14),(22,10),(27,-20),(31,2),(69,4),(73,-18),(79,8),(86,-22),(91,2),(95,-12)))],
+        'butterflies':[{**pl(17,34,2.4),'stop':6,'dur':5.3,'reverse':False},{**pl(71,28,2.8),'stop':3,'dur':6.7,'reverse':True}],
+    }
+
 def render():
     return '/* GENERATED by scripts/onboarding_motion.py. Do not edit. */\n' + ''.join(
         f'\n/* {name} */\n{css}\n' for name, css in (('beat 1', b1()[0]), ('beat 4', b4()), ('beat 6', b6()[0])))
 
+def ts(name, data):
+    return f'/* GENERATED by scripts/onboarding_motion.py. Do not edit. */\nexport const {name} = {json.dumps(data, indent=1)} as const\n'
+
+def outputs():
+    return {OUT: render(),
+            OUT.with_name('b1art.generated.ts'): ts('B1_ART', b1()[1]),
+            OUT.with_name('b1wide.generated.ts'): ts('B1_WIDE', b1wide())}
+
 if __name__ == '__main__':
-    css = render()
-    if '--check' not in sys.argv:
-        OUT.parent.mkdir(parents=True, exist_ok=True)
-        OUT.write_text(css)
-    elif not OUT.exists() or OUT.read_text() != css:
-        sys.exit(f'{OUT.relative_to(OUT.parents[5])} is stale. Fix: python3 scripts/onboarding_motion.py')
+    stale = []
+    for path, text in outputs().items():
+        if '--check' not in sys.argv:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(text)
+        elif not path.exists() or path.read_text() != text:
+            stale.append(str(path.relative_to(OUT.parents[5])))
+    if stale:
+        sys.exit(f'{", ".join(stale)} stale. Fix: python3 scripts/onboarding_motion.py')
