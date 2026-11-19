@@ -253,16 +253,18 @@ returner either: someone who bailed is by definition a person the pitch did not 
 **The sign-in card is skipped when a session exists.** The one asymmetry — re-asking for
 agreement is free and honest, re-authenticating is a full round trip, and bouncing a
 signed-in person out to a provider looks like the site has lost them. With the contract
-before sign-in, a signed-in person still sees the title, the beats and the contract; they go
-from the contract straight to character creation, and the consent row is written at once
-because the account already exists (*Terms*).
+before sign-in, a signed-in person who opens `/start` cold still sees the title, the beats and
+the contract; they go from the contract straight to character creation, and the consent row is
+written at once because the account already exists (*Terms*). The OAuth resume
+(`utils/onboardingResume`) is not a cold open: it lands past the title, the beats and the
+contract, with the held contract click carried through the redirect.
 
 **Someone who already plays gets the "Welcome back" sign-in view** rather than the run from
 the top: a sign-in and nothing else, for a person who has a character already.
 
 *2026-11-18, [#3457](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3457); #3452:* was written when sign-in came before the terms. The order is
-now title, seven beats, contract, sign-in, creation, arrival, and a signed-in person skips
-only the sign-in step.
+now title, seven beats, contract, sign-in, creation, arrival, and a signed-in person who opens
+`/start` cold skips only the sign-in step; the OAuth resume lands past the title, beats and contract.
 
 **The flow stops applying once that character has completed the onboarding task** — the same
 predicate as the mark. One rule, two consumers, consistent by construction: the flow can
