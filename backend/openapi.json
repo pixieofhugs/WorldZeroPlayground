@@ -1729,7 +1729,7 @@
             "type": "string"
           },
           "value": {
-            "maxLength": 2000,
+            "maxLength": 5000,
             "minLength": 1,
             "title": "Value",
             "type": "string"
@@ -1848,6 +1848,11 @@
             "title": "Email",
             "type": "string"
           },
+          "era_id": {
+            "default": 0,
+            "title": "Era Id",
+            "type": "integer"
+          },
           "era_name": {
             "default": "",
             "title": "Era Name",
@@ -1923,6 +1928,7 @@
           "second_character_level_required",
           "albescent_level_required",
           "era_name",
+          "era_id",
           "can_propose_task",
           "can_propose_metatask",
           "can_see_retired_tasks",
@@ -3790,6 +3796,10 @@
             "title": "Duel Level Required",
             "type": "integer"
           },
+          "era_id": {
+            "title": "Era Id",
+            "type": "integer"
+          },
           "era_name": {
             "title": "Era Name",
             "type": "string"
@@ -3826,6 +3836,7 @@
         },
         "required": [
           "era_name",
+          "era_id",
           "level_thresholds",
           "duel_level_required",
           "collab_auto_submit_days",

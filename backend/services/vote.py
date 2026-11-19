@@ -2,7 +2,7 @@ import dataclasses
 from typing import Optional
 
 from fastapi import HTTPException
-from sqlalchemy import exists, select
+from sqlalchemy import exists, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dependencies import account_has_admin_role
@@ -27,6 +27,9 @@ from services.era_gates import may_vote, vote_lock_reason
 from services.praxis_duel import get_duel_for_praxis
 from services.scoring import compute_votes_available
 from services.vote_tally import VoteTally, tally_votes
+
+#: Advisory-lock namespace; must differ from the signup and era-rollover keys.
+_VOTE_LOCK_NAMESPACE = 0x5A1A
 
 
 @dataclasses.dataclass(frozen=True)
@@ -124,7 +127,13 @@ async def cast_or_update_vote(
 
     # Both branches report the budget (#1382); always the current era's (#1345).
     era_row = await get_current_era_row(session)
+    # The budget is read-then-write; the stats row may not exist yet, so lock the
+    # character (not a row) and re-read, as the identity map may hold a stale copy.
+    await session.execute(
+        select(func.pg_advisory_xact_lock(_VOTE_LOCK_NAMESPACE, voter.id))
+    )
     stats = await get_or_create_stats(session, voter.id, era_row.id)
+    await session.refresh(stats)
 
     if existing is not None:
         # Free re-rate; ``voter_character_id`` follows the life that set the value.

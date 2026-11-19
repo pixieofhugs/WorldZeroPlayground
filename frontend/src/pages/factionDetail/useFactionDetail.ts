@@ -4,6 +4,7 @@
  */
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import i18n from "../../i18n";
 import {
   getFactionStatus,
   chooseFaction,
@@ -137,7 +138,7 @@ export function useFactionDetail(
       })
       .catch((err) => {
         if (!cancelled)
-          setFetchError(extractError(err, t("detail.errors.load")));
+          setFetchError(extractError(err, i18n.t("factions:detail.errors.load")));
       })
       .finally(() => {
         if (!cancelled) setEntitiesLoading(false);
@@ -145,7 +146,7 @@ export function useFactionDetail(
     return () => {
       cancelled = true;
     };
-  }, [slug, t]);
+  }, [slug]);
 
   // Membership status; cleared without a character so the join block hides.
   useEffect(() => {

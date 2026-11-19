@@ -38,6 +38,9 @@ permissions:
 jobs:
   e2e:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
 
     services:
       postgres:
@@ -149,3 +152,39 @@ jobs:
           name: playwright-json
           path: frontend/test-results/results.json
           retention-days: 14
+
+      # nightly-red (#2463): an open issue means the full suite on main is red
+      # right now. Only full-suite runs on main count: the schedule, a push, or
+      # a dispatch on main with no spec/grep. PRs and partial runs never touch it.
+      - name: Raise a red run
+        if: >-
+          failure() && github.ref == 'refs/heads/main' &&
+          github.event_name != 'pull_request' &&
+          inputs.spec == '' && inputs.grep == ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          open=$(gh issue list --label nightly-red --state open --limit 1 --json number --jq '.[0].number // empty')
+          if [ -n "$open" ]; then
+            gh issue comment "$open" --body "Red again ($EVENT): $RUN_URL"
+          else
+            gh issue create --label nightly-red --label needs-triage \
+              --title "The E2E suite on main went red" \
+              --body "First red full-suite run on main since it was last green ($EVENT). Run: $RUN_URL"
+          fi
+
+      - name: Clear a red run
+        if: >-
+          success() && github.ref == 'refs/heads/main' &&
+          github.event_name != 'pull_request' &&
+          inputs.spec == '' && inputs.grep == ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          open=$(gh issue list --label nightly-red --state open --limit 1 --json number --jq '.[0].number // empty')
+          if [ -n "$open" ]; then
+            gh issue close "$open" --comment "Green again: $RUN_URL"
+          fi

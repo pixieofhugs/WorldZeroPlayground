@@ -6,15 +6,26 @@ import { describe, it, expect, vi } from 'vitest'
 import { createCacheEpoch } from '../cacheEpoch'
 
 describe('the era stamp', () => {
+  it('the same era NAME under a new id still drops — a same-era reset appends an Era row', () => {
+    const epoch = createCacheEpoch()
+    const drop = vi.fn()
+    epoch.register(drop)
+
+    epoch.noteEraStamp(1)
+    epoch.noteEraStamp(2)
+
+    expect(drop).toHaveBeenCalledTimes(1)
+  })
+
   it('the FIRST era seen only records the stamp — there is nothing held to be wrong yet', () => {
     const epoch = createCacheEpoch()
     const drop = vi.fn()
     epoch.register(drop)
 
-    epoch.noteEraStamp('TestEra')
+    epoch.noteEraStamp(1)
 
     expect(drop).not.toHaveBeenCalled()
-    expect(epoch.lastSeenEra()).toBe('TestEra')
+    expect(epoch.lastSeenEra()).toBe(1)
     expect(epoch.version()).toBe(0)
   })
 
@@ -23,9 +34,9 @@ describe('the era stamp', () => {
     const drop = vi.fn()
     epoch.register(drop)
 
-    epoch.noteEraStamp('TestEra')
-    epoch.noteEraStamp('TestEra')
-    epoch.noteEraStamp('TestEra')
+    epoch.noteEraStamp(1)
+    epoch.noteEraStamp(1)
+    epoch.noteEraStamp(1)
 
     expect(drop).not.toHaveBeenCalled()
     expect(epoch.version()).toBe(0)
@@ -38,12 +49,12 @@ describe('the era stamp', () => {
     epoch.register(gameConfig)
     epoch.register(factions)
 
-    epoch.noteEraStamp('TestEra')
-    epoch.noteEraStamp('SecondEra')
+    epoch.noteEraStamp(1)
+    epoch.noteEraStamp(2)
 
     expect(gameConfig).toHaveBeenCalledTimes(1)
     expect(factions).toHaveBeenCalledTimes(1)
-    expect(epoch.lastSeenEra()).toBe('SecondEra')
+    expect(epoch.lastSeenEra()).toBe(2)
   })
 
   it('advances the version on every drop, so an in-flight request can tell it is stale', () => {
