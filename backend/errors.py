@@ -174,6 +174,7 @@ class ErrorCode(str, enum.Enum):
     #: Re-opening the live era would wipe every score for nothing. 409, not
     #: 422: the request is well formed, the state refuses it.
     era_already_live = "ERA_ALREADY_LIVE"
+    era_roll_needs_character = "ERA_ROLL_NEEDS_CHARACTER"
 
     # -- Copy overrides (#3065) ---------------------------------------------
     #: Usually two admins reverting the same string: already shipped wording.

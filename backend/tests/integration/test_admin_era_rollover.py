@@ -506,3 +506,24 @@ async def test_the_roll_opens_the_new_era_with_its_task_list(
 
     again = await sync_era_tasks(db_session, listed, character.id, reactivate=True)
     assert again == (0, 0)
+
+
+async def test_the_roll_refuses_new_tasks_when_the_operator_has_no_character(
+    db_session: AsyncSession,
+    account: Account,
+    era: Era,
+    some_faction: Faction,
+    monkeypatch,
+):
+    from services.admin_service import roll_into_era
+
+    await make_admin(db_session, account)
+    _era_listing(monkeypatch, "Beta")
+
+    with pytest.raises(HTTPException) as caught:
+        await roll_into_era("era_2", account, db_session)
+
+    assert caught.value.status_code == 409
+    assert caught.value.detail["code"] == "ERA_ROLL_NEEDS_CHARACTER"
+    rows = (await db_session.execute(select(Era))).scalars().all()
+    assert [row.config_key for row in rows] == [era.config_key]

@@ -839,6 +839,24 @@ async def roll_into_era(
             f"{era_config.name} is already the live era.",
         )
 
+    creator_id = (
+        await session.execute(
+            select(Character.id)
+            .where(Character.account_id == operator.id)
+            .order_by(Character.id)
+            .limit(1)
+        )
+    ).scalar_one_or_none()
+    if creator_id is None:
+        board_titles = set((await session.execute(select(Task.title))).scalars())
+        if any(task.title not in board_titles for task in era_config.tasks):
+            raise_coded(
+                409,
+                ErrorCode.era_roll_needs_character,
+                "This era lists new tasks and the operator has no character "
+                "to author them.",
+            )
+
     characters = await list_characters_to_reset(session)
     new_era_row = Era(
         # Fallback if the config file is later deleted; see models/era.py.
@@ -855,16 +873,6 @@ async def roll_into_era(
 
     await apply_era_reset(characters, new_era_row, session, era=era_config)
 
-    # ponytail: an operator with no character fails the roll (NOT NULL) only if
-    # the era lists new tasks; every mod holds a character in practice.
-    creator_id = (
-        await session.execute(
-            select(Character.id)
-            .where(Character.account_id == operator.id)
-            .order_by(Character.id)
-            .limit(1)
-        )
-    ).scalar_one_or_none()
     tasks_created, tasks_reactivated = await sync_era_tasks(
         session, era_config, creator_id, reactivate=True
     )
