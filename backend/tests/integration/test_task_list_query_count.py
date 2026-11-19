@@ -61,7 +61,7 @@ async def _add_tasks(
             point_value=5,
             level_required=0,
             status=TaskStatus.active,
-            created_by=author.id,
+            created_by_id=author.id,
             primary_faction_slug=DEFAULT_FACTION_SLUG,
         )
         for index in range(start, start + count)

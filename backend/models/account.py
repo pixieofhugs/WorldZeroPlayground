@@ -1,23 +1,27 @@
 import enum
+from datetime import datetime
 from typing import TYPE_CHECKING, List
 
 from sqlalchemy import (
     BigInteger,
-    Boolean,
-    Enum,
+    DateTime,
     ForeignKey,
     Identity,
+    Index,
     String,
     UniqueConstraint,
+    event,
+    func,
     text,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from models.base import Base
+from models.base import Base, string_enum
 from models.mixins import CreatedAtMixin, TimestampMixin
 
 if TYPE_CHECKING:
+    from models.account_secret_faction import AccountSecretFaction
     from models.character import Character
 
 
@@ -49,11 +53,15 @@ class AuthProvider(enum.StrEnum):
 
 class Account(TimestampMixin, Base):
     __tablename__ = "account"
+    # Case-insensitive: two OAuth providers may report one mailbox in different case.
+    __table_args__ = (
+        Index("uq_account_email_lower", func.lower(text("email")), unique=True),
+    )
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
-    email: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+    email: Mapped[str] = mapped_column(String, nullable=False)
     status: Mapped[AccountStatus] = mapped_column(
-        Enum(AccountStatus, create_type=False), nullable=False, default=AccountStatus.active
+        string_enum(AccountStatus), nullable=False, default=AccountStatus.active
     )
     # The "last carried life". use_alter breaks the DDL cycle with character.account_id.
     active_character_id: Mapped[int | None] = mapped_column(
@@ -61,28 +69,20 @@ class Account(TimestampMixin, Base):
         ForeignKey("character.id", use_alter=True, name="fk_account_active_character"),
         nullable=True,
     )
-    # Sticky (ADR-0027): set when any life joins Albescent, never unset. Do NOT
-    # derive from live membership — it survives age-out and switches.
-    albescent_revealed: Mapped[bool] = mapped_column(
-        Boolean, nullable=False, default=False, server_default="false"
-    )
-    # Sticky (#2399), stamped by `services.character.stamp_albescent_unlock`:
-    # era reset leaves nothing to derive it from.
-    albescent_unlocked: Mapped[bool] = mapped_column(
-        Boolean, nullable=False, default=False, server_default="false"
-    )
-    # Sticky (#2770), stamped by `services.character.stamp_albescent_glimpse`.
-    # Account-scoped so the tile doesn't blink with the character switcher.
-    # glimpsed = may see a row is there; revealed = may read it; unlocked = may
-    # join. Revealed implies glimpsed, resolved in `is_albescent_glimpsed`.
-    albescent_glimpsed: Mapped[bool] = mapped_column(
-        Boolean, nullable=False, default=False, server_default="false"
+    # Eager: the sync predicates in services.albescent_reveal read it (ADR-0097).
+    secret_faction_stamps: Mapped[List["AccountSecretFaction"]] = relationship(
+        "AccountSecretFaction", lazy="selectin", cascade="all, delete-orphan"
     )
 
     # Per account (#1047). JSONB so a new event needs no migration: unset keys
     # default in code. Read only via `services.notification_prefs.resolve_prefs`.
     notification_prefs: Mapped[dict] = mapped_column(
         JSONB, nullable=False, default=dict, server_default=text("'{}'::jsonb")
+    )
+
+    # The account's last first-time praxis seal (#3474); the daily cap reads it.
+    last_praxis_posted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
     )
 
     # Disambiguates from the active_character_id FK path.
@@ -95,6 +95,12 @@ class Account(TimestampMixin, Base):
     oauth_providers: Mapped[List["OAuthProvider"]] = relationship(
         "OAuthProvider", back_populates="account", lazy="raise"
     )
+
+
+@event.listens_for(Account, "init")
+def _start_with_no_stamps(target: Account, args: tuple, kwargs: dict) -> None:
+    # A new Account's unloaded collection would lazy-load (sync IO) on first read.
+    target.secret_faction_stamps = []
 
 
 class OAuthProvider(TimestampMixin, Base):

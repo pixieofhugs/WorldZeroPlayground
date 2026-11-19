@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from models.character import Character
 from models.character_block import CharacterBlock
 from models.era import Era
-from models.relationship import Relationship, RelationshipStatus, RelationshipType
+from models.relationship import Relationship, RelationshipType
 from models.task import Task
 from models.taunt_message import TauntMessage
 from services.character_stats import recalculate_character_stats
@@ -26,7 +26,6 @@ async def _declare(
         from_character_id=declarer.id,
         to_character_id=target.id,
         type=rel_type,
-        status=RelationshipStatus.active,
     )
     db_session.add(edge)
     await db_session.flush()

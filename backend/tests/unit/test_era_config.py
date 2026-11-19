@@ -2,7 +2,7 @@ import dataclasses
 
 import pytest
 
-from faction_slugs import ALBESCENT_FACTION_SLUG, UNAFFILIATED_FACTION_SLUG
+from faction_slugs import UNAFFILIATED_FACTION_SLUG
 from game_config import (
     _ERA_ATTRIBUTE_BY_CONFIG_KEY,
     COMPILE_TIME_ERA_CONFIG_KEY,
@@ -194,9 +194,9 @@ def test_era_2_inherits_every_other_rule_from_era_1():
 
 
 def test_era_2_albescent_gate_is_inherited_knowingly():
-    """Coverage (``_account_covers_every_faction``) is far cheaper here:
+    """Coverage (``_character_covers_every_faction``) is far cheaper here:
     three non-sentinel factions vs seven. Accepted (#1618)."""
-    assert ERA_2.albescent_level_required == ERA_1.albescent_level_required
+    assert ERA_2.secret_faction_join_level == ERA_1.secret_faction_join_level
     sentinels = {"na", "albescent"}
     assert len(set(ERA_2.factions) - sentinels) == 3
     assert len(set(ERA_1.factions) - sentinels) == 7
@@ -230,7 +230,7 @@ def test_every_registered_era_carries_the_structural_slugs():
     for config_key in _ERA_ATTRIBUTE_BY_CONFIG_KEY:
         era = era_config_for_key(config_key)
         assert UNAFFILIATED_FACTION_SLUG in era.factions, config_key
-        assert ALBESCENT_FACTION_SLUG in era.factions, config_key
+        assert era.secret_faction_slug in era.factions, config_key
 
 
 def test_every_registered_era_pins_the_two_na_fields():
@@ -251,15 +251,15 @@ def test_an_era_that_drops_na_will_not_construct():
         dataclasses.replace(ERA_1, factions=without_na)
 
 
-def test_an_era_that_drops_albescent_will_not_construct():
-    """Its gate stays era-tunable; only its presence is required."""
-    without_albescent = {
-        slug: faction
-        for slug, faction in ERA_1.factions.items()
-        if slug != ALBESCENT_FACTION_SLUG
-    }
-    with pytest.raises(ValueError, match="ADR-0087"):
-        dataclasses.replace(ERA_1, factions=without_albescent)
+def test_an_era_may_have_no_secret_faction():
+    """ADR-0097: Albescent is Era 1's secret faction, not a fixture of every era."""
+    no_secret = dataclasses.replace(ERA_1, secret_faction_slug=None)
+    assert no_secret.secret_faction_slug is None
+
+
+def test_an_era_whose_secret_faction_is_not_in_its_roster_will_not_construct():
+    with pytest.raises(ValueError, match="ADR-0097"):
+        dataclasses.replace(ERA_1, secret_faction_slug="not_a_faction")
 
 
 def test_an_era_that_moves_the_starting_faction_will_not_construct():

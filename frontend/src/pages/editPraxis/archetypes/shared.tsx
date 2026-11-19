@@ -13,6 +13,7 @@ import type { TaskOut } from "../../../api/tasks";
 import type { PraxisOut } from "../../../api/praxis";
 import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 import { useStrayFileDropGuard } from "../strayFileDrop";
+import { usePraxisRoom } from "../praxisRoom";
 
 interface ErrorBannerProps {
   message: string;
@@ -54,6 +55,15 @@ export function formatAutosave(date: Date | null): string {
   if (ago < 60) return i18n.t("forms:autosaveAgo.seconds", { seconds: ago });
   const minutes = Math.round(ago / 60);
   return i18n.t("forms:autosaveAgo.minutes", { minutes });
+}
+
+/** The composer's save line: says "on this phone" until the server has the edits (#3580). */
+export function AutosaveStatus({ at }: { at: Date | null }) {
+  const room = usePraxisRoom();
+  const { t } = useTranslation("forms");
+  if (!at) return <>{t("editPraxis.composer.statusUnsaved")}</>;
+  if (room && !room.synced) return <>{t("editPraxis.composer.statusSavedOnPhone")}</>;
+  return <>{t("editPraxis.composer.statusSaved", { ago: formatAutosave(at) })}</>;
 }
 
 /**

@@ -5,11 +5,12 @@ One connection per test inside a transaction that rolls back; handler commits
 only release a SAVEPOINT.
 """
 import os
+from datetime import datetime, timezone
 
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy import event
+from sqlalchemy import event, func, select
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     create_async_engine,
@@ -25,16 +26,65 @@ from models.account import Account
 from models.base import Base
 from models.character import Character
 from models.character_stats import CharacterStats
+from models.duel import Duel, DuelStatus
 from models.era import Era
 from models.faction import Faction
 from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.task import Task
 from models.vote import Vote
 from services.auth import create_jwt
-from tests.integration.factories import DEFAULT_FACTION_SLUG
+from tests.integration.factories import DEFAULT_FACTION_SLUG, attach_proof
+
+
+@event.listens_for(Praxis, "before_insert")
+@event.listens_for(Praxis, "before_update")
+def _stamp_sealed_praxis_era(mapper, connection, praxis: Praxis) -> None:
+    """Fixtures seal praxes directly; the CHECK wants the seal's stamps."""
+    if praxis.status != PraxisStatus.submitted:
+        return
+    if praxis.submitted_at is None:
+        praxis.submitted_at = datetime.now(timezone.utc)
+    if praxis.era_id is None:
+        praxis.era_id = connection.scalar(select(func.max(Era.id)))
+
+
+@event.listens_for(Duel, "before_insert")
+@event.listens_for(Duel, "before_update")
+def _stamp_duel_lifecycle(mapper, connection, duel: Duel) -> None:
+    """Fixtures set a duel's status directly; stamp what that status implies."""
+    now = datetime.now(timezone.utc)
+    if duel.status == DuelStatus.declined and duel.declined_at is None:
+        duel.declined_at = now
+    if duel.status in (DuelStatus.active, DuelStatus.settled, DuelStatus.resolved):
+        duel.accepted_at = duel.accepted_at or now
+    if duel.status == DuelStatus.resolved:
+        duel.resolved_at = duel.resolved_at or now
+        duel.resolved_era_id = duel.resolved_era_id or connection.scalar(
+            select(func.max(Era.id))
+        )
+
 
 # Level-0 fixture voters have a past peak at the vote level (#3102).
 CURRENT_ERA_VOTE_LEVEL: int = CURRENT_ERA.vote_level_required
+
+
+@pytest.fixture(autouse=True)
+def _no_post_cooldown(restore_live_era):
+    """Most tests post many praxes from one account; the cap has its own tests."""
+    object.__setattr__(CURRENT_ERA, "praxis_post_cooldown_hours", 0)
+
+
+@pytest.fixture(autouse=True)
+def proof_rule_off(request, monkeypatch):
+    """Tests that POST /praxes then submit carry no media; only ``proof_rule`` tests
+    (#3473) see the rule."""
+    if request.node.get_closest_marker("proof_rule") is None:
+        from services import collab_consensus
+
+        async def _always(*args, **kwargs):
+            return True
+
+        monkeypatch.setattr(collab_consensus, "_has_proof", _always)
 
 
 @pytest.fixture(autouse=True)
@@ -68,6 +118,12 @@ async def test_engine():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
     await engine.dispose()
+
+
+@pytest.fixture
+def media_root(tmp_path, monkeypatch):
+    monkeypatch.setattr(settings, "MEDIA_ROOT", str(tmp_path))
+    return tmp_path
 
 
 @pytest_asyncio.fixture
@@ -161,7 +217,7 @@ async def era(db_session: AsyncSession, account: Account) -> Era:
     e = Era(
         name=CURRENT_ERA.name,
         config_key=CURRENT_ERA.config_key,
-        started_by=account.id,
+        started_by_id=account.id,
     )
     db_session.add(e)
     await db_session.commit()
@@ -216,7 +272,6 @@ async def character(db_session: AsyncSession, account: Account, era: Era, some_f
         character_id=ch.id,
         era_id=era.id,
         score=0,
-        all_time_score=0,
         level=0,
         votes_spent_this_era=0,
     )
@@ -233,6 +288,7 @@ async def character2(db_session: AsyncSession, account2: Account, era: Era, some
         account_id=account2.id,
         username="othercharacter",
         peak_level=5,
+        all_time_score=500,
         display_name="Other Character",
         faction_slug=DEFAULT_FACTION_SLUG,
     )
@@ -243,7 +299,6 @@ async def character2(db_session: AsyncSession, account2: Account, era: Era, some
         character_id=ch.id,
         era_id=era.id,
         score=500,
-        all_time_score=500,
         level=5,
         votes_spent_this_era=0,
     )
@@ -279,7 +334,6 @@ async def character3(db_session: AsyncSession, account3: Account, era: Era, some
         character_id=ch.id,
         era_id=era.id,
         score=0,
-        all_time_score=0,
         level=0,
         votes_spent_this_era=0,
     )
@@ -317,7 +371,7 @@ async def active_task(db_session: AsyncSession, character: Character) -> Task:
         point_value=10,
         level_required=0,
         status=TaskStatus.active,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(task)
@@ -342,6 +396,7 @@ async def praxis_solo(
     db_session.add(praxis)
     await db_session.flush()
     db_session.add(PraxisMember(praxis_id=praxis.id, character_id=character.id))
+    await attach_proof(db_session, praxis)
     await db_session.commit()
     await db_session.refresh(praxis)
     return praxis
@@ -371,6 +426,7 @@ async def praxis_collab(
             PraxisMember(praxis_id=praxis.id, character_id=character2.id),
         ]
     )
+    await attach_proof(db_session, praxis)
     await db_session.commit()
     await db_session.refresh(praxis)
     return praxis

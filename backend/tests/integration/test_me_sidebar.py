@@ -90,7 +90,8 @@ async def test_sidebar_returns_all_three_panels(
 
 #: SELECTs for one rail read on a character with no activity (measured). One
 #: more fan-out, or a badge count the rail never draws, breaks the exact pin.
-SIDEBAR_SELECT_BUDGET = 20
+#: +3 (#3456): collab, duel and letter now also fetch their answered rows.
+SIDEBAR_SELECT_BUDGET = 24
 
 
 @pytest.mark.asyncio
@@ -155,7 +156,7 @@ async def test_activity_count_is_the_whole_panel_not_the_five_item_glance(
             point_value=10,
             level_required=0,
             status=TaskStatus.active,
-            created_by=character.id,
+            created_by_id=character.id,
             primary_faction_slug=DEFAULT_FACTION_SLUG,
         )
         for n in range(12)
@@ -206,12 +207,11 @@ async def test_activity_count_excludes_the_requests_it_is_shown_beside(
     )
     assert feed.status_code == 200
     items = feed.json()["items"]
-    assert {item["type"] for item in items}.isdisjoint(REQUEST_ITEM_TYPES), (
-        "guard: the live `all` view already excludes the obligations"
-    )
+    answered = [item for item in items if item["type"] in REQUEST_ITEM_TYPES]
+    assert len(answered) == 3, "guard: only the answered twins are in the stream"
     assert body["global_activity_count"] == len(items), (
         f"the news count {body['global_activity_count']} must be the "
-        f"obligation-free view's {len(items)} — no item on both rows"
+        f"live view's {len(items)}"
     )
 
 
@@ -230,11 +230,11 @@ async def four_request_types(
 
     ``collab_invite``      ``pending`` AND room still joinable
     ``duel_challenge``     ``pending``
-    ``awaiting_submission``  ``has_submitted`` false
+    ``awaiting_submission``  ``has_approved`` false
     ``invitation_letter``  faction is not the one you stand in
 
     ``collab_invite`` has a second twin (#2279): pending but its praxis is
-    submitted, so ``respond_to_invite`` would refuse it.
+    submitted, so ``respond_to_invite`` would refuse it. It is in neither list.
     """
     def praxis(owner_id: int, praxis_type: PraxisType, title: str) -> Praxis:
         return Praxis(
@@ -252,12 +252,13 @@ async def four_request_types(
     shut_collab.status = PraxisStatus.submitted
     open_duel_praxis = praxis(character2.id, PraxisType.duel, "Open duel")
     answered_duel_praxis = praxis(character2.id, PraxisType.duel, "Answered duel")
+    answered_duel_reply = praxis(character.id, PraxisType.duel, "Answered reply")
     # Creator's member row too: an obligation needs another party (#1980).
     my_turn = praxis(character2.id, PraxisType.collab, "My turn")
     already_filed = praxis(character2.id, PraxisType.collab, "Already filed")
     db_session.add_all([
         open_collab, answered_collab, shut_collab, open_duel_praxis,
-        answered_duel_praxis, my_turn, already_filed,
+        answered_duel_praxis, answered_duel_reply, my_turn, already_filed,
     ])
     await db_session.flush()
 
@@ -290,20 +291,21 @@ async def four_request_types(
             task_id=active_task.id,
             challenger_praxis_id=answered_duel_praxis.id,
             opponent_character_id=character.id,
+            opponent_praxis_id=answered_duel_reply.id,
             status=DuelStatus.active,
         ),
         PraxisMember(
-            praxis_id=my_turn.id, character_id=character.id, has_submitted=False
+            praxis_id=my_turn.id, character_id=character.id, has_approved=False
         ),
         PraxisMember(
-            praxis_id=my_turn.id, character_id=character2.id, has_submitted=False
+            praxis_id=my_turn.id, character_id=character2.id, has_approved=False
         ),
         PraxisMember(
-            praxis_id=already_filed.id, character_id=character.id, has_submitted=True
+            praxis_id=already_filed.id, character_id=character.id, has_approved=True
         ),
-        # Must differ from ``my_turn`` only in ``has_submitted``.
+        # Must differ from ``my_turn`` only in ``has_approved``.
         PraxisMember(
-            praxis_id=already_filed.id, character_id=character2.id, has_submitted=False
+            praxis_id=already_filed.id, character_id=character2.id, has_approved=False
         ),
         InvitationLetter(
             character_id=character.id, faction_slug=OTHER_FACTION_SLUG, era_id=era.id
@@ -413,21 +415,21 @@ async def test_activity_panel_carries_the_players_own_news_not_just_global(
 
 
 @pytest.mark.asyncio
-async def test_activity_panel_excludes_exactly_what_the_requests_queue_holds(
+async def test_activity_panel_is_the_head_of_the_live_all_view(
     client: AsyncClient,
     four_request_types: int,
     auth_headers: dict,
 ):
-    """#1556: panel and queue partition the feed via ``_visible_types`` (ADR-0070)."""
+    """#1556: the panel shows no unanswered request (ADR-0070)."""
     response = await client.get("/me/sidebar", headers=auth_headers)
     assert response.status_code == 200
     body = response.json()
 
-    panel_types = {item["type"] for item in body["global_activity"]}
     assert body["pending_requests_count"] == four_request_types, (
         "guard: the fixture's four obligations are outstanding"
     )
-    assert panel_types.isdisjoint(REQUEST_ITEM_TYPES), (
-        "an unanswered obligation reached the rail's activity panel: "
-        f"{sorted(panel_types & REQUEST_ITEM_TYPES)} (ADR-0070)"
+    feed = await client.get(
+        "/activity-feed", params={"filter": "all", "limit": 100}, headers=auth_headers
     )
+    head = [item["item_key"] for item in feed.json()["items"]][:5]
+    assert [item["item_key"] for item in body["global_activity"]] == head

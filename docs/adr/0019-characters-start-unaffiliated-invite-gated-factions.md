@@ -29,7 +29,7 @@ the only invite an account can hold is one it earns itself, via task work.
   account's characters — no new model, no creation-vs-switch special-casing.
 - Invites are era-scoped, so the account-pooled start resets each era.
 - "Everyone starts in UA" and the `aged_out` forced-graduation mechanic are fully retired.
-- Incentive to ever leave unaffiliated now comes from scoring, not force — see ADR-0020.
+- Incentive to ever leave unaffiliated comes from the invite, not force. *[2026-11-19, #3426: this line cited ADR-0020's scoring penalty, which was never built; see the amendment]*
 
 ## Amendment (2026-11-18, #3427): the join gate reads more than letters
 
@@ -42,6 +42,10 @@ excluded, and Albescent is added back if the account earned it. A new life may b
 born into any faction in that set.
 
 A **per-character rejoin refusal** sits on top, in `faction_service`: a character
-that left a faction may not return to it, unless its faction has
+that left a faction this era may not rejoin it, unless that faction has
 `can_always_rejoin`. The owner ruled the code right, so this is the rule. Invites
 remain era-scoped.
+
+## Amendment (2026-11-19, #3426)
+
+ADR-0020 is Reversed and was never built (#452 flattened cross-faction modifiers to 1.0x): there is no unaffiliated penalty, so scoring gives no incentive to leave. No later ADR replaced it, so the status stays Accepted.

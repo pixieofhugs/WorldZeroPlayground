@@ -1,19 +1,23 @@
 """Dev-only: one community-voted demo praxis per faction, plus score-breakdown
-fixtures. Idempotent; repairs its own #2846-corrupt rows.
+fixtures. Idempotent.
 
 Run as a MODULE from backend/ (a script path can't import `faction_slugs`):
 ``python -m scripts.seed_demo_praxes [--remove]``, or ``scripts/wz seed --demo``.
 """
 import argparse
 import asyncio
+import os
+import uuid
 from datetime import datetime, timezone
 from typing import Optional
 
+from PIL import Image
 from sqlalchemy import delete, func, or_, select, update
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from faction_slugs import real_faction_slugs
 from game_config import CURRENT_ERA, EraConfig
+from config import settings
 from script_utils import get_settings
 from models.account import Account, AuthProvider, OAuthProvider
 from models.character import Character
@@ -22,11 +26,32 @@ from models.duel import Duel, DuelStatus
 from models.era import Era
 from models.meta_task import PraxisMetaTask
 from models.task import Task, TaskStatus, TaskType
-from models.praxis import ModerationStatus, Praxis, PraxisMember, PraxisStatus, PraxisType
+from models.praxis import (
+    MediaItem,
+    MediaType,
+    ModerationStatus,
+    Praxis,
+    PraxisMember,
+    PraxisStatus,
+    PraxisType,
+)
 from models.vote import Vote
 from services.character import record_level_reached
+from services.era import get_current_era_row
 
 TITLE_MARKER = "[demo] "
+
+
+def _attach_proof(session, praxis: Praxis, author: Character) -> None:
+    """One generated image, stored as the media service does (relative path)."""
+    directory = os.path.join(str(author.id), str(praxis.id), uuid.uuid4().hex)
+    os.makedirs(os.path.join(settings.MEDIA_ROOT, directory), exist_ok=True)
+    path = os.path.join(directory, "proof.png")
+    Image.new("RGB", (64, 64), (120, 90, 200)).save(
+        os.path.join(settings.MEDIA_ROOT, path)
+    )
+    session.add(MediaItem(praxis_id=praxis.id, type=MediaType.image, file_path=path))
+
 
 
 def fixture_faction_slugs(era: EraConfig) -> tuple[str, str, str]:
@@ -132,6 +157,10 @@ COLLAB_BODY = (
 COLLAB_STARS = [("demo_quill", 5), ("demo_vesper", 4), ("demo_unit", 4)]
 
 
+async def _current_era_id(session) -> int:
+    return (await get_current_era_row(session)).id
+
+
 async def _praxis_exists(session, title: str) -> bool:
     count = (
         await session.execute(
@@ -205,14 +234,13 @@ async def get_or_create_metatask_owner(
             character_id=existing.id,
             era_id=era_row.id,
             score=score,
-            all_time_score=score,
             level=level,
             votes_spent_this_era=0,
         ))
     else:
         stats.level = level
         stats.score = max(stats.score, score)
-        stats.all_time_score = max(stats.all_time_score, stats.score)
+    existing.all_time_score = max(existing.all_time_score, score)
     record_level_reached(existing, level)
     await session.flush()
     return existing
@@ -237,7 +265,7 @@ async def get_or_create_metatask(
         level_required=0,
         status=TaskStatus.active,
         task_type=TaskType.metatask,
-        created_by=created_by.id,
+        created_by_id=created_by.id,
         primary_faction_slug=faction_slug,
         metatask_faction_slug=faction_slug,
     )
@@ -268,6 +296,7 @@ async def seed_metatask_fixture(
             task_id=task.id,
             type=PraxisType.solo,
             status=PraxisStatus.submitted,
+            era_id=await _current_era_id(session),
             title=METATASK_PRAXIS_TITLE,
             body_text=METATASK_PRAXIS_BODY,
             created_by_id=owner.id,
@@ -277,8 +306,9 @@ async def seed_metatask_fixture(
         session.add(praxis)
         await session.flush()
         session.add(PraxisMember(
-            praxis_id=praxis.id, character_id=owner.id, has_submitted=True
+            praxis_id=praxis.id, character_id=owner.id, has_approved=True
         ))
+        _attach_proof(session, praxis, owner)
         session.add(PraxisMetaTask(praxis_id=praxis.id, task_id=metatask.id))
         voters = [c for c in players.values() if c.account_id != owner.account_id]
         for voter, star in zip(voters, METATASK_PRAXIS_STARS):
@@ -308,7 +338,7 @@ async def seed_metatask_fixture(
         session.add(open_praxis)
         await session.flush()
         session.add(PraxisMember(
-            praxis_id=open_praxis.id, character_id=owner.id, has_submitted=False
+            praxis_id=open_praxis.id, character_id=owner.id, has_approved=False
         ))
         print(f"  + in-progress praxis for the apply flow by {owner.display_name}")
     await session.flush()
@@ -346,6 +376,7 @@ async def seed_duel_fixture(
             task_id=task.id,
             type=PraxisType.solo,
             status=PraxisStatus.submitted,
+            era_id=await _current_era_id(session),
             title=title,
             body_text=body,
             created_by_id=author.id,
@@ -355,8 +386,9 @@ async def seed_duel_fixture(
         session.add(praxis)
         await session.flush()
         session.add(PraxisMember(
-            praxis_id=praxis.id, character_id=author.id, has_submitted=True
+            praxis_id=praxis.id, character_id=author.id, has_approved=True
         ))
+        _attach_proof(session, praxis, author)
         if metatask is not None:
             session.add(PraxisMetaTask(praxis_id=praxis.id, task_id=metatask.id))
         sides[title] = praxis
@@ -415,6 +447,7 @@ async def seed_collab_fixture(
         task_id=task.id,
         type=PraxisType.collab,
         status=PraxisStatus.submitted,
+        era_id=await _current_era_id(session),
         title=COLLAB_TITLE,
         body_text=COLLAB_BODY,
         created_by_id=author.id,
@@ -425,8 +458,9 @@ async def seed_collab_fixture(
     await session.flush()
     for member in (author, second):
         session.add(PraxisMember(
-            praxis_id=praxis.id, character_id=member.id, has_submitted=True
+            praxis_id=praxis.id, character_id=member.id, has_approved=True
         ))
+    _attach_proof(session, praxis, author)
 
     member_account_ids = {author.account_id, second.account_id}
     for voter_username, star in COLLAB_STARS:
@@ -529,68 +563,8 @@ async def get_or_create_players(
     return chars
 
 
-async def _repair_corrupt_submitted(session) -> int:
-    """Re-stamp this script's own (``TITLE_MARKER``) rows that are submitted with
-    NULL ``submitted_at`` (#2846), and their members, from ``created_at``.
-    Needed because the title-keyed skip would never revisit them."""
-    rows = (
-        await session.execute(
-            select(Praxis).where(
-                Praxis.title.like(f"{TITLE_MARKER}%"),
-                Praxis.status == PraxisStatus.submitted,
-                Praxis.submitted_at.is_(None),
-            )
-        )
-    ).scalars().all()
-    for praxis in rows:
-        praxis.submitted_at = praxis.created_at
-        members = (
-            await session.execute(
-                select(PraxisMember).where(
-                    PraxisMember.praxis_id == praxis.id,
-                    PraxisMember.has_submitted.is_(True),
-                    PraxisMember.submitted_at.is_(None),
-                )
-            )
-        ).scalars().all()
-        for member in members:
-            member.submitted_at = praxis.created_at
-    if rows:
-        await session.flush()
-        print(
-            f"  ! repaired {len(rows)} pre-existing corrupt row(s) "
-            "(status=submitted, submitted_at=NULL — #2846) — re-stamped from created_at"
-        )
-    return len(rows)
-
-
-async def _assert_no_corrupt_submitted(session) -> None:
-    """Post-seed check of the ``list_praxes`` invariant (submitted implies
-    ``submitted_at``) over this script's rows, so a new creation site can't
-    silently regress it."""
-    bad = (
-        await session.execute(
-            select(func.count())
-            .select_from(Praxis)
-            .where(
-                Praxis.title.like(f"{TITLE_MARKER}%"),
-                Praxis.status == PraxisStatus.submitted,
-                Praxis.submitted_at.is_(None),
-            )
-        )
-    ).scalar()
-    if bad:
-        raise RuntimeError(
-            f"seed_demo_praxes: {bad} row(s) with status=submitted and "
-            "submitted_at=NULL survived seeding — services/praxis.py hides "
-            "these from every feed and profile. Fix the creation site that "
-            "made them; see #2846."
-        )
-
-
 async def seed(session, era: EraConfig = CURRENT_ERA) -> None:
     players = await get_or_create_players(session, era)
-    repaired = await _repair_corrupt_submitted(session)
     created = 0
     for faction, (author_username, title, body, ptype, stars) in DEMOS.items():
         task = (
@@ -619,6 +593,7 @@ async def seed(session, era: EraConfig = CURRENT_ERA) -> None:
             task_id=task.id,
             type=ptype,
             status=PraxisStatus.submitted,
+            era_id=await _current_era_id(session),
             title=marked_title,
             body_text=body,
             created_by_id=author.id,
@@ -631,9 +606,10 @@ async def seed(session, era: EraConfig = CURRENT_ERA) -> None:
         session.add(PraxisMember(
             praxis_id=praxis.id,
             character_id=author.id,
-            has_submitted=True,
-            submitted_at=now,
+            has_approved=True,
+            approved_at=now,
         ))
+        _attach_proof(session, praxis, author)
         voters = [c for c in players.values() if c.id != author.id][: len(stars)]
         for voter, star in zip(voters, stars):
             session.add(Vote(
@@ -647,11 +623,7 @@ async def seed(session, era: EraConfig = CURRENT_ERA) -> None:
 
     await seed_score_fixtures(session, players, era)
     await session.commit()
-    await _assert_no_corrupt_submitted(session)
-    summary = f"\nDone. {created} demo praxis(es) created"
-    if repaired:
-        summary += f", {repaired} corrupt row(s) repaired"
-    print(summary + ".")
+    print(f"\nDone. {created} demo praxis(es) created.")
     print_login_recipe(era)
 
 

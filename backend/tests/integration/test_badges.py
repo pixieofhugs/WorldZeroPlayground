@@ -3,13 +3,14 @@
 One account, many characters: earliest = sock_puppeteer, later = sock_puppet.
 """
 from contextlib import contextmanager
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import pytest
 from httpx import AsyncClient
 from sqlalchemy import event
 from sqlalchemy.ext.asyncio import AsyncSession
 
+import services.badge as badge_service
 from models.account import Account
 from models.character import Character
 from models.character_stats import CharacterStats
@@ -54,7 +55,6 @@ async def _add_character_on_new_account(
             character_id=character.id,
             era_id=era.id,
             score=0,
-            all_time_score=0,
             level=0,
             votes_spent_this_era=0,
         )
@@ -85,7 +85,6 @@ async def _add_second_character(
             character_id=second.id,
             era_id=era.id,
             score=0,
-            all_time_score=0,
             level=0,
             votes_spent_this_era=0,
         )
@@ -93,6 +92,39 @@ async def _add_second_character(
     await db_session.commit()
     await db_session.refresh(second)
     return second
+
+
+@pytest.fixture(autouse=True)
+def _after_every_delay(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        badge_service, "_utcnow", lambda: datetime.now(timezone.utc) + timedelta(days=4)
+    )
+
+
+@pytest.mark.asyncio
+async def test_puppeteer_appears_only_after_its_delay(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    monkeypatch: pytest.MonkeyPatch,
+    account: Account,
+    era: Era,
+    character: Character,
+    some_faction: Faction,
+):
+    second = await _add_second_character(
+        db_session, account, era, created_at=character.created_at + timedelta(seconds=1)
+    )
+    reveal_at = second.created_at + badge_service.puppeteer_delay(character.id)
+
+    async def keys(character_id: int, now: datetime) -> list[str]:
+        monkeypatch.setattr(badge_service, "_utcnow", lambda: now)
+        resp = await client.get(f"/characters/{character_id}")
+        return [badge["key"] for badge in resp.json()["badges"]]
+
+    just_before = reveal_at - timedelta(seconds=1)
+    assert await keys(character.id, just_before) == []
+    assert await keys(second.id, just_before) == ["sock_puppet"]
+    assert await keys(character.id, reveal_at) == ["sock_puppeteer"]
 
 
 @pytest.mark.asyncio

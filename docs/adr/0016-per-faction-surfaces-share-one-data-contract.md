@@ -1,6 +1,6 @@
 # ADR-0016: Per-faction surfaces share one data contract; archetypes own only presentation
 
-**Status:** Accepted
+**Status:** Amended by ADR-0061, ADR-0065
 **Date:** 2026-06-24
 
 ## Context
@@ -47,7 +47,7 @@ archetype of that surface consumes it identically. Archetypes own only presentat
    per-archetype — *not* flattened into a fixed scaffold.
 4. **Faction-specific content is catalog copy, not a structural difference.** Faction-voiced
    text (flavor lines, vote-tier labels, at-cap messages) is a *slot* whose words come from
-   the copy catalog (ADR-0010) keyed by the **contextual faction** (§2), resolved by the
+   the copy catalog (ADR-0010 *[2026-11-18, #3425: superseded by ADR-0032, now `frontend/src/locales/en/*.json`]*) keyed by the **contextual faction** (§2), resolved by the
    control via `t()`. The slot is invariant; only the words differ.
 
 ### Enforcement
@@ -71,7 +71,7 @@ archetype of that surface consumes it identically. Archetypes own only presentat
   (#194), the comment archetype (ADR-0006), the activity-feed frame.
 - Complements **ADR-0002** (a page is a composition of surfaces) — this governs what each
   surface *is*; 0002 governs how surfaces compose into a page. And **ADR-0010** (copy
-  catalog) is the mechanism for slot #4.
+  catalog; superseded by ADR-0032, 2026-11-18, #3425) is the mechanism for slot #4.
 
 ## Alternatives considered
 
@@ -83,3 +83,7 @@ archetype of that surface consumes it identically. Archetypes own only presentat
   the per-faction identity §1 #3 protects. The contract is shared; the *layout* is not.
 - **Leave it as a CONTEXT.md note.** Rejected: a note doesn't stop erosion. The invariant
   needs to be citable law a future archetype author is held to.
+
+## Amendment (2026-11-19, #3426)
+
+"Arrangement ... *not* flattened into a fixed scaffold" no longer holds for praxis detail (ADR-0061) and the edit-praxis composer (ADR-0065): each is one shared layout every faction dresses, and each calls itself a per-surface exception to this record. The data-contract rules and every other surface stand.

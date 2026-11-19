@@ -1,8 +1,10 @@
 import { Trans, useTranslation } from 'react-i18next'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import PageTitle from '../components/ui/PageTitle'
 
 export default function About() {
   const { t } = useTranslation('common')
+  useDocumentTitle(t('about.title'))
   return (
     <div className="py-8 max-w-2xl">
       <PageTitle title={t('about.title')} />

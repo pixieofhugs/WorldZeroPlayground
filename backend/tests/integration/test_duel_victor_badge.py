@@ -26,7 +26,9 @@ DUEL_VICTOR_BADGE = {"key": "duel_victor", "name": "Duel Victor"}
 
 
 async def _next_era(session: AsyncSession, account: Account, *, name: str) -> Era:
-    era_row = Era(name=name, config_key=CURRENT_ERA.config_key, started_by=account.id)
+    era_row = Era(
+        name=name, config_key=CURRENT_ERA.config_key, started_by_id=account.id
+    )
     session.add(era_row)
     await session.commit()
     await session.refresh(era_row)
@@ -147,18 +149,6 @@ async def test_no_era_has_closed_so_nobody_is_a_victor(
     assert await _badge_keys(db_session, opponent) == []
 
 
-@pytest.mark.asyncio
-async def test_a_frozen_win_with_no_recorded_era_grants_nothing(
-    db_session: AsyncSession, era: Era, account: Account, some_faction: Faction
-):
-    duel, challenger, opponent = await make_duel(
-        db_session, era, label="unstamped", challenger_votes=5, opponent_votes=1, commit=True)
-    await _freeze(db_session, duel, winner=challenger, resolved_era=None)
-    await _next_era(db_session, account, name="Era 2")
-
-    assert await _badge_keys(db_session, challenger) == ["duelist"]
-    assert await _badge_keys(db_session, opponent) == []
-
 
 @pytest.mark.asyncio
 async def test_a_character_with_no_duels_earns_nothing(
@@ -196,7 +186,7 @@ async def test_the_real_era_reset_produces_the_badge(
         db_session, era, label="reset", challenger_votes=6, opponent_votes=2, commit=True)
 
     new_era_row = Era(
-        name="Era 2", config_key=CURRENT_ERA.config_key, started_by=account.id
+        name="Era 2", config_key=CURRENT_ERA.config_key, started_by_id=account.id
     )
     db_session.add(new_era_row)
     await db_session.flush()

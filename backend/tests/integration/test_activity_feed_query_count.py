@@ -22,7 +22,7 @@ from models.character import Character
 from models.era import Era
 from models.feed_dismissal import FeedDismissal
 from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
-from models.relationship import Relationship, RelationshipStatus, RelationshipType
+from models.relationship import Relationship, RelationshipType
 from models.task import Task
 from models.vote import Vote
 from services.activity_feed import (
@@ -35,7 +35,10 @@ from services.activity_feed import (
 #: pre-fetch round trips, one fetch per registry source, one badge UNION. Change
 #: it only with the reason in the PR body. A new registry source is +1, not +2.
 #: The metatask gate (#2280) is a round trip, not SQL, so the rule lives once.
-EXPECTED_FEED_LOAD_STATEMENTS = 22
+#: ADR-0070 (#3456): answered requests join the stream, so +3 fetches (collab,
+#: duel, letter; awaiting_submission has no answered state). The answered
+#: badges ride the existing UNION, so no extra badge statement or session.
+EXPECTED_FEED_LOAD_STATEMENTS = 26
 
 #: One ``UNION ALL`` over the fetch fan-out's windowed Selects (#1532).
 EXPECTED_BADGE_COUNT_STATEMENTS = 1
@@ -82,13 +85,11 @@ async def feed_viewer(
             from_character_id=character.id,
             to_character_id=character2.id,
             type=RelationshipType.friend,
-            status=RelationshipStatus.active,
         ),
         Relationship(
             from_character_id=character.id,
             to_character_id=character3.id,
             type=RelationshipType.foe,
-            status=RelationshipStatus.active,
         ),
     ])
     praxis = Praxis(

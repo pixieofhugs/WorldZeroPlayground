@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from errors import ErrorCode
@@ -31,7 +31,7 @@ from models.praxis import (
     PraxisStatus,
     PraxisType,
 )
-from models.relationship import Relationship, RelationshipStatus, RelationshipType
+from models.relationship import Relationship, RelationshipType
 from models.task import Task
 from models.taunt_message import TauntMessage, TauntTriggerType
 from services.activity_feed import (
@@ -109,13 +109,11 @@ async def full_feed(
                 from_character_id=character.id,
                 to_character_id=character2.id,
                 type=RelationshipType.friend,
-                status=RelationshipStatus.active,
             ),
             Relationship(
                 from_character_id=character.id,
                 to_character_id=character3.id,
                 type=RelationshipType.foe,
-                status=RelationshipStatus.active,
             ),
         ]
     )
@@ -226,13 +224,13 @@ async def full_feed(
     db_session.add(collab_praxis)
     await db_session.flush()
     viewer_member = PraxisMember(
-        praxis_id=collab_praxis.id, character_id=character.id, has_submitted=False
+        praxis_id=collab_praxis.id, character_id=character.id, has_approved=False
     )
     friend_member = PraxisMember(
         praxis_id=collab_praxis.id,
         character_id=character2.id,
-        has_submitted=True,
-        submitted_at=now,
+        has_approved=True,
+        approved_at=now,
     )
     collab_invite = PraxisInvite(
         praxis_id=collab_praxis.id,
@@ -736,7 +734,11 @@ async def _resolve_the_requests(db_session: AsyncSession, full_feed: dict) -> No
     await db_session.execute(
         update(Duel)
         .where(Duel.id == full_feed["duel_id"])
-        .values(status=DuelStatus.active)
+        .values(
+            status=DuelStatus.active,
+            accepted_at=func.now(),
+            opponent_praxis_id=full_feed["collab_praxis_id"],
+        )
     )
     await db_session.commit()
 
@@ -757,7 +759,7 @@ async def test_a_nudge_retires_when_the_recipient_files(
     await db_session.execute(
         update(PraxisMember)
         .where(PraxisMember.id == full_feed["viewer_member_id"])
-        .values(has_submitted=True, submitted_at=datetime.now(timezone.utc))
+        .values(has_approved=True, approved_at=datetime.now(timezone.utc))
     )
     await db_session.commit()
 
@@ -791,7 +793,11 @@ async def test_a_nudge_retires_when_the_praxis_is_published(
     await db_session.execute(
         update(Praxis)
         .where(Praxis.id == full_feed["collab_praxis_id"])
-        .values(status=PraxisStatus.submitted)
+        .values(
+            status=PraxisStatus.submitted,
+            submitted_at=func.now(),
+            era_id=select(func.max(Era.id)).scalar_subquery(),
+        )
     )
     await db_session.commit()
 
@@ -806,14 +812,54 @@ async def test_a_resolved_request_leaves_every_live_tab(
     full_feed: dict,
     auth_headers: dict,
 ):
-    """`unanswered_requests_only` is a live-feed axis; it covers duel challenges too."""
+    """ADR-0070 (#3456): an answered request leaves the queue and joins the stream."""
     await _resolve_the_requests(db_session, full_feed)
 
-    for tab in (ALL_FILTER, YOUR_STUFF_FILTER, REQUESTS_FILTER):
+    queue = await _feed(client, auth_headers, REQUESTS_FILTER)
+    queue_types = [item["type"] for item in queue["items"]]
+    assert FEED_ITEM_TYPE_COLLAB_INVITE not in queue_types
+    assert FEED_ITEM_TYPE_DUEL_CHALLENGE not in queue_types
+
+    for tab in (ALL_FILTER, YOUR_STUFF_FILTER):
         feed = await _feed(client, auth_headers, tab)
         types = [item["type"] for item in feed["items"]]
+        assert FEED_ITEM_TYPE_COLLAB_INVITE in types, tab
+        assert FEED_ITEM_TYPE_DUEL_CHALLENGE in types, tab
+
+
+@pytest.mark.asyncio
+async def test_an_unanswered_request_stays_out_of_the_stream(
+    client: AsyncClient, full_feed: dict, auth_headers: dict
+):
+    for tab in (ALL_FILTER, YOUR_STUFF_FILTER):
+        feed = await _feed(client, auth_headers, tab)
+        types = {item["type"] for item in feed["items"]}
+        assert types.isdisjoint(REQUEST_ITEM_TYPES), tab
+
+
+@pytest.mark.asyncio
+async def test_a_pending_invite_on_a_submitted_praxis_stays_out_of_the_stream(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    full_feed: dict,
+    auth_headers: dict,
+):
+    await db_session.execute(
+        update(Praxis)
+        .where(Praxis.id == full_feed["collab_praxis_id"])
+        .values(
+            status=PraxisStatus.submitted,
+            submitted_at=func.now(),
+            era_id=select(func.max(Era.id)).scalar_subquery(),
+        )
+    )
+    await db_session.commit()
+
+    for tab in (ALL_FILTER, YOUR_STUFF_FILTER):
+        feed = await _feed(client, auth_headers, tab)
+        types = {item["type"] for item in feed["items"]}
         assert FEED_ITEM_TYPE_COLLAB_INVITE not in types, tab
-        assert FEED_ITEM_TYPE_DUEL_CHALLENGE not in types, tab
+        assert feed["counts"][COUNT_KEYS[tab]] == len(feed["items"]), tab
 
 
 @pytest.mark.asyncio
@@ -980,7 +1026,8 @@ async def test_selecting_one_type_does_not_shrink_the_other_types_counts(
     others with no way back (#1419 decision 19).
     """
     unfiltered = await _feed(client, auth_headers)
-    assert len(unfiltered["counts"]["by_type"]) == SEEDED_ITEM_COUNTS[ALL_FILTER]
+    # +3: the answerable request types are facets even while none is answered.
+    assert len(unfiltered["counts"]["by_type"]) == SEEDED_ITEM_COUNTS[ALL_FILTER] + 3
 
     response = await client.get(
         "/activity-feed",

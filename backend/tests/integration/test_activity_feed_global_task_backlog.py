@@ -29,7 +29,7 @@ async def _make_task(
         point_value=10,
         level_required=0,
         status=TaskStatus.active,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
         created_at=created_at,
     )
@@ -126,7 +126,6 @@ async def test_a_second_character_on_an_old_account_starts_clean(
             character_id=second.id,
             era_id=era.id,
             score=0,
-            all_time_score=0,
             level=0,
             votes_spent_this_era=0,
         )

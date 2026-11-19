@@ -414,7 +414,7 @@ export function ProfileSkin({
         ) : (
           <div className="flex flex-wrap gap-4 items-start">
             {submissions.map((praxis) => (
-              <div key={praxis.id} style={{ position: 'relative' }}>
+              <div key={praxis.id} style={{ position: 'relative' }} data-laurel={praxis.id === laurelId || undefined}>
                 {praxis.id === laurelId && kit.laurel}
                 {/* The laurel covers the card's own crown corner (#1960). */}
                 <PraxisCard praxis={praxis} showCrown={praxis.id !== laurelId} />

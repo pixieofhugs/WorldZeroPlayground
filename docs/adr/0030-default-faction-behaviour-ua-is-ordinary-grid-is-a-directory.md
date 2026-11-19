@@ -33,7 +33,8 @@ records the resulting **default faction behaviour** and the Factions-grid shape:
 ## Consequences
 
 `backend/eras/era_1.py` still carries **inert pre-ADR-0019 remnants — do not trust
-them**:
+them**: *[2026-11-18, #3425: those remnants, `is_selectable` included, are gone from `era_1.py`; kept as history]*
+
 
 - UA's description said *"The default starting faction. Full points on all tasks.
   Must leave at level 3."* The auto-UA start and the level-3 graduation both have

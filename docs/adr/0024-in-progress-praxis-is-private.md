@@ -3,8 +3,6 @@
 **Status:** Amended by ADR-0011
 **Date:** 2026-06-30
 
-> **Amended (2026-10-16, #3257):** "hidden → never" has one exception: an admin may open a `hidden` praxis at the detail door (`can_view_praxis`), so the admin tab's link isn't a 404. Hidden stays a 404 for everyone else, and the list/feed predicate still excludes hidden rows for admins too.
-
 **Relates to:** ADR-0007 (praxis editing is status-only), ADR-0013 (collaborations are co-owned), ADR-0011 (duel is two linked praxes)
 
 ## Context
@@ -48,7 +46,7 @@ Enforced at the API layer, so every caller routes through one guard:
   `?status=in_progress` return the viewer's own drafts and nothing else.
 - **Comments** (`GET /praxes/{id}/comments`): same member-or-404 guard as
   detail.
-- **Frontend read page** (`/praxes/:id`): a member landing on the read view of
+- **Frontend read page** (`/praxes/:id` *[2026-11-18, #3425: the route is `/praxis/:id`, edit `/praxis/:id/edit`]*): a member landing on the read view of
   an `in_progress` praxis is redirected to `/praxes/:id/edit`. The public read
   view never renders a draft; the edit page is the only surface for in-progress
   work (it already owns the submit control). Non-members get the 404 from the
@@ -78,6 +76,10 @@ scope here. Blocking keeps behavior correct until the full semantics land.
   they re-count on resubmit. Voter budget is unchanged. Out of scope for #303.
 - Deferred to follow-up issues: full duel un-settle-on-unsubmit semantics; any
   demotion notification.
+
+## Amendment (2026-10-16, #3257): an admin may open a hidden praxis
+
+"hidden → never" has one exception: an admin may open a `hidden` praxis at the detail door (`can_view_praxis`), so the admin tab's link isn't a 404. Hidden stays a 404 for everyone else, and the list/feed predicate still excludes hidden rows for admins too.
 
 ## Amendment (2026-11-18, #3419): withdrawing a settled duel side forfeits
 

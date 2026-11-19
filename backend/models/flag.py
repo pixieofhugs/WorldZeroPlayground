@@ -45,7 +45,7 @@ class Flag(CreatedAtMixin, Base):
     comment_id: Mapped[Optional[int]] = mapped_column(
         BigInteger, ForeignKey("comment.id", ondelete="CASCADE"), nullable=True
     )
-    flagged_by: Mapped[int] = mapped_column(
+    flagged_by_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("character.id"), nullable=False
     )
     reason: Mapped[str] = mapped_column(Text, nullable=False, server_default="other")

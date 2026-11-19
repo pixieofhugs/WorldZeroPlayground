@@ -40,6 +40,7 @@ class ErrorCode(str, enum.Enum):
     task_proposal_level_too_low = "TASK_PROPOSAL_LEVEL_TOO_LOW"
     metatask_proposal_level_too_low = "METATASK_PROPOSAL_LEVEL_TOO_LOW"
     second_character_level_too_low = "SECOND_CHARACTER_LEVEL_TOO_LOW"
+    character_creation_banned = "CHARACTER_CREATION_BANNED"
     praxis_mode_unavailable = "PRAXIS_MODE_UNAVAILABLE"
 
     # -- Signup caps and task-signup eligibility ----------------------------
@@ -68,6 +69,12 @@ class ErrorCode(str, enum.Enum):
     media_too_large = "MEDIA_TOO_LARGE"
     avatar_must_be_image = "AVATAR_MUST_BE_IMAGE"
     avatar_too_large = "AVATAR_TOO_LARGE"
+
+    # -- Praxis posting limits (#3473, #3474) ---------------------------------
+    #: A praxis needs one photo, video or audio file to submit or to keep.
+    praxis_needs_proof = "PRAXIS_NEEDS_PROOF"
+    #: 429. ``params``: ``hours`` until the next post, ``next_post_at`` (ISO).
+    praxis_post_cooldown = "PRAXIS_POST_COOLDOWN"
 
     # -- Praxis reads: filters and missing rows (#1652) ----------------------
     #: Worded per filter via :data:`DETAIL_CONTEXT_PARAM`.
@@ -101,7 +108,7 @@ class ErrorCode(str, enum.Enum):
     faction_invitation_required = "FACTION_INVITATION_REQUIRED"
     #: #2399. The *account* has never earned the Albescent door.
     faction_albescent_not_eligible = "FACTION_ALBESCENT_NOT_ELIGIBLE"
-    #: #2399. Earned, but THIS life is past ``era.albescent_level_required`` —
+    #: #2399. Earned, but THIS life is past ``era.secret_faction_join_level`` —
     #: the game's only MAXIMUM level gate.
     faction_albescent_new_game_plus_only = "FACTION_ALBESCENT_NEW_GAME_PLUS_ONLY"
 
@@ -167,6 +174,10 @@ class ErrorCode(str, enum.Enum):
     #: Re-opening the live era would wipe every score for nothing. 409, not
     #: 422: the request is well formed, the state refuses it.
     era_already_live = "ERA_ALREADY_LIVE"
+    #: 409: the era lists new tasks and the operator has no Character to author them.
+    era_roll_needs_character = "ERA_ROLL_NEEDS_CHARACTER"
+    #: 409: a ``reactivate_tasks`` title matches no task, or several.
+    era_reactivate_ambiguous = "ERA_REACTIVATE_AMBIGUOUS"
 
     # -- Copy overrides (#3065) ---------------------------------------------
     #: Usually two admins reverting the same string: already shipped wording.
@@ -175,6 +186,9 @@ class ErrorCode(str, enum.Enum):
     # -- Owner-only admin roster (#3258) ------------------------------------
     #: A non-owner on the roster routes. 403, like ``require_admin``.
     admin_owner_required = "ADMIN_OWNER_REQUIRED"
+    #: 409: the handle is taken, compared case-insensitively.
+    username_taken = "USERNAME_TAKEN"
+
     admin_unknown_username = "ADMIN_UNKNOWN_USERNAME"
     #: The service is idempotent; this tells a typo from a real grant.
     admin_already_admin = "ADMIN_ALREADY_ADMIN"

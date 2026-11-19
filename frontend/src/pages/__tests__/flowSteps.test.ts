@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { back, initialFlow, next, skip, toSignIn, type Flow } from '../onboarding/flowSteps'
+import { back, decline, initialFlow, next, skip, toArrival, toCharacter, toSignIn, type Flow } from '../onboarding/flowSteps'
 
 const times = (f: Flow, n: number) => Array.from({ length: n }).reduce<Flow>((acc) => next(acc), f)
 
@@ -8,7 +8,7 @@ describe('flowSteps', () => {
     expect(times(initialFlow(false), 1).step).toBe(1)
     expect(times(initialFlow(false), 7).step).toBe(7)
     expect(times(initialFlow(false), 8).step).toBe('contract')
-    expect(next(times(initialFlow(false), 8)).step).toBe('contract')
+    expect(next(times(initialFlow(false), 8)).step).toBe('signin')
   })
 
   it('Back retraces the same path to the title', () => {
@@ -31,5 +31,29 @@ describe('flowSteps', () => {
 
   it('an OAuth resume starts at the contract', () => {
     expect(initialFlow(true).step).toBe('contract')
+  })
+
+  it('the contract comes before sign-in, and Back from sign-in returns to it', () => {
+    const f = next(times(initialFlow(false), 8))
+    expect(back(f).step).toBe('contract')
+  })
+
+  it('declining goes to Declined; Back (Reconsider) returns to the contract', () => {
+    const f = decline(times(initialFlow(false), 8))
+    expect(f.step).toBe('declined')
+    expect(back(f).step).toBe('contract')
+  })
+
+  it('with a character, Back from arrival skips the creation form to the contract', () => {
+    const f = toArrival(toCharacter(times(initialFlow(false), 8)))
+    expect(back(f).step).toBe('character')
+    const b = back(f, true)
+    expect(b.step).toBe('contract')
+    expect(b.history).not.toContain('character')
+  })
+
+  it('the creation form is unreachable once a character exists', () => {
+    const f = times(initialFlow(false), 8)
+    expect(toCharacter(f, true)).toBe(f)
   })
 })

@@ -25,13 +25,15 @@ export function handoffDestination(tasks: TaskOut[], fallback: string): string {
 export const HANDOFF_PAGE_SIZE = 50
 
 /** Failures are swallowed on purpose: throwing would strand a new character on a dead form. */
-export async function resolveHandoffDestination(fallback: string): Promise<string> {
+export async function resolveHandoffTask(): Promise<TaskOut | undefined> {
   try {
-    return handoffDestination(
-      await listTasks({ sort: 'level', limit: HANDOFF_PAGE_SIZE }),
-      fallback,
-    )
+    return startHereTask(await listTasks({ sort: 'level', limit: HANDOFF_PAGE_SIZE }))
   } catch {
-    return fallback
+    return undefined
   }
+}
+
+export async function resolveHandoffDestination(fallback: string): Promise<string> {
+  const task = await resolveHandoffTask()
+  return task === undefined ? fallback : `/tasks/${task.id}`
 }

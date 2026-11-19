@@ -28,6 +28,7 @@ from models.faction import Faction, FactionStatus
 from models.praxis import ModerationStatus, Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.roles import AccountRole, Role
 from models.task import Task, TaskStatus, TaskType
+from services.era_tasks import sync_era_tasks
 
 
 HIDDEN_FACTION_SLUGS = frozenset({"aged_out", UNAFFILIATED_FACTION_SLUG})
@@ -112,7 +113,7 @@ async def bootstrap_admin(session, era, pixie_acc) -> Character:
     era_row = Era(
         name=era.name,
         config_key=era.config_key,
-        started_by=pixie_acc.id,
+        started_by_id=pixie_acc.id,
     )
     session.add(era_row)
     await session.flush()
@@ -125,44 +126,18 @@ async def bootstrap_admin(session, era, pixie_acc) -> Character:
     session.add(AccountRole(
         account_id=pixie_acc.id,
         role_id=admin_role.id,
-        granted_by=pixie_acc.id,
+        granted_by_id=pixie_acc.id,
     ))
 
     session.add(CharacterStats(
         character_id=pixie_char.id,
         era_id=era_row.id,
         score=0,
-        all_time_score=0,
         level=0,
         votes_spent_this_era=0,
     ))
     await session.flush()
     return pixie_char
-
-
-async def sync_era_tasks(session, era, created_by_id: int) -> int:
-    """Per-task sync keyed on title, so later config additions reach seeded DBs.
-    Returns rows added."""
-    existing_titles = set(
-        (await session.execute(select(Task.title))).scalars().all()
-    )
-    added = 0
-    for task_def in era.tasks:
-        if task_def.title in existing_titles:
-            continue
-        session.add(Task(
-            title=task_def.title,
-            description=task_def.description,
-            point_value=task_def.point_value,
-            level_required=task_def.level_required,
-            status=TaskStatus.active,
-            created_by=created_by_id,
-            primary_faction_slug=task_def.faction_slug,
-            is_task_vision_eligible=task_def.is_task_vision_eligible,
-        ))
-        added += 1
-    await session.flush()
-    return added
 
 
 # The single game-wide level-0 task (#511): not era content, seeded every run.
@@ -199,7 +174,7 @@ async def ensure_onboarding_task(session, created_by_id: int) -> bool:
             level_required=0,
             status=TaskStatus.active,
             task_type=TaskType.standard,
-            created_by=created_by_id,
+            created_by_id=created_by_id,
             primary_faction_slug=ONBOARDING_TASK_FACTION_SLUG,
         ))
         await session.flush()
@@ -270,7 +245,7 @@ async def ensure_duel_fixture_task(session, created_by_id: int) -> bool:
             level_required=CURRENT_ERA.duel_level_required,
             status=TaskStatus.active,
             task_type=TaskType.standard,
-            created_by=created_by_id,
+            created_by_id=created_by_id,
             primary_faction_slug=slug,
         ))
         await session.flush()
@@ -329,7 +304,6 @@ async def seed_dev_demo(session, created_by_id: int) -> None:
             character_id=molly.id,
             era_id=era_row.id,
             score=0,
-            all_time_score=0,
             level=0,
             votes_spent_this_era=0,
         ))
@@ -354,7 +328,7 @@ async def seed_dev_demo(session, created_by_id: int) -> None:
             session.add(PraxisMember(
                 praxis_id=praxis.id,
                 character_id=molly.id,
-                has_submitted=False,
+                has_approved=False,
             ))
         await session.flush()
         print("  >Dev-login character (@dev 'Molly', unaffiliated) + 1 in-progress task")

@@ -45,7 +45,7 @@ async def collab_task(db_session: AsyncSession, character: Character) -> Task:
         point_value=COLLAB_TASK_POINTS,
         level_required=0,
         status=TaskStatus.active,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(task)
@@ -75,10 +75,10 @@ async def submitted_collab(
     db_session.add_all(
         [
             PraxisMember(
-                praxis_id=praxis.id, character_id=character.id, has_submitted=True
+                praxis_id=praxis.id, character_id=character.id, has_approved=True
             ),
             PraxisMember(
-                praxis_id=praxis.id, character_id=character3.id, has_submitted=True
+                praxis_id=praxis.id, character_id=character3.id, has_approved=True
             ),
         ]
     )
@@ -154,14 +154,16 @@ async def test_a_collab_vote_moves_every_member_all_time_score(
     some_faction: Faction,
 ):
     """``all_time_score`` is a forward delta (#1345): a missed recalc never heals."""
-    before = (await _stats(db_session, character3.id, era)).all_time_score
+    await db_session.refresh(character3)
+    before = character3.all_time_score
 
     await cast_vote_on_praxis(character2, submitted_collab.id, FIRST_VOTE_VALUE, db_session)
     await db_session.commit()
 
-    after = await _stats(db_session, character3.id, era)
-    assert after.all_time_score == before + FIRST_VOTE_VALUE
-    assert after.all_time_score == after.score
+    await db_session.refresh(character3)
+    assert character3.all_time_score == before + FIRST_VOTE_VALUE
+    stats = await _stats(db_session, character3.id, era)
+    assert character3.all_time_score == stats.score
 
 
 @pytest.mark.asyncio
@@ -188,4 +190,5 @@ async def test_re_rating_a_collab_vote_down_moves_every_member_down(
     assert member_stats.score == expected, (
         "a re-rate down must debit the non-starter too"
     )
-    assert member_stats.all_time_score == expected
+    await db_session.refresh(character3)
+    assert character3.all_time_score == expected

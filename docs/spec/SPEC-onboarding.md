@@ -41,8 +41,12 @@ place of the whole run. ([#1738](https://github.com/pixieofhugs/WorldZeroPlaygro
 *2026-11-18, [#3457](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3457):* was "three net-new cards, then the flow ends" with a hand-off to another
 route. The approved design keeps going through creation and arrival.
 
-**One flow, two entrances.** The QR code points at it; Home's logged-out CTA leads into it
-rather than straight to a provider. Not two explanations of the same game.
+**One flow, two entrances.** The flow is the home page: `/` shows it to a guest and to a signed-in
+account with no character; a player with a character gets the Field Desk. The QR code points at
+`/start`, which renders the same flow (no redirect), as a path segment that can later take
+`/start/<theme>`. The old marketing Home is deleted. Not two explanations of the same game.
+
+*2026-11-19, [#3541](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3541):* was "Home's logged-out CTA leads into it". OAuth returns to `/` and resumes the flow in place.
 
 **A door, not a wall.** Tasks, praxis, factions, leaderboard and character profiles are
 already public — no `ProtectedRoute`. Every stop keeps "let me just look around" available.
@@ -54,6 +58,7 @@ The failure being fixed is copy and routing, not permissions.
 document says only what each slot must carry. Build with obvious placeholders — never
 invent final copy, and never lift the throwaway wording from the prototype
 (`prototype/onboarding-flow`), which exists to be reacted to and is not a source.
+The one exception is the approved prototype (below).
 
 ### What the intro must land — six things, over a short run of beats
 
@@ -85,8 +90,13 @@ the shipped default (#3457, standing rule 8), replacing the "never lift the prot
 wording" rule above for that prototype. That wording lives in
 `frontend/src/locales/en/onboarding.json`, and the owner still owns every string in it.
 
-*2026-11-18, [#3457](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3457):* the reviewed prototype wording is the shipped default; ownership of
+*2026-11-18, [#3457](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3457):* the reviewed prototype wording is the shipped default, and the
+"never invent final copy" placeholder rule no longer applies to it; ownership of
 the strings is unchanged.
+
+The approved prototype was vendored for the build as `.design-sync/onboarding-arc/` and deleted once the flow shipped ([#3598](https://github.com/pixieofhugs/WorldZeroPlayground/pull/3598), commit aaf79e3f). The shipped flow under `frontend/src/pages/onboarding/` is now the reference the copy exception covers.
+
+- **The revision must mention the deleted-account record** ([#3451](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3451)): per ADR-0081, a salted hash of the sign-in ID is kept for a limited time. Wording is the owner's, still owed.
 
 *2026-11-18, [#3452](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3452):* was "one paragraph, not three beats" with factions cut. The owner
 approved the seven-beat prototype, so this section now describes a sequence and allows a
@@ -190,7 +200,7 @@ arc**, which has exactly one destination.
   a flag riding back through a redirect. It stays honest this way: the click is held
   client-side through the OAuth redirect (the same mechanism as *Authentication*), and the
   consent row is written only once the account exists, so the server never records an
-  acceptance that has no identity behind it. If a new account arrives with no acceptance,
+  acceptance that has no identity behind it. If the flow returns from OAuth holding no click,
   the player is sent back to the contract before character creation.
 - **Recorded as an append-only consent log** — one row per acceptance event, carrying the
   account, the version, and the time. Existing accounts have no rows, which is the honest
@@ -278,8 +288,10 @@ character with no praxis (the mark).
 
 ## Level 1
 
-The existing **Field Stamp** pop-up, unchanged — it already fires at the right moment and
-announces rank `trailhead` and its unlocks. No bespoke ending: by then the player has done a
+The existing **Field Stamp** pop-up, unchanged apart from that — it already fires at the right moment and
+announces rank `trailhead` and its unlocks. Its `vote` unlock (`backend/eras/era_1.py`)
+shows [#3475](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3475)'s lock
+explanation: the level gate stays and the received-vote condition is added. No bespoke ending: by then the player has done a
 real thing in the world and photographed it, which does not need a surface congratulating
 them for it.
 

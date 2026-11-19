@@ -23,13 +23,17 @@ class CurrentUser(WireModel):
     is_admin: bool = False
     # Gates the admin-roster section (``account_is_owner``, #3258).
     is_owner: bool = False
+    # Accepted the CURRENT terms version (#3468).
+    has_accepted_terms: bool = False
     # Server-side capability flags. Admin forces propose/see flags True; the
     # eligibility flags have their own rules (see character_capabilities).
     can_create_additional_character: bool = False
     can_start_as_albescent: bool = False
+    # A moderator ban on one of the account's lives blocks creating any (#3507).
+    character_creation_banned: bool = False
     # Sticky (ADR-0027): any life on the account ever joined Albescent.
     albescent_revealed: bool = False
-    # Sticky (#2770): any life reached `era.albescent_glimpse_level`; gates
+    # Sticky (#2770): any life reached `era.secret_faction_glimpse_level`; gates
     # whether the Albescent row is drawn at all. Revealed implies glimpsed.
     albescent_glimpsed: bool = False
     # For the "locked dossier" gate copy (#270).
@@ -93,3 +97,4 @@ class DevLoginOut(WireModel):
     character_id: Optional[int] = None
     character_name: Optional[str] = None
     faction_slug: Optional[str] = None
+    draft_praxis_id: Optional[int] = None

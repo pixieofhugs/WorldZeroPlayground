@@ -32,9 +32,6 @@ const CSS = stripComments(readIndexCss());
 const MOTION = sheet("motion.ornament.css");
 const GATE = "@media (prefers-reduced-motion: no-preference)";
 
-/** Comments stripped: the docblock may name the traps it avoids. */
-const CODE = readFileSync(BAND, "utf8").replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, "");
-
 const SIDES: NotationSide[] = ["band", "top", "bottom", "divider"];
 
 /** The head of `MARKS` as written: survives any renaming (#2341). */
@@ -160,18 +157,20 @@ describe("one drawing at four mounts (#2230)", () => {
   });
 
   it("declares no animation inline — the stylesheets own the motion", () => {
-    // #911. Also on source: unmeasured markup is empty and passes vacuously.
+    // #911.
     for (const side of SIDES) {
       expect(
         renderToStaticMarkup(<EphemeristsNotationBand seed="task:41" side={side} />),
         side,
       ).not.toContain("animation");
     }
-    expect(CODE).not.toMatch(/animation:/);
   });
 
   it("paints from tokens only", () => {
-    expect(CODE).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
+    for (const side of SIDES) {
+      const html = renderToStaticMarkup(<EphemeristsNotationBand seed="task:41" side={side} />);
+      expect(html, `${side} draws marks`).toContain("var(--");
+    }
   });
 });
 

@@ -119,34 +119,27 @@ human, by the procedure under "Blast radius".
 Prerequisites: every environment is at the same schema state (or you're willing
 to wipe), and you've read every model in `backend/models/` to know the final schema.
 
-1. **Inventory enums.** `grep -rn "class.*enum.Enum" backend/models/`. For each,
-   note the lowercase PG type name (`class AccountStatus` → `accountstatus`) and its values.
-2. **Order tables by FK tier.** Tier 0 = no FK deps (`faction`, `contact_messages`);
+1. **Order tables by FK tier.** Tier 0 = no FK deps (`faction`, `contact_message`);
    Tier 1 depends only on Tier 0 (`account`, `role`); Tier 2+ on prior tiers.
-3. **Delete the chain.** `rm backend/alembic/versions/*.py`.
-4. **Write the new root** with `down_revision = None`:
-   - **A — enum types** via `op.execute("DO $$ … CREATE TYPE … AS ENUM (…) … $$;")`,
-     each guarded so re-running is a no-op. Keep the values in declaration order —
-     Postgres sorts an enum by the order its values were added.
-   - **B — tables** via `Base.metadata.create_all(op.get_bind())`. This is the whole
+2. **Delete the chain.** `rm backend/alembic/versions/*.py`.
+3. **Write the new root** with `down_revision = None`:
+   - **A — tables** via `Base.metadata.create_all(op.get_bind())`. This is the whole
      point: the baseline is generated from the models, so it cannot drift from them
-     and every model-level index / identity / type change ships for free. (Steps 1–2
-     still matter — enums are the one thing `create_all` must *not* emit.)
-   - **C — reference data** is `seed.py`'s job, not the migration's; `start.sh` runs
+     and every model-level index / identity / type change ships for free.
+   - **B — reference data** is `seed.py`'s job, not the migration's; `start.sh` runs
      it right after `alembic upgrade head`.
-   - **D — downgrade()** is `Base.metadata.drop_all` then `DROP TYPE IF EXISTS` each
-     enum, in reverse.
+   - **C — downgrade()** is `Base.metadata.drop_all`.
    - **Revision id must be ≤ 32 chars** — `alembic_version.version_num` is
      `varchar(32)`, and an over-long id only fails *after* the DDL has run.
      `backend/tests/test_migration_revision_ids.py` guards this.
-5. **Verify** on a fresh DB: `alembic upgrade head`, then `alembic check` (drift),
+4. **Verify** on a fresh DB: `alembic upgrade head`, then `alembic check` (drift),
    then a `downgrade base` → `upgrade head` round-trip, then seed and spot-check the
    rows. Do this by hand against a real Postgres — CI builds from
    `Base.metadata.create_all`, so a green `pytest` proves nothing about the migration.
-6. **Stamp, don't upgrade, live DBs** that already hold the schema:
+5. **Stamp, don't upgrade, live DBs** that already hold the schema:
    `alembic stamp <new_root>` (writes the revision without running DDL — this is
    Strategy B above). Under Strategy A you wipe instead; see "Blast radius".
-7. **Delete any test coupled to a revision you removed.** A test that imports a
+6. **Delete any test coupled to a revision you removed.** A test that imports a
    migration module by path (there was one for `0011`) breaks at collection.
 
 Future squashes are identical with a bumped id (next is `0003_squashed`,
@@ -227,19 +220,20 @@ copy key, which is likewise written by a human and has no surrogate id.
 | `account.py` | `account` | `id` | `active_character_id` |
 | `account.py` | `account_tombstone` | `id` | `account_id` |
 | `account.py` | `oauth_provider` | `id` | `account_id` |
+| `account_secret_faction.py` | `account_secret_faction` | `id` | `account_id` |
 | `character.py` | `character` | `id` | `account_id` (+ `faction_slug`, string) |
 | `character_block.py` | `character_block` | `id` | `blocker_character_id`, `blocked_character_id` |
 | `character_stats.py` | `character_stats` | `id` | `character_id`, `era_id` |
 | `comment.py` | `comment` | `id` | `praxis_id`, `task_id`, `created_by_id` |
 | `comment.py` | `comment_mention` | `id` | `comment_id`, `mentioned_character_id` |
-| `contact.py` | `contact_messages` | `id` | — |
-| `copy_override.py` | `copy_override` | `(ns, key)` — **composite VARCHAR, no `Identity()`** | `updated_by` |
+| `contact.py` | `contact_message` | `id` | — |
+| `copy_override.py` | `copy_override` | `(ns, key)` — **composite VARCHAR, no `Identity()`** | `updated_by_id` |
 | `duel.py` | `duel` | `id` | `task_id`, `challenger_praxis_id`, `opponent_praxis_id`, `opponent_character_id`, `forfeited_by_character_id`, `winner_character_id`, `resolved_era_id` |
-| `era.py` | `era` | `id` | `started_by` |
+| `era.py` | `era` | `id` | `started_by_id` |
 | `faction.py` | `faction` | `slug` (**VARCHAR — the exception**) | — |
 | `faction_defection_history.py` | `faction_defection_history` | `id` | `character_id`, `era_id` (+ `faction_slug`, string) |
 | `feed_dismissal.py` | `feed_dismissal` | `id` | `character_id` |
-| `flag.py` | `flag` | `id` | `praxis_id`, `comment_id`, `flagged_by` |
+| `flag.py` | `flag` | `id` | `praxis_id`, `comment_id`, `flagged_by_id` |
 | `invitation_letter.py` | `invitation_letter` | `id` | `character_id`, `era_id` (+ `faction_slug`, string) |
 | `meta_task.py` | `praxis_meta_task` | `(praxis_id, task_id)` — **composite, no `Identity()`** | `praxis_id`, `task_id` |
 | `nudge.py` | `nudge` | `id` | `from_character_id`, `to_character_id`, `praxis_id` |
@@ -250,22 +244,19 @@ copy key, which is likewise written by a human and has no surrogate id.
 | `praxis_room.py` | `praxis_room_update` | `id` | `praxis_id` |
 | `relationship.py` | `relationship` | `id` | `from_character_id`, `to_character_id` |
 | `roles.py` | `role` | `id` | — |
-| `roles.py` | `account_role` | `id` | `account_id`, `role_id`, `granted_by` |
-| `task.py` | `task` | `id` | `created_by` (+ `primary_faction_slug`, `metatask_faction_slug`, strings) |
+| `roles.py` | `account_role` | `id` | `account_id`, `role_id`, `granted_by_id` |
+| `task.py` | `task` | `id` | `created_by_id` (+ `primary_faction_slug`, `metatask_faction_slug`, strings) |
 | `taunt_message.py` | `taunt_message` | `id` | `from_character_id`, `to_character_id` |
 | `terms_acceptance.py` | `terms_acceptance` | `id` | `account_id` |
 | `vote.py` | `vote` | `id` | `praxis_id`, `voter_character_id`, `voter_account_id` |
 
-31 tables, 57 integer foreign keys, 5 string ones.
+32 tables, 58 integer foreign keys, 5 string ones.
 
 `backend/tests/unit/test_model_conventions.py` parses this table and asserts both
 halves against `Base.metadata`, so a new model that skips this list fails there.
 
-### The `create_type=False` convention (three-layer enum defense)
+### Enums are strings with a CHECK (#3448)
 
-PG enum types are created once via `CREATE TYPE`; SQLAlchemy tries to auto-create them
-whenever it sees `Enum()`, causing "type already exists" errors. So:
-
-1. Every model `Enum()` column uses `create_type=False`.
-2. `alembic/env.py` has a safety loop forcing `create_type=False` on all metadata enums.
-3. Migrations own all `CREATE TYPE` via explicit `op.execute()`.
+A Python enum column is `string_enum(X)` (`models/base.py`): `VARCHAR(32)` plus a
+`ck_<table>_<enumclass>` CHECK on the member names. A new value is a revision that
+widens that CHECK (drop and re-add); there is no `ALTER TYPE`.

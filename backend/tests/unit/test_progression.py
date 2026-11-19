@@ -1,10 +1,10 @@
 """The ladder's visibility filter, ``visible_level_profiles`` (#1891)."""
 from game_config import CURRENT_ERA, LevelProfile, LevelUnlock, LevelUnlockKind
-from models.account import Account
 from services.progression import (
     HIDDEN_UNTIL_REVEALED_UNLOCK_KEY,
     visible_level_profiles,
 )
+from tests.stamps import account_with
 
 
 def _unlock_keys(profiles: list[LevelProfile]) -> set[str]:
@@ -25,12 +25,12 @@ def test_anonymous_caller_is_not_told_the_society_exists():
 
 def test_unrevealed_account_is_not_told_either():
     assert HIDDEN_UNTIL_REVEALED_UNLOCK_KEY not in _unlock_keys(
-        visible_level_profiles(Account(albescent_revealed=False))
+        visible_level_profiles(account_with(revealed=False))
     )
 
 
 def test_revealed_account_sees_the_whole_ladder_unchanged():
-    served = visible_level_profiles(Account(albescent_revealed=True))
+    served = visible_level_profiles(account_with(revealed=True))
     assert served == list(CURRENT_ERA.level_profiles)
 
 
@@ -83,7 +83,7 @@ def test_filtering_does_not_mutate_the_era():
     before = tuple(CURRENT_ERA.level_profiles)
 
     visible_level_profiles(None)
-    visible_level_profiles(Account(albescent_revealed=True))
+    visible_level_profiles(account_with(revealed=True))
 
     assert CURRENT_ERA.level_profiles == before
     assert HIDDEN_UNTIL_REVEALED_UNLOCK_KEY in _unlock_keys(list(before))

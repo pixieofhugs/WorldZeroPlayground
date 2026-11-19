@@ -192,7 +192,6 @@ async def _add_second_life(
             character_id=alt.id,
             era_id=era.id,
             score=0,
-            all_time_score=0,
             level=0,
             votes_spent_this_era=0,
         )
@@ -719,15 +718,18 @@ async def test_non_participant_can_vote_on_duel_side(
     era: Era,
     some_faction,
     auth_headers: dict,
+    auth_headers2: dict,
 ):
     from models.duel import Duel, DuelStatus
     from services.auth import create_jwt
 
     challenger_pid = await _create_and_submit_solo(client, active_task, auth_headers)
+    opponent_pid = await _create_and_submit_solo(client, active_task, auth_headers2)
     db_session.add(
         Duel(
             task_id=active_task.id,
             challenger_praxis_id=challenger_pid,
+            opponent_praxis_id=opponent_pid,
             opponent_character_id=character2.id,
             status=DuelStatus.settled,
         )
@@ -899,7 +901,7 @@ async def test_duel_detail_returns_both_sides_with_tallies(
     await db_session.flush()
     db_session.add(CharacterStats(
         character_id=third_char.id, era_id=era.id, score=100,
-        all_time_score=100, level=3, votes_spent_this_era=0,
+        level=3, votes_spent_this_era=0,
     ))
     await db_session.commit()
     third_headers = {"Authorization": f"Bearer {create_jwt(third.id)}"}

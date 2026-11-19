@@ -1,6 +1,6 @@
 # ADR-0014: Praxis scoring is per-character Contribution; the card shows Merit
 
-**Status:** Amended by ADR-0053, ADR-0086
+**Status:** Amended by ADR-0047, ADR-0052, ADR-0053, ADR-0086
 **Date:** 2026-06-24
 
 > **Superseded in part — the *Merit (the card number)* section only.** The half
@@ -161,3 +161,7 @@ die.
   the unification now, ahead of ADR-0011.** Rejected: building duel scoring against a
   model that is about to be replaced is throwaway work; dependency-ordering on #185
   lets us build duel scoring once, correctly.
+
+## Amendment (2026-11-19, #3426)
+
+"Floats with votes; never frozen" (the duel multiplier) is wrong for a finished duel. ADR-0052 freezes the outcome at era close: `DuelStatus.resolved` is terminal, and `praxis_scoring.py` reads `resolved` duels so a frozen duel keeps its modifier. Before era close, `active` and `settled` duels still float. ADR-0053 and ADR-0086 (in the status line) replaced the Merit display and the multiplier's scope.

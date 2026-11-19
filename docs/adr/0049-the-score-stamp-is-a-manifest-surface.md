@@ -1,6 +1,6 @@
 # ADR-0049 — The score stamp is a manifest surface, not a themed component
 
-**Status:** Accepted
+**Status:** Amended by ADR-0053, ADR-0076
 **Date:** 2026-07-20
 
 **Narrows:** **ADR-0047** (its row-selection rules survive intact; only the
@@ -58,7 +58,7 @@ The split between shared and bespoke is drawn at **logic vs. presentation**:
 
 `Default*` fall-through applies as everywhere else (ADR-0039): a slug with no
 registered `scoreStamp` renders the neutral default. `na`/unaffiliated has no
-manifest and keeps that behaviour.
+manifest and keeps that behaviour. *[2026-11-18, #3425: `DEFAULT_MANIFEST` now has `slug: 'na'` (`factions/default.ts`) and is registered in `factions/index.ts`; ADR-0084's #2530 amendment]*
 
 **Faction marks live in `components/factionMarks/`, and the requirement is that a
 mark is tintable from a token** — never that its colour is baked in. An `<img
@@ -100,3 +100,7 @@ one import site and do not care which mechanism is underneath.
   size-agnostic and mobile reuses it, per the design's mobile guidance.
 - Adding a faction still costs one manifest line. Adding a *mark* costs one file
   in `factionMarks/`.
+
+## Amendment (2026-11-19, #3426)
+
+"ADR-0047's row rules: mult hidden at `x1.0` or collab, ... votes always" is out of date. `scoreBreakdown.ts` has no collab case (`mult` is null only at x1.0), and `votes` is null at 0 or less so a base-only score reads as a bare total (ADR-0076). ADR-0053 made the total one computed number. Which record owns the row rules (0047 or 0053/0076) is an open owner call; this amendment does not decide it.

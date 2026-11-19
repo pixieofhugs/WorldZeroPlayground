@@ -139,3 +139,62 @@ describe('CopyEditor, one wording from several keys', () => {
     expect(container.textContent).not.toContain(MARK)
   })
 })
+
+describe('CopyEditor, edit box over the spot (#3453)', () => {
+  const open = async (mobile: boolean) => {
+    vi.stubGlobal('matchMedia', () => ({
+      matches: mobile,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    }))
+    render(
+      <>
+        <Page />
+        <CopyEditor />
+      </>,
+    )
+    const spot = screen.getByText('Overridden Zero')
+    spot.getBoundingClientRect = () => new DOMRect(30, 50, 200, 24)
+    fireEvent.click(screen.getByText('edit copy'))
+    await screen.findByText('stop editing copy')
+    fireEvent.click(spot)
+    return (await screen.findByLabelText('Replacement wording')) as HTMLTextAreaElement
+  }
+
+  it('desktop: the textarea sits at the clicked text', async () => {
+    const box = await open(false)
+    expect(box.style.position).toBe('fixed')
+    expect([box.style.left, box.style.top, box.style.minWidth]).toEqual(['30px', '50px', '200px'])
+  })
+
+  it('phone: it stays in the panel', async () => {
+    expect((await open(true)).style.position).not.toBe('fixed')
+  })
+
+  it('each spot opens in its own typography, not the first one opened', async () => {
+    const real = getComputedStyle
+    vi.stubGlobal('getComputedStyle', (el: Element) => {
+      const cs = real(el)
+      const big = el.tagName === 'A'
+      return { ...cs, font: big ? '30px serif' : '10px serif', color: big ? 'red' : 'blue' }
+    })
+    render(
+      <>
+        <Page />
+        <a href="/tasks">{i18n.t('common:nav.tasks')}</a>
+        <CopyEditor />
+      </>,
+    )
+    const rect = () => new DOMRect(30, 50, 200, 24)
+    for (const el of [screen.getByText('Overridden Zero'), screen.getByText(i18n.t('common:nav.tasks'))])
+      el.getBoundingClientRect = rect
+    fireEvent.click(screen.getByText('edit copy'))
+    await screen.findByText('stop editing copy')
+
+    fireEvent.click(screen.getByText('Overridden Zero'))
+    expect(((await screen.findByLabelText('Replacement wording')) as HTMLTextAreaElement).style.color).toBe('blue')
+    fireEvent.click(screen.getByText(i18n.t('common:nav.tasks')))
+    const box = (await screen.findByLabelText('Replacement wording')) as HTMLTextAreaElement
+    expect([box.style.fontSize, box.style.color]).toEqual(['30px', 'red'])
+  })
+})

@@ -39,6 +39,6 @@ class AccountRole(Base):
     granted_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
-    granted_by: Mapped[int] = mapped_column(
+    granted_by_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("account.id"), nullable=False
     )

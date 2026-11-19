@@ -217,3 +217,32 @@
     --plate-label-size: var(--text-base);
   }
 }
+
+/* Floors the empty gutter so the title yields to the profile's FDL laurel (44px at right:14px). */
+[data-laurel] [data-card-masthead] > :last-child {
+  min-width: 3.5rem;
+}
+
+/* Snide's amp (~270px) outgrows the panel; components/vote is frozen, so the slot fits it. */
+@media (max-width: 479px) {
+  .duel-vote-slot {
+    margin-inline: calc(-1 * var(--space-md));
+    /* overflow-x:auto makes y scroll too; the padding keeps confetti and the cheer bounce unclipped. */
+    overflow-x: auto;
+    padding-block: var(--space-xl);
+    margin-block: calc(-1 * var(--space-xl));
+  }
+}
+.duel-vote-slot-fit {
+  width: max-content;
+  min-width: 100%;
+  margin-inline: auto;
+}
+
+.touch-target {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--touch-target);
+  min-width: var(--touch-target);
+}

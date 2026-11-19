@@ -1,6 +1,6 @@
 # ADR-0069 — The character profile and the duel seal collapse to one responsive component per faction
 
-**Status:** Accepted
+**Status:** Amended by ADR-0078
 **Date:** 2026-07-30
 
 **Relates to:** ADR-0056 (task cards), ADR-0058 (task detail), ADR-0063 (praxis
@@ -142,7 +142,7 @@ known ceiling rather than a second form-factor mechanism.
   granted here is scoped to the character profile and the duel seal and **does
   not generalise** — unifying either survivor needs its own record, on evidence,
   the same way each collapse so far has.
-- `surfaceDispatch.test.ts` and `wowRendersDefault.test.tsx` walk `SURFACE_KEYS`
+- `surfaceDispatch.test.ts` (`frontend/src/factions/__tests__/`) and `wowRendersDefault.test.tsx` *[2026-11-18, #3425: `wowRendersDefault.test.tsx` is gone; nearest is `factions/__tests__/wowIsThemed.test.ts`]* walk `SURFACE_KEYS`
   and were updated by dropping the retired rows, not weakened.
   `duelSkinSlots.test.tsx` previously walked two registries; it now walks one at
   **both** form factors, so it newly catches a phone shell that drops a slot —
@@ -159,3 +159,7 @@ known ceiling rather than a second form-factor mechanism.
   — it was true when made — but this one supersedes its inventory.
 - The evaluation window is closed for both surfaces. A second profile or duel
   seal implementation reappearing is drift, not an experiment.
+
+## Amendment (2026-11-19, #3426)
+
+"Two `mobile*` component surfaces remain: `mobileFactionPage` and `mobileFieldDesk`" is out of date. ADR-0078 collapsed faction detail, so only `mobileFieldDesk` is left (`factions/manifest.ts`). The no-generalising rule applies to it unchanged.

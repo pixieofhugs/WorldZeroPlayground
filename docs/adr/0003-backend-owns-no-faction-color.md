@@ -1,6 +1,6 @@
 # The backend owns no faction color
 
-**Status:** Accepted
+**Status:** Amended by ADR-0038
 **Date:** 2026-06-22
 
 Faction color is a *design* fact (canon lives in the vault design docs; see ADR-0001), and
@@ -14,9 +14,13 @@ Decision: **remove `color` from the backend** — the `game_config.py` `FactionC
 dataclass field, the `era_1.py` values, and the `/game-config` response schema/payload.
 **No DB migration is involved**: there is no `faction.color` column — color was only ever
 backend *config* (in memory), never persisted. The frontend owns color outright: `index.css`
-(theme) and the `factions.ts` `FACTION_FALLBACKS` (raw hex), both mirroring the vault canon.
+(theme) and the `factions.ts` `FACTION_FALLBACKS` (raw hex), both mirroring the vault canon. *[2026-11-18, #3425: `FACTION_FALLBACKS` and `populateFactionRegistry()` are gone; the mirror table was removed in #1269, see WORLD_ZERO_STYLE.md]*
 With the backend no longer serving color, `populateFactionRegistry()` stops overwriting the
 hex, so the purple-Singularity / gray-UA bug cannot recur.
 
 `era_1.py` keeps gameplay + identity (slug, name, ability, modifiers); it just no longer
 carries the brand color.
+
+## Amendment (2026-11-19, #3426)
+
+"`era_1.py` keeps gameplay + identity (slug, name, ...)" lost its `name`: ADR-0038 removed `name`/`description` from `FactionConfig`. Config keeps the slug and the mechanics; the words live in `frontend/src/locales/en/factions.json`. No color, as this record says.

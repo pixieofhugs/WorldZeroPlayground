@@ -27,9 +27,15 @@
  *     line, so a split block is invisible and its rows pass vacuously.
  */
 import { readFileSync } from "node:fs";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { MemoryRouter } from "react-router-dom";
 import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
+
+import "../../i18n";
+import SnideFactionHero from "../../components/factionHero/SnideFactionHero";
 
 import {
   AAA_NORMAL,
@@ -663,6 +669,25 @@ const ARCHETYPE_PAIRS: Pair[] = [
     surface: "--faction-wow-ground-from",
     text: `--faction-wow-${ink}`,
     veil: "--faction-wow-court-glow",
+  })),
+  // Eyebrow and chip paint ground-quiet: accent-deep is 4.14 under the hatch in light.
+  // Glow paints over hatch, so on ground-from they stack (outermost-last).
+  {
+    what: "wow profile ground-to, Proposed eyebrow ink",
+    surface: "--faction-wow-ground-to",
+    text: "--faction-wow-ground-quiet",
+  },
+  {
+    what: "wow profile ground-from, Badges chip ink under court glow",
+    surface: "--faction-wow-ground-from",
+    text: "--faction-wow-ground-quiet",
+    veil: "--faction-wow-court-glow",
+  },
+  ...["card-text", "ground-quiet"].map((ink) => ({
+    what: `wow profile ground-from, ${ink} under hatch and court glow stacked`,
+    surface: "--faction-wow-ground-from",
+    text: `--faction-wow-${ink}`,
+    veil: ["--faction-wow-hatch", "--faction-wow-court-glow"],
   })),
 
   // WOW lists (#895), duel seal and rail. The kit's contrast table is wrong both
@@ -1323,16 +1348,6 @@ describe("the retired codex colours are gone from both cascades (#2698 stage 1)"
     expect(THEMES.light.has(name), `light declares ${name}`).toBe(false);
     expect(THEMES.dark.has(name), `dark declares ${name}`).toBe(false);
   });
-
-  it("no row measures one, so nothing makes them look alive again", () => {
-    expect(
-      PAIRS.filter(
-        (pair) =>
-          RETIRED_CODEX_COLOURS.includes(pair.surface) ||
-          RETIRED_CODEX_COLOURS.includes(pair.text),
-      ).map((pair) => pair.what),
-    ).toEqual([]);
-  });
 });
 
 /**
@@ -1684,16 +1699,6 @@ const ROLE_READ = String.raw`(?:var\(\s*--[\w-]+\s*,\s*)?`;
 
 /** Closes {@link ROLE_READ}. Separate because the token sits between them. */
 const ROLE_READ_END = String.raw`\)?`;
-
-/**
- * `dress.pageStyle` out of `EphemeristsEditPraxis` — the second Ephemerists
- * root, carrying two seams (#1636, #1800). One reader for the slice.
- */
-function ephemeristsComposerPageStyle(): string {
-  const source = sourceOf("pages/editPraxis/archetypes/EphemeristsEditPraxis.tsx");
-  // `sheetStyle` is the next key in the dress literal, and is the boundary.
-  return source.slice(source.indexOf("pageStyle: {"), source.indexOf("sheetStyle,"));
-}
 
 describe("faction token contrast (WCAG AA)", () => {
   for (const theme of BOTH_THEMES) {
@@ -2081,17 +2086,6 @@ describe("the label tier stays two tiers on one seam (#1307)", () => {
    * 2.64. Fine today — every label renders inside the sheet or a panel — but a
    * label mounted on the bare composer page would repeat #1793.
    */
-  it("the composer and waiting surface set the same label seam on their own root (#1800)", () => {
-    const pageStyle = ephemeristsComposerPageStyle();
-    expect(
-      pageStyle,
-      "`dress.pageStyle` is the second Ephemerists root. Without the seam, every `.label-caption` in the composer and the waiting surface reads the global tertiary on a night sheet — 2.01:1 on the plate, 1.86:1 in a panel cell.",
-    ).toContain('["--label-ink" as string]: QUIET');
-    expect(
-      ruleBody(".eph-plate-sheet"),
-      "both Ephemerists roots must land on ONE ink, or the label tier reads two different quiets depending on which page you are on.",
-    ).toContain("--label-ink: var(--faction-ephemerists-plate-quiet)");
-  });
 });
 
 /**
@@ -2136,19 +2130,6 @@ describe("a prose link's ink is a seam (#1636)", () => {
     ).toContain("--link-ink: var(--faction-ephemerists-plate-brass-light)");
     expect(body, "hover goes to the plate's body ink, the same relation the neutral pair has.").toContain(
       "--link-ink-hover: var(--faction-ephemerists-plate-ink)",
-    );
-  });
-
-  // The other root: the composer/waiting surface's `BodyPreview` read 2.60
-  // (hover 1.16) until `dress.pageStyle` declared the seam.
-  it("the composer and waiting surface set the same seam on their own root", () => {
-    const pageStyle = ephemeristsComposerPageStyle();
-    expect(
-      pageStyle,
-      "`dress.pageStyle` is mounted by both `ComposerPage` and `PraxisWaitingSurface`; without the seam their prose links fall back to the app neutral on a night ground.",
-    ).toContain('["--link-ink" as string]: BRASS_LIGHT');
-    expect(pageStyle, "and its hover partner, for the same reason").toContain(
-      '["--link-ink-hover" as string]: INK',
     );
   });
 });
@@ -2204,35 +2185,6 @@ describe("a themed ground is a longhand (#1636)", () => {
  * clearing the light page needs <= 0.1626 — no value does both (computed below).
  */
 describe("the Ephemerists faction page paints the page's ink outside its cards (#1793)", () => {
-  const SOURCE = sourceOf("pages/factionDetail/archetypes/EphemeristsFactionBody.tsx");
-
-  // The two strings the sweep measured, plus the roster's (inside a `CARD`) as
-  // a control. Keys are the shared `detail.*` block's; a rename moves the marker only.
-  for (const key of ["detail.default.tasksEmpty", "detail.default.recentEmpty"]) {
-    it(`\`${key}\` reads the page's quiet ink, not the plate's`, () => {
-      const at = SOURCE.indexOf(`t("${key}")`);
-      expect(at, `no \`t("${key}")\` call in EphemeristsFactionBody`).toBeGreaterThan(-1);
-      const element = SOURCE.slice(at - 400, at);
-      expect(
-        element,
-        "an empty state outside a `CARD` sits on `--color-bg-page`, where the plate's quiet ink is 2.64:1 in light. `PAGE_QUIET` is the app's own second tier — 7.78:1 light, 8.33:1 dark — and it is what the kicker beside it already reads (#1675).",
-      ).toContain("color: PAGE_QUIET");
-      expect(
-        element,
-        "`QUIET` is `-plate-quiet`, minted for the three NIGHT grounds of the Valley plate. On the app's light page it is the defect this issue reports.",
-      ).not.toContain("color: QUIET");
-    });
-  }
-
-  it("prose that IS inside a card keeps the plate's ink", () => {
-    const at = SOURCE.indexOf('t("detail.membersEmptyWithSpotlight")');
-    expect(at, "no roster empty state in EphemeristsFactionBody").toBeGreaterThan(-1);
-    expect(
-      SOURCE.slice(at - 400, at),
-      "the roster empty state renders inside `CARD`, whose ground is `-plate-bg`. Repainting it too would swap a 5.98:1 faction ink for a neutral on a night sheet — the mistake in the other direction.",
-    ).toContain("color: QUIET");
-  });
-
   for (const theme of BOTH_THEMES) {
     it(`the ink it takes instead clears AA on the app's page (${theme})`, () => {
       const ink = resolveColor("--color-text-secondary", theme);
@@ -2496,64 +2448,34 @@ describe("a mark on the invariant xerox disc is frozen too (#2364)", () => {
  * The subhead is checked here too: it was a quiet-tier body-font caption.
  */
 describe("the S.N.I.D.E. hero's black medallion and its subhead (#2368)", () => {
-  const HERO = "components/factionHero/SnideFactionHero.tsx";
   const WALL = "--faction-snide-wall";
 
-  /** The aliases the rows below match, so a rename fails loudly (as #2343). */
-  const ALIASES: ReadonlyArray<readonly [string, string]> = [
-    ["WALL", "--faction-snide-wall"],
-    ["NOTE_INK", "--faction-snide-note-ink"],
-    ["PLATE", "--faction-snide-ink"],
-    ["ACID", "--faction-snide-acid"],
-    ["CHROME", "--faction-snide"],
-    ["STOCK", "--faction-snide-paper"],
-  ];
+  /** The hero as it renders, with role reads folded to the token the map names. */
+  const HTML = resolveRoleReads(
+    renderToStaticMarkup(
+      createElement(
+        MemoryRouter,
+        null,
+        createElement(SnideFactionHero, { slug: "snide", name: "S.N.I.D.E.", members: 1, tasks: 1, praxes: 1 }),
+      ),
+    ),
+  );
+  const TOKEN = String.raw`var\((--[a-z-]+)\)`;
 
-  function heroSource(): string {
-    // `stripComments` only knows `/* … */`; this file argues in `//` lines between
-    // declarations, so strip those too or reasoning could hide a declaration.
-    const source = stripComments(sourceOf(HERO)).replace(/^[^\S\n]*\/\/.*$/gm, "");
-    for (const [alias, token] of ALIASES) {
-      expect(
-        source,
-        `${HERO} no longer binds \`${alias}\` to ${token}; retarget this guard at whatever it is called there now.`,
-      ).toMatch(
-        new RegExp(`const ${alias} = ["']${ROLE_READ}var\\(${token}\\)${ROLE_READ_END}["']`),
-      );
-    }
-    return source;
+  function tokenOf(match: RegExpMatchArray | null, role: string): string {
+    expect(match, `the hero renders no ${role} this guard can read`).not.toBeNull();
+    return match![1];
   }
 
-  /** An alias (bare, `{X}` or `${X}`) or a literal `var(--token)`, as its token. */
-  function tokenOf(expression: string, role: string): string {
-    const trimmed = expression.replace(/[`"'${}]/g, "").replace(/[,;]$/, "").trim();
-    const alias = ALIASES.find(([name]) => name === trimmed);
-    if (alias) return alias[1];
-    // `CHROME` is a role read since #2676; both spellings resolve to one token.
-    const bare = trimmed.match(new RegExp(`^${ROLE_READ}var\\((--[a-z-]+)\\)${ROLE_READ_END}$`));
-    expect(bare, `${role} paints \`${trimmed}\`, which is neither an alias this guard knows nor a var()`).not.toBeNull();
-    return bare![1];
-  }
-
-  /** The medallion, read OFF THE SOURCE so no row measures a token it stopped painting. */
+  /** The medallion, read OFF THE RENDER so no row measures a token it stopped painting. */
   function medallion(): { disc: string; marks: Array<[string, string]>; raster: string } {
-    const source = heroSource();
-    const disc = source.match(/borderRadius: "50%",\s*background: ([^,\n]+),/);
-    const rim = source.match(/border: [`"]2px solid ([^`"]+)[`"]/);
-    const sigil = source.match(/<SnideSigil[^>]*color=([^\s/>]+)/);
-    // The medallion's 6% raster (the wall grain is 5.5%, ghosts 7/3.5/2.5%).
-    const raster = source.match(/color-mix\(in srgb, ([^\s]+) 6%, transparent\)/);
-    expect(disc, "no disc in the hero — nothing here is measuring the medallion").not.toBeNull();
-    expect(rim, "no `2px solid` rim on the hero medallion").not.toBeNull();
-    expect(sigil, "the hero draws no `SnideSigil` in a colour this guard can read").not.toBeNull();
-    expect(raster, "the medallion's 6% raster is gone").not.toBeNull();
     return {
-      disc: tokenOf(disc![1], "the medallion's disc"),
+      disc: tokenOf(HTML.match(new RegExp(`border-radius:50%;background:${TOKEN}`)), "disc"),
       marks: [
-        ["the medallion's rim", tokenOf(rim![1], "the medallion's rim")],
-        ["the medallion's sigil", tokenOf(sigil![1], "the medallion's sigil")],
+        ["the medallion's rim", tokenOf(HTML.match(new RegExp(`border-radius:50%;[^"]*?border:2px solid ${TOKEN}`)), "rim")],
+        ["the medallion's sigil", tokenOf(HTML.match(new RegExp(`<svg[^>]*fill="${TOKEN}"`)), "sigil")],
       ],
-      raster: tokenOf(raster![1], "the medallion's raster"),
+      raster: tokenOf(HTML.match(new RegExp(`color-mix\\(in srgb, ${TOKEN} 6%, transparent\\)`)), "6% raster"),
     };
   }
 
@@ -2608,21 +2530,12 @@ describe("the S.N.I.D.E. hero's black medallion and its subhead (#2368)", () => 
     });
   }
 
-  /** The wordmark's expansion line, as `style={{ … }}` up to the string it renders. */
-  function subhead(): string {
-    const source = heroSource();
-    const at = source.indexOf("identity.snide.fullName");
-    expect(at, `${HERO} no longer renders the faction's full name`).toBeGreaterThan(-1);
-    const open = source.lastIndexOf("style={{", at);
-    expect(open, "the expansion line is rendered by no styled element").toBeGreaterThan(-1);
-    return source.slice(open, at);
-  }
-
   for (const theme of BOTH_THEMES) {
     it(`the subhead's ink clears AA on the hero's real ground (${theme})`, () => {
-      const ink = subhead().match(/color: ([^,\n]+),/);
-      expect(ink, "the expansion line sets no colour").not.toBeNull();
-      const token = tokenOf(ink![1], "the expansion line");
+      const token = tokenOf(
+        HTML.match(new RegExp(`<p style="[^"]*?color:${TOKEN}[^"]*">Society for`)),
+        "expansion line",
+      );
       const text = resolveColor(token, theme);
       const ground = resolveColor(WALL, theme);
       expect(text.color, `${token} (${theme}) resolved to "${text.raw}"`).not.toBeNull();

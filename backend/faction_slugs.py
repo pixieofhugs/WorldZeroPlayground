@@ -4,7 +4,7 @@ A **leaf** module (no project imports) so every layer can name the same string.
 The two ``"na"`` constants are deliberately not aliases: a task's "no faction"
 and a character's "no faction" are different concepts.
 
-``na`` and ``albescent`` are structural in every era (ADR-0087). The birth
+``na`` is structural in every era (ADR-0087; ADR-0097 relaxes albescent). The birth
 faction is a rule, not a sentinel: services read ``era.starting_faction_slug``,
 never the constant below.
 """
@@ -76,5 +76,5 @@ def real_faction_slugs(era) -> list[str]:
     return [
         slug
         for slug in era.factions
-        if slug not in (UNAFFILIATED_FACTION_SLUG, ALBESCENT_FACTION_SLUG)
+        if slug not in (UNAFFILIATED_FACTION_SLUG, era.secret_faction_slug)
     ]

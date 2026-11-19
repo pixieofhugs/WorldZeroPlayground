@@ -131,8 +131,8 @@ async def test_withdraw_collab_recalculates_every_member(
     await db_session.flush()
     db_session.add_all(
         [
-            PraxisMember(praxis_id=praxis.id, character_id=character.id, has_submitted=True),
-            PraxisMember(praxis_id=praxis.id, character_id=character2.id, has_submitted=True),
+            PraxisMember(praxis_id=praxis.id, character_id=character.id, has_approved=True),
+            PraxisMember(praxis_id=praxis.id, character_id=character2.id, has_approved=True),
         ]
     )
     await db_session.commit()
@@ -166,9 +166,11 @@ async def test_withdraw_settled_duel_side_forfeits(
     praxis_id = await _create_solo(client, active_task, auth_headers)
     assert (await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers)).status_code == 200
 
+    opponent_praxis = await _submitted_solo(db_session, active_task, character2)
     duel = Duel(
         task_id=active_task.id,
         challenger_praxis_id=praxis_id,
+        opponent_praxis_id=opponent_praxis.id,
         opponent_character_id=character2.id,
         status=DuelStatus.settled,
     )
@@ -199,7 +201,7 @@ async def _submitted_solo(
     )
     db_session.add(praxis)
     await db_session.flush()
-    db_session.add(PraxisMember(praxis_id=praxis.id, character_id=author.id, has_submitted=True))
+    db_session.add(PraxisMember(praxis_id=praxis.id, character_id=author.id, has_approved=True))
     await db_session.commit()
     await db_session.refresh(praxis)
     return praxis
@@ -230,7 +232,7 @@ async def test_active_incomplete_duel_side_is_author_only(
     db_session.add(opponent_praxis)
     await db_session.flush()
     db_session.add(
-        PraxisMember(praxis_id=opponent_praxis.id, character_id=character2.id, has_submitted=False)
+        PraxisMember(praxis_id=opponent_praxis.id, character_id=character2.id, has_approved=False)
     )
     duel = Duel(
         task_id=active_task.id,
@@ -335,7 +337,7 @@ async def test_forfeit_reveals_surviving_submitted_side(
     db_session.add(forfeiter_praxis)
     await db_session.flush()
     db_session.add(
-        PraxisMember(praxis_id=forfeiter_praxis.id, character_id=character.id, has_submitted=False)
+        PraxisMember(praxis_id=forfeiter_praxis.id, character_id=character.id, has_approved=False)
     )
     duel = Duel(
         task_id=active_task.id,
@@ -391,9 +393,11 @@ async def test_can_view_and_list_service_gate_duel_side(
     from services.praxis import can_view_praxis, list_praxes
 
     challenger_praxis = await _submitted_solo(db_session, active_task, character)
+    opponent_praxis = await _submitted_solo(db_session, active_task, character2)
     duel = Duel(
         task_id=active_task.id,
         challenger_praxis_id=challenger_praxis.id,
+        opponent_praxis_id=opponent_praxis.id,
         opponent_character_id=character2.id,
         status=DuelStatus.active,
     )

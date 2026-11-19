@@ -8,15 +8,6 @@ from schemas.comment import CommentOut
 from schemas.praxis import PraxisOut
 
 
-class AccountSummary(WireModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    email: str
-    status: str
-    created_at: datetime
-
-
 class CharacterBrief(WireModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -25,6 +16,24 @@ class CharacterBrief(WireModel):
     display_name: str
     faction_slug: str
     status: str
+
+
+class AccountSummary(WireModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    email: str
+    status: str
+    created_at: datetime
+    # Only the characters a search hit; empty when there is no search.
+    matched_characters: list[CharacterBrief] = []
+
+
+class AccountPage(WireModel):
+    items: list[AccountSummary]
+    total: int
+    limit: int
+    offset: int
 
 
 class AccountDetail(WireModel):
@@ -70,6 +79,12 @@ class FlaggedPraxisOut(PraxisOut):
     """PraxisOut plus its flag rows."""
 
     flags: list[FlagOut] = []
+    # Admin-only: the queue needs the account to suspend and link to.
+    author_account_id: int
+    author_username: str
+    author_status: str
+    author_account_status: str
+    author_flagged_count: int
 
 
 class FlaggedCommentOut(CommentOut):
@@ -86,6 +101,8 @@ class OverviewStats(WireModel):
     votes: int
     flagged_praxis: int = 0
     suspended_accounts: int = 0
+    # Not suspended or deleted, with at least one non-banned character.
+    active_accounts: int = 0
 
 
 class CharacterStatsPatch(WireModel):
@@ -153,6 +170,10 @@ class SuspendActionOut(WireModel):
     status: str
 
 
+class RemoveFlaggedOut(WireModel):
+    removed: int
+
+
 class BanActionOut(WireModel):
     """A ban is character-scoped, not account (ADR-0041)."""
 
@@ -188,6 +209,8 @@ class EraRollOut(WireModel):
     config_key: str
     name: str
     characters_reset: int
+    tasks_reactivated: int
+    tasks_created: int
 
 
 class AdminRow(WireModel):
@@ -203,3 +226,20 @@ class AdminRow(WireModel):
 
 class AdminGrantIn(WireModel):
     username: str
+
+
+class RingRecipient(WireModel):
+    """One account an account's votes went to (admin-only)."""
+
+    account_id: int
+    display_name: str
+    votes: int
+    average_stars: float
+    share: float
+    reciprocal: bool
+
+
+class VoteRingOut(WireModel):
+    total_votes: int
+    top3_share: float
+    recipients: list[RingRecipient]

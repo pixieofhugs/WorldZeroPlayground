@@ -446,7 +446,7 @@ export default function EverymenPraxisDetail({
     <>
       {sectionHead(t("detail.sections.writeUp"))}
       <MarkdownPreview
-        source={praxis.body_text ?? ''}
+        source={praxis.body_text}
         className="markdown-preview content-text"
         style={{ fontFamily: BODY, lineHeight: 1.8, color: INK }}
       />

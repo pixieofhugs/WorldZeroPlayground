@@ -73,12 +73,12 @@ export const aMember = (over: Partial<PraxisMemberOut> = {}): PraxisMemberOut =>
   character_id: AUTHOR.id,
   character_display_name: AUTHOR.name,
   character_avatar_url: '',
-  has_submitted: true,
+  has_approved: true,
   // Done is orthogonal to approval (ADR-0079).
   is_done: false,
   joined_at: '2026-01-01T00:00:00Z',
   nudged_at: null,
-  submitted_at: null,
+  approved_at: null,
   ...over,
 })
 
@@ -98,7 +98,7 @@ export const aPraxis = (over: Partial<PraxisOut> = {}): PraxisOut => ({
   title: 'The Long Way Round',
   body_text: 'Walked the whole ridge before dark.',
   moderation_status: 'visible',
-  admin_note: null,
+  admin_note: "",
   flagged_at: null,
   submitted_at: '2026-01-03T00:00:00Z',
   submit_proposed_at: null,
@@ -146,7 +146,7 @@ export const aPraxisCard = (over: Partial<PraxisCardOut> = {}): PraxisCardOut =>
   type: 'solo',
   status: 'submitted',
   title: 'Seedlings',
-  body_text: null,
+  body_text: "",
   moderation_status: 'visible',
   created_by_id: AUTHOR.id,
   created_by_display_name: AUTHOR.name,
@@ -210,7 +210,9 @@ export const aCurrentUser = (over: Partial<CurrentUser> = {}): CurrentUser => ({
   character: aCharacter(),
   is_admin: false,
   is_owner: false,
+  has_accepted_terms: true,
   can_create_additional_character: false,
+  character_creation_banned: false,
   can_start_as_albescent: false,
   albescent_revealed: false,
   albescent_glimpsed: false,
@@ -302,6 +304,7 @@ export const anEditPraxisState = (
 
   title: 'The Long Way Round',
   setTitle: noop,
+  needsProof: false,
   body: 'Walked the whole ridge before dark.',
   setBody: noop,
 

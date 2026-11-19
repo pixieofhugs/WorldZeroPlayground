@@ -36,13 +36,12 @@ class PraxisMemberOut(WireModel):
     character_display_name: str  # populated by build_praxis_out
     # Relative media path, or "" (no portrait: UI shows a monogram) (#2318).
     character_avatar_url: str = ""  # populated by build_praxis_out
-    # APPROVAL of the live proposal (ADR-0079), not "filed their part".
-    has_submitted: bool
+    has_approved: bool
     # "My part is finished" (ADR-0079): social, reversible, survives approval
     # resets. Set via `POST /praxes/{id}/done`.
     is_done: bool
-    # When `has_submitted` last flipped True; cleared with it, never stale (#571).
-    submitted_at: Optional[datetime] = None
+    # When `has_approved` last flipped True; cleared with it, never stale (#571).
+    approved_at: Optional[datetime] = None
     joined_at: datetime
     # When the VIEWER last nudged this member (#1083); NULL once `NUDGE_COOLDOWN`
     # lapses, so non-null means "can't nudge yet".
@@ -80,10 +79,10 @@ class PraxisOut(WireModel):
     task_faction_slug: Optional[str] = None  # populated by build_praxis_out; drives per-faction vote UI
     type: PraxisType
     status: PraxisStatus
-    title: Optional[str]
-    body_text: Optional[str]
+    title: str
+    body_text: str
     moderation_status: ModerationStatus
-    admin_note: Optional[str]
+    admin_note: str
     flagged_at: Optional[datetime]
     submitted_at: Optional[datetime] = None  # set on in_progress→submitted
     submit_proposed_at: Optional[datetime] = None  # collab pending-publish window opened-at (ADR-0012)
@@ -133,7 +132,7 @@ class PraxisCardOut(WireModel):
     task_level_required: int
     type: PraxisType
     status: PraxisStatus
-    title: Optional[str]
+    title: str
     moderation_status: ModerationStatus
     created_by_id: int
     created_by_display_name: str
@@ -158,7 +157,7 @@ class PraxisCardOut(WireModel):
     applied_metatasks: List[TaskOut] = []
     task_faction_slug: Optional[str] = None
     # For mobile praxis cards (#573).
-    body_text: Optional[str] = None
+    body_text: str = ""
     created_by_faction_slug: Optional[str] = None  # author's member faction; actor-scoped byline
     members: List[PraxisMemberOut] = []
     media_items: List[MediaItemOut] = []

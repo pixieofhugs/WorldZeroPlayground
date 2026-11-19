@@ -4,7 +4,8 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import HTTPException
-from sqlalchemy import case, func, or_, select, union
+from sqlalchemy import and_, case, exists, func, or_, select, union
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import Select, false as sa_false
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -15,7 +16,7 @@ from faction_slugs import (
     faction_filter_slugs,
 )
 from game_config import CURRENT_ERA, EraConfig
-from models.account import Account
+from models.account import Account, AccountStatus
 from models.character import Character, CharacterStatus
 from models.character_stats import CharacterStats
 from models.faction_defection_history import FactionDefectionHistory
@@ -23,9 +24,19 @@ from models.invitation_letter import InvitationLetter
 from models.praxis import Praxis, PraxisMember, PraxisStatus
 from schemas.character import BadgeOut, CharacterCreate, CharacterOut, CharacterUpdate
 from services.albescent_reveal import is_albescent_revealed
+from services.secret_faction import has_stamp, set_stamp
 from services.era import get_current_era_row, get_current_era_row_safe, get_or_create_stats
 from services.era_gates import meets_albescent_level
 from services.media import delete_stored_avatar
+
+# A life a moderator banned, as opposed to one its player left (``departed_at``).
+MOD_BANNED = and_(
+    Character.status == CharacterStatus.banned, Character.departed_at.is_(None)
+)
+
+def _mod_banned_exists(account_id: int):
+    return exists().where(Character.account_id == account_id, MOD_BANNED)
+
 
 # The rule is "not banned"; a set so a future life state needs no rewrite.
 _ROSTER_STATUSES: frozenset[CharacterStatus] = frozenset({CharacterStatus.active})
@@ -54,7 +65,7 @@ def build_character_out(
         status=character.status.value,
         created_at=character.created_at,
         score=stats.score if stats else 0,
-        all_time_score=stats.all_time_score if stats else 0,
+        all_time_score=character.all_time_score,
         level=stats.level if stats else 0,
         badges=badges or [],
         invitations=invitations or [],
@@ -90,26 +101,37 @@ _ALBESCENT_SENTINEL_SLUGS: frozenset[str] = frozenset(
 )
 
 
-async def account_peak_character_level(
+def _sentinel_slugs(era: EraConfig) -> frozenset[str]:
+    return frozenset({UNAFFILIATED_FACTION_SLUG, era.secret_faction_slug})
+
+
+async def account_peak_level_and_ban(
     account_id: int,
     era_id: int,
     session: AsyncSession,
-) -> int:
-    """Highest level among the account's active characters in ``era_id``, or 0."""
-    peak = await session.scalar(
-        select(func.max(CharacterStats.level))
-        .select_from(Character)
-        .join(
-            CharacterStats,
-            (CharacterStats.character_id == Character.id)
-            & (CharacterStats.era_id == era_id),
+) -> tuple[int, bool]:
+    """Highest level among the active characters in ``era_id`` (or 0), and
+    whether a moderator ban stands, in one round trip."""
+    row = (
+        await session.execute(
+            select(
+                select(func.max(CharacterStats.level))
+                .select_from(Character)
+                .join(
+                    CharacterStats,
+                    (CharacterStats.character_id == Character.id)
+                    & (CharacterStats.era_id == era_id),
+                )
+                .where(
+                    Character.account_id == account_id,
+                    Character.status == CharacterStatus.active,
+                )
+                .scalar_subquery(),
+                _mod_banned_exists(account_id),
+            )
         )
-        .where(
-            Character.account_id == account_id,
-            Character.status == CharacterStatus.active,
-        )
-    )
-    return peak or 0
+    ).one()
+    return row[0] or 0, bool(row[1])
 
 
 async def _character_covers_every_faction(
@@ -125,7 +147,7 @@ async def _character_covers_every_faction(
     Era-scoped, hence the result is stamped (:func:`stamp_albescent_unlock`).
     """
     required_faction_slugs = frozenset(
-        slug for slug in era.factions if slug not in _ALBESCENT_SENTINEL_SLUGS
+        slug for slug in era.factions if slug not in _sentinel_slugs(era)
     )
     if not required_faction_slugs:
         return True
@@ -182,13 +204,13 @@ async def stamp_albescent_unlock(
 
     ``Character.account`` is ``lazy="raise"``, so the account is fetched by id.
     """
+    slug = era.secret_faction_slug
     account = await session.get(Account, character.account_id)
-    if account is None or account.albescent_unlocked:
+    if account is None or slug is None or has_stamp(account, slug, "unlocked"):
         return False
     if not await character_earns_albescent(character, era_id, session, era):
         return False
-    account.albescent_unlocked = True
-    return True
+    return set_stamp(account, slug, "unlocked")
 
 
 async def stamp_albescent_glimpse(
@@ -203,13 +225,13 @@ async def stamp_albescent_glimpse(
     account-scoped so it does not blink with the character switcher. Returns
     True if this call flipped it.
     """
-    if level < era.albescent_glimpse_level:
+    slug = era.secret_faction_slug
+    if slug is None or level < era.secret_faction_glimpse_level:
         return False
     account = await session.get(Account, character.account_id)
-    if account is None or account.albescent_glimpsed:
+    if account is None:
         return False
-    account.albescent_glimpsed = True
-    return True
+    return set_stamp(account, slug, "glimpsed")
 
 
 @dataclasses.dataclass(frozen=True)
@@ -221,6 +243,8 @@ class AccountEligibility:
 
     can_create_additional_character: bool = False
     can_start_as_albescent: bool = False
+    # A mod-banned life blocks every new one, first included.
+    character_creation_banned: bool = False
 
 
 async def load_account_eligibility(
@@ -230,14 +254,33 @@ async def load_account_eligibility(
     era: EraConfig = CURRENT_ERA,
 ) -> AccountEligibility:
     """Second-life gate is a live level query; Albescent is the stamped column."""
-    peak_level = await account_peak_character_level(account_id, era_id, session)
+    peak_level, mod_banned = await account_peak_level_and_ban(
+        account_id, era_id, session
+    )
     account = await session.get(Account, account_id)
     return AccountEligibility(
         can_create_additional_character=(
-            peak_level >= era.second_character_level_required
+            peak_level >= era.second_character_level_required and not mod_banned
         ),
-        can_start_as_albescent=bool(account is not None and account.albescent_unlocked),
+        can_start_as_albescent=has_stamp(account, era.secret_faction_slug, "unlocked"),
+        character_creation_banned=mod_banned,
     )
+
+
+async def has_mod_banned_life(account_id: int, session: AsyncSession) -> bool:
+    return bool(
+        await session.scalar(
+            select(_mod_banned_exists(account_id))
+        )
+    )
+
+
+async def is_playable(character: Character, session: AsyncSession) -> bool:
+    """The life and its account are both active."""
+    if character.status != CharacterStatus.active:
+        return False
+    account = await session.get(Account, character.account_id)
+    return account is not None and account.status == AccountStatus.active
 
 
 async def can_create_additional_character(
@@ -299,9 +342,9 @@ async def get_account_invited_faction_slugs(
             ),
         )
     )
-    slugs = {row[0] for row in result.all()} - _ALBESCENT_SENTINEL_SLUGS
+    slugs = {row[0] for row in result.all()} - _sentinel_slugs(era)
     if await can_start_as_albescent(account_id, session, era):
-        slugs.add(ALBESCENT_FACTION_SLUG)
+        slugs.add(era.secret_faction_slug)
     return sorted(slugs)
 
 
@@ -334,7 +377,7 @@ async def _derive_unique_username(display_name: str, session: AsyncSession) -> s
     suffix = 2
     # ponytail: serial probe; UNIQUE constraint backstops concurrent creates.
     while await session.scalar(
-        select(Character.id).where(Character.username == candidate)
+        select(Character.id).where(func.lower(Character.username) == candidate)
     ) is not None:
         candidate = f"{base}{suffix}"
         suffix += 1
@@ -439,6 +482,14 @@ async def create_character(
     )
     existing_count = result.scalar_one()
 
+    if await has_mod_banned_life(account_id, session):
+        raise_coded(
+            403,
+            ErrorCode.character_creation_banned,
+            "A moderator banned one of your characters, so you can't create "
+            "another until that's lifted.",
+        )
+
     if existing_count > 0:
         if not await can_create_additional_character(account_id, session, era):
             raise_coded(
@@ -466,6 +517,12 @@ async def create_character(
         starting_faction_slug = requested_faction_slug
 
     explicit_username = (data.username or "").strip() or None
+    if explicit_username and await session.scalar(
+        select(Character.id).where(
+            func.lower(Character.username) == explicit_username.lower()
+        )
+    ):
+        raise_coded(409, ErrorCode.username_taken, "That username is already taken.")
     username = explicit_username or await _derive_unique_username(display_name, session)
 
     character = Character(
@@ -478,8 +535,14 @@ async def create_character(
         location=data.location or "",
         faction_slug=starting_faction_slug,
     )
-    session.add(character)
-    await session.flush()
+    try:
+        session.add(character)
+        await session.flush()
+    except IntegrityError as exc:
+        if "uq_character_username_lower" not in str(exc.orig):
+            raise
+        await session.rollback()
+        raise_coded(409, ErrorCode.username_taken, "That username is already taken.")
 
     stats = await get_or_create_stats(
         session,
@@ -527,12 +590,16 @@ async def soft_delete_character(
     Praxis media survives both. The unlink is last and non-transactional (the
     router commits), so a failed commit leaves at worst a dead ``avatar_url``.
     """
-    character = await get_character_by_id(character_id, session)
+    # Not get_character_by_id: an account's banned lives are deleted too.
+    character = await session.get(Character, character_id)
     if character is None:
         raise HTTPException(status_code=404, detail="Character not found.")
+    # Distinguishes self-deletion from a ban (#1577); never cleared. A life a
+    # moderator already banned stays unstamped, so MOD_BANNED (and its hidden
+    # votes) survives the player deleting their account.
+    if character.status != CharacterStatus.banned:
+        character.departed_at = datetime.now(timezone.utc)
     character.status = CharacterStatus.banned
-    # Distinguishes self-deletion from a ban (#1577); never cleared.
-    character.departed_at = datetime.now(timezone.utc)
     erased_avatar_url = character.avatar_url
     character.avatar_url = ""
 
@@ -557,7 +624,11 @@ def _character_stats_era_join(era_id: int | None) -> Select:
     return (
         select(Character, CharacterStats)
         .outerjoin(CharacterStats, join_condition)
-        .where(Character.status == CharacterStatus.active)
+        .join(Account, Account.id == Character.account_id)
+        .where(
+            Character.status == CharacterStatus.active,
+            Account.status == AccountStatus.active,
+        )
     )
 
 

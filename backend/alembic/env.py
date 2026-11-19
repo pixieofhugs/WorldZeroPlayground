@@ -1,6 +1,5 @@
 import asyncio
 import os
-import re
 import sys
 from logging.config import fileConfig
 from pathlib import Path
@@ -16,12 +15,6 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from models.base import Base
 import models  # noqa: F401 - registers all mapped classes with Base.metadata
 
-# Migrations own every CREATE TYPE; metadata must never emit one.
-for _table in Base.metadata.tables.values():
-    for _col in _table.columns:
-        if hasattr(_col.type, "create_type"):
-            _col.type.create_type = False
-
 config = context.config
 
 if config.config_file_name is not None:
@@ -29,9 +22,7 @@ if config.config_file_name is not None:
 
 target_metadata = Base.metadata
 
-# Normalise postgres:// and postgresql:// to the asyncpg scheme.
 _db_url = os.environ.get("DATABASE_URL", "")
-_db_url = re.sub(r"^postgres(?:ql)?://", "postgresql+asyncpg://", _db_url)
 if _db_url:
     config.set_main_option("sqlalchemy.url", _db_url)
 

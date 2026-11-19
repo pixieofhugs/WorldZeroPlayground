@@ -127,3 +127,21 @@ export const stickPraxis = makePraxis({
   points_from_votes: 12,
   score: 17,
 })
+
+/** Another player's proof, never the viewer's own; Beat 5 adds the judges' and the player's votes to `score`. */
+export const dragonPraxis = makePraxis({
+  id: 502,
+  task_id: 101,
+  task_title: dragonTask.title,
+  task_point_value: dragonTask.point_value,
+  task_level_required: 2,
+  task_faction_slug: 'wow',
+  title: 'Laundry Dragon, slain',
+  body_text: 'It had been growing in the corner for weeks. Two sock horns, one cardboard sword. The floor is free again.',
+  created_by_id: 9,
+  created_by_display_name: 'Wizard Wobblewand',
+  created_by_avatar_url: drawings.nightGardener,
+  media_items: [{ id: 9002, praxis_id: 502, type: 'image', file_path: drawings.laundryDragon, display_order: 0, created_at: NOW }],
+  score: dragonTask.point_value,
+  viewer_can_vote: true,
+})

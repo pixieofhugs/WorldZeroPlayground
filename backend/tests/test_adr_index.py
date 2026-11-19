@@ -66,3 +66,18 @@ def test_readme_is_what_the_generator_would_write(adrs: list[adr_index.Adr]) -> 
         "docs/adr/README.md is stale - it is generated, never hand-written. "
         "Run `python scripts/adr_index.py` and commit the result."
     )
+
+
+def test_every_amends_or_supersedes_line_is_named_back(
+    adrs: list[adr_index.Adr],
+) -> None:
+    by_number = {a.number: a for a in adrs}
+    missing = [
+        f"{a.number} {'supersedes' if verb == 'Superseded' else 'amends'} {target}, "
+        f"but {target}'s status doesn't name {a.number} "
+        f"(add `{verb} by ADR-{a.number}`)"
+        for a in adrs
+        for target, verb in a.changes
+        if target in by_number and a.number not in by_number[target].refs
+    ]
+    assert not missing, "\n".join(missing)

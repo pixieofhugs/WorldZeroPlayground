@@ -254,7 +254,7 @@ describe("the plate's label voice and monogram are declared once (#1664)", () =>
 
   it('is the kit that holds both values', () => {
     // Fails here if the kit reformats, rather than hollowing the sweep below.
-    const kit = squash(readFileSync(KIT, 'utf8'))
+    const kit = squash(sources().find(({ path }) => path === KIT)!.source)
     expect(kit, 'SMALL_CAPS').toContain(LABEL_VOICE)
     expect(kit, 'initialsOf').toContain(INITIALS)
   })

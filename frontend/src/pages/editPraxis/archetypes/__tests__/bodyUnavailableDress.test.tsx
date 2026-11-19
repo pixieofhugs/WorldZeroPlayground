@@ -61,6 +61,10 @@ describe("the write-up box while the room has not seeded", () => {
     expect(tag).toMatch(/cursor:\s*not-allowed/);
   });
 
+  it("never dims the host with opacity: that halves placeholder contrast on every skin (#2574)", () => {
+    expect(host(html(fakeRoom(false)))).not.toContain("opacity");
+  });
+
   it("says why on hover and points the editor's description at the notice", () => {
     const markup = html(fakeRoom(false));
     const tag = host(markup);

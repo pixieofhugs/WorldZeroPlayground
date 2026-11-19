@@ -4,7 +4,7 @@ from typing import Any, Optional
 from authlib.jose import JoseError, JsonWebToken
 from fastapi import Cookie, Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import settings
@@ -86,6 +86,10 @@ async def get_current_account(
 
     result = await session.execute(select(Account).where(Account.id == account_id))
     account = result.scalar_one_or_none()
+    if account is not None and account.status is AccountStatus.suspended:
+        raise_coded(
+            403, ErrorCode.account_suspended, "That account is suspended."
+        )
     if account is None or account.status != AccountStatus.active:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Your account could not be found. Please log in again.")
 
@@ -173,7 +177,9 @@ async def create_or_get_account(
             deleted_on=tombstone.created_at.date(),
         )
 
-    result = await session.execute(select(Account).where(Account.email == email))
+    result = await session.execute(
+        select(Account).where(func.lower(Account.email) == email.lower())
+    )
     account = result.scalar_one_or_none()
 
     if account is None:

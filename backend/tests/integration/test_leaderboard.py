@@ -148,7 +148,6 @@ async def _seed_tied_characters(db_session, era: Era, count: int) -> list[int]:
                 character_id=character.id,
                 era_id=era.id,
                 score=0,
-                all_time_score=0,
                 level=0,
                 votes_spent_this_era=0,
             )

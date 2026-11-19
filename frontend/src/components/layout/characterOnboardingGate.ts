@@ -27,14 +27,38 @@
 export const CHARACTER_REDIRECT_EXEMPT_PATHS: ReadonlySet<string> = new Set([
   '/characters/create',
   '/settings',
+  '/start',
+  '/start/again',
 ])
 
-/** Whether `Layout`'s onboarding redirect should fire for this render. */
+const CONTRACT_EXEMPT_PATHS: ReadonlySet<string> = new Set(['/start', '/start/again', '/settings'])
+
+/** Where `Layout` sends this render (#3468): no acceptance → the contract, even from creation. */
+export function characterRedirectTarget(
+  loading: boolean,
+  hasUser: boolean,
+  hasCharacter: boolean,
+  hasAcceptedTerms: boolean,
+  pathname: string,
+  handoffPending = false,
+  creationBanned = false,
+): '/start' | '/characters/create' | null {
+  // `/` renders the welcome flow for a character-less account, which owns contract and creation.
+  if (loading || !hasUser || hasCharacter || pathname === '/') return null
+  if (!hasAcceptedTerms) return CONTRACT_EXEMPT_PATHS.has(pathname) ? null : '/start'
+  // The flow is about to mount at /start and owns creation; a competing navigate would strand its mark.
+  if (handoffPending) return null
+  // Nothing to create into: the create page and the flow's character step show the notice.
+  if (creationBanned) return null
+  return CHARACTER_REDIRECT_EXEMPT_PATHS.has(pathname) ? null : '/characters/create'
+}
+
+/** The redirect with acceptance assumed. */
 export function needsCharacterRedirect(
   loading: boolean,
   hasUser: boolean,
   hasCharacter: boolean,
   pathname: string,
 ): boolean {
-  return !loading && hasUser && !hasCharacter && !CHARACTER_REDIRECT_EXEMPT_PATHS.has(pathname)
+  return characterRedirectTarget(loading, hasUser, hasCharacter, true, pathname) !== null
 }

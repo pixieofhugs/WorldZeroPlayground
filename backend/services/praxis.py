@@ -45,6 +45,7 @@ from schemas.praxis import (
 )
 from services import collab_consensus
 from services.albescent_reveal import is_albescent_revealed
+from services.character import is_playable
 from services.character_stats import (
     recalculate_character_stats,
     recalculate_members_stats,
@@ -349,9 +350,7 @@ async def list_praxes(
         query = query.where(Praxis.status == status)
 
     if status == PraxisStatus.submitted:
-        # Invariant (``_apply_seal``): submitted ⟹ submitted_at set; corrupt rows
-        # are hidden. Only here: drafts have NULL by definition. Also keeps the
-        # sort free of NULLS-FIRST traps.
+        # Drafts have NULL submitted_at; this keeps the sort free of NULLS-FIRST traps.
         query = query.where(Praxis.submitted_at.isnot(None))
 
     if era_scope == PraxisEraScope.this_era:
@@ -556,7 +555,7 @@ async def create_praxis(
         task_id=task_id,
         type=praxis_type,
         status=PraxisStatus.in_progress,
-        title=title,
+        title=title or "",
         body_text=body_text or "",
         moderation_status=ModerationStatus.visible,
         created_by_id=character_id,
@@ -567,7 +566,7 @@ async def create_praxis(
     member = PraxisMember(
         praxis_id=praxis.id,
         character_id=character_id,
-        has_submitted=False,
+        has_approved=False,
     )
     session.add(member)
     await session.flush()
@@ -627,7 +626,7 @@ async def unsubmit_praxis(
     praxis.status = PraxisStatus.in_progress
     praxis.submit_proposed_at = None
     for member in praxis.members:
-        member.has_submitted = False
+        member.has_approved = False
     await session.flush()
     # The room reseeds from body_text on first connect (ADR-0073 rule 7).
 
@@ -807,6 +806,26 @@ async def delete_media_item(
     to the praxis. Paths go through ``resolve_stored_media_path`` (never a bare
     join); ``None`` means nothing on disk, and the row removal still succeeds.
     """
+    if praxis.status == PraxisStatus.submitted:
+        remaining = await session.scalar(
+            select(func.count())
+            .select_from(MediaItem)
+            .where(MediaItem.praxis_id == praxis.id)
+        )
+        if remaining <= 1:
+            raise_coded(
+                422,
+                ErrorCode.praxis_needs_proof,
+                "A published praxis keeps at least one photo, video or audio file.",
+                {DETAIL_CONTEXT_PARAM: "delete"},
+            )
+
+    await session.delete(media_item)
+    await session.flush()
+    # Cancels a pending publish (ADR-0012).
+    await collab_consensus.on_member_edit(praxis, session, era)
+
+    # Last, so a refused delete never strands a row on a missing file.
     abs_path = resolve_stored_media_path(media_item.file_path)
     if abs_path is not None:
         try:
@@ -818,11 +837,6 @@ async def delete_media_item(
             os.rmdir(os.path.dirname(abs_path))
         except OSError:
             pass
-
-    await session.delete(media_item)
-    await session.flush()
-    # Cancels a pending publish (ADR-0012).
-    await collab_consensus.on_member_edit(praxis, session, era)
 
 
 async def can_view_praxis(
@@ -884,7 +898,7 @@ async def account_already_flagged(
     )
     result = await session.execute(
         select(Flag.id)
-        .join(Character, Character.id == Flag.flagged_by)
+        .join(Character, Character.id == Flag.flagged_by_id)
         .where(target, Character.account_id == account_id)
         .limit(1)
     )
@@ -978,7 +992,7 @@ async def flag_praxis(
 
     flag = Flag(
         praxis_id=praxis.id,
-        flagged_by=flagged_by.id,
+        flagged_by_id=flagged_by.id,
         reason=reason.value,
         reason_detail=reason_detail,
     )
@@ -1042,7 +1056,7 @@ async def invite_to_praxis(
         )
 
     invitee = await session.get(Character, invitee_id)
-    if invitee is None:
+    if invitee is None or not await is_playable(invitee, session):
         raise HTTPException(status_code=404, detail="Invitee not found.")
 
     if await is_active_member_of_task(invitee, praxis.task, session, era):
@@ -1139,7 +1153,7 @@ async def respond_to_invite(
     member = PraxisMember(
         praxis_id=praxis.id,
         character_id=character_id,
-        has_submitted=False,
+        has_approved=False,
     )
     session.add(member)
 
@@ -1230,7 +1244,7 @@ async def kick_member(
     close_member_sockets(praxis_id, member_id)
 
     # A kick resets the changed group back to drafting (ADR-0013).
-    await collab_consensus.on_member_kicked(praxis, session)
+    await collab_consensus.on_member_kicked(praxis, session, era)
 
 
 async def leave_praxis(
@@ -1297,7 +1311,7 @@ async def submit_praxis(
 
     Collab: first call opens the ``collab_auto_submit_days`` window; later calls
     approve. All approved, or the window lapses → Live. Solo/duel publish at once.
-    See ``collab_consensus.on_submit``.
+    See ``collab_consensus.on_submit`` for the proof and daily-cap guards.
     """
     # Plain read on purpose (#2874): settling first would seal twice (double
     # taunts, habit re-stamp, new submitted_at). The settling read below seals.
@@ -1339,7 +1353,7 @@ async def moderate_praxis(
     if mod_enum == ModerationStatus.failed:
         praxis.admin_note = admin_note or ""
     elif mod_enum == ModerationStatus.visible:
-        praxis.admin_note = None
+        praxis.admin_note = ""
 
     await session.flush()
     await _apply_media_publication(praxis, session)

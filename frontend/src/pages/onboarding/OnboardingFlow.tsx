@@ -1,18 +1,30 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthContext'
+import { acceptTerms } from '../../api/terms'
+import type { TaskOut } from '../../api/tasks'
+import { resolveHandoffTask } from '../../utils/onboardingHandoff'
+import { clearTermsAcceptance, holdTermsAcceptance, termsAcceptanceHeld } from '../../utils/onboardingResume'
+import Arrival from './Arrival'
 import AuthCard from './AuthCard'
+import CharacterStep from './CharacterStep'
+import Declined from './Declined'
+import SignInView from './SignInView'
 import TermsCard from './TermsCard'
 import Wisp from './Wisp'
 import { BEATS } from './beats'
 import { HoldNextContext } from './beats/holdNext'
-import { back, initialFlow, isBeat, next, skip, toSignIn, type Flow, type Step } from './flowSteps'
+import { back, decline, initialFlow, isBeat, next, skip, toArrival, toCharacter, toSignIn, type Flow, type Step } from './flowSteps'
 import './flow.css'
 
 const TYPE_MS = 28
 const LEAVE_MS = 460
 const TITLE_DELAY_MS = 2800
 const TITLE_CHAR_MS = 84
+
+// The one beat whose stage holds a live control (Next waits on it), so it stays out of aria-hidden.
+const VOTE_BEAT = 5
 
 const CONFIDENCE: Record<string, number> = { title: 0.08, 1: 0.18, 2: 0.3, 3: 0.42, 4: 0.5, 5: 0.6, 6: 0.72, 7: 0.82 }
 
@@ -41,7 +53,7 @@ function Title({ cameBack, onStart }: { cameBack: boolean; onStart: () => void }
   const shown = useTitleTyping(welcome, cameBack || reducedMotion())
   const delay = (s: number): CSSProperties => ({ animationDelay: `${s}s` })
   return (
-    <main className={`ob-title ${cameBack ? 'ob-rew ob-quick' : ''}`}>
+    <section className={`ob-title ${cameBack ? 'ob-rew ob-quick' : ''}`}>
       <div aria-hidden="true" className="ob-rail">
         <div className="boing ob-level">
           <span className="ob-cap">{t('flow.level')}</span>
@@ -78,12 +90,12 @@ function Title({ cameBack, onStart }: { cameBack: boolean; onStart: () => void }
       <button type="button" className="boing ob-start" style={delay(4.3)} onClick={onStart} data-testid="onboarding-start">
         {t('flow.start')}
       </button>
-    </main>
+    </section>
   )
 }
 
 export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boolean; onAccepted: () => void }) {
-  const { user, loading } = useAuth()
+  const { user, loading, refetch } = useAuth()
   const { t } = useTranslation('onboarding')
   const { t: tc } = useTranslation('common')
   const [flow, setFlow] = useState<Flow>(() => initialFlow(resumed))
@@ -91,8 +103,38 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
   const [leaving, setLeaving] = useState(false)
   const [cameFrom, setCameFrom] = useState<Step | null>(null)
   const [held, setHeld] = useState<string | null>(null)
+  const [arrival, setArrival] = useState<{ name: string; task: TaskOut } | null>(null)
+  const navigate = useNavigate()
+  // After an OAuth round trip a held click is written once, before creation; a failure shows the contract again.
+  const [recording, setRecording] = useState(() => resumed && termsAcceptanceHeld())
+  const recordedOnce = useRef(false)
+  // Back from a later step re-mounts the contract; one mount writes one row.
+  const wrote = useRef(false)
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
   useEffect(() => () => clearTimeout(timer.current), [])
+
+  // A player with a character goes where the hand-off sends them; one without creates it here.
+  const hasCharacter = !!user?.character || arrival !== null
+  const handOff = () => (hasCharacter ? onAccepted() : move((f) => toCharacter(f, hasCharacter)))
+
+  useEffect(() => {
+    if (!recording || loading || recordedOnce.current) return
+    if (!user) return setRecording(false)
+    recordedOnce.current = true
+    acceptTerms().then(
+      async () => {
+        wrote.current = true
+        clearTermsAcceptance()
+        // Layout gates on `has_accepted_terms`; hand off only once it can see the row.
+        await refetch()
+        handOff()
+      },
+      () => {
+        clearTermsAcceptance()
+        setRecording(false)
+      },
+    )
+  }, [recording, loading, user, handOff, refetch])
 
   const { step } = flow
   const n = isBeat(step) ? step : null
@@ -107,6 +149,19 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
     const id = setTimeout(() => setReveal((r) => r + 1), TYPE_MS)
     return () => clearTimeout(id)
   }, [beat, leaving, done, reveal, line.length])
+
+  // Focus carries the whole line to a screen reader; typing is only for the eyes.
+  const lineBox = useRef<HTMLButtonElement>(null)
+  const rootRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (beat) return lineBox.current?.focus({ preventScroll: true })
+    const root = rootRef.current
+    if (step === 'title') return cameFrom !== null ? root?.querySelector<HTMLElement>('[data-testid=onboarding-start]')?.focus({ preventScroll: true }) : undefined
+    const el = root?.querySelector<HTMLElement>('h1, h2') ?? root?.querySelector<HTMLElement>('section')
+    if (!el) return
+    if (!el.hasAttribute('tabindex')) el.tabIndex = -1
+    el.focus({ preventScroll: true })
+  }, [step, beat, loading, recording, cameFrom])
 
   // Leaving un-types the line while the scene is yanked away.
   useEffect(() => {
@@ -127,7 +182,7 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
     if (leaving || !flow.history.length) return
     const land = () => {
       window.scrollTo(0, 0)
-      setFlow(back)
+      setFlow((f) => back(f, hasCharacter))
       setReveal(Infinity)
       setCameFrom(step)
       setLeaving(false)
@@ -143,6 +198,10 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
     else if (held === null) move(next)
   }
 
+  const goNext = () => {
+    if (held === null) move(next)
+  }
+
   const setHold = useCallback((label: string | null) => setHeld(label), [])
 
   // Back plays on the whole screen except beat to beat, where only the stage swaps.
@@ -154,10 +213,10 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
   const onBack = flow.history.length ? goBack : undefined
 
   const Beat = n === null ? null : BEATS[n - 1]
-  const label = !done ? t('flow.finishLine') : n === 7 ? t('flow.toContract') : t('flow.next')
+  const label = n === 7 ? t('flow.toContract') : t('flow.next')
 
   return (
-    <div className="onboarding-arc ob-root" data-theme="dark" style={{ ['--conf' as string]: CONFIDENCE[String(step)] ?? 1 }}>
+    <div ref={rootRef} className="onboarding-arc ob-root" data-theme="dark" style={{ ['--conf' as string]: CONFIDENCE[String(step)] ?? 1 }}>
       <span aria-hidden="true" className="ob-aurora" style={{ animationDelay: step === 'title' && !cameBack ? '3.4s' : '0s' }} />
       <header className="ob-header">
         <span>
@@ -187,9 +246,9 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
       {step === 'title' && <Title cameBack={cameBack} onStart={() => move(next)} />}
 
       {Beat && n !== null && (
-        <main className={`ob-beat ${screenCls}`}>
+        <section className={`ob-beat ${screenCls}`}>
           <HoldNextContext.Provider value={setHold}>
-            <section aria-hidden="true" className={`ob-stage ${stageCls}`} key={step}>
+            <section aria-hidden={n === VOTE_BEAT ? undefined : true} inert={n !== VOTE_BEAT} className={`ob-stage ${stageCls}`} key={step}>
               <Beat confidence={CONFIDENCE[n]} />
             </section>
           </HoldNextContext.Provider>
@@ -203,15 +262,12 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
                 ))}
               </span>
             </span>
-            <button type="button" className="ob-adv" onClick={advance} aria-label={label}>
+            <button type="button" className="ob-adv" key={step} ref={lineBox} tabIndex={-1} onClick={(e) => (e.detail === 0 ? goNext() : advance())} aria-label={line}>
               <span aria-hidden="true" className="ob-lora ob-line-text">
                 {line.slice(0, reveal)}
                 <span className="ob-caret" />
               </span>
             </button>
-            <span className="ob-sr" aria-live="polite">
-              {line}
-            </span>
             <span className="ob-box-nav">
               {onBack ? (
                 <button type="button" className="ob-ghost ob-cap ob-bk ob-prev" onClick={onBack}>
@@ -220,28 +276,75 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
               ) : (
                 <span />
               )}
-              {done && held !== null ? (
+              {held !== null ? (
                 <span className="ob-cap ob-hold">{held}</span>
               ) : (
-                <button type="button" className="ob-ghost ob-cap ob-next ob-fwd" onClick={advance}>
+                <button type="button" className="ob-ghost ob-cap ob-next ob-fwd" onClick={goNext}>
                   {label}
                 </button>
               )}
             </span>
           </div>
-        </main>
+        </section>
       )}
 
       {step === 'signin' && <div className={screenCls}><AuthCard onBack={onBack} /></div>}
 
+      {step === 'character' && (
+        <div className={screenCls}>
+          <CharacterStep
+            onBack={onBack}
+            onCreated={async (c) => {
+              const task = await resolveHandoffTask()
+              if (!task) return navigate('/tasks')
+              setArrival({ name: c.display_name, task })
+              move(toArrival)
+            }}
+          />
+        </div>
+      )}
+
+      {step === 'arrival' && arrival && (
+        <div className={screenCls}>
+          <Arrival name={arrival.name} task={arrival.task} onBack={onBack} />
+        </div>
+      )}
+
+      {step === 'returning' && (
+        <div className={screenCls}>
+          <SignInView onRestart={() => move(() => initialFlow(false))} />
+        </div>
+      )}
+
+      {step === 'declined' && (
+        <div className={screenCls}>
+          <Declined onReconsider={onBack} />
+        </div>
+      )}
+
       {step === 'contract' && (
         <div className={screenCls}>
-          {loading ? (
+          {loading || recording ? (
             <div className="page font-body text-muted">{tc('loading')}</div>
-          ) : !user ? (
-            <AuthCard onBack={onBack} />
           ) : (
-            <TermsCard onAccepted={onAccepted} onBack={onBack} />
+            <TermsCard
+              // A session writes the row now; a guest holds the click through sign-in.
+              record={
+                user
+                  ? async () => {
+                      if (wrote.current) return
+                      await acceptTerms()
+                      wrote.current = true
+                    }
+                  : async () => void holdTermsAcceptance()
+              }
+              onAccepted={() => (user ? void refetch().then(handOff) : move(next))}
+              onDecline={() => {
+                clearTermsAcceptance()
+                move(decline)
+              }}
+              onBack={onBack}
+            />
           )}
         </div>
       )}

@@ -244,6 +244,7 @@ export function editPraxisState(slug: string): EditPraxisState {
     setError: noop,
     title: 'Charcoal study, north portico',
     setTitle: noop,
+    needsProof: false,
     body: 'Two hours at the north portico with a stick of vine charcoal. I let the cornice go soft and pressed hard only where the light broke.',
     setBody: noop,
     media: [],
@@ -513,7 +514,7 @@ function duelSide(overrides: Partial<DuelSideOut> = {}): DuelSideOut {
 
 function duelPraxis(taskSlug: string | null, overrides: Partial<PraxisOut> = {}): PraxisOut {
   return {
-    admin_note: null,
+    admin_note: "",
     applied_metatasks: [],
     body_text:
       'I went up before the light six days running. The fourth morning the hold under the overhang was wet, so I sat on the ledge for an hour instead.',

@@ -412,6 +412,7 @@ export default function CovenCreateCharacter({ state }: { state: CreateCharacter
                 <button
                   type="button"
                   onClick={() => navigate('/')}
+                  className="touch-target"
                   style={composerLabelStyle({
                     fontFamily: CHROME,
                     fontWeight: 700,
@@ -451,7 +452,7 @@ export default function CovenCreateCharacter({ state }: { state: CreateCharacter
                 }}
               >
                 <Spark size={CAST_SPARK} color={CTA_INK} />
-                {submitting ? t('createCharacter.submitBusy') : t('createCharacter.submitIdle')}
+                {submitting ? t('createCharacter.submitBusy') : (<>{t('createCharacter.submitIdle')}<span aria-hidden="true"> {t('createCharacter.submitGlyph')}</span></>)}
               </button>
             }
           />

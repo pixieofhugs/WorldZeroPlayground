@@ -18,7 +18,7 @@ class Era(Base):
     started_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
-    started_by: Mapped[int] = mapped_column(
+    started_by_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("account.id"), nullable=False
     )
     notes: Mapped[str] = mapped_column(Text, nullable=False, server_default="")

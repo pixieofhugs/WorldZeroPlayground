@@ -5,8 +5,8 @@ from typing import TYPE_CHECKING, List, Optional
 from sqlalchemy import (
     BigInteger,
     Boolean,
+    CheckConstraint,
     DateTime,
-    Enum,
     ForeignKey,
     Identity,
     Index,
@@ -19,7 +19,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from models.base import Base
+from models.base import Base, string_enum
 from models.mixins import CreatedAtMixin, TimestampMixin
 
 if TYPE_CHECKING:
@@ -74,6 +74,11 @@ class Praxis(TimestampMixin, Base):
     __tablename__ = "praxis"
 
     __table_args__ = (
+        CheckConstraint(
+            "status <> 'submitted' "
+            "OR (submitted_at IS NOT NULL AND era_id IS NOT NULL)",
+            name="submitted_has_stamps",
+        ),
         Index("ix_praxis_created_by_id", "created_by_id"),
         Index("ix_praxis_task_id", "task_id"),
     )
@@ -83,23 +88,29 @@ class Praxis(TimestampMixin, Base):
         BigInteger, ForeignKey("task.id"), nullable=False
     )
     type: Mapped[PraxisType] = mapped_column(
-        Enum(PraxisType, create_type=False), nullable=False
+        string_enum(PraxisType), nullable=False
     )
     status: Mapped[PraxisStatus] = mapped_column(
-        Enum(PraxisStatus, create_type=False),
+        string_enum(PraxisStatus),
         nullable=False,
         default=PraxisStatus.in_progress,
         server_default="in_progress",
     )
-    title: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    body_text: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    title: Mapped[str] = mapped_column(
+        Text, nullable=False, default="", server_default=""
+    )
+    body_text: Mapped[str] = mapped_column(
+        Text, nullable=False, default="", server_default=""
+    )
     moderation_status: Mapped[ModerationStatus] = mapped_column(
-        Enum(ModerationStatus, create_type=False),
+        string_enum(ModerationStatus),
         nullable=False,
         default=ModerationStatus.visible,
         server_default="visible",
     )
-    admin_note: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    admin_note: Mapped[str] = mapped_column(
+        Text, nullable=False, default="", server_default=""
+    )
     flagged_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
@@ -180,6 +191,7 @@ class PraxisMember(Base):
     __tablename__ = "praxis_member"
     __table_args__ = (
         UniqueConstraint("praxis_id", "character_id", name="uq_praxis_member"),
+        Index("ix_praxis_member_character_id", "character_id"),
     )
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
@@ -190,9 +202,8 @@ class PraxisMember(Base):
     character_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("character.id"), nullable=False
     )
-    # Means APPROVAL of the live proposal (ADR-0079). All approved → publish;
-    # any edit during a proposal clears all.
-    has_submitted: Mapped[bool] = mapped_column(
+    # All approved → publish; any edit during a proposal clears all (ADR-0079).
+    has_approved: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, server_default="false"
     )
     # "My part is finished" (ADR-0079): social badge, gates nothing. Separate so
@@ -200,8 +211,8 @@ class PraxisMember(Base):
     is_done: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, server_default="false"
     )
-    # When has_submitted last flipped True (#571); feed sorts by it.
-    submitted_at: Mapped[Optional[datetime]] = mapped_column(
+    # When has_approved last flipped True; feed sorts by it.
+    approved_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
     joined_at: Mapped[datetime] = mapped_column(
@@ -234,7 +245,7 @@ class MediaItem(CreatedAtMixin, Base):
         BigInteger, ForeignKey("praxis.id", ondelete="CASCADE"), nullable=False
     )
     type: Mapped[MediaType] = mapped_column(
-        Enum(MediaType, create_type=False), nullable=False
+        string_enum(MediaType), nullable=False
     )
     file_path: Mapped[str] = mapped_column(String, nullable=False)
     display_order: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
@@ -255,6 +266,7 @@ class PraxisInvite(CreatedAtMixin, Base):
             unique=True,
             postgresql_where=text("status = 'pending'"),
         ),
+        Index("ix_praxis_invite_invitee_id", "invitee_id"),
     )
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
@@ -269,7 +281,7 @@ class PraxisInvite(CreatedAtMixin, Base):
         BigInteger, ForeignKey("character.id"), nullable=False
     )
     status: Mapped[PraxisInviteStatus] = mapped_column(
-        Enum(PraxisInviteStatus, create_type=False),
+        string_enum(PraxisInviteStatus),
         nullable=False,
         server_default="pending",
     )

@@ -15,7 +15,7 @@
  * groups keep headings since they head buttons. `ep-drift` motion is a class so
  * the reduced-motion guard applies (#1003).
  */
-import { useRef } from 'react'
+import { useRef, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { factionCssVar, factionName } from '../../../utils/factions'
@@ -62,7 +62,8 @@ import {
  * ground is the washed sheet, not the page, so the app neutrals don't apply;
  * rows in `createCharacterContrast.test.ts` and `defaultComposerDressEdges.test.tsx`. */
 
-export default function DefaultCreateCharacter({ state }: { state: CreateCharacterState }) {
+/** `leadAction` sits immediately left of Cancel: `/start` puts its Back there. */
+export default function DefaultCreateCharacter({ state, leadAction }: { state: CreateCharacterState; leadAction?: ReactNode }) {
   const { t } = useTranslation(['forms', 'common'])
   const navigate = useNavigate()
   const sizes = useComposerSizes()
@@ -276,9 +277,11 @@ export default function DefaultCreateCharacter({ state }: { state: CreateCharact
           <ComposerFooter
             start={
               <>
+                {leadAction}
                 <button
                   type="button"
                   onClick={() => navigate('/')}
+                  className="touch-target"
                   style={composerLabelStyle({
                     background: 'none',
                     border: 'none',
@@ -300,10 +303,10 @@ export default function DefaultCreateCharacter({ state }: { state: CreateCharact
                 type="submit"
                 disabled={!canSubmit}
                 /* `.control-off`, not an opacity fade (#2486). */
-                className="control-off"
+                className="control-off touch-target"
                 style={{ ...primaryStyle, cursor: submitting ? 'wait' : 'pointer' }}
               >
-                {submitting ? t('createCharacter.submitBusy') : t('createCharacter.submitIdle')}
+                {submitting ? t('createCharacter.submitBusy') : (<>{t('createCharacter.submitIdle')}<span aria-hidden="true"> {t('createCharacter.submitGlyph')}</span></>)}
               </button>
             }
           />

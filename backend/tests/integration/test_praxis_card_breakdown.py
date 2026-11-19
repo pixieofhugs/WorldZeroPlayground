@@ -139,7 +139,6 @@ async def _make_character(
             character_id=character.id,
             era_id=era.id,
             score=0,
-            all_time_score=0,
             level=level,
             votes_spent_this_era=0,
         )
@@ -230,7 +229,7 @@ async def _make_metatask(
         level_required=level_required,
         status=TaskStatus.active,
         task_type=TaskType.metatask,
-        created_by=creator.id,
+        created_by_id=creator.id,
         primary_faction_slug=issuing_faction_slug,
         metatask_faction_slug=issuing_faction_slug,
     )

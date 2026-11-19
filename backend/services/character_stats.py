@@ -7,7 +7,7 @@ from typing import Any
 from fastapi import HTTPException
 from sqlalchemy import ColumnElement, and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import InstrumentedAttribute
+from sqlalchemy.orm import InstrumentedAttribute, selectinload
 
 from faction_slugs import CROSS_FACTION_SLUG, UNAFFILIATED_FACTION_SLUG
 from game_config import CURRENT_ERA, EraConfig
@@ -70,24 +70,6 @@ def _era_window_condition(
         timestamp_column >= era_row.started_at,
         timestamp_column < next_era_row.started_at,
     )
-
-
-async def _credit_all_time_score(
-    character_id: int, from_era_id: int, delta: int, session: AsyncSession
-) -> None:
-    """Move ``all_time_score`` by ``delta`` on ``from_era_id``'s row and every later one.
-
-    Lifetime cumulative across eras (#1345). A delta, not ``SUM(score)``, so a
-    ``reset_all_time_score`` baseline written by ``apply_era_reset`` survives.
-    """
-    result = await session.execute(
-        select(CharacterStats).where(
-            CharacterStats.character_id == character_id,
-            CharacterStats.era_id >= from_era_id,
-        )
-    )
-    for stats in result.scalars():
-        stats.all_time_score += delta
 
 
 async def _deliver_earned_invitations(
@@ -231,7 +213,7 @@ async def recalculate_character_stats(
     stats.level = compute_level(total_score, era)
     record_level_reached(author, stats.level)
     if score_delta:
-        await _credit_all_time_score(character_id, era_row.id, score_delta, session)
+        author.all_time_score += score_delta
 
     if next_era_row is not None:
         # Closed era: no invitations (ADR-0022) or taunts (ADR-0068).
@@ -281,6 +263,28 @@ async def recalculate_members_stats(
             member.character_id, session, era, era_row=era_row
         )
     await session.flush()
+
+
+async def recalculate_for_account_votes(
+    account_id: int,
+    session: AsyncSession,
+    era: EraConfig = CURRENT_ERA,
+) -> None:
+    """Re-score every praxis ``account_id`` voted on, after a moderation flip.
+
+    Tallies skip moderated voters on read, so stored scores must follow.
+    """
+    result = await session.execute(
+        select(Praxis)
+        .where(
+            Praxis.id.in_(
+                select(Vote.praxis_id).where(Vote.voter_account_id == account_id)
+            )
+        )
+        .options(selectinload(Praxis.members))
+    )
+    for praxis in result.scalars().all():
+        await recalculate_members_stats(praxis, session, era)
 
 
 @dataclasses.dataclass(frozen=True)

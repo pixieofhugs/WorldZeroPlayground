@@ -167,6 +167,7 @@
     "loadError": "Could not load comments.",
     "composerPlaceholder": "Say something worth keeping…",
     "mentionHint": "@ to mention",
+    "levelGate": "Reach level {{level}} to join the discussion",
     "post": "Post comment",
     "posting": "Posting…",
     "edited": "edited",

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-"""E2E-only fixture: six distinct tasks for collaboration.spec.ts C4.
+"""E2E-only fixture: six distinct tasks for collaboration.spec.ts C4, plus one Ephemerists task for
+ephemeristsStampClearance.spec.ts.
 
 Run by ``run-e2e.sh`` after ``seed.py``, against the e2e DB (``DATABASE_URL``).
 Not in seed.py (#2483): that runs on every prod deploy and would restore these.
@@ -34,6 +35,11 @@ FIXTURE_TASKS: tuple[tuple[str, str, int], ...] = (
     ("E2E fixture: Cook Without a Recipe", "Fixture task for the e2e suite.", 6),
 )
 
+# One Ephemerists-owned task so the sweep can post a praxis that wears the
+# Ephemerists card (#2820). Level 9 sits above MAX_LEVEL_REQUIRED, so the
+# collab and duel pickers never reach it.
+EPHEMERISTS_FIXTURE_TASK = ("E2E fixture: Ephemerists Stamp Clearance", 9)
+
 REQUIRED_DISTINCT_TASKS = 6
 MAX_LEVEL_REQUIRED = 8
 
@@ -47,7 +53,7 @@ async def main() -> None:
     session_factory = async_sessionmaker(engine, expire_on_commit=False)
     try:
         async with session_factory() as session:
-            # ``created_by`` is a non-nullable FK; any character will do.
+            # ``created_by_id`` is a non-nullable FK; any character will do.
             created_by_id = (
                 await session.execute(select(Character.id).order_by(Character.id).limit(1))
             ).scalars().first()
@@ -68,10 +74,22 @@ async def main() -> None:
                     level_required=level_required,
                     status=TaskStatus.active,
                     task_type=TaskType.standard,
-                    created_by=created_by_id,
+                    created_by_id=created_by_id,
                     primary_faction_slug=CROSS_FACTION_SLUG,
                 ))
                 added += 1
+            title, level_required = EPHEMERISTS_FIXTURE_TASK
+            if title not in existing_titles:
+                session.add(Task(
+                    title=title,
+                    description="Fixture task for the e2e suite.",
+                    point_value=10,
+                    level_required=level_required,
+                    status=TaskStatus.active,
+                    task_type=TaskType.standard,
+                    created_by_id=created_by_id,
+                    primary_faction_slug="ephemerists",
+                ))
             await session.commit()
 
             # Fail here rather than deep in the serial spec.

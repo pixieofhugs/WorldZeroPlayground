@@ -128,7 +128,7 @@ ERA_1_FACTIONS = {
 # =============================================================================
 
 # Must stay EMPTY: the board is curated in the admin UI, and
-# `seed.py::sync_era_tasks` re-adds config tasks on every deploy, undoing
+# `services/era_tasks.py::sync_era_tasks` re-adds config tasks on every deploy, undoing
 # deletes. The level-0 onboarding task is seeded separately (#511).
 ERA_1_TASKS: tuple[TaskDef, ...] = ()
 
@@ -245,13 +245,15 @@ ERA_1 = EraConfig(
     comment_level_required=2,
     comment_flag_review_threshold=1,
     second_character_level_required=4,
-    albescent_level_required=8,
+    secret_faction_slug="albescent",
+    secret_faction_join_level=8,
     # Moves together with the level-6 `albescent_glimpse` rung (#2770).
-    albescent_glimpse_level=6,
+    secret_faction_glimpse_level=6,
     invitation_point_threshold=50,   # ADR-0022
     invitation_task_threshold=2,
     # Stated though it matches the default: the cadence is the era's (#1617).
     habit_window_days=7,
+    praxis_post_cooldown_hours=24,  # one first-time post a day (#3474)
     reset_score=True,
     reset_level=True,
     reset_faction=True,

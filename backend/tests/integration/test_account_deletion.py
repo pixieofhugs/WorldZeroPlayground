@@ -157,7 +157,7 @@ async def test_identity_is_blanked_across_account_character_praxis_and_comment(
     assert character.avatar_url == ""
 
     await db_session.refresh(praxis)
-    assert praxis.title is None
+    assert praxis.title == ""
     assert praxis.body_text == REMOVED_BODY_MARKER
 
     await db_session.refresh(comment)
@@ -221,7 +221,7 @@ async def test_media_the_account_uploaded_leaves_the_disk_with_its_row(
     media_root,
 ) -> None:
     task = await make_task(db_session, character2, title="host")
-    praxis = await make_solo_praxis(db_session, task, character)
+    praxis = await make_solo_praxis(db_session, task, character, proof=False)
     stored = _write_media_file(
         media_root, str(character.id), str(praxis.id), "u1", "p.jpg"
     )

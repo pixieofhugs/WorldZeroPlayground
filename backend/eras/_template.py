@@ -92,12 +92,14 @@ ERA_N_FACTIONS = {
 #   faction_slug   -- a key above; "na" for cross-faction
 #   level_required -- 0 = anyone
 #   point_value    -- before modifiers
-#   is_task_vision_eligible -- Ephemerists see it after retirement
 #
-# DECIDE FIRST: tasks here are re-added by `seed.py::sync_era_tasks` on EVERY
+# DECIDE FIRST: tasks here are re-added by `services/era_tasks.py` on EVERY
 # deploy, so an admin-UI delete won't stick. Era 1 leaves this EMPTY and
-# curates in the admin UI (#1398). Level 0 is the game-wide onboarding task
-# (`seed.py::ensure_onboarding_task`, #511).
+# curates in the admin UI (#1398). The era roll retires the board, then
+# creates the tasks listed here. To bring EXISTING tasks back instead, name
+# them by title in `reactivate_tasks` (an EraConfig field, set below): the roll
+# refuses if a title matches no task or several. Level 0 is the game-wide
+# onboarding task (`seed.py::ensure_onboarding_task`, #511).
 
 ERA_N_TASKS: tuple[TaskDef, ...] = (
     # TODO: tasks, or leave empty. Example:
@@ -181,9 +183,13 @@ ERA_N = EraConfig(
     collab_invite_bypasses_task_bank=False,
 
     second_character_level_required=4,
-    albescent_level_required=8,
+    # None for an era with no secret faction (ADR-0097); else a key of `factions`.
+    secret_faction_slug=None,
+    secret_faction_join_level=8,
+    secret_faction_glimpse_level=6,
     invitation_point_threshold=50,   # ADR-0022
     invitation_task_threshold=2,
+    praxis_post_cooldown_hours=24,  # hours between first-time posts; admins exempt
     # starting_faction_slug / reset_faction_slug: OMIT — pinned to `na` (ADR-0087).
 
     reset_score=True,
@@ -194,6 +200,7 @@ ERA_N = EraConfig(
 
     factions=ERA_N_FACTIONS,
     tasks=ERA_N_TASKS,
+    reactivate_tasks=(),
     level_profiles=ERA_N_LEVEL_PROFILES,
 
     # Perks as slug sets (#1871); inheritors are added automatically.

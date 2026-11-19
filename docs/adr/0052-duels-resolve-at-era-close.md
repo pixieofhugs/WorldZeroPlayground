@@ -61,15 +61,15 @@ unresolved duel.
 - Any query that means "this praxis is part of a duel" must now decide whether it
   includes `resolved`. Scoring and the praxis-card duel link do (a past duel must
   keep its win/loss modifier and its identity); the live-duel gates in
-  `services/duel.get_duel_for_praxis` — challenge dedupe, forfeit-on-withdraw,
+  `services/duel.get_duel_for_praxis` *[2026-11-18, #3425: now `services/praxis_duel.py`]* — challenge dedupe, forfeit-on-withdraw,
   anti-participant voting — do not, because a resolved duel is over.
 - The resolved-duel **screen** is design work (#719); this ADR only guarantees
   the frozen data it will read.
 
 ## Amendment (2026-11-18, #3419, #3427): ties and `resolved_era_id`
 
-**A tie can have a winner.** "Equal -> NULL" is no longer the whole rule. On level
-votes, `duel_winner()` (`services/duel_outcome.py`) gives the win to the **sole**
+**A tie can have a winner.** "Equal -> NULL" is no longer the whole rule. On equal
+`points_from_votes`, `sole_tie_taker_slug` (`services/scoring.py`) gives the win to the **sole**
 faction holding the era's `takes_duel_ties` perk (`game_config.py`, #748, #2664).
 Two holders cancel and the tie stays NULL. The perk is **per-era faction data**,
 not a permanent advantage: Era 1 gives it to S.N.I.D.E., and another era may give

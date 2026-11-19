@@ -11,7 +11,6 @@
   },
   "componentSrcMap": {
     "AccountSection": "src/pages/settings/sections/AccountSection.tsx",
-    "ActivityTicker": "src/components/ActivityTicker.tsx",
     "AlbescentAvatar": "src/components/avatar/AlbescentAvatar.tsx",
     "AlbescentBackdrop": "src/components/backdrop/AlbescentBackdrop.tsx",
     "AlbescentComment": "src/components/comments/voices/AlbescentComment.tsx",
@@ -340,9 +339,6 @@
     "WowVote": "src/components/vote/WowVote.tsx"
   },
   "overrides": {
-    "ActivityTicker": {
-      "cardMode": "column"
-    },
     "AlbescentBackdrop": {
       "cardMode": "single",
       "viewport": "480x320"

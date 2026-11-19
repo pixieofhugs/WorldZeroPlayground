@@ -25,6 +25,11 @@ from scripts.backfill_character_stats import backfill_character_stats
 from services.character_stats import recompute_votes_spent_this_era
 
 
+async def _life(session: AsyncSession, character: Character) -> int:
+    await session.refresh(character)
+    return character.all_time_score
+
+
 async def _load_stats(
     session: AsyncSession, character_id: int, era_id: int
 ) -> CharacterStats:
@@ -212,7 +217,7 @@ async def test_the_window_is_the_cast_time_not_the_seal_time(
     era_two = Era(
         name=CURRENT_ERA.name,
         config_key=CURRENT_ERA.config_key,
-        started_by=account.id,
+        started_by_id=account.id,
         started_at=era_two_start,
     )
     db_session.add(era_two)
@@ -271,7 +276,7 @@ async def test_recompute_refuses_an_era_that_carries_spend_forward(
     era_two = Era(
         name=CURRENT_ERA.name,
         config_key=CURRENT_ERA.config_key,
-        started_by=account.id,
+        started_by_id=account.id,
     )
     db_session.add(era_two)
     await db_session.commit()
@@ -301,7 +306,7 @@ async def test_backfill_stats_repairs_score_and_all_time_score(
     auth_headers2: dict,
 ):
     """Both repaired: ``all_time_score`` gets the same ``score_delta``
-    (never re-derived; see ``_credit_all_time_score``)."""
+    (never re-derived)."""
     resp = await client.post(
         f"/praxes/{praxis_solo.id}/vote", json={"value": 5}, headers=auth_headers2
     )
@@ -309,20 +314,20 @@ async def test_backfill_stats_repairs_score_and_all_time_score(
 
     author_before = await _load_stats(db_session, character.id, era.id)
     score_before = author_before.score
-    all_time_before = author_before.all_time_score
+    all_time_before = await _life(db_session, character)
     assert score_before > 5  # base task points plus the five stars
 
     await _drop_vote_like_the_migration(db_session, resp.json()["id"])
 
     stale = await _load_stats(db_session, character.id, era.id)
     assert stale.score == score_before
-    assert stale.all_time_score == all_time_before
+    assert await _life(db_session, character) == all_time_before
 
     assert await backfill_character_stats(db_session) == 0
 
     repaired = await _load_stats(db_session, character.id, era.id)
     assert score_before - repaired.score == 5
-    assert all_time_before - repaired.all_time_score == 5
+    assert all_time_before - await _life(db_session, character) == 5
 
 
 @pytest.mark.asyncio
@@ -345,9 +350,9 @@ async def test_backfill_stats_repair_is_idempotent(
     assert await backfill_character_stats(db_session) == 0
     after_first = await _load_stats(db_session, character.id, era.id)
     settled_score = after_first.score
-    settled_all_time = after_first.all_time_score
+    settled_all_time = await _life(db_session, character)
 
     assert await backfill_character_stats(db_session) == 0
     after_second = await _load_stats(db_session, character.id, era.id)
     assert after_second.score == settled_score
-    assert after_second.all_time_score == settled_all_time
+    assert await _life(db_session, character) == settled_all_time

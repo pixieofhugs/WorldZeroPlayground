@@ -1,27 +1,30 @@
 /**
  * One Everymen cog, drawn once, read by every surface (#2121). A source
  * defect (private copies, and a U+2699 system glyph that differs per OS), so
- * it's tested on the surface files themselves, plus one render at the task
- * card. `MOUNTS` is a census: add a surface when it starts wearing the mark.
- * `EverymenVote` is a recorded exception (see `everymenCogs.tsx`).
+ * it's a walk of the whole tree, plus one render at the task card. `MOUNTS`
+ * is a census floor: add a surface when it starts wearing the mark.
  */
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
-
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import { describe, it, expect, vi } from "vitest";
 
 import "../../../i18n";
 import { EVERYMEN_COG_PATH } from "../everymenCogs";
+import { readStripped, sourceFiles, toRelative } from "../../../test/sourceScan";
 
 vi.mock("../../../hooks/useFormFactor", () => ({ useFormFactor: () => "desktop" }));
+vi.mock("../../vote/useVote", () => ({
+  useVote: () => ({ user: { id: 1 }, selected: 0, saving: false, error: "", vote: vi.fn() }),
+}));
+vi.mock("../../../auth/AuthContext", () => ({
+  useAuth: () => ({ user: { id: 1 }, refetch: vi.fn() }),
+}));
 
 // Imported after the mock is registered.
 import EverymenTaskCard from "../../taskCard/EverymenTaskCard";
+import EverymenVote from "../../vote/EverymenVote";
+import { VOTE_REFRAMES } from "../../vote/voteReframes";
 import { aTask } from "../../../test/fixtures";
-
-const SRC = fileURLToPath(new URL("../../../", import.meta.url));
 
 /** Built from its codepoint, so this file is not itself a hit for it. */
 const GLYPH = String.fromCodePoint(0x2699);
@@ -34,7 +37,9 @@ const MOUNTS = [
   "pages/praxisDetail/archetypes/EverymenPraxisDetail.tsx",
 ];
 
-const read = (rel: string): string => readFileSync(SRC + rel, "utf8");
+const COG_MODULE = "components/factionMarks/everymenCogs.tsx";
+/** The vote row keeps its own gear, on the record in `everymenCogs.tsx`. */
+const EXEMPT = [COG_MODULE, "components/vote/EverymenVote.tsx"];
 
 /** Shapes real private copies took, named so a revival reports which. */
 const PRIVATE_DRAWINGS: Array<[label: string, pattern: RegExp]> = [
@@ -46,42 +51,32 @@ const PRIVATE_DRAWINGS: Array<[label: string, pattern: RegExp]> = [
 ];
 
 describe("the Everymen cog is drawn once", () => {
-  it.each(MOUNTS)("%s reads the shared mark and draws none of its own", (rel) => {
-    const source = read(rel);
+  const shipped = sourceFiles().map((path) => ({ rel: toRelative(path), source: readStripped(path) }));
 
-    expect(source).toMatch(/from\s+["'][^"']*factionMarks\/everymenCogs["']/);
-    expect(source).toContain("EverymenCog");
-
-    for (const [label, pattern] of PRIVATE_DRAWINGS) {
-      expect(
-        pattern.test(source),
-        `${rel} still defines ${label} — the point of #2121 is that it does not`,
-      ).toBe(false);
-    }
+  it.each(PRIVATE_DRAWINGS)("no file defines %s", (label, pattern) => {
+    const offenders = shipped
+      .filter(({ rel, source }) => !EXEMPT.includes(rel) && pattern.test(source))
+      .map(({ rel }) => rel);
+    expect(offenders, `the point of #2121 is that ${label} does not come back`).toEqual([]);
   });
 
   it("prints the glyph nowhere: it is a system font, not our drawing", () => {
-    const offenders = MOUNTS.filter((rel) => read(rel).includes(GLYPH));
+    const offenders = shipped.filter(({ source }) => source.includes(GLYPH)).map(({ rel }) => rel);
     expect(offenders).toEqual([]);
+  });
+
+  it("every file that mounts the cog reads the shared mark, and the census holds", () => {
+    const wearers = shipped.filter(({ rel, source }) => rel !== COG_MODULE && source.includes("<EverymenCog"));
+    expect(wearers.map(({ rel }) => rel)).toEqual(expect.arrayContaining(MOUNTS));
+    for (const { rel, source } of wearers) {
+      expect(source, rel).toMatch(/from\s+["'][^"']*factionMarks\/everymenCogs["']/);
+    }
   });
 
   it("keeps the identity sigil a separate device", () => {
     // Meshed pair (badge) vs one cog (furniture); never collapse them.
-    expect(read("components/sigil/EverymenSigil.tsx")).not.toContain("everymenCogs");
-    expect(read("components/factionMarks/everymenCogs.tsx")).not.toContain(
-      "EverymenSigil({",
-    );
-  });
-
-  it("leaves the gearworks vote row out, on the record", () => {
-    // If the vote row adopts the mark, move it into MOUNTS.
-    const vote = read("components/vote/EverymenVote.tsx");
-    expect(vote).not.toMatch(/^import .*everymenCogs/m);
-    // Recorded at both ends.
-    expect(vote).toContain("everymenCogs");
-    expect(read("components/factionMarks/everymenCogs.tsx")).toContain(
-      "components/vote/EverymenVote",
-    );
+    const importers = shipped.filter(({ source }) => /from\s+["'][^"']*everymenCogs["']/.test(source));
+    expect(importers.map(({ rel }) => rel)).not.toContain("components/sigil/EverymenSigil.tsx");
   });
 });
 
@@ -109,5 +104,11 @@ describe("what the shared mark actually renders", () => {
       [...markup.matchAll(/<path d="(M[^"]*A9\.5,9\.5[^"]*Z)"/g)].map((m) => m[1]),
     );
     expect([...drawn]).toEqual([EVERYMEN_COG_PATH]);
+  });
+
+  it("leaves the vote row on its own gear: eight rect teeth per tier, never the shared path", () => {
+    const markup = renderToStaticMarkup(<EverymenVote praxisId={1} />);
+    expect(markup).not.toContain(EVERYMEN_COG_PATH);
+    expect(markup.match(/<rect /g)).toHaveLength(8 * VOTE_REFRAMES["everymen"].tiers.length);
   });
 });

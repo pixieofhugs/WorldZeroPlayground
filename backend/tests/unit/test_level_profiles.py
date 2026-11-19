@@ -16,8 +16,8 @@ GATE_ATTRS = [
     "level_to_see_metatasks",
     "metatask_apply_level",
     "metatasks_per_praxis_max_level",
-    "albescent_level_required",
-    "albescent_glimpse_level",
+    "secret_faction_join_level",
+    "secret_faction_glimpse_level",
 ]
 
 

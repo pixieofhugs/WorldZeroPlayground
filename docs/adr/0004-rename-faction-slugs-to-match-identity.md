@@ -22,7 +22,7 @@ The rename is applied via a **forward Alembic migration** on top of the current 
 When #145 is eventually unblocked, the new baseline bakes in the final slugs.
 
 The `SLUG_ALIASES` rule (`albescent`/`aged_out` → `ua`) is unaffected — that is
-alias-by-design, not a rebrand.
+alias-by-design, not a rebrand. *[2026-11-18, #3425: `SLUG_ALIASES` no longer exists; `aged_out` survives only as a hidden seed row (`backend/seed.py`)]*
 
 Related Era-1 roster reconciliation to apply in the same pass (vault is canon, code
 lagged): **cut `ua_masters` from Era 1** (deferred to Era 2 per the vault) and **reassign

@@ -5,17 +5,18 @@ from typing import TYPE_CHECKING, List, Optional
 from sqlalchemy import (
     BigInteger,
     DateTime,
-    Enum,
     ForeignKey,
     Identity,
     Index,
     Integer,
     String,
     Text,
+    func,
+    text,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from models.base import Base
+from models.base import Base, string_enum
 from models.mixins import TimestampMixin
 
 if TYPE_CHECKING:
@@ -34,13 +35,19 @@ class Character(TimestampMixin, Base):
     __tablename__ = "character"
 
     # The roster reads by account on nearly every authenticated request.
-    __table_args__ = (Index("ix_character_account_id", "account_id"),)
+    __table_args__ = (
+        Index("ix_character_account_id", "account_id"),
+        # Handles are looked up lower-cased (mentions, search); display case is kept.
+        Index(
+            "uq_character_username_lower", func.lower(text("username")), unique=True
+        ),
+    )
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
     account_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("account.id"), nullable=False
     )
-    username: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+    username: Mapped[str] = mapped_column(String, nullable=False)
     display_name: Mapped[str] = mapped_column(String, nullable=False)
     bio: Mapped[str] = mapped_column(Text, nullable=False, server_default="")
     # Profile-header slogan (#1628); not a short bio, never backfilled from it.
@@ -53,7 +60,7 @@ class Character(TimestampMixin, Base):
         String, ForeignKey("faction.slug"), nullable=False, server_default="na"
     )
     status: Mapped[CharacterStatus] = mapped_column(
-        Enum(CharacterStatus, create_type=False), nullable=False, default=CharacterStatus.active
+        string_enum(CharacterStatus), nullable=False, default=CharacterStatus.active
     )
     # Player ended this life (#1577); status is also ``banned``. Not a status
     # value so every "not playable" read keeps working. Written only by
@@ -66,7 +73,12 @@ class Character(TimestampMixin, Base):
     peak_level: Mapped[int] = mapped_column(
         Integer, nullable=False, default=0, server_default="0"
     )
-    # Scores and levels live in CharacterStats.
+    # Lifetime score, all eras (#3434). Moved by delta so a reset baseline
+    # survives; one writer: ``services.character_stats``.
+    all_time_score: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default="0"
+    )
+    # Per-era score and level live in CharacterStats.
 
     account: Mapped["Account"] = relationship(
         "Account",

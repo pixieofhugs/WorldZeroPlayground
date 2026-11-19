@@ -40,7 +40,7 @@ more than one render mode — vote caster vs. summary).
     `author_faction_slug` is an additive column *then* if the "frozen voice" ever bites.
 
 - **One per-faction surface ("Comment", surface #14), one dispatcher, two render modes.**
-  `COMMENT_COMPONENTS: Record<slug, Component>` + `DefaultComment`, resolved via `pickVariant`.
+  `COMMENT_COMPONENTS: Record<slug, Component>` + `DefaultComment`, resolved via `pickVariant`. *[2026-11-18, #3425: now `surfaceMap('comment')`; `COMMENT_COMPONENTS` and `pickVariant` are gone]*
   `mode="row"` (read-only, keyed on `comment.author.faction_slug`) and `mode="composer"` (input,
   keyed on `currentCharacter.faction_slug`). **The call site picks the slug; the component is the
   same archetype** — a faction's comment voice is defined once and used for both reading and
@@ -75,7 +75,7 @@ more than one render mode — vote caster vs. summary).
   table, so mentions must be queryable by recipient. A **`comment_mention` join table**
   (`comment_id`, `mentioned_character_id`, `UNIQUE` pair) is written on comment create and
   **reconciled on edit**. Resolution is by **`username`** (unique handle); an unresolved `@handle`
-  stays plain text. A new feed item type **`comment_mention`** (a `_fetch_comment_mentions`
+  stays plain text. A new feed item type **`comment_mention`** (a `_fetch_comment_mentions` *[2026-11-18, #3425: now `_comment_mentions_query` in `services/activity_feed.py`]*
   sub-query joining `comment_mention → comment → praxis/task`) lands in the `your_stuff` (+ `all`)
   filter with a `_compute_counts` entry. **No self-notify.** Linkify in the body is a separate
   render-time concern.
@@ -106,3 +106,7 @@ mentioned_character_id)`.
 - Not yet built. Implementation tracked in the GitHub issue filed from this design session.
 - Per-faction comment *aesthetics* (SNIDE/Everymen/Ephemerists/WoW/Singularity/UA/Albescent
   voices) are vault design work, not specified here.
+
+## Amendment (2026-11-19, #3426)
+
+"The `CommentThread` container is neutral chrome, not a per-faction surface" no longer holds on the praxis read page. ADR-0061 (amending this clause) and ADR-0064 make the thread a layout region the page mounts and the archetype owns, not chrome the dispatcher appends.
