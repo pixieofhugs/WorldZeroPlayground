@@ -11,7 +11,6 @@ import factions from './locales/en/factions.json'
 import feed from './locales/en/feed.json'
 import forms from './locales/en/forms.json'
 import home from './locales/en/home.json'
-import onboarding from './locales/en/onboarding.json'
 import praxis from './locales/en/praxis.json'
 import progression from './locales/en/progression.json'
 import tasks from './locales/en/tasks.json'
@@ -34,7 +33,6 @@ export const resources = {
     feed,
     forms,
     home,
-    onboarding,
     praxis,
     progression,
     tasks,
@@ -42,6 +40,20 @@ export const resources = {
     votes,
   },
 } as const
+
+/** Shipped JSON of namespaces loaded with their route, for Revert (`shippedValue`). */
+export const lazyShipped: Record<string, unknown> = {}
+
+/** Only `/start` surfaces read `onboarding:`; keeping it out of the eager bundle holds the byte budget. */
+export function registerNamespace(ns: string, json: object): void {
+  lazyShipped[ns] = json
+  // overwrite=false: a copy override already applied stays on top.
+  i18n.addResourceBundle('en', ns, structuredClone(json), true, false)
+}
+
+export async function loadOnboardingCopy(): Promise<void> {
+  registerNamespace('onboarding', (await import('./locales/en/onboarding.json')).default)
+}
 
 const IS_PRODUCTION = import.meta.env.PROD
 
