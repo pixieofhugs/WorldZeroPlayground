@@ -5,6 +5,7 @@ import Layout from './components/Layout'
 import ProtectedRoute from './auth/ProtectedRoute'
 import { useAuth, hadSessionLastVisit } from './auth/AuthContext'
 import { useAdminMode } from './auth/AdminModeContext'
+import { loadOnboardingCopy } from './i18n'
 import { onboardingHandoffPending } from './utils/onboardingResume'
 import { importAccountDeleted } from './pages/accountDeletedLoader'
 
@@ -27,6 +28,8 @@ const importFactionCopySheet = () => import('./pages/admin/FactionCopySheet')
 const importLevelUpCopySheet = () => import('./pages/admin/LevelUpCopySheet')
 const importCreateCharacter = () => import('./pages/CreateCharacter')
 const importProposeTask = () => import('./pages/ProposeTask')
+
+const withOnboardingCopy = <T,>(page: Promise<T>) => Promise.all([page, loadOnboardingCopy()]).then(([m]) => m)
 
 const Home = lazy(importHome)
 const FieldDesk = lazy(importFieldDesk)
@@ -55,8 +58,8 @@ const Disclaimer = lazy(() => import('./pages/Disclaimer'))
 const Attributions = lazy(() => import('./pages/Attributions'))
 const Donate = lazy(() => import('./pages/Donate'))
 const AccountDeleted = lazy(importAccountDeleted)
-const Onboarding = lazy(() => import('./pages/Onboarding'))
-const ReturningCard = lazy(() => import('./pages/onboarding/ReturningCard'))
+const Onboarding = lazy(() => withOnboardingCopy(import('./pages/Onboarding')))
+const ReturningCard = lazy(() => withOnboardingCopy(import('./pages/onboarding/ReturningCard')))
 const CopyEditor = lazy(() => import('./components/admin/CopyEditor'))
 
 /** Gate lives outside the lazy component so ordinary visitors never fetch its chunk (load-time.md). */
