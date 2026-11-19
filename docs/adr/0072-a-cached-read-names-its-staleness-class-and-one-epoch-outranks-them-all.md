@@ -1,6 +1,6 @@
 # ADR-0072 — A cached read names its staleness class, and one epoch outranks them all
 
-**Status:** Accepted
+**Status:** Amended by ADR-0091
 **Date:** 2026-08-02
 
 **Relates to:** ADR-0027 (Albescent is a secret society), ADR-0042 (era as
@@ -161,3 +161,18 @@ locally; there is nothing to discover by asking again.
 **Put the era stamp in `localStorage` so it survives a reload.** Rejected as
 solving nothing: the cache lives in module scope, so a reload already discards
 everything the stamp would have invalidated.
+
+## Amendment (2026-11-18) — the era no longer changes only with a deploy
+
+**ADR-0091** (the latest `Era` row chooses the live ruleset). Class A's premise,
+"changing it takes a deploy", and the claim that `/game-config` "cannot change
+while the process is running", no longer hold: a mod can switch eras from the admin
+page, and `/game-config` then serialises a different ruleset. Class A stays
+session-long because the **epoch** covers this: a switch to a differently named
+era moves `era_name` on `/auth/me` and `/game-config`, and every cache drops.
+
+Unchanged and still open: a switch to, or reset of, an era with the **same
+`era_name`** does not move the stamp (see "Bad — the stamp is coarser than the
+event"). The `Era.id` follow-up is therefore required, not optional, before any
+score-derived read is cached. `useTasks` and `usePraxes` hold viewer-keyed Class B
+first pages on that epoch, so they inherit both the fix and the gap.

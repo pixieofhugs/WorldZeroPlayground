@@ -312,6 +312,7 @@ describe('plural forms (#3165)', () => {
     expect(noun(5)).toBe('Souls')
     expect(noun(1)).toBe(shippedOne)
 
+    wire.replyWith(json({ ns: 'feed', key: key('one'), value: 'Soul' }))
     await saveCopy({ ns: 'feed', key: key('one') }, 'Soul')
     expect(noun(1)).toBe('Soul')
     expect(noun(5)).toBe('Souls')

@@ -198,3 +198,8 @@ export function UaCtaFlank({ side, size }: { side: "start" | "end"; size: number
     </span>
   );
 }
+
+export const LOTUS = {
+  color: 'var(--faction-ua-card-lotus)',
+  opacity: 'var(--faction-ua-card-lotus-opacity)',
+} as const

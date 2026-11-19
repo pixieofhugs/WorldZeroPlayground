@@ -29,7 +29,7 @@
 | [0012](0012-collab-lazy-consensus-submission.md) | Collaborations publish by lazy consensus, not unanimous submission | Accepted | — |
 | [0013](0013-collaborations-are-co-owned.md) | Collaborations are co-owned by all members | Accepted | — |
 | [0014](0014-praxis-scoring-is-per-character-contribution.md) | Praxis scoring is per-character Contribution; the card shows Merit | Amended | [ADR-0053](0053-a-praxis-has-one-number-merit-is-retired.md), [ADR-0086](0086-only-the-base-multiplies-a-metatask-is-flat.md) |
-| [0015](0015-metatask-is-its-own-model.md) | A metatask is its own model, not a Task subtype | Accepted | — |
+| [0015](0015-metatask-is-its-own-model.md) | A metatask is its own model, not a Task subtype | Amended | [ADR-0086](0086-only-the-base-multiplies-a-metatask-is-flat.md) |
 | [0016](0016-per-faction-surfaces-share-one-data-contract.md) | Per-faction surfaces share one data contract; archetypes own only presentation | Accepted | — |
 | [0017](0017-praxis-read-page.md) | The praxis read page is a per-faction archetype surface with an interactive vote caster | Superseded | [ADR-0061](0061-praxis-detail-is-one-shared-page-every-faction-dresses.md) |
 | [0018](0018-comment-voice-reuses-task-card-atoms.md) | Each faction's comment voice reuses its task-card atoms at full fidelity | Amended | [ADR-0026](0026-ua-comment-adopts-the-gilt-salon.md), [ADR-0093](0093-comment-timestamps-read-the-same-for-every-faction.md) |
@@ -38,8 +38,8 @@
 | [0021](0021-albescent-unlock-is-account-collective.md) | Albescent unlock is account-collective, with level and coverage decoupled | Superseded | [ADR-0080](0080-one-life-earns-albescent-its-siblings-take-it-and-the-earner-never-can.md) |
 | [0022](0022-faction-invite-trigger-drops-pledge.md) | Faction invite is earned by 2 tasks + 50 points; pledge-allegiance gate dropped | Accepted | — |
 | [0023](0023-activity-feed-stays-a-read-time-projection.md) | The activity feed stays a read-time projection, not a stored event log | Accepted | — |
-| [0024](0024-in-progress-praxis-is-private.md) | An in-progress praxis is private (member-only) | Accepted | — |
-| [0025](0025-active-character-is-the-actor.md) | The active character is the actor for every write path | Accepted | — |
+| [0024](0024-in-progress-praxis-is-private.md) | An in-progress praxis is private (member-only) | Amended | [ADR-0011](0011-duel-is-two-linked-praxes.md) |
+| [0025](0025-active-character-is-the-actor.md) | The active character is the actor for every write path | Amended | [ADR-0041](0041-two-layer-identity-account-vs-character.md) |
 | [0026](0026-ua-comment-adopts-the-gilt-salon.md) | The UA comment adopts the gilt-salon identity | Amended | [ADR-0093](0093-comment-timestamps-read-the-same-for-every-faction.md) |
 | [0027](0027-albescent-is-a-secret-society.md) | Albescent is a secret society, revealed by a sticky per-account flag | Amended | [ADR-0080](0080-one-life-earns-albescent-its-siblings-take-it-and-the-earner-never-can.md), [ADR-0082](0082-albescent-is-redacted-not-hidden.md) |
 | [0028](0028-task-crown-replaces-faction-distinction-laurel.md) | The Task Crown replaces the Faction Distinction Laurel | Amended | [ADR-0054](0054-one-theme-aware-task-crown.md) |
@@ -86,7 +86,7 @@
 | [0069](0069-the-character-profile-and-the-duel-seal-collapse-to-one-responsive-component-per-faction.md) | The character profile and the duel seal collapse to one responsive component per faction | Accepted | — |
 | [0070](0070-an-unanswered-obligation-lives-in-the-queue-never-in-the-stream.md) | An unanswered obligation lives in the queue, never in the stream | Accepted | — |
 | [0071](0071-three-doors-lead-into-a-praxis-and-two-of-them-are-deliberate-carve-outs.md) | Three doors lead into a praxis, and two of them are deliberate carve-outs | Accepted | — |
-| [0072](0072-a-cached-read-names-its-staleness-class-and-one-epoch-outranks-them-all.md) | A cached read names its staleness class, and one epoch outranks them all | Accepted | — |
+| [0072](0072-a-cached-read-names-its-staleness-class-and-one-epoch-outranks-them-all.md) | A cached read names its staleness class, and one epoch outranks them all | Amended | [ADR-0091](0091-the-latest-era-row-chooses-the-live-ruleset.md) |
 | [0073](0073-a-praxis-is-written-in-a-room-and-the-room-is-not-the-record.md) | A praxis is written in a room, and the room is not the record | Accepted | — |
 | [0074](0074-one-sky-serves-both-themes-the-meadow-is-retired.md) | One sky serves both themes; the Meadow is retired | Accepted | — |
 | [0075](0075-a-verified-email-is-one-account-whatever-provider-vouches-for-it.md) | A verified email is one Account, whatever provider vouches for it | Accepted | — |

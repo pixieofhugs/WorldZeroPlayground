@@ -88,9 +88,7 @@ What the ban does **not** cover:
   the `src/test/sourceScan.ts` guards. Those are *structure* rules about the shape of the
   tree, not behaviour, and they stay.
 - Where a behavioural claim has no value seam at all, the residue stays source-reading
-  and says so loudly. `pages/editPraxis/__tests__/composerMountSourceScan.test.ts` is
-  what the #2881 conversion left behind: two claims with no plan to extract, kept with
-  the comment-bounded slice removed and the guard-the-guard retained.
+  and says so loudly. (`composerMount.test.tsx` converted the #2881 residue; none is left there.)
 
 ### `src/test/sourceScan.ts` is the only walk
 
