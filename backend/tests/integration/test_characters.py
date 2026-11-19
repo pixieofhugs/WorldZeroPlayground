@@ -15,7 +15,7 @@ from models.character_stats import CharacterStats
 from models.era import Era
 from models.faction import Faction
 from models.task import Task
-from tests.integration.factories import DEFAULT_FACTION_SLUG
+from tests.integration.factories import DEFAULT_FACTION_SLUG, make_character
 
 #: Any live-era faction other than the fixtures' default; derived, never named (#2708).
 OTHER_FACTION_SLUG = next(
@@ -390,8 +390,12 @@ async def test_list_characters_limit_offset(
 
 @pytest.mark.asyncio
 async def test_get_character_includes_stats_fields(
-    client: AsyncClient, character2: Character
+    client: AsyncClient, db_session: AsyncSession, era: Era, some_faction: Faction
 ):
+    character2 = await make_character(
+        db_session, era, username="statsful", level=5, score=500, all_time_score=500
+    )
+    await db_session.commit()
     resp = await client.get(f"/characters/{character2.id}")
     assert resp.status_code == 200
     data = resp.json()

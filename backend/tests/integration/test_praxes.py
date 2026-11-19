@@ -20,7 +20,7 @@ from models.character_stats import CharacterStats
 from models.era import Era
 from models.praxis import ModerationStatus, Praxis, PraxisMember
 from models.task import Task, TaskStatus, TaskType
-from tests.integration.factories import DEFAULT_FACTION_SLUG
+from tests.integration.factories import DEFAULT_FACTION_SLUG, make_character
 
 #: A live-era faction other than the fixtures' default, derived not named (#2708).
 #: The faction that may work RETIRED tasks, found by perk (#2708); era-owned, and
@@ -925,11 +925,18 @@ async def test_create_praxis_bank_cap(
 @pytest.mark.asyncio
 async def test_create_collab_praxis(
     client: AsyncClient,
-    character2: Character,
+    db_session: AsyncSession,
+    era: Era,
+    account2: Account,
     active_task: Task,
     auth_headers2: dict,
 ):
-    """Collab create: creator is first member (character2 is level 5)."""
+    """Collab create: creator is first member, at the collaboration level."""
+    character2 = await make_character(
+        db_session, era, username="collabber", account=account2,
+        level=CURRENT_ERA.collaboration_level_required,
+    )
+    await db_session.commit()
     resp = await client.post(
         "/praxes",
         json={"task_id": active_task.id, "type": "collab", "title": "Our Collab"},

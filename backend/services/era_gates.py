@@ -9,7 +9,7 @@ forgetting which inputs a gate reads.
 ``services.current_user``, so it imports only ``game_config`` and reads faction
 perks from ``era.factions`` directly.
 """
-from game_config import CURRENT_ERA, EraConfig
+from game_config import CURRENT_ERA, EraConfig, VoteLockReason
 
 
 def may_propose_task(
@@ -153,17 +153,34 @@ def meets_albescent_level(
     return level >= era.albescent_level_required
 
 
+def vote_lock_reason(
+    peak_level: int | None,
+    has_received_vote: bool,
+    is_admin: bool,
+    era: EraConfig = CURRENT_ERA,
+) -> VoteLockReason | None:
+    """Why this viewer may not vote, or ``None``. The one answer ``/auth/me`` and
+    ``cast_or_update_vote`` share.
+
+    Level is checked on the highest level EVER reached (#3102): ``reset_level``
+    zeroes everyone at rollover, which would leave nobody able to vote on day
+    one. The admin bypass covers only the received-vote rule, never the level.
+    """
+    if peak_level is None or peak_level < era.vote_level_required:
+        return "level"
+    if era.vote_requires_received_vote and not has_received_vote and not is_admin:
+        return "no_received_vote"
+    return None
+
+
 def may_vote(
     peak_level: int | None,
     faction_slug: str | None,
     is_admin: bool,
     era: EraConfig = CURRENT_ERA,
+    *,
+    has_received_vote: bool = True,
 ) -> bool:
-    """``era.vote_level_required`` against the highest level EVER reached (#3102).
-
-    Peak, not current, level: ``reset_level`` zeroes everyone at rollover, which
-    would leave nobody able to vote on day one. No admin bypass.
-    """
-    if peak_level is None:
-        return False
-    return peak_level >= era.vote_level_required
+    """``vote_lock_reason`` is ``None``. The default means "rule not asked"; every
+    caller that knows the account passes the real answer."""
+    return vote_lock_reason(peak_level, has_received_vote, is_admin, era) is None

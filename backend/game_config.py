@@ -7,6 +7,7 @@ CURRENT_ERA is a stable object identity — see "The live era binding" below.
 """
 from dataclasses import dataclass, field, replace
 from enum import Enum
+from typing import Literal
 
 from faction_slugs import ALBESCENT_FACTION_SLUG, UNAFFILIATED_FACTION_SLUG
 
@@ -14,6 +15,10 @@ from faction_slugs import ALBESCENT_FACTION_SLUG, UNAFFILIATED_FACTION_SLUG
 class LevelUnlockKind(str, Enum):
     ability = "ability"   # must match a real gate constant
     sense = "sense"        # flavor, no mechanics
+
+
+# Why ``can_vote`` is false; the client branches on it for the lock copy.
+VoteLockReason = Literal["level", "no_received_vote"]
 
 
 @dataclass(frozen=True)
@@ -192,6 +197,9 @@ class EraConfig:
     flag_level_required: int
     # Checked against Character.peak_level: a reset_level rollover keeps it (#3102).
     vote_level_required: int
+    # Voting also needs one vote received from another account. Like the level
+    # gate it is not reset at rollover: a vote received in any era counts.
+    vote_requires_received_vote: bool
 
     # ADR-0006; services/comment.py. The flag threshold is service-only.
     comment_level_required: int

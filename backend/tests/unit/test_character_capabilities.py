@@ -28,6 +28,7 @@ def test_compute_capabilities_reads_from_era_arg() -> None:
         can_comment=True,
         # no peak_level passed (#3102)
         can_vote=False,
+        vote_lock_reason="level",
         can_apply_metatask=True,
         level_jump_reach=0,
         level_jump_available=False,
