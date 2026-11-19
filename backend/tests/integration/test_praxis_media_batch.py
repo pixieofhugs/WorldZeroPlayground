@@ -249,7 +249,7 @@ async def test_collab_batch_cancels_pending_publish_only_when_a_file_lands(
 ):
     """ADR-0012: a pending publish is cancelled only when a file is stored, so a
     batch of all-failing files is not an edit."""
-    # A level-1 creator: collabs need level 1; `character` is level 0.
+    # A creator at the collab level; `character` is level 0.
     await make_character(
         db_session, era, username="collabauthor", account=account2,
         level=CURRENT_ERA.collaboration_level_required,

@@ -218,7 +218,7 @@ def test_advertise_and_enforce_agree_across_the_matrix(field: str) -> None:
             advertised := getattr(
                 # only ``can_vote`` reads peak_level (#3102)
                 compute_capabilities(
-                    level, is_admin, ERA_1, slug, peak_level=level
+                    level, is_admin, ERA_1, slug, peak_level=level, has_received_vote=True
                 ),
                 field,
             )
