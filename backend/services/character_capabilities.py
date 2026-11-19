@@ -49,7 +49,8 @@ def compute_capabilities(
     faction_slug: str | None = None,
     level_jump_used_at_level: int | None = None,
     peak_level: int | None = None,
-    has_received_vote: bool = True,
+    *,
+    has_received_vote: bool,
 ) -> CharacterCapabilities:
     granted_reach = faction_level_jump_reach(faction_slug, era)
     # Level 0 is the tutorial (one onboarding task); it is the scale's floor,
