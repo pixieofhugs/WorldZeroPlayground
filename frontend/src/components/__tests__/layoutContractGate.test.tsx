@@ -84,6 +84,16 @@ describe('Layout with the contract', () => {
     expect(store.has('wz_terms_accepted')).toBe(false)
   })
 
+  it('OAuth return with consent already on file but no character: ends on /start with the creation form', async () => {
+    store.set('wz_onboarding_handoff', 'true')
+    store.set('wz_terms_accepted', 'true')
+    render(<App user={{ ...noAcceptance, has_accepted_terms: true }} at="/" />)
+
+    expect(await screen.findByPlaceholderText(/character name/i)).toBeTruthy()
+    expect(screen.getByTestId('where').textContent).toBe('/start')
+    expect(store.has('wz_onboarding_handoff')).toBe(false)
+  })
+
   it('a signed-in account with no acceptance is sent to the contract from anywhere else', async () => {
     render(<App user={noAcceptance} at="/tasks" />)
 
