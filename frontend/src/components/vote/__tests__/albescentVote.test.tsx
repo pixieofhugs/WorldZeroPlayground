@@ -52,6 +52,7 @@ function currentUser(): CurrentUser {
     is_owner: false,
     has_accepted_terms: true,
     can_create_additional_character: false,
+    character_creation_banned: false,
     can_start_as_albescent: true,
     albescent_revealed: true,
     albescent_glimpsed: false,

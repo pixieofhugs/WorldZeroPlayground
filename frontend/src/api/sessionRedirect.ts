@@ -36,3 +36,28 @@ export function returnToLandingIfSessionExpired(
     window.location.href = '/'
   }
 }
+
+const SUSPENDED_CODE = 'ACCOUNT_SUSPENDED'
+const SUSPENDED_LANDING = `/?login=${SUSPENDED_CODE}`
+
+/** A suspended session is told why on landing; already there, a reload would loop. */
+export function shouldShowSuspendedNotice(
+  status: number | undefined,
+  code: string | null,
+  pathname: string,
+  search: string,
+): boolean {
+  if (status !== 403 || code !== SUSPENDED_CODE) return false
+  return !(pathname === '/' && search.includes(`login=${SUSPENDED_CODE}`))
+}
+
+export function showSuspendedNoticeIfSuspended(
+  status: number | undefined,
+  code: string | null,
+): void {
+  if (typeof window === 'undefined') return
+  const { pathname, search } = window.location
+  if (shouldShowSuspendedNotice(status, code, pathname, search)) {
+    window.location.href = SUSPENDED_LANDING
+  }
+}

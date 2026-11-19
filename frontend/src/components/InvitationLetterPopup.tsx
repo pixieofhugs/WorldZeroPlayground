@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import { useModal } from '../hooks/useModal'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import { factionName } from '../utils/factions'
@@ -33,11 +34,14 @@ function tArr<T>(t: TFunction<'factions'>, key: string): T[] {
 interface InvitationLetterPopupProps {
   factionSlug: string
   onClose: () => void
+  /** An admin copy-sheet embed: no focus trap, Escape or focus steal. */
+  preview?: boolean
 }
 
 export default function InvitationLetterPopup({
   factionSlug,
   onClose,
+  preview,
 }: InvitationLetterPopupProps) {
   const { t } = useTranslation('factions')
   const { user, applyUser } = useAuth()
@@ -47,14 +51,7 @@ export default function InvitationLetterPopup({
   const [confirming, setConfirming] = useState(false)
   const [joining, setJoining] = useState(false)
   const [joinError, setJoinError] = useState<string | null>(null)
-
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [onClose])
+  const ref = useModal(onClose, !preview)
 
   const name = factionName(factionSlug)
   const base = `${factionSlug}.invitation`
@@ -105,6 +102,7 @@ export default function InvitationLetterPopup({
       }}
     >
       <div
+        ref={ref}
         role="dialog"
         aria-modal="true"
         aria-label={headline}

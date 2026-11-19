@@ -2828,6 +2828,11 @@ export interface components {
             can_vote: boolean;
             character: components["schemas"]["CharacterOut"] | null;
             /**
+             * Character Creation Banned
+             * @default false
+             */
+            character_creation_banned: boolean;
+            /**
              * Email
              * @default
              */

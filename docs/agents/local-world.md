@@ -121,7 +121,7 @@ admin deletes it. Test fixtures live beside the suite that needs them.
 `scripts/wz psql` for the database, `scripts/wz logs backend` for the app,
 `scripts/wz shell` for a shell in the container. `scripts/wz test` runs pytest
 inside the container — no venv. It creates its test DB if missing: `worldzero_test`
-in the main checkout, `wz_<worktree-dir>_test` in a worktree. A second `wz test` on
+in the main checkout, `wz_<worktree-dir>_test` in a worktree, then runs `alembic upgrade head` on it as CI does (a no-op at head; it creates the enum types; if it fails, `wz test` drops and recreates that DB's `public` schema and retries once, and refuses unless the DB name ends in `_test`). A second `wz test` on
 the same DB exits at once with "another wz test is using ...".
 
 In a **worktree**, `wz test` runs in a throwaway container that mounts *that*
