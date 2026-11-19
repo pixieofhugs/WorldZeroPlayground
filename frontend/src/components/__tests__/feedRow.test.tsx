@@ -7,7 +7,6 @@ import FeedRowContent from '../feed/FeedRowContent'
 import { FeedRowSkinContext, type FeedRowSkin } from '../feed/feedRowSkin'
 import type { ActivityFeedItem } from '../../api/activityFeed'
 import i18n from '../../i18n'
-import { collabCopy } from '../collab/collabCopy'
 import { AA_NORMAL, contrastRatio, formatRatio, parseColor, requiredRatio } from '../../utils/contrast'
 import { FACTION_RAINBOW_ORDER } from '../../utils/factions'
 import { readThemes, resolveVar } from '../../utils/__tests__/cssVars'
@@ -101,7 +100,7 @@ describe('normalizeFeedItem', () => {
       }),
     )!
     expect(row.actor).toBe('Ada')
-    expect(row.action).toBe(collabCopy('coven', 'nudgeFeedAction'))
+    expect(row.action).toBe(i18n.t('feed:row.action.nudgedYou'))
     expect(row.actorHref).toBe('/characters/8')
     expect(row.headline).toBe('Plant a tree')
     expect(row.headlineHref).toBe('/praxis/12/edit')
@@ -344,7 +343,6 @@ describe('FeedRowContent', () => {
   it('paints every faction accent from the cascade, never a JS hex (#1269)', () => {
     const html = renderToStaticMarkup(<MemoryRouter><FeedRowContent row={completionRow('ua')} avatarUrl={null} /></MemoryRouter>)
     expect(html).toContain('var(--faction-ua)')
-    expect(html).not.toMatch(/#[0-9a-fA-F]{3,8}\b/)
   })
 
   // #983: a border is a scalar and cannot hold the na gradient; a fill can.

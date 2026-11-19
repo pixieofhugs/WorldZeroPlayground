@@ -31,5 +31,5 @@ stored budget column.
 
 `votes_spent_this_era` is not always "reset to 0 on era reset". The new stats row
 copies the previous spend unless `era.reset_vote_budget` is set
-(`apply_era_reset`, `backend/services/era.py`; field in `game_config.py`). Era 1
-and Era 2 both set it, so today it does reset. Read `era.reset_vote_budget`.
+(`apply_era_reset`, `backend/services/era.py`; field in `game_config.py`). Read
+`era.reset_vote_budget` for whether a given era resets it.

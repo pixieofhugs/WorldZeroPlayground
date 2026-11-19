@@ -377,4 +377,17 @@ describe("PublishButton — the primary is dead until the praxis has a title (#2
     expect(markup).not.toContain("aria-describedby");
     expect(markup).not.toContain('role="status"');
   });
+
+  it("is disabled with a hint until media is attached (#3473)", () => {
+    const markup = renderToStaticMarkup(
+      renderButton(soloState({ needsProof: true })),
+    );
+    expect(markup).toContain("disabled");
+    expect(markup).toContain(
+      i18n.t("forms:editPraxis.composer.publishNeedsProof"),
+    );
+    expect(
+      renderToStaticMarkup(renderButton(soloState({ needsProof: false }))),
+    ).not.toContain("disabled");
+  });
 });

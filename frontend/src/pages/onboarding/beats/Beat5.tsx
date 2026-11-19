@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import PraxisCard from '../../../components/praxisCard/PraxisCard'
 import { VoteSandboxContext } from '../../../components/vote/voteSandbox'
 import { dragonPraxis } from '../fixtures'
+import { revealVoteRow } from '../fitStage'
 import FactionBuddy from '../FactionBuddy'
 import Wisp from '../Wisp'
 import '../beat5.css'
@@ -20,9 +21,12 @@ const SCORE_AFTER = 0.55
 const COUNT_AFTER = SCORE_AFTER + 0.2
 /** Back plays every judge at 1s, behind the card. */
 const QUICK_LAND = 1
-const VOTE_ROW_AT_MS = 3300
+
+/** The last score has risen and the count settled; the old 3.3s for the 2.4s judge. */
+const SETTLE_AFTER = COUNT_AFTER + 0.15
 
 const reducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+const motionOff = () => reducedMotion() || document.documentElement.dataset.motion === 'off'
 
 export default function Beat5({ confidence }: BeatProps) {
   const { t } = useTranslation('onboarding')
@@ -32,22 +36,29 @@ export default function Beat5({ confidence }: BeatProps) {
   useHoldNext(voted === null ? t('beat5.hold') : null)
 
   useEffect(() => {
-    if (reducedMotion()) return
+    // One scroll per mount: the judges stay in view while they land, then the vote row is brought up.
+    if (motionOff()) {
+      revealVoteRow(false)
+      if (reducedMotion()) return
+    }
     const quick = root.current?.closest('.ob-rew') != null
     const ids = JUDGES.map((j, i) =>
       setTimeout(() => setJudged(i + 1), ((quick ? QUICK_LAND : j.land) + COUNT_AFTER) * 1000),
     )
-    // The vote row sits low on a tall card: bring it out from behind the text box.
-    ids.push(
-      setTimeout(() => {
-        const row = root.current?.querySelector('button[aria-pressed]')
-        if (!row) return
-        const over = row.getBoundingClientRect().bottom - (window.innerHeight - 250)
-        if (over > 0) window.scrollBy({ top: over + 40, behavior: 'smooth' })
-      }, VOTE_ROW_AT_MS),
-    )
+    if (!motionOff()) {
+      const last = quick ? QUICK_LAND : Math.max(...JUDGES.map((j) => j.land))
+      ids.push(setTimeout(() => revealVoteRow(true), (last + SETTLE_AFTER) * 1000))
+    }
     return () => ids.forEach(clearTimeout)
   }, [])
+
+  // The fixture card's links lead nowhere real; only the vote row belongs in the tab order.
+  useEffect(() => {
+    root.current?.querySelectorAll('.b5-card a[href]').forEach((a) => a.setAttribute('tabindex', '-1'))
+    // The card re-keys on every tally, so the star just pressed is gone; hand focus to its replacement.
+    if (voted !== null && document.activeElement === document.body)
+      root.current?.querySelector<HTMLElement>('.b5-card button[aria-pressed="true"]')?.focus({ preventScroll: true })
+  }, [judged, voted])
 
   const sandbox = useMemo(() => ({ value: voted, cast: setVoted }), [voted])
   const fromJudges = JUDGES.slice(0, judged).reduce((sum, j) => sum + j.score, 0)

@@ -299,7 +299,7 @@ async def moderate_comment(
     new_status: str,
     session: AsyncSession,
     *,
-    actor_id: Optional[int] = None,
+    actor_id: int,
 ) -> Comment:
     """Admin moderation: hidden (reversible hold) / deleted (tombstone) / visible."""
     comment = await get_comment(comment_id, session)
@@ -310,10 +310,9 @@ async def moderate_comment(
             status_code=422, detail=f"Invalid moderation status: {new_status}"
         )
     await session.flush()
-    if actor_id is not None:
-        await log_mod_action(
-            session, actor_id, f"comment_{new_status}", "comment", comment_id
-        )
+    await log_mod_action(
+        session, actor_id, f"comment_{new_status}", "comment", comment_id
+    )
     return await get_comment(comment_id, session)
 
 

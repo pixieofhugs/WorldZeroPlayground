@@ -11,7 +11,6 @@
     "start": "Start",
     "back": "Back",
     "next": "Next",
-    "finishLine": "Skip text",
     "toContract": "To the contract",
     "skip": "Skip",
     "rewind": "rewind",
@@ -43,7 +42,7 @@
   },
   "auth": {
     "title": "Login Logistics",
-    "body": "World Zero doesn't store any personal information except your email and whatever you post yourself. This means we ask someone else to confirm that your email belongs to you. Choose your way in."
+    "body": "World Zero keeps only your email, an ID from the service you sign in with, and whatever you post yourself. This means we ask someone else to confirm that your email belongs to you. Choose your way in."
   },
   "signin": {
     "title": "Welcome back.",

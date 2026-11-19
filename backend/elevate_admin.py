@@ -25,6 +25,7 @@ from models.character import Character
 from models.roles import AccountRole, Role
 from script_utils import add_env_argument, get_settings
 from services.admin_service import assign_or_revoke_role
+from services.mod_log import log_mod_action
 
 #: The only role the application reads (``dependencies.require_admin``).
 ADMIN_ROLE_NAME = "admin"
@@ -110,6 +111,9 @@ async def run(username: str, env: str, revoke: bool) -> None:
             granted_by_id=account_id,
         )
         session.add(account_role)
+        await log_mod_action(
+            session, account_id, "role_grant", "account", account_id, ADMIN_ROLE_NAME
+        )
         await session.commit()
 
         print(f"\nDone: Account {account_id} (character: '{username}') is now an admin.")

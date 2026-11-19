@@ -1,6 +1,7 @@
-/* The flow's frame: header, title page, text box. Ported from .design-sync/onboarding-arc/src.html; ob- prefixed because this sheet stays loaded once /start has been visited. */
-.ob-root{position:relative;min-height:100vh;box-sizing:border-box;display:flex;flex-direction:column;overflow-x:clip;background:var(--color-bg-page);color:var(--faction-default-card-text);font-family:var(--font-body)}
-.ob-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+/* The flow's frame: header, title page, text box. ob- prefixed because this sheet stays loaded once /start has been visited. */
+.ob-root{position:relative;min-height:100vh;box-sizing:border-box;display:flex;flex-direction:column;background:var(--color-bg-page);color:var(--faction-default-card-text);font-family:var(--font-body)}
+/* Stops sideways scroll from the aurora and beat 1's world without clipping at the root, which gave the world's soft mask hard edges. */
+html:has(.ob-root){overflow-x:hidden}
 .ob-cap{font-family:var(--font-body);font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:var(--faction-default-card-muted)}
 .ob-lora{font-family:var(--font-display);font-weight:600;font-style:italic}
 .ob-hair{height:1px;background:var(--faction-default-border)}
@@ -93,11 +94,14 @@
 .ob-pips i{width:7px;height:7px;border-radius:2px;background:var(--faction-default-border)}
 .ob-adv{padding:0;border:0;background:transparent;color:inherit;cursor:pointer;font:inherit;text-align:left}
 .ob-adv:focus-visible{outline:2px solid var(--faction-default-card-text);outline-offset:4px}
+.ob-root h1:focus,.ob-root h2:focus,.ob-root section:focus{outline:none}
 .ob-line-text{display:block;font-size:clamp(20px,2.3vw,27px);line-height:1.4;min-height:2.8em}
 .ob-box-nav{display:flex;justify-content:space-between;align-items:center;gap:12px}
 .ob-box-nav .ob-ghost:first-child{margin-left:-14px}
 .ob-box-nav .ob-ghost:last-child,.ob-box-nav .ob-hold{margin-right:-14px}
-.ob-hold{padding:0 14px}
+.ob-hold{padding:0 14px;white-space:nowrap}
+.ob-box-nav .ob-ghost{white-space:nowrap}
+@media (max-width:420px){.ob-box-nav .ob-cap{letter-spacing:.12em}}
 
 /* contract: the quill wants a signature */
 .ob-contract{display:flex;flex-direction:column}
@@ -143,10 +147,10 @@
 .ob-box-top .ob-hair{flex:1}
 .ob-zz::before{content:"z"}
 .ob-bang::before{content:"!"}
-.ob-fwd::after{content:" ▸"}
-.ob-fwd2::after{content:" ▸▸"}
-.ob-prev::before{content:"◂ "}
-.ob-rwd-arrow::before{content:"◂◂ "}
+.ob-fwd::after{content:" ▸" / ""}
+.ob-fwd2::after{content:" ▸▸" / ""}
+.ob-prev::before{content:"◂ " / ""}
+.ob-rwd-arrow::before{content:"◂◂ " / ""}
 
 @media (prefers-reduced-motion: reduce){
   .onboarding-arc .ob-aurora{opacity:var(--faction-default-aurora-opacity,.22)!important}

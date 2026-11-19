@@ -69,6 +69,13 @@ export default function AuthorRow({
         >
           {t("moderation.queue.author.viewAccount")}
         </button>
+        <button
+          type="button"
+          className="label-caption cursor-pointer bg-transparent border-0"
+          onClick={() => onViewAccount(praxis.author_username)}
+        >
+          {t("moderation.queue.author.viewRing")}
+        </button>
       </div>
       {confirming && (
         <ModerateConfirm

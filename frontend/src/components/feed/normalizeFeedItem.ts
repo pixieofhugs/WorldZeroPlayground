@@ -2,7 +2,6 @@ import type { ActivityFeedItem } from '../../api/activityFeed'
 import i18n from '../../i18n'
 import { factionName } from '../../utils/factions'
 import { resolveTaunt } from '../../utils/taunts'
-import { collabCopy } from '../collab/collabCopy'
 
 /**
  * Activity feed rows (#376): every faction-owned event type normalizes into ONE
@@ -111,15 +110,25 @@ function commentTargetHref(payload: Record<string, any>): string | null {
  * (`CommentThread` mounts the composer under the list), so the excerpt link
  * opens the thread and this CTA invites the answer.
  */
-function buildCommentActions(payload: Record<string, any>): FeedRowAction[] {
+function buildCommentActions(
+  payload: Record<string, any>,
+  commentGate: number | null,
+): FeedRowAction[] {
   const href = commentTargetHref(payload)
   if (href == null) return []
-  return [{ id: 'reply', label: i18n.t('feed:rowAction.reply'), tone: 'primary', href }]
+  const label =
+    commentGate == null
+      ? i18n.t('feed:rowAction.reply')
+      : i18n.t('feed:rowAction.replyGated', { level: commentGate })
+  return [{ id: 'reply', label, tone: 'primary', href }]
 }
 
 /** Map a faction-owned feed item to its row slots. Returns null for the
  *  structural/interactive types that render a companion body instead. */
-export function normalizeFeedItem(item: ActivityFeedItem): FeedRow | null {
+export function normalizeFeedItem(
+  item: ActivityFeedItem,
+  commentGate: number | null = null,
+): FeedRow | null {
   if (!FACTION_ROW_TYPES.has(item.type)) return null
   const p = item.payload ?? {}
   const actor = item.actor_display_name
@@ -221,14 +230,13 @@ export function normalizeFeedItem(item: ActivityFeedItem): FeedRow | null {
     case 'nudge':
       // Someone poked you to file (#1083). Sits beside the
       // `awaiting_submission` row for the same praxis, so it borrows its badge
-      // and editor link. Action copy comes from `collabCopy` (composer
-      // vocabulary), in the SENDER's voice (`context_faction_slug` = actor's).
+      // and editor link. Eager `feed` copy: the Sidebar reads this outside any loader.
       return {
         slug,
         actor,
         actorHref:
           p.from_character_id != null ? `/characters/${p.from_character_id}` : null,
-        action: collabCopy(slug, 'nudgeFeedAction'),
+        action: i18n.t('feed:row.action.nudgedYou'),
         badge:
           p.praxis_type === 'collab'
             ? { type: 'collab', label: i18n.t('feed:badge.collab') }
@@ -277,7 +285,7 @@ export function normalizeFeedItem(item: ActivityFeedItem): FeedRow | null {
         headlineQuoted: true,
         points: null,
         level: null,
-        actions: buildCommentActions(p),
+        actions: buildCommentActions(p, commentGate),
       }
     case 'vote_on_mine':
     case 'vote_changed_on_mine':

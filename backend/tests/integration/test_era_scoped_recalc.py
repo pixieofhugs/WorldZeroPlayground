@@ -327,7 +327,8 @@ async def test_failing_a_past_era_praxis_debits_that_era(
     before_prior_score = (await _stats(db_session, character, prior_era)).score
 
     await moderate_praxis(
-        old.id, ModerationStatus.failed.value, "Not actually done", db_session
+        old.id, ModerationStatus.failed.value, "Not actually done", db_session,
+        actor_id=character.account_id,
     )
     await db_session.commit()
 

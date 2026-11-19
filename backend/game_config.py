@@ -217,6 +217,10 @@ class EraConfig:
     # Era files state it explicitly: the cadence is the era's (#1617).
     habit_window_days: int = 7
 
+    # Hours an account waits between first-time praxis posts (#3474); 24 = one a
+    # day, rolling from the last post. Admins are exempt.
+    praxis_post_cooldown_hours: int = 24
+
     # PINNED to `na` in every era (ADR-0087), validated in __post_init__ rather
     # than deleted so the rule is explained where someone tries to break it.
     # Kept separate from reset_faction_slug on purpose (#1559, #1580).
@@ -240,7 +244,9 @@ class EraConfig:
     secret_faction_glimpse_level: int = 6
     secret_faction_join_level: int = 8   # on an existing char
 
-    tasks: tuple = ()                # tuple[TaskDef, ...]
+    tasks: tuple = ()                # tuple[TaskDef, ...]: new tasks
+    # Existing tasks (by title) the era roll brings back from the retired pool.
+    reactivate_tasks: tuple[str, ...] = ()
 
     # Indexed by level like level_thresholds (index 0 never shown).
     level_profiles: tuple = ()       # tuple[LevelProfile, ...]

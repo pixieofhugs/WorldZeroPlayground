@@ -46,7 +46,9 @@ from schemas.admin import (
 # ``seed`` imports no service, so no cycle; it owns the mirror (runs every deploy).
 from seed import upsert_era_factions
 from services.faction_service import refuse_hidden_faction
-from services.character import record_level_reached
+from services.character import MOD_BANNED, record_level_reached
+from services.character_stats import recalculate_for_account_votes
+from services.era_tasks import sync_era_tasks, tasks_to_reactivate
 from services.duel import forfeit_settled_duels_for_character
 from services.mod_log import log_mod_action
 from services.praxis import moderate_praxis
@@ -213,8 +215,18 @@ async def list_characters(
     ]
 
 
+async def list_characters_to_reset(session: AsyncSession) -> list[Character]:
+    """Lives an era roll resets: active plus mod-banned, so an unban is clean."""
+    result = await session.execute(
+        select(Character).where(
+            or_(Character.status != CharacterStatus.banned, MOD_BANNED)
+        )
+    )
+    return list(result.scalars().all())
+
+
 async def list_active_characters(session: AsyncSession) -> list[Character]:
-    """Return every non-banned character — shared by era-reset and stats-backfill."""
+    """Return every non-banned character, for the stats backfill."""
     result = await session.execute(
         select(Character).where(Character.status != CharacterStatus.banned)
     )
@@ -410,7 +422,9 @@ async def remove_flagged_praxes_by_author(
     )
     praxis_ids = list(result.scalars())
     for praxis_id in praxis_ids:
-        await moderate_praxis(praxis_id, ModerationStatus.hidden.value, None, session)
+        await moderate_praxis(
+            praxis_id, ModerationStatus.hidden.value, None, session, actor_id=actor_id
+        )
     await log_mod_action(
         session, actor_id, "remove_flagged", "character", character_id,
         str(len(praxis_ids)),
@@ -433,8 +447,11 @@ async def apply_ban(
 
     Un-banning refuses a departed life: ``departed_at`` is written only by the
     player's own ``soft_delete_character``; ``status`` alone can't tell them apart.
+    A mod-banned life of a deleted account stays unstamped, so that is checked too.
     """
-    if not banned and character.departed_at is not None:
+    account = await session.get(Account, character.account_id)
+    deleted = account is not None and account.status == AccountStatus.deleted
+    if not banned and (character.departed_at is not None or deleted):
         raise_coded(
             409,
             ErrorCode.character_departed_not_restorable,
@@ -451,6 +468,7 @@ async def apply_ban(
     await log_mod_action(
         session, actor_id, "ban" if banned else "unban", "character", character.id
     )
+    await recalculate_for_account_votes(character.account_id, session, era)
 
 
 async def set_character_stats(
@@ -614,12 +632,15 @@ async def suspend_account(
     account_id: int,
     suspended: bool,
     session: AsyncSession,
+    era: EraConfig = CURRENT_ERA,
     *,
     actor_id: int,
 ) -> Account:
     account = await session.get(Account, account_id)
     if account is None:
         raise HTTPException(status_code=404, detail="Account not found.")
+    if account.status == AccountStatus.deleted:
+        raise_coded(409, ErrorCode.account_deleted, "Account was deleted.")
     account.status = AccountStatus.suspended if suspended else AccountStatus.active
     await session.flush()
     await log_mod_action(
@@ -629,6 +650,7 @@ async def suspend_account(
         "account",
         account_id,
     )
+    await recalculate_for_account_votes(account_id, session, era)
     await session.refresh(account)
     return account
 
@@ -829,7 +851,9 @@ async def roll_into_era(
     in the system, and there is no undo.
 
     Delegates to the owners: new ``Era`` row (ADR-0042), roster mirror,
-    ``apply_era_reset`` (incoming era's flags; freezes duels #824), then
+    ``apply_era_reset`` (incoming era's flags; freezes duels #824), the incoming
+    era's ``reactivate_tasks`` (named retired ones return) and ``tasks`` (new ones
+    are created); the onboarding task is spared by the retirement, not relisted), then
     ``commit_and_bind_live_era``. ``operator`` is the ``Era.started_by_id`` audit.
 
     Refuses an unregistered key and the already-live era (a full destructive
@@ -855,7 +879,28 @@ async def roll_into_era(
             f"{era_config.name} is already the live era.",
         )
 
-    characters = await list_active_characters(session)
+    # Before any write: a bad title refuses the whole roll.
+    to_reactivate = await tasks_to_reactivate(session, era_config)
+
+    creator_id = (
+        await session.execute(
+            select(Character.id)
+            .where(Character.account_id == operator.id)
+            .order_by(Character.id)
+            .limit(1)
+        )
+    ).scalar_one_or_none()
+    if creator_id is None:
+        board_titles = set((await session.execute(select(Task.title))).scalars())
+        if any(task.title not in board_titles for task in era_config.tasks):
+            raise_coded(
+                409,
+                ErrorCode.era_roll_needs_character,
+                "This era lists new tasks and the operator has no character "
+                "to author them.",
+            )
+
+    characters = await list_characters_to_reset(session)
     new_era_row = Era(
         # Fallback if the config file is later deleted; see models/era.py.
         name=era_config.name,
@@ -871,6 +916,10 @@ async def roll_into_era(
 
     await apply_era_reset(characters, new_era_row, session, era=era_config)
 
+    for task in to_reactivate:
+        task.status = TaskStatus.active
+    tasks_created = await sync_era_tasks(session, era_config, creator_id)
+
     # Durable first, live second; see `commit_and_bind_live_era`.
     await commit_and_bind_live_era(session, era_config)
 
@@ -879,4 +928,6 @@ async def roll_into_era(
         config_key=era_config.config_key,
         name=era_config.name,
         characters_reset=len(characters),
+        tasks_reactivated=len(to_reactivate),
+        tasks_created=tasks_created,
     )

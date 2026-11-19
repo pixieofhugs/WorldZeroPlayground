@@ -32,7 +32,7 @@ import {
   composerDropGround,
   composerLabelStyle,
   composerMetaCluster,
-  formatAutosave,
+  AutosaveStatus,
   useComposerSizes,
   type ComposerDress,
 } from "./shared";
@@ -535,11 +535,7 @@ export default function CovenEditPraxis({ state }: Props) {
                   letterSpacing: "0.06em",
                 })}
               >
-                {state.autosaveAt
-                  ? t("editPraxis.composer.statusSaved", {
-                      ago: formatAutosave(state.autosaveAt),
-                    })
-                  : t("editPraxis.composer.statusUnsaved")}
+                <AutosaveStatus at={state.autosaveAt} />
               </span>
               <WriteUpTabs
                 tab={tab}
@@ -733,6 +729,7 @@ export default function CovenEditPraxis({ state }: Props) {
               duel={state.duel}
               duelMode={state.duelMode}
               title={state.title}
+              needsProof={state.needsProof}
               submitting={state.submitting}
               switchingMode={state.switchingMode}
               publish={state.publish}

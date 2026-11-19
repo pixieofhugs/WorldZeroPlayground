@@ -94,7 +94,9 @@ async def test_praxis_and_bulk_remove_each_log_once(
     )
     assert removed.json() == {"removed": 2}
     assert await _rows(db_session) == [
-        ("remove_flagged", "character", character.id, account.id)
+        ("praxis_hidden", "praxis", ids[0], account.id),
+        ("praxis_hidden", "praxis", ids[1], account.id),
+        ("remove_flagged", "character", character.id, account.id),
     ]
 
     hidden = await client.patch(
@@ -103,8 +105,39 @@ async def test_praxis_and_bulk_remove_each_log_once(
         headers=auth_headers,
     )
     assert hidden.status_code == 200
-    assert (await _rows(db_session))[1:] == [
+    assert (await _rows(db_session))[3:] == [
         ("praxis_hidden", "praxis", ids[2], account.id)
+    ]
+
+
+@pytest.mark.asyncio
+async def test_comment_moderation_and_task_delete_each_log_once(
+    client, account, character, active_task, auth_headers, db_session
+):
+    await make_admin(db_session, account)
+    comment = await client.post(
+        f"/tasks/{active_task.id}/comments",
+        json={"body": "hello"},
+        headers=auth_headers,
+    )
+    assert comment.status_code == 201, comment.text
+    comment_id = comment.json()["id"]
+
+    moderated = await client.patch(
+        f"/admin/comments/{comment_id}/moderate",
+        json={"status": "hidden"},
+        headers=auth_headers,
+    )
+    assert moderated.status_code == 200, moderated.text
+    assert await _rows(db_session) == [
+        ("comment_hidden", "comment", comment_id, account.id)
+    ]
+
+    spare = await make_task(db_session, character, title="spare", commit=True)
+    deleted = await client.delete(f"/admin/tasks/{spare.id}", headers=auth_headers)
+    assert deleted.status_code == 204, deleted.text
+    assert (await _rows(db_session))[1:] == [
+        ("task_delete", "task", spare.id, account.id)
     ]
 
 

@@ -45,6 +45,7 @@ from schemas.praxis import (
 )
 from services import collab_consensus
 from services.albescent_reveal import is_albescent_revealed
+from services.character import is_playable
 from services.character_stats import (
     recalculate_character_stats,
     recalculate_members_stats,
@@ -808,6 +809,26 @@ async def delete_media_item(
     to the praxis. Paths go through ``resolve_stored_media_path`` (never a bare
     join); ``None`` means nothing on disk, and the row removal still succeeds.
     """
+    if praxis.status == PraxisStatus.submitted:
+        remaining = await session.scalar(
+            select(func.count())
+            .select_from(MediaItem)
+            .where(MediaItem.praxis_id == praxis.id)
+        )
+        if remaining <= 1:
+            raise_coded(
+                422,
+                ErrorCode.praxis_needs_proof,
+                "A published praxis keeps at least one photo, video or audio file.",
+                {DETAIL_CONTEXT_PARAM: "delete"},
+            )
+
+    await session.delete(media_item)
+    await session.flush()
+    # Cancels a pending publish (ADR-0012).
+    await collab_consensus.on_member_edit(praxis, session, era)
+
+    # Last, so a refused delete never strands a row on a missing file.
     abs_path = resolve_stored_media_path(media_item.file_path)
     if abs_path is not None:
         try:
@@ -819,11 +840,6 @@ async def delete_media_item(
             os.rmdir(os.path.dirname(abs_path))
         except OSError:
             pass
-
-    await session.delete(media_item)
-    await session.flush()
-    # Cancels a pending publish (ADR-0012).
-    await collab_consensus.on_member_edit(praxis, session, era)
 
 
 async def can_view_praxis(
@@ -1043,7 +1059,7 @@ async def invite_to_praxis(
         )
 
     invitee = await session.get(Character, invitee_id)
-    if invitee is None:
+    if invitee is None or not await is_playable(invitee, session):
         raise HTTPException(status_code=404, detail="Invitee not found.")
 
     if await is_active_member_of_task(invitee, praxis.task, session, era):
@@ -1231,7 +1247,7 @@ async def kick_member(
     close_member_sockets(praxis_id, member_id)
 
     # A kick resets the changed group back to drafting (ADR-0013).
-    await collab_consensus.on_member_kicked(praxis, session)
+    await collab_consensus.on_member_kicked(praxis, session, era)
 
 
 async def leave_praxis(
@@ -1298,7 +1314,7 @@ async def submit_praxis(
 
     Collab: first call opens the ``collab_auto_submit_days`` window; later calls
     approve. All approved, or the window lapses → Live. Solo/duel publish at once.
-    See ``collab_consensus.on_submit``.
+    See ``collab_consensus.on_submit`` for the proof and daily-cap guards.
     """
     # Plain read on purpose (#2874): settling first would seal twice (double
     # taunts, habit re-stamp, new submitted_at). The settling read below seals.
@@ -1319,7 +1335,7 @@ async def moderate_praxis(
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
     *,
-    actor_id: Optional[int] = None,
+    actor_id: int,
 ) -> Praxis:
     """Admin moderation: update moderation_status and admin_note.
 
@@ -1336,10 +1352,9 @@ async def moderate_praxis(
         raise HTTPException(status_code=422, detail=f"Invalid moderation status: {new_status}")
 
     praxis.moderation_status = mod_enum
-    if actor_id is not None:
-        await log_mod_action(
-            session, actor_id, f"praxis_{mod_enum.value}", "praxis", praxis_id
-        )
+    await log_mod_action(
+        session, actor_id, f"praxis_{mod_enum.value}", "praxis", praxis_id
+    )
 
     if mod_enum == ModerationStatus.flagged:
         praxis.flagged_at = datetime.now(timezone.utc)

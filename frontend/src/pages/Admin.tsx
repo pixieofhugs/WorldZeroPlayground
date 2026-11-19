@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { ALBESCENT_FACTION_SLUG, FACTION_RAINBOW_ORDER, factionName } from '../utils/factions'
@@ -54,6 +55,7 @@ function CopySheetPicker() {
 
 export default function Admin() {
   const { t } = useTranslation('admin')
+  useDocumentTitle(t('title'))
   const [activeTab, setActiveTab] = useState<Tab>(getInitialTab)
   const [accountSearch, setAccountSearch] = useState('')
 

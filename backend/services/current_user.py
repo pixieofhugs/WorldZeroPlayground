@@ -98,6 +98,7 @@ async def build_current_user(
         has_accepted_terms=has_accepted_terms,
         can_create_additional_character=eligibility.can_create_additional_character,
         can_start_as_albescent=eligibility.can_start_as_albescent,
+        character_creation_banned=eligibility.character_creation_banned,
         # Through the seam (#2400): admins see, but cannot join, Albescent.
         albescent_revealed=is_albescent_revealed(account, is_admin=is_admin, era=era),
         # The seam resolves reveal-implies-glimpse (#2770).

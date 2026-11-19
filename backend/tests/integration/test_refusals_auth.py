@@ -31,7 +31,7 @@ async def test_cli_token_refused_when_the_secret_is_unset(
     await make_admin(db_session, account)
     monkeypatch.setattr(settings, "ADMIN_CLI_SECRET", "")
 
-    for sent in ("", "anything"):
+    for sent in ("", "anything", "sécret".encode()):
         resp = await _cli_token(client, sent)
         assert resp.status_code == 403
         assert "access_token" not in resp.text
@@ -60,6 +60,7 @@ async def test_cli_token_non_ascii_header_is_a_403_not_a_500(
     resp = await _cli_token(client, "sécret".encode())
 
     assert resp.status_code == 403
+    assert "access_token" not in resp.text
 
 
 @pytest.mark.asyncio
@@ -100,8 +101,8 @@ async def test_suspended_accounts_existing_token_is_refused(
         f"/praxes/{praxis_solo.id}/vote", json={"value": 3}, headers=auth_headers2
     )
 
-    assert me.status_code == 401
-    assert vote.status_code == 401
+    assert me.status_code == 403
+    assert vote.status_code == 403
     assert await db_session.scalar(select(func.count()).select_from(Vote)) == 0
 
 

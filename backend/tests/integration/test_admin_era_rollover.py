@@ -11,14 +11,15 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import game_config
+from faction_slugs import real_faction_slugs
 from game_config import era_config_for_key
 from models.account import Account
-from models.character import Character
+from models.character import Character, CharacterStatus
 from models.character_stats import CharacterStats
 from models.era import Era
 from models.faction import Faction, FactionStatus
 from seed import HIDDEN_FACTION_SLUGS
-from tests.integration.factories import make_admin
+from tests.integration.factories import make_admin, make_character
 
 # --- GET /admin/eras ---
 
@@ -382,3 +383,175 @@ async def test_rebind_on_a_database_with_no_era_row_does_not_raise(
     bound = await rebind_live_era(db_session)
 
     assert bound.config_key == game_config.COMPILE_TIME_ERA_CONFIG_KEY
+
+
+async def test_an_era_roll_resets_a_mod_banned_life(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    era: Era,
+    account: Account,
+    auth_headers: dict,
+    some_faction: Faction,
+):
+    from services.admin_service import roll_into_era
+
+    era_2 = era_config_for_key("era_2")
+    old_slug = next(
+        slug
+        for slug in real_faction_slugs(game_config.CURRENT_ERA)
+        if slug != era_2.reset_faction_slug
+    )
+    banned = await make_character(
+        db_session, era, username="rollban", faction_slug=old_slug, level=3
+    )
+    banned.status = CharacterStatus.banned
+    await make_admin(db_session, account)
+
+    await roll_into_era("era_2", account, db_session)
+
+    await db_session.commit()
+    resp = await client.post(
+        f"/admin/characters/{banned.id}/ban",
+        json={"banned": False},
+        headers=auth_headers,
+    )
+
+    assert resp.status_code == 200
+    await db_session.refresh(banned)
+    assert era_2.reset_faction
+    assert banned.faction_slug == era_2.reset_faction_slug
+
+
+async def test_an_era_roll_leaves_a_self_deleted_life_alone(
+    db_session: AsyncSession, era: Era, some_faction: Faction
+):
+    from services.admin_service import list_characters_to_reset
+    from services.character import soft_delete_character
+
+    gone = await make_character(
+        db_session,
+        era,
+        username="gone",
+        faction_slug=real_faction_slugs(game_config.CURRENT_ERA)[0],
+    )
+    await soft_delete_character(gone.id, db_session)
+
+    assert gone.id not in {c.id for c in await list_characters_to_reset(db_session)}
+
+
+# --- the incoming era's task list ---
+
+
+def _era_listing(monkeypatch, *titles: str, reactivate: tuple[str, ...] = ()):
+    import dataclasses
+
+    import services.admin_service as admin_service
+    from game_config import TaskDef
+
+    listed = dataclasses.replace(
+        era_config_for_key("era_2"),
+        reactivate_tasks=reactivate,
+        tasks=tuple(
+            TaskDef(
+                title=title,
+                description="d",
+                faction_slug=real_faction_slugs(game_config.CURRENT_ERA)[0],
+                level_required=1,
+                point_value=5,
+            )
+            for title in titles
+        ),
+    )
+    real = admin_service.era_config_for_key
+    monkeypatch.setattr(
+        admin_service,
+        "era_config_for_key",
+        lambda key: listed if key == "era_2" else real(key),
+    )
+    return listed
+
+
+async def test_the_roll_opens_the_new_era_with_its_task_list(
+    db_session: AsyncSession,
+    account: Account,
+    era: Era,
+    character: Character,
+    some_faction: Faction,
+    monkeypatch,
+):
+    from models.task import Task, TaskStatus
+    from seed import ensure_onboarding_task
+    from services.admin_service import roll_into_era
+    from tests.integration.factories import make_task
+
+    slug = real_faction_slugs(game_config.CURRENT_ERA)[0]
+    await make_admin(db_session, account)
+    await ensure_onboarding_task(db_session, character.id)
+    await make_task(
+        db_session, character, title="Alpha", faction_slug=slug
+    )
+    await make_task(
+        db_session, character, title="Other", faction_slug=slug
+    )
+    _era_listing(monkeypatch, "Beta", reactivate=("Alpha",))
+
+    out = await roll_into_era("era_2", account, db_session)
+
+    assert (out.tasks_reactivated, out.tasks_created) == (1, 1)
+    rows = (await db_session.execute(select(Task))).scalars().all()
+    active = {task.title for task in rows if task.status == TaskStatus.active}
+    assert active == {"Alpha", "Beta", "Introduce Yourself"}
+    other = next(task for task in rows if task.title == "Other")
+    assert other.status == TaskStatus.retired
+
+
+async def test_the_roll_refuses_new_tasks_when_the_operator_has_no_character(
+    db_session: AsyncSession,
+    account: Account,
+    era: Era,
+    some_faction: Faction,
+    monkeypatch,
+):
+    from services.admin_service import roll_into_era
+
+    await make_admin(db_session, account)
+    _era_listing(monkeypatch, "Beta")
+
+    with pytest.raises(HTTPException) as caught:
+        await roll_into_era("era_2", account, db_session)
+
+    assert caught.value.status_code == 409
+    assert caught.value.detail["code"] == "ERA_ROLL_NEEDS_CHARACTER"
+    rows = (await db_session.execute(select(Era))).scalars().all()
+    assert [row.config_key for row in rows] == [era.config_key]
+
+
+@pytest.mark.parametrize("twins", [0, 2])
+async def test_the_roll_refuses_a_reactivation_title_matching_not_one_task(
+    db_session: AsyncSession,
+    account: Account,
+    era: Era,
+    character: Character,
+    some_faction: Faction,
+    monkeypatch,
+    twins: int,
+):
+    from models.task import Task, TaskStatus
+    from services.admin_service import roll_into_era
+    from tests.integration.factories import make_task
+
+    slug = real_faction_slugs(game_config.CURRENT_ERA)[0]
+    await make_admin(db_session, account)
+    for _ in range(twins):
+        await make_task(db_session, character, title="Alpha", faction_slug=slug)
+    _era_listing(monkeypatch, reactivate=("Alpha",))
+
+    with pytest.raises(HTTPException) as caught:
+        await roll_into_era("era_2", account, db_session)
+
+    assert caught.value.status_code == 409
+    assert caught.value.detail["code"] == "ERA_REACTIVATE_AMBIGUOUS"
+    rows = (await db_session.execute(select(Era))).scalars().all()
+    assert [row.config_key for row in rows] == [era.config_key]
+    tasks = (await db_session.execute(select(Task))).scalars().all()
+    assert all(task.status == TaskStatus.active for task in tasks)

@@ -1883,6 +1883,11 @@
               }
             ]
           },
+          "character_creation_banned": {
+            "default": false,
+            "title": "Character Creation Banned",
+            "type": "boolean"
+          },
           "email": {
             "default": "",
             "title": "Email",
@@ -1969,6 +1974,7 @@
           "has_accepted_terms",
           "can_create_additional_character",
           "can_start_as_albescent",
+          "character_creation_banned",
           "albescent_revealed",
           "albescent_glimpsed",
           "second_character_level_required",
@@ -2602,13 +2608,23 @@
           "name": {
             "title": "Name",
             "type": "string"
+          },
+          "tasks_created": {
+            "title": "Tasks Created",
+            "type": "integer"
+          },
+          "tasks_reactivated": {
+            "title": "Tasks Reactivated",
+            "type": "integer"
           }
         },
         "required": [
           "era_id",
           "config_key",
           "name",
-          "characters_reset"
+          "characters_reset",
+          "tasks_reactivated",
+          "tasks_created"
         ],
         "title": "EraRollOut",
         "type": "object"
@@ -6118,6 +6134,45 @@
         "title": "ReturningPlayerOut",
         "type": "object"
       },
+      "RingRecipient": {
+        "description": "One account an account's votes went to (admin-only).",
+        "properties": {
+          "account_id": {
+            "title": "Account Id",
+            "type": "integer"
+          },
+          "average_stars": {
+            "title": "Average Stars",
+            "type": "number"
+          },
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "reciprocal": {
+            "title": "Reciprocal",
+            "type": "boolean"
+          },
+          "share": {
+            "title": "Share",
+            "type": "number"
+          },
+          "votes": {
+            "title": "Votes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "account_id",
+          "display_name",
+          "votes",
+          "average_stars",
+          "share",
+          "reciprocal"
+        ],
+        "title": "RingRecipient",
+        "type": "object"
+      },
       "SidebarOut": {
         "description": "Everything the rail's three data panels draw, in one response.\n\nOne field per panel, and nothing else. Identity is deliberately absent: the\ncharacter card reads ``user.character`` from ``/auth/me``, which ~20 call\nsites already refetch, and fattening that payload would make every one of\nthem heavier (#1349). This carries only what the panels need.\n\nRequests are a NUMBER, not a list (#1456). The rail listed them until\n#1423; under ADR-0070 the Requests queue on ``/updates`` is the only\nsurface a request can be answered on, so all that is left here is the\nbadge on the collapsed handle, the mobile bell and the mobile FieldDesk —\nthree consumers of one integer. Shipping up to a hundred hydrated feed\nitems on a page-load path to produce it was the whole of the cost.\n\nThe count is the same one ``counts.requests`` reports, so the badge and\nthe queue's card list cannot disagree — see\n:func:`services.activity_feed.get_sidebar_feed`.",
         "properties": {
@@ -6983,6 +7038,32 @@
         "title": "VoteOnMinePayload",
         "type": "object"
       },
+      "VoteRingOut": {
+        "properties": {
+          "recipients": {
+            "items": {
+              "$ref": "#/components/schemas/RingRecipient"
+            },
+            "title": "Recipients",
+            "type": "array"
+          },
+          "top3_share": {
+            "title": "Top3 Share",
+            "type": "number"
+          },
+          "total_votes": {
+            "title": "Total Votes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total_votes",
+          "top3_share",
+          "recipients"
+        ],
+        "title": "VoteRingOut",
+        "type": "object"
+      },
       "VoteTallyOut": {
         "description": "A praxis's vote aggregate, in the field names every praxis payload uses.\n\nDeliberately the same two names as ``PraxisOut`` / ``PraxisCardOut`` carry\n(``points_from_votes``, ``voter_count``) rather than a third vocabulary for\nthe same numbers. The retired ``VoteSummary`` used ``total_score`` /\n``total_votes``, which is why the client needed a *separate* merge function\nfor it — one shape, one merge (#1382).",
         "properties": {
@@ -7721,6 +7802,69 @@
           }
         ],
         "summary": "Admin Suspend Account",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/accounts/{account_id}/vote-ring": {
+      "get": {
+        "operationId": "admin_vote_ring_admin_accounts__account_id__vote_ring_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "account_id",
+            "required": true,
+            "schema": {
+              "title": "Account Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VoteRingOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Admin Vote Ring",
         "tags": [
           "admin"
         ]
