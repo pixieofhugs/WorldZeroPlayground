@@ -6,7 +6,7 @@ cannot say out loud. Everything the code *can* say lives in
 
 ## The shape
 
-**24 dispatched surfaces × 9 faction identities.**
+**`SURFACE_KEYS.length` dispatched surfaces × 9 faction identities.**
 
 A **surface** is a place where a faction may look like itself: a task card, a
 vote widget, a comment voice, a whole page. The list is
@@ -99,8 +99,9 @@ not — read `default.ts`, which is now the one place that answers the question.
 
 `albescent.ts` declares every `SURFACE_KEYS` entry. ADR-0046's freeze (new
 surfaces fall through to na) is Reversed; ADR-0048 governs the look. Albescent is
-a secret society hiding in plain sight (ADR-0027), so each row is `Default` **plus
-a flourish** (a drifting spectrum wash, a turning prism ring), never a repaint in
+a secret society hiding in plain sight (ADR-0027), so each row is `Default` plus
+at most a flourish (a drifting spectrum wash, a turning prism ring; several rows are
+deliberate PASS-THROUGHs, each explained in its docblock), never a repaint in
 its own colours, which would put it back in the spectrum and un-hide it. The
 per-surface reasoning is in the docblocks in `frontend/src/factions/albescent.ts`.
 

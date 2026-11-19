@@ -42,7 +42,7 @@ excluded, and Albescent is added back if the account earned it. A new life may b
 born into any faction in that set.
 
 A **per-character rejoin refusal** sits on top, in `faction_service`: a character
-that left a faction may not return to it, unless its faction has
+that left a faction this era may not rejoin it, unless that faction has
 `can_always_rejoin`. The owner ruled the code right, so this is the rule. Invites
 remain era-scoped.
 
