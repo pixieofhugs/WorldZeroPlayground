@@ -24,7 +24,7 @@ _Avoid_: variant (reserve "variant" for the `resolveVariant` mechanism), skin, t
 The **`na` / Unaffiliated** rendering of a surface — *not* a personality-free generic.
 `default` ≡ `na` ≡ Unaffiliated are **one visual identity**: the spectrum-band editorial
 kit (neutral paper + `--faction-default-*` tokens + system fonts, rainbow as accent;
-ADR-0039 / ADR-0046 / ADR-0048). So `DefaultXxx` **is the na kit**, serving both
+ADR-0039 / ADR-0048; the ADR-0046 freeze is reversed). So `DefaultXxx` **is the na kit**, serving both
 unaffiliated characters and the fall-through for any faction that registers no archetype
 of its own. A `Default*` that invents its own metaphor or voice, or borrows another
 faction's display font (as the retired cork-board `DefaultEditPraxis` did with Caveat +
@@ -169,7 +169,7 @@ slots exist. **Made law in ADR-0016:** every per-faction surface exposes **one d
 contract** (its slots); each slot is rendered by a **shared control that owns its own
 binding** (reads the slot from the contract), so an archetype is handed only
 `{contract, skin}` and *cannot* feed a slot different data. Archetypes own **skin +
-arrangement** only; faction-specific copy is catalog content (ADR-0010) keyed by the
+arrangement** only; faction-specific copy is catalog content (ADR-0032, which superseded ADR-0010) keyed by the
 contextual faction, not a structural slot difference.
 
 **Contextual faction**:
@@ -380,7 +380,7 @@ change. This is per-faction surface #8; it is the **hero** of a praxis card and 
 interactive *caster* form (the read-only *average-summary* badge is retired — see **Points from votes**).
 **Ownership:** the per-faction tier *structure* (value, label, numeral style) lives in a
 `voteReframes` registry; the label *words* are literals in that registry for now (migrating them to
-the copy catalog `copy/en.ts` / ADR-0010 is deferred to its own issue); the *visual ramp* stays in
+the copy catalog, now `frontend/src/locales/en/*.json` / ADR-0032, is deferred to its own issue); the *visual ramp* stays in
 the archetype (don't-unify-the-look). There is **no shared scaffold**: the login-gate + summary live
 in `VoteShell`, and each archetype keeps its own `useVote` + tiles + theme — arrangement stays
 per-archetype (ADR-0016). One reframe lookup powers the caster **and** the per-voter breakdown
