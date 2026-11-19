@@ -16,6 +16,7 @@ import { extractError } from "../../utils/errors";
 import { formatTimestamp } from "../../utils/dates";
 import { useAuth } from "../../auth/AuthContext";
 import AdminRosterSection from "./AdminRosterSection";
+import VoteRingPanel from "./VoteRingPanel";
 
 /** Two backend enums, one `accounts.status.*` namespace (#1610). The account
  *  enum is not on the wire schema, so it is stated here. */
@@ -271,6 +272,7 @@ export default function AccountsTab() {
                       ))}
                     </div>
                   )}
+                  <VoteRingPanel key={account.id} accountId={account.id} />
                 </div>
               )}
             </div>

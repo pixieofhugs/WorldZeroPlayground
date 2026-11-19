@@ -84,6 +84,15 @@ export async function getAccounts(email?: string): Promise<AccountSummary[]> {
   return data
 }
 
+export type VoteRing = components['schemas']['VoteRingOut']
+
+export async function getVoteRing(id: number): Promise<VoteRing> {
+  const { data } = await apiGet('/admin/accounts/{account_id}/vote-ring', {
+    params: { path: { account_id: id } },
+  })
+  return data
+}
+
 export async function getAccountDetail(id: number): Promise<AccountDetail> {
   const { data } = await apiGet('/admin/accounts/{account_id}', {
     params: { path: { account_id: id } },
