@@ -442,7 +442,7 @@ export default function EphemeristsCreateCharacter({ state }: { state: CreateCha
                   cursor: submitting ? 'wait' : 'pointer',
                 }}
               >
-                {submitting ? t('createCharacter.submitBusy') : (<>{t('createCharacter.submitIdle')}<span aria-hidden="true"> ▸</span></>)}
+                {submitting ? t('createCharacter.submitBusy') : (<>{t('createCharacter.submitIdle')}<span aria-hidden="true"> {t('createCharacter.submitGlyph')}</span></>)}
                 <Sign name="openEye" size={SUBMIT_SIGN} color={CTA_INK} weight={1.4} />
               </button>
             </>

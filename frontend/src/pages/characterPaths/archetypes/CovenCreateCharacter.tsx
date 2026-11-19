@@ -451,7 +451,7 @@ export default function CovenCreateCharacter({ state }: { state: CreateCharacter
                 }}
               >
                 <Spark size={CAST_SPARK} color={CTA_INK} />
-                {submitting ? t('createCharacter.submitBusy') : (<>{t('createCharacter.submitIdle')}<span aria-hidden="true"> ▸</span></>)}
+                {submitting ? t('createCharacter.submitBusy') : (<>{t('createCharacter.submitIdle')}<span aria-hidden="true"> {t('createCharacter.submitGlyph')}</span></>)}
               </button>
             }
           />

@@ -383,7 +383,7 @@ export default function WowCreateCharacter({ state }: { state: CreateCharacterSt
                   cursor: submitting ? 'wait' : 'pointer',
                 }}
               >
-                {submitting ? t('createCharacter.submitBusy') : (<>{t('createCharacter.submitIdle')}<span aria-hidden="true"> ▸</span></>)}
+                {submitting ? t('createCharacter.submitBusy') : (<>{t('createCharacter.submitIdle')}<span aria-hidden="true"> {t('createCharacter.submitGlyph')}</span></>)}
                 <WowSpark color={ON_GOLD} />
               </button>
             }

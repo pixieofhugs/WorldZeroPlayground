@@ -19,6 +19,7 @@
     "callingHint": "Some of these already know you.",
     "callingOptional": "· optional — invitations you've earned",
     "submitIdle": "Create & step out",
+    "submitGlyph": "▸",
     "submitBusy": "Stepping out…",
     "startsAt": "starts at Lvl 0 · 0 pts",
     "previewFallbackName": "Wanderer",
