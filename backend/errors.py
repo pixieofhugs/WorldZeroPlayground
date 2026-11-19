@@ -68,6 +68,7 @@ class ErrorCode(str, enum.Enum):
     # -- Media limits -------------------------------------------------------
     media_type_unsupported = "MEDIA_TYPE_UNSUPPORTED"
     media_too_large = "MEDIA_TOO_LARGE"
+    media_unreadable = "MEDIA_UNREADABLE"
     avatar_must_be_image = "AVATAR_MUST_BE_IMAGE"
     avatar_too_large = "AVATAR_TOO_LARGE"
 

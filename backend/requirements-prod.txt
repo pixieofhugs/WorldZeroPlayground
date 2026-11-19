@@ -9,6 +9,7 @@ authlib
 itsdangerous
 python-multipart
 Pillow
+pillow-heif
 httpx
 # The praxis room (ADR-0073). Both MIT, as is the pycrdt-store dependency
 # pycrdt-websocket pulls in. Pinned rather than floating like the rest of this

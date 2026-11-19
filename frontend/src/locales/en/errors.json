@@ -94,6 +94,7 @@
 
     "MEDIA_TYPE_UNSUPPORTED": "Unsupported media type.",
     "MEDIA_TOO_LARGE": "File too large (max {{max_megabytes}} MB).",
+    "MEDIA_UNREADABLE": "We couldn't read that file. Try a different one.",
     "AVATAR_MUST_BE_IMAGE": "Avatar must be an image file.",
     "AVATAR_TOO_LARGE": "Avatar too large (max {{max_megabytes}} MB).",
     "PRAXIS_NEEDS_PROOF": "Add a photo, video or audio file before you submit.",
