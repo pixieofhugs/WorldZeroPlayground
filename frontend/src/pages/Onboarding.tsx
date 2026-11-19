@@ -9,8 +9,8 @@ import OnboardingFlow from './onboarding/OnboardingFlow'
 /** `/start`: the QR code's arc (`docs/spec/SPEC-onboarding.md`), unguarded. The flow is `OnboardingFlow`; this page owns the hand-off and the one resume, the OAuth round trip (`utils/onboardingResume`), consumed on mount. */
 export default function Onboarding() {
   const navigate = useNavigate()
-  const { t } = useTranslation('common')
-  useDocumentTitle(t('pageTitles.welcome'))
+  const { t } = useTranslation('onboarding')
+  useDocumentTitle(t('flow.welcome'))
 
   // Read once (not in render, which StrictMode double-invokes); cleared in the effect.
   const [resumed] = useState(onboardingHandoffPending)

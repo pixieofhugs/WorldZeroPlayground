@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { useTranslation } from 'react-i18next'
 import PageTitle from '../components/ui/PageTitle'
 import FactionSelectCard from '../components/selectCard/FactionSelectCard'
@@ -37,6 +38,7 @@ export default function Factions() {
 /** Exported for tests: the desktop grid over a controlled state. */
 export function DesktopFactions({ state }: { state: FactionsDirectoryState }) {
   const { t } = useTranslation('factions')
+  useDocumentTitle('Factions')
   const { user } = useAuth()
   const character = user?.character ?? null
   const navigate = useNavigate()

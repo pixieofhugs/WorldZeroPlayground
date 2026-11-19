@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import PraxisCard from '../components/praxisCard/PraxisCard'
 import PageTitle from '../components/ui/PageTitle'
 import { extractError } from '../utils/errors'
@@ -20,6 +21,7 @@ export default function Praxes() {
 
 function DesktopPraxes({ state }: { state: PraxesFeedState }) {
   const { t } = useTranslation('praxis')
+  useDocumentTitle(t('listPage.title'))
   const { t: tc } = useTranslation('common')
   const {
     items,

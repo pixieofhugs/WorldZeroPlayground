@@ -16,7 +16,7 @@ export default function PraxisDetail() {
   const { t } = useTranslation(['praxis', 'common'])
   const { id } = useParams<{ id: string }>()
   const state = usePraxisDetail(id)
-  useDocumentTitle(state.praxis?.task_title ?? t('common:pageTitles.praxis'))
+  useDocumentTitle(state.praxis?.task_title ?? t('listPage.title'))
 
   if (state.loading) return <div className="py-8 font-body text-muted">{t('common:loading')}</div>
   if (state.fetchError) return (

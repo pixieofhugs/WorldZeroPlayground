@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import TaskCard from '../components/taskCard/TaskCard'
 import PageTitle from '../components/ui/PageTitle'
 import { extractError } from '../utils/errors'
@@ -21,6 +22,7 @@ export default function Tasks() {
 
 function DesktopTasks({ state }: { state: TasksState }) {
   const { t } = useTranslation('tasks')
+  useDocumentTitle('Tasks')
   const { t: tc } = useTranslation('common')
   const {
     user,

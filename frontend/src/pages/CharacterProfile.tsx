@@ -73,7 +73,7 @@ export default function CharacterProfile() {
     [id],
   );
   const character = data?.[0] ?? null;
-  useDocumentTitle(character?.display_name ?? t("pageTitles.character"));
+  useDocumentTitle(character?.display_name ?? t("nav.players"));
   const submissions = data?.[1] ?? [];
   const proposedTasks = data?.[2] ?? [];
   const [relationship, setRelationship] = useState<RelationshipListItem | null>(

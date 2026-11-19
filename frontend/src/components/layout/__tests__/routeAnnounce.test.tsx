@@ -24,6 +24,7 @@ function Probe() {
   go = useNavigate()
   return null
 }
+
 const mount = () =>
   render(
     <MemoryRouter initialEntries={['/tasks']}>
@@ -34,18 +35,19 @@ const mount = () =>
   )
 
 describe('route changes are announced', () => {
-  it('titles the first load without stealing focus', () => {
+  it('has a skip link to <main> as the first focusable element', () => {
     mount()
-    expect(document.title).toBe('Tasks · World Zero')
+    const first = document.querySelector<HTMLElement>('a[href], button, input, [tabindex="0"]')
+    expect(first?.getAttribute('href')).toBe('#content')
+    expect(first?.textContent).toBe('Skip to content')
     expect(document.activeElement).toBe(document.body)
   })
 
-  it('retitles and focuses <main> on a pathname change only', () => {
+  it('focuses <main> on a pathname change only', () => {
     mount()
     act(() => go('/tasks?q=x'))
     expect(document.activeElement).toBe(document.body)
     act(() => go('/leaderboard'))
-    expect(document.title).toBe('Leaderboard · World Zero')
     expect(document.activeElement).toBe(document.getElementById('content'))
   })
 })

@@ -19,7 +19,7 @@ export default function TaskDetail() {
   const { id } = useParams<{ id: string }>();
   const { t } = useTranslation(["tasks", "common"]);
   const state = useTaskDetail(id);
-  useDocumentTitle(state.task?.title ?? t("common:pageTitles.task"));
+  useDocumentTitle(state.task?.title ?? t("detail.pageTitle"));
 
   if (state.loading)
     return <div className="py-8 font-body text-muted">{t("common:loading")}</div>;
