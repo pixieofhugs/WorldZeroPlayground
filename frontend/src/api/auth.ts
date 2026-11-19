@@ -45,7 +45,7 @@ export type AuthProvider = 'google' | 'discord'
 
 /**
  * A full navigation. Failure redirects to `/?login=<ErrorCode>`, rendered by
- * `pages/Home.tsx`.
+ * `components/LoginNotice.tsx`.
  */
 export function loginWith(provider: AuthProvider): void {
   window.location.href = `${API_BASE_URL}/auth/${provider}`

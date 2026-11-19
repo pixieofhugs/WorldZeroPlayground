@@ -10,9 +10,12 @@ import { Link } from 'react-router-dom'
 import {
   getFlaggedPraxes,
   getFlaggedComments,
-  getAdminCharacters,
+  getOverview,
   getMessages,
   moderatePraxis,
+  banCharacter,
+  removeFlaggedPraxes,
+  suspendAccount,
   moderateComment,
   archiveMessage,
 } from '../../api/admin'
@@ -26,6 +29,8 @@ import { formatTimestamp, relativeTime } from '../../utils/dates'
 import { extractError } from '../../utils/errors'
 import { flagReasonLabel } from '../../utils/flagReasons'
 import i18n from '../../i18n'
+import AuthorRow from './AuthorRow'
+import type { AuthorAction } from './AuthorRow'
 
 
 export type QueueItem =
@@ -161,11 +166,11 @@ function QueueCardFrame({
 }
 
 
-export default function ModerationTab() {
+export default function ModerationTab({ onViewAccount }: { onViewAccount: (search: string) => void }) {
   const { t } = useTranslation(['admin', 'common'])
   const [flaggedPraxes, setFlaggedPraxes] = useState<FlaggedPraxisOut[]>([])
   const [flaggedComments, setFlaggedComments] = useState<FlaggedCommentOut[]>([])
-  const [activeMembers, setActiveMembers] = useState<number | null>(null)
+  const [activeAccounts, setActiveAccounts] = useState<number | null>(null)
   const [messages, setMessages] = useState<ContactMessageOut[]>([])
   const [showArchived, setShowArchived] = useState(false)
   const [typeFilter, setTypeFilter] = useState<QueueFilter>('all')
@@ -176,6 +181,8 @@ export default function ModerationTab() {
   const [failNoteTarget, setFailNoteTarget] = useState<number | null>(null)
   const [failNote, setFailNote] = useState('')
 
+  const [confirming, setConfirming] = useState<{ praxisId: number; kind: AuthorAction } | null>(null)
+
   // Session-only, newest first; no undo or audit table, deliberately (#237).
   const [actionLog, setActionLog] = useState<ActionLogEntry[]>([])
 
@@ -184,13 +191,13 @@ export default function ModerationTab() {
     Promise.all([
       getFlaggedPraxes(),
       getFlaggedComments(),
-      getAdminCharacters('active'),
+      getOverview(),
       getMessages(showArchived),
     ])
-      .then(([praxes, comments, characters, messageRows]) => {
+      .then(([praxes, comments, overview, messageRows]) => {
         setFlaggedPraxes(praxes)
         setFlaggedComments(comments)
-        setActiveMembers(characters.length)
+        setActiveAccounts(overview.active_accounts)
         setMessages(messageRows)
       })
       .catch((err) => setError(extractError(err, t('moderation.loadError'))))
@@ -226,6 +233,32 @@ export default function ModerationTab() {
       refresh()
     } catch (err) {
       setActionError(extractError(err, t('moderation.actionError')))
+    }
+  }
+
+  const moderateAuthor = async (
+    praxis: FlaggedPraxisOut,
+    kind: AuthorAction,
+    on: boolean,
+  ) => {
+    setActionError(null)
+    const name = praxis.created_by_display_name
+    try {
+      if (kind === 'removeAll') {
+        const count = await removeFlaggedPraxes(praxis.created_by_id)
+        logAction(t('moderation.log.removedAllAuthor', { name, count }))
+      } else {
+        if (kind === 'ban') await banCharacter(praxis.created_by_id, on)
+        else await suspendAccount(praxis.author_account_id, on)
+        logAction(
+          t(`moderation.log.${on ? '' : 'un'}${kind === 'ban' ? 'banned' : 'suspended'}Author`, { name }),
+        )
+      }
+      setConfirming(null)
+      refresh()
+    } catch (err) {
+      setActionError(extractError(err, t('moderation.actionError')))
+      throw err
     }
   }
 
@@ -288,8 +321,8 @@ export default function ModerationTab() {
           <p className="label-caption">{t('moderation.stats.openReports')}</p>
         </div>
         <div className="card px-5 py-3" style={{ minWidth: 140 }}>
-          <p className="font-display text-2xl font-bold">{activeMembers ?? '—'}</p>
-          <p className="label-caption">{t('moderation.stats.activeMembers')}</p>
+          <p className="font-display text-2xl font-bold">{activeAccounts ?? '—'}</p>
+          <p className="label-caption">{t('moderation.stats.activeAccounts')}</p>
         </div>
       </div>
 
@@ -342,6 +375,14 @@ export default function ModerationTab() {
                           &ldquo;{item.praxis.flags[0].reason_detail}&rdquo;
                         </p>
                       )}
+                      <AuthorRow
+                        praxis={item.praxis}
+                        confirming={confirming?.praxisId === item.praxis.id ? confirming.kind : null}
+                        onAsk={(kind) => setConfirming({ praxisId: item.praxis.id, kind })}
+                        onCancel={() => setConfirming(null)}
+                        onModerate={moderateAuthor}
+                        onViewAccount={onViewAccount}
+                      />
                       <Link
                         to={`/praxis/${item.praxis.id}`}
                         className="label-caption"

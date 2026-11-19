@@ -812,14 +812,50 @@ async def test_a_resolved_request_leaves_every_live_tab(
     full_feed: dict,
     auth_headers: dict,
 ):
-    """`unanswered_requests_only` is a live-feed axis; it covers duel challenges too."""
+    """ADR-0070 (#3456): an answered request leaves the queue and joins the stream."""
     await _resolve_the_requests(db_session, full_feed)
 
-    for tab in (ALL_FILTER, YOUR_STUFF_FILTER, REQUESTS_FILTER):
+    queue = await _feed(client, auth_headers, REQUESTS_FILTER)
+    queue_types = [item["type"] for item in queue["items"]]
+    assert FEED_ITEM_TYPE_COLLAB_INVITE not in queue_types
+    assert FEED_ITEM_TYPE_DUEL_CHALLENGE not in queue_types
+
+    for tab in (ALL_FILTER, YOUR_STUFF_FILTER):
         feed = await _feed(client, auth_headers, tab)
         types = [item["type"] for item in feed["items"]]
+        assert FEED_ITEM_TYPE_COLLAB_INVITE in types, tab
+        assert FEED_ITEM_TYPE_DUEL_CHALLENGE in types, tab
+
+
+@pytest.mark.asyncio
+async def test_an_unanswered_request_stays_out_of_the_stream(
+    client: AsyncClient, full_feed: dict, auth_headers: dict
+):
+    for tab in (ALL_FILTER, YOUR_STUFF_FILTER):
+        feed = await _feed(client, auth_headers, tab)
+        types = {item["type"] for item in feed["items"]}
+        assert types.isdisjoint(REQUEST_ITEM_TYPES), tab
+
+
+@pytest.mark.asyncio
+async def test_a_pending_invite_on_a_submitted_praxis_stays_out_of_the_stream(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    full_feed: dict,
+    auth_headers: dict,
+):
+    await db_session.execute(
+        update(Praxis)
+        .where(Praxis.id == full_feed["collab_praxis_id"])
+        .values(status=PraxisStatus.submitted)
+    )
+    await db_session.commit()
+
+    for tab in (ALL_FILTER, YOUR_STUFF_FILTER):
+        feed = await _feed(client, auth_headers, tab)
+        types = {item["type"] for item in feed["items"]}
         assert FEED_ITEM_TYPE_COLLAB_INVITE not in types, tab
-        assert FEED_ITEM_TYPE_DUEL_CHALLENGE not in types, tab
+        assert feed["counts"][COUNT_KEYS[tab]] == len(feed["items"]), tab
 
 
 @pytest.mark.asyncio
@@ -986,7 +1022,8 @@ async def test_selecting_one_type_does_not_shrink_the_other_types_counts(
     others with no way back (#1419 decision 19).
     """
     unfiltered = await _feed(client, auth_headers)
-    assert len(unfiltered["counts"]["by_type"]) == SEEDED_ITEM_COUNTS[ALL_FILTER]
+    # +3: the answerable request types are facets even while none is answered.
+    assert len(unfiltered["counts"]["by_type"]) == SEEDED_ITEM_COUNTS[ALL_FILTER] + 3
 
     response = await client.get(
         "/activity-feed",

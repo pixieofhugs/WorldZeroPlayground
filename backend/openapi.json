@@ -38,6 +38,37 @@
         "title": "AccountDetail",
         "type": "object"
       },
+      "AccountPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AccountSummary"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "title": "AccountPage",
+        "type": "object"
+      },
       "AccountSummary": {
         "properties": {
           "created_at": {
@@ -53,6 +84,14 @@
             "title": "Id",
             "type": "integer"
           },
+          "matched_characters": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/CharacterBrief"
+            },
+            "title": "Matched Characters",
+            "type": "array"
+          },
           "status": {
             "title": "Status",
             "type": "string"
@@ -62,7 +101,8 @@
           "id",
           "email",
           "status",
-          "created_at"
+          "created_at",
+          "matched_characters"
         ],
         "title": "AccountSummary",
         "type": "object"
@@ -3022,6 +3062,26 @@
             "title": "Applied Metatasks",
             "type": "array"
           },
+          "author_account_id": {
+            "title": "Author Account Id",
+            "type": "integer"
+          },
+          "author_account_status": {
+            "title": "Author Account Status",
+            "type": "string"
+          },
+          "author_flagged_count": {
+            "title": "Author Flagged Count",
+            "type": "integer"
+          },
+          "author_status": {
+            "title": "Author Status",
+            "type": "string"
+          },
+          "author_username": {
+            "title": "Author Username",
+            "type": "string"
+          },
           "body_text": {
             "title": "Body Text",
             "type": "string"
@@ -3273,7 +3333,12 @@
           "can_flag",
           "viewer_can_vote",
           "viewer_vote",
-          "flags"
+          "flags",
+          "author_account_id",
+          "author_username",
+          "author_status",
+          "author_account_status",
+          "author_flagged_count"
         ],
         "title": "FlaggedPraxisOut",
         "type": "object"
@@ -4673,6 +4738,11 @@
             "title": "Accounts",
             "type": "integer"
           },
+          "active_accounts": {
+            "default": 0,
+            "title": "Active Accounts",
+            "type": "integer"
+          },
           "active_tasks": {
             "title": "Active Tasks",
             "type": "integer"
@@ -4707,7 +4777,8 @@
           "praxis",
           "votes",
           "flagged_praxis",
-          "suspended_accounts"
+          "suspended_accounts",
+          "active_accounts"
         ],
         "title": "OverviewStats",
         "type": "object"
@@ -5869,6 +5940,19 @@
         ],
         "title": "RelationshipTypeEnum",
         "type": "string"
+      },
+      "RemoveFlaggedOut": {
+        "properties": {
+          "removed": {
+            "title": "Removed",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "removed"
+        ],
+        "title": "RemoveFlaggedOut",
+        "type": "object"
       },
       "ReturningPlayerOut": {
         "description": "What the consent gate may know (``GET /auth/returning-player``).\n\nThe caller is authenticated as nobody, so keep this to one field. A date, not\na timestamp: truncated in ``ReturningPlayerConsentRequired``.",
@@ -7270,7 +7354,7 @@
         "parameters": [
           {
             "in": "query",
-            "name": "email",
+            "name": "search",
             "required": false,
             "schema": {
               "anyOf": [
@@ -7281,7 +7365,30 @@
                   "type": "null"
                 }
               ],
-              "title": "Email"
+              "title": "Search"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
             }
           },
           {
@@ -7306,11 +7413,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/AccountSummary"
-                  },
-                  "title": "Response Admin List Accounts Admin Accounts Get",
-                  "type": "array"
+                  "$ref": "#/components/schemas/AccountPage"
                 }
               }
             },
@@ -7811,6 +7914,69 @@
           }
         ],
         "summary": "Ban Character",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/characters/{character_id}/praxes/remove-flagged": {
+      "post": {
+        "operationId": "remove_flagged_praxes_admin_characters__character_id__praxes_remove_flagged_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "character_id",
+            "required": true,
+            "schema": {
+              "title": "Character Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RemoveFlaggedOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Remove Flagged Praxes",
         "tags": [
           "admin"
         ]

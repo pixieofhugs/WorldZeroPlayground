@@ -250,6 +250,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/characters/{character_id}/praxes/remove-flagged": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Remove Flagged Praxes */
+        post: operations["remove_flagged_praxes_admin_characters__character_id__praxes_remove_flagged_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/characters/{character_id}/stats": {
         parameters: {
             query?: never;
@@ -2068,6 +2085,17 @@ export interface components {
             /** Status */
             status: string;
         };
+        /** AccountPage */
+        AccountPage: {
+            /** Items */
+            items: components["schemas"]["AccountSummary"][];
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Total */
+            total: number;
+        };
         /** AccountSummary */
         AccountSummary: {
             /**
@@ -2079,6 +2107,11 @@ export interface components {
             email: string;
             /** Id */
             id: number;
+            /**
+             * Matched Characters
+             * @default []
+             */
+            matched_characters: components["schemas"]["CharacterBrief"][];
             /** Status */
             status: string;
         };
@@ -3325,6 +3358,16 @@ export interface components {
              * @default []
              */
             applied_metatasks: components["schemas"]["TaskOut"][];
+            /** Author Account Id */
+            author_account_id: number;
+            /** Author Account Status */
+            author_account_status: string;
+            /** Author Flagged Count */
+            author_flagged_count: number;
+            /** Author Status */
+            author_status: string;
+            /** Author Username */
+            author_username: string;
             /** Body Text */
             body_text: string;
             /**
@@ -4007,6 +4050,11 @@ export interface components {
         OverviewStats: {
             /** Accounts */
             accounts: number;
+            /**
+             * Active Accounts
+             * @default 0
+             */
+            active_accounts: number;
             /** Active Tasks */
             active_tasks: number;
             /** Characters */
@@ -4524,6 +4572,11 @@ export interface components {
          * @enum {string}
          */
         RelationshipTypeEnum: "friend" | "foe";
+        /** RemoveFlaggedOut */
+        RemoveFlaggedOut: {
+            /** Removed */
+            removed: number;
+        };
         /**
          * ReturningPlayerOut
          * @description What the consent gate may know (``GET /auth/returning-player``).
@@ -5184,7 +5237,9 @@ export interface operations {
     admin_list_accounts_admin_accounts_get: {
         parameters: {
             query?: {
-                email?: string | null;
+                search?: string | null;
+                limit?: number;
+                offset?: number;
             };
             header?: never;
             path?: never;
@@ -5200,7 +5255,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AccountSummary"][];
+                    "application/json": components["schemas"]["AccountPage"];
                 };
             };
             /** @description Validation Error */
@@ -5439,6 +5494,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BanActionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_flagged_praxes_admin_characters__character_id__praxes_remove_flagged_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                character_id: number;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RemoveFlaggedOut"];
                 };
             };
             /** @description Validation Error */

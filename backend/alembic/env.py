@@ -1,6 +1,5 @@
 import asyncio
 import os
-import re
 import sys
 from logging.config import fileConfig
 from pathlib import Path
@@ -23,9 +22,7 @@ if config.config_file_name is not None:
 
 target_metadata = Base.metadata
 
-# Normalise postgres:// and postgresql:// to the asyncpg scheme.
 _db_url = os.environ.get("DATABASE_URL", "")
-_db_url = re.sub(r"^postgres(?:ql)?://", "postgresql+asyncpg://", _db_url)
 if _db_url:
     config.set_main_option("sqlalchemy.url", _db_url)
 
