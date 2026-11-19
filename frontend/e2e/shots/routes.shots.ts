@@ -18,7 +18,7 @@ import { SWEEP_VIEWPORTS } from '../../src/utils/contrastSweep'
  *                Feed frames: "invited=coven" lands a letter on /updates. Composer:
  *                "draft_praxis=true" + route /praxis/{draft}/edit.
  *   SHOT_DIR     output dir (default test-results/shots, emptied on each run).
- *   SHOT_VIEWPORTS  mobile (375), narrow (621), desktop (1280), wide (1920).
+ *   SHOT_VIEWPORTS  mobile (375), narrow (621), composer (700), desktop (1280), wide (1920).
  *                Default "mobile,desktop".
  *   SHOT_THEME   light | dark | both. Unset = dark, no theme in file names.
  *   MAX_SCREENS  screenfuls per page (default 4).
@@ -38,6 +38,7 @@ const MAX_SCREENS = Number(process.env.MAX_SCREENS) || 4
 const SIZES = {
   ...SWEEP_VIEWPORTS,
   narrow: { width: 621, height: 900 },
+  composer: { width: 700, height: 900 },
   wide: { width: 1920, height: 1080 },
 }
 type ShotViewport = keyof typeof SIZES
