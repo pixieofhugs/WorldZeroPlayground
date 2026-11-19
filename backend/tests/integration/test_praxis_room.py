@@ -955,6 +955,44 @@ async def test_typing_while_a_proposal_is_live_cancels_it(
         assert list(approvals) == [False, False]
 
 
+def _offline_state(doc: Doc, words: str) -> str:
+    """The browser's whole state after typing ``words`` the room never received."""
+    offline = Doc()
+    offline.apply_update(doc.get_update())
+    offline.get(ROOM_BODY_KEY, type=Text).insert(0, words)
+    return base64.b64encode(offline.get_update()).decode()
+
+
+async def test_a_proposers_unsent_edits_are_proposed_not_cancelled(
+    db_session, collab, account2, character, monkeypatch
+) -> None:
+    """#3611: merged edits are part of the proposal; the flush mustn't cancel it."""
+    async with running_rooms(
+        db_session, monkeypatch, flush_debounce_seconds=0.05
+    ) as rooms:
+        holdout = await rooms.open(collab.id, account2.id)
+        async with client_doc(holdout) as doc:
+            await _wait_for_body(doc, SEED_BODY, "the holdout")
+            state = _offline_state(doc, "offline ")
+
+            proposed = await rooms.submit(collab.id, character.id, doc_state=state)
+            assert proposed.status == PraxisStatus.pending
+            await _wait_for_record(
+                rooms, collab.id, "the proposed text", body_text=f"offline {SEED_BODY}"
+            )
+            status, proposed_at = await _proposal(rooms, collab.id)
+            assert (status, proposed_at is not None) == (PraxisStatus.pending, True)
+
+            # A duplicate of what the room already holds changes nothing.
+            await rooms.submit(collab.id, character.id, doc_state=state)
+            await _settle()
+            assert (await _proposal(rooms, collab.id))[0] == PraxisStatus.pending
+
+            # Another member's later edit still cancels.
+            doc.get(ROOM_BODY_KEY, type=Text).insert(0, "later ")
+            await _wait_for_drafting(rooms, collab.id, "the later edit to cancel")
+
+
 async def test_an_awareness_update_never_cancels_a_proposal(
     db_session, collab, account2, character, monkeypatch
 ) -> None:

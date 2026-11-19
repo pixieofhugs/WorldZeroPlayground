@@ -216,7 +216,13 @@ class _RoomFlusher:
         self._log = log
         self._changed = Event()
         self._pending = False
+        self._absorbed: dict[str, str] | None = None
         self._cancel_scope: anyio.CancelScope | None = None
+
+    def absorb(self) -> None:
+        """The document now holds text its submitter is proposing: that text
+        alone must not cancel the proposal. Any later difference still does."""
+        self._absorbed = _document_values(self._room.ydoc)
 
     def mark_changed(self) -> None:
         """The document moved. Safe from the observer: it only sets a flag."""
@@ -268,10 +274,12 @@ class _RoomFlusher:
             # Deferred: collab_consensus imports this module.
             from services.collab_consensus import on_room_edit
 
-            await on_room_edit(self._praxis_id, session)
+            if values != self._absorbed:
+                await on_room_edit(self._praxis_id, session)
             await session.commit()
         # Only after commit, so a cancelled write still flushes on close.
         self._pending = False
+        self._absorbed = None
 
 
 def _header(scope: dict[str, Any], name: str) -> str | None:
@@ -515,11 +523,17 @@ class PraxisRoomServer(WebsocketServer):
 
         ponytail: opens a room if none runs; a rejected submit strands it.
         """
-        room = await self.get_room(room_name_for(praxis_id))
+        name = room_name_for(praxis_id)
+        room = await self.get_room(name)
+        flusher = self._flushers[name]
+        clean = not flusher._pending
         try:
             room.ydoc.apply_update(update)
         except Exception:
             raise_coded(422, ErrorCode.praxis_doc_update_invalid, _INVALID_DRAFT)
+        # The submitter's own unsent edits are part of what they submit.
+        if clean:
+            flusher.absorb()
 
     def revoke(self, praxis_id: int, character_id: int) -> None:
         """Door two: close every socket this character holds on this praxis."""
