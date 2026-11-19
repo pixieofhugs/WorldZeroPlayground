@@ -117,7 +117,7 @@ async def test_comment_moderation_and_task_delete_each_log_once(
     await make_admin(db_session, account)
     comment = await client.post(
         f"/tasks/{active_task.id}/comments",
-        json={"body": "hello"},
+        json={"body_text": "hello"},
         headers=auth_headers,
     )
     assert comment.status_code == 201, comment.text
