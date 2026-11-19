@@ -15,6 +15,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
     func,
+    text,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -245,6 +246,16 @@ class MediaItem(CreatedAtMixin, Base):
 
 class PraxisInvite(CreatedAtMixin, Base):
     __tablename__ = "praxis_invite"
+    # Partial: a declined invite is re-sent as a new row.
+    __table_args__ = (
+        Index(
+            "uq_praxis_invite_pending",
+            "praxis_id",
+            "invitee_id",
+            unique=True,
+            postgresql_where=text("status = 'pending'"),
+        ),
+    )
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
     # CASCADE: see ``MediaItem.praxis_id``.
