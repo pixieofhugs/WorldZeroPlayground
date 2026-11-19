@@ -52,6 +52,12 @@ describe("Ephemerists praxis detail — the inherited layout contract", () => {
     );
   });
 
+  it("pads the score stage so the crown clears the heading (#2820)", () => {
+    // Geometry is measured in the shots; this pins the host's declaration.
+    const { html } = render(state());
+    expect(html).toContain("padding-top:var(--space-sm);display:flex");
+  });
+
   it("mounts the comments region with the layout's heading, not the thread's", () => {
     const { text } = render(state());
     expect(text, "the layout's section head").toContain("Discussion");
