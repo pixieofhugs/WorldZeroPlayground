@@ -1231,7 +1231,7 @@ async def kick_member(
     close_member_sockets(praxis_id, member_id)
 
     # A kick resets the changed group back to drafting (ADR-0013).
-    await collab_consensus.on_member_kicked(praxis, session)
+    await collab_consensus.on_member_kicked(praxis, session, era)
 
 
 async def leave_praxis(

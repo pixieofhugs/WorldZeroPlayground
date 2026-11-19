@@ -198,6 +198,22 @@ async def convert_to_solo(
     await session.flush()
 
 
+async def convert_if_sole_member(
+    praxis: Praxis, session: AsyncSession, era: EraConfig
+) -> None:
+    """The one ``collab → solo`` trigger for any exit (leave or kick, ADR-0060)."""
+    if praxis.type == PraxisType.collab and len(praxis.members) == 1:
+        survivor_character_id = praxis.members[0].character_id
+        await convert_to_solo(praxis, survivor_character_id, session, era)
+        if praxis.status == PraxisStatus.submitted:
+            # Collab modifiers give way to solo ones: reprice the survivor.
+            era_row = await get_era_row_for_praxis(praxis, session)
+            await recalculate_character_stats(
+                survivor_character_id, session, era, era_row=era_row
+            )
+            await session.flush()
+
+
 async def on_member_leave(
     praxis: Praxis, session: AsyncSession, era: EraConfig
 ) -> None:
@@ -213,24 +229,18 @@ async def on_member_leave(
     ):
         await seal_to_live(praxis, session, era)
 
-    if praxis.type == PraxisType.collab and len(praxis.members) == 1:
-        survivor_character_id = praxis.members[0].character_id
-        await convert_to_solo(praxis, survivor_character_id, session, era)
-        if praxis.status == PraxisStatus.submitted:
-            # Collab modifiers give way to solo ones: reprice the survivor.
-            era_row = await get_era_row_for_praxis(praxis, session)
-            await recalculate_character_stats(
-                survivor_character_id, session, era, era_row=era_row
-            )
-            await session.flush()
+    await convert_if_sole_member(praxis, session, era)
 
 
-async def on_member_kicked(praxis: Praxis, session: AsyncSession) -> None:
-    """Call after removing the kicked member: group re-consents (ADR-0013).
-    ``is_done`` survives."""
+async def on_member_kicked(
+    praxis: Praxis, session: AsyncSession, era: EraConfig
+) -> None:
+    """Call after removing the kicked member: group re-consents (ADR-0013), or
+    converts to solo if one member is left. ``is_done`` survives."""
     for member in praxis.members:
         member.has_approved = False
         member.approved_at = None
     praxis.status = PraxisStatus.in_progress
     praxis.submit_proposed_at = None
     await session.flush()
+    await convert_if_sole_member(praxis, session, era)
