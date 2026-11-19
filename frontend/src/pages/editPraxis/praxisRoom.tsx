@@ -30,9 +30,16 @@ import {
   samePresence,
 } from "./roomPresence";
 import { shouldReconnectRoom } from "./roomReconnect";
-import { proveRoomDelivery } from "./roomDelivery";
-import { roomStoreName, trackRoomDelivery, trackRoomStore } from "./roomStore";
+import { roomStoreName, trackRoomState, trackRoomStore } from "./roomStore";
 import { API_BASE_URL } from "../../api/baseUrl";
+
+function bytesToBase64(bytes: Uint8Array): string {
+  let binary = "";
+  for (let start = 0; start < bytes.length; start += 0x8000) {
+    binary += String.fromCharCode(...bytes.subarray(start, start + 0x8000));
+  }
+  return btoa(binary);
+}
 
 /** Must match `ROOM_BODY_KEY` in `praxis_room.py`; a mismatch is a silent empty doc. */
 const ROOM_BODY_KEY = "body";
@@ -197,13 +204,13 @@ export function PraxisRoomProvider({
       onUpdateRef.current?.(new Date());
     };
     doc.on("update", onDocUpdate);
-    const untrackDelivery = trackRoomDelivery(praxisId, (timeoutMs) =>
-      proveRoomDelivery(provider, doc, timeoutMs),
+    const untrackState = trackRoomState(praxisId, () =>
+      bytesToBase64(Y.encodeStateAsUpdate(doc)),
     );
 
     return () => {
       doc.off("update", onDocUpdate);
-      untrackDelivery();
+      untrackState();
       provider.off("sync", onSync);
       provider.off("status", onStatus);
       provider.off("closed", onClosed);
