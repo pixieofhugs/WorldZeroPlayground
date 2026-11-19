@@ -60,10 +60,11 @@ def _dsn(database: str) -> str:
 
 
 def _alembic(*args: str) -> "subprocess.CompletedProcess[str]":
+    _asyncpg_url = _dsn(MIGRATION_TEST_DB).replace("://", "+asyncpg://", 1)
     return subprocess.run(
         [sys.executable, "-m", "alembic", *args],
         cwd=BACKEND_DIR,
-        env={**os.environ, "DATABASE_URL": _dsn(MIGRATION_TEST_DB).replace("postgresql://", "postgresql+asyncpg://", 1)},
+        env={**os.environ, "DATABASE_URL": _asyncpg_url},
         capture_output=True,
         text=True,
     )
