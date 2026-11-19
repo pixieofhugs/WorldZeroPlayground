@@ -17,6 +17,7 @@ import {
   useSectionDisclosures,
 } from "../sectionDisclosure";
 import type { FactionDetailState } from "../useFactionDetail";
+import { paragraphsOf } from "../../../utils/paragraphs";
 
 /**
  * Singularity faction body: the terminal-printout skin of the shared spine.
@@ -152,10 +153,7 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
   // The burn (#1305) reuses the gate's chassis with neutral platform copy (ADR-0061).
   const burned = membership.state === "burned";
 
-  const paragraphs = factionDescription(faction.slug)
-    .split(/\n\s*\n/)
-    .map((p) => p.trim())
-    .filter(Boolean);
+  const paragraphs = paragraphsOf(factionDescription(faction.slug));
 
   const ranked = [...members].sort((a, b) => b.all_time_score - a.all_time_score);
   const spot: CharacterOut | undefined = ranked[0];

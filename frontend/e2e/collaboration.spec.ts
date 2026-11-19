@@ -108,16 +108,21 @@ test.describe('collaboration lifecycle', () => {
     }
   })
 
-  // KNOWN GAP: archetypes render only the creator byline, never `praxis.members`.
+  // Guards that the published page credits every member, via the shared MemberByline.
   test('the published praxis page credits both collaborators', async ({ browser }) => {
-    test.fail()
     const draft = await seedCollabDraft(scenarioFor(browser), 'credit')
     try {
       await bothSubmit(draft)
       const page = await draft.invitee.ctx.newPage()
       await page.goto(`/praxis/${draft.praxisId}`)
       // Main only: the viewer's own name shows in the chrome regardless.
-      await expect(page.getByRole('main').getByText(draft.invitee.name)).toBeVisible()
+      const main = page.getByRole('main')
+      for (const who of [draft.creator, draft.invitee]) {
+        await expect(main.getByRole('link', { name: who.name, exact: true })).toHaveAttribute(
+          'href',
+          `/characters/${who.characterId}`,
+        )
+      }
     } finally {
       await closeDraft(draft)
     }
