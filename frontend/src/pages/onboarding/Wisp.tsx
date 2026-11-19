@@ -14,7 +14,6 @@ const WISP =
 // Under a hat the hair is tucked away: same wisp, round on top.
 const BALD =
   'M50 104 C 30 104, 18 90, 18 72 C 18 52, 32 38, 50 38 C 68 38, 82 52, 82 70 C 82 90, 70 104, 50 104 Z'
-const BLUSH = 'color-mix(in srgb, var(--faction-coven) 70%, var(--faction-default-card-text))'
 
 const ink = { stroke: K, strokeLinejoin: 'round' as const }
 
@@ -84,15 +83,15 @@ export default function Wisp({ size = 52, confidence = 0.5, hat, sleeping = fals
           ))}
         </linearGradient>
         <radialGradient id={`${id}shade`} gradientUnits="userSpaceOnUse" gradientTransform="translate(18 4) scale(64 100)" cx=".42" cy=".62" r=".64">
-          <stop offset="55%" style={{ stopColor: T, stopOpacity: 0 }} />
+          <stop className="wshade-mid" offset="55%" />
           <stop offset="100%" style={{ stopColor: S(6), stopOpacity: 0.3 }} />
         </radialGradient>
       </defs>
       <g className="msway">
         <path d={path} fill={`url(#${id}rain)`} />
         <path d={path} fill={`url(#${id}shade)`} stroke={K} strokeWidth="2.6" strokeLinejoin="round" />
-        <ellipse className="blush" cx="27" cy="84" rx="8" ry="4.2" style={{ fill: BLUSH }} />
-        <ellipse className="blush" cx="73" cy="84" rx="8" ry="4.2" style={{ fill: BLUSH }} />
+        <ellipse className="blush" cx="27" cy="84" rx="8" ry="4.2" />
+        <ellipse className="blush" cx="73" cy="84" rx="8" ry="4.2" />
         <g className="eyes">
           <circle cx="38" cy="70" r="10.5" fill={T} stroke={K} strokeWidth="2.2" />
           <circle cx="62" cy="70" r="10.5" fill={T} stroke={K} strokeWidth="2.2" />

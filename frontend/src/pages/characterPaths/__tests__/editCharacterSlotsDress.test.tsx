@@ -3,8 +3,8 @@
  *
  * A supplied dress wins (props spread last); a mount that supplies none renders
  * the literal defaults, since drift there repaints every mount and `na` /
- * Albescent have no dress to notice with. The confirm branch needs a click, so
- * it is pinned as source; the filled DELETE key has no seam by ruling (ADR-0061).
+ * Albescent have no dress to notice with. The confirm branch is clicked open
+ * below; the filled DELETE key has no seam by ruling (ADR-0061).
  */
 // @vitest-environment jsdom
 import { afterEach } from 'vitest'

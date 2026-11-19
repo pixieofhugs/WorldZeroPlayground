@@ -141,3 +141,9 @@ describe("Albescent's letter names the same invitation slots as the other seven 
     expect(leaf('albescent.letter.joined')).toBeUndefined()
   })
 })
+
+describe('the decline-failure copy', () => {
+  it('ships a non-empty albescent.letter.declineError', () => {
+    expect(factions.albescent.letter.declineError.length).toBeGreaterThan(0)
+  })
+})

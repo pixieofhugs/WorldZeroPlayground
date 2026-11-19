@@ -1,8 +1,8 @@
 # Files with a static inline style object (ADR-0095, #3000). This list only ever
 # shrinks: moving a file's paint into classes means deleting its line here, never
 # adding one. A file that has gone clean and is still listed fails
-# src/__tests__/staticInlineStyleRule.test.ts. The rule sees literals only, so an
-# object reading a module const is invisible: this list is a floor, not the extent.
+# src/__tests__/staticInlineStyleRule.test.ts. A value read from a
+# module-scope static const counts as static.
 src/components/ActivityTicker.tsx
 src/components/AlbescentInvitation.tsx
 src/components/CharacterSwitcherSheet.tsx
@@ -55,6 +55,7 @@ src/components/factionMarks/EphemeristsMasthead.tsx
 src/components/factionMarks/PointsRoundel.tsx
 src/components/factionMarks/SingularityLamps.tsx
 src/components/factionMarks/SingularityProcessLight.tsx
+src/components/factionMarks/SingularityReadout.tsx
 src/components/factionMarks/TaskCrown.tsx
 src/components/factionMarks/WowSelectMarks.tsx
 src/components/factionMarks/covenSlip.tsx
@@ -101,6 +102,7 @@ src/components/layout/WatercolorBackground.tsx
 src/components/metataskSeal/MetataskPicker.tsx
 src/components/metataskSeal/MetataskRemoveConfirm.tsx
 src/components/metataskSeal/MetataskSeal.tsx
+src/components/metataskSeal/sealBands.tsx
 src/components/metataskSeal/skins/AlbescentSeal.tsx
 src/components/metataskSeal/skins/CovenSeal.tsx
 src/components/metataskSeal/skins/DefaultSeal.tsx
@@ -159,6 +161,8 @@ src/components/taskCard/WowTaskCard.tsx
 src/components/ui/ChipRow.tsx
 src/components/ui/FilterLevelNodes.tsx
 src/components/ui/PageTitle.tsx
+src/components/vote/AlbescentVote.tsx
+src/components/vote/DefaultVote.tsx
 src/components/vote/EphemeristsVote.tsx
 src/components/vote/EverymenVote.tsx
 src/components/vote/SingularityVote.tsx

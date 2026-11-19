@@ -19,6 +19,8 @@
 .mpup{transform:translateY(calc((1 - var(--conf)) * 2.5px));animation:glance 11.3s ease-in-out infinite}
 @keyframes glance{0%,18%,38%,61%,77%,100%{translate:0 0}21%,34%{translate:2.3px -.6px}64%,73%{translate:-2.5px .5px}}
 .blush{opacity:calc(.2 + var(--conf) * .25);transition:opacity .35s}
+.msc .blush{fill:color-mix(in srgb,var(--faction-coven) 70%,var(--faction-default-card-text))}
+.msc .wshade-mid{stop-color:var(--faction-default-card-text);stop-opacity:0}
 .msc:hover .blush,.shy .blush{opacity:.95}
 .fb{position:relative;display:inline-block}
 .mth{position:absolute;left:50%;top:67%;width:28%;height:13%;margin-left:-14%;box-sizing:border-box;border:solid var(--faction-default-on-fill);border-width:0 0 2px;border-radius:0 0 100% 100%/0 0 180% 180%}
