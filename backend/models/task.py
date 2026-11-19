@@ -1,10 +1,10 @@
 import enum
 from typing import TYPE_CHECKING, List, Optional
 
-from sqlalchemy import BigInteger, CheckConstraint, Enum, ForeignKey, Identity, Integer, String, Text
+from sqlalchemy import BigInteger, CheckConstraint, ForeignKey, Identity, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from models.base import Base
+from models.base import Base, string_enum
 from models.mixins import TimestampMixin
 
 if TYPE_CHECKING:
@@ -30,6 +30,10 @@ class Task(TimestampMixin, Base):
     __tablename__ = "task"
     __table_args__ = (
         CheckConstraint("point_value >= 0", name="point_value_nonnegative"),
+        CheckConstraint(
+            "(task_type = 'metatask') = (metatask_faction_slug IS NOT NULL)",
+            name="metatask_faction_iff_metatask",
+        ),
     )
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
@@ -38,10 +42,10 @@ class Task(TimestampMixin, Base):
     point_value: Mapped[int] = mapped_column(Integer, nullable=False)
     level_required: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     status: Mapped[TaskStatus] = mapped_column(
-        Enum(TaskStatus, create_type=False), default=TaskStatus.pending, nullable=False
+        string_enum(TaskStatus), default=TaskStatus.pending, nullable=False
     )
     task_type: Mapped[TaskType] = mapped_column(
-        Enum(TaskType, create_type=False),
+        string_enum(TaskType),
         nullable=False,
         default=TaskType.standard,
         server_default="standard",

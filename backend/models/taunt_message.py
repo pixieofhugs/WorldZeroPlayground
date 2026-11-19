@@ -1,9 +1,9 @@
 import enum
 
-from sqlalchemy import BigInteger, Enum, ForeignKey, Identity, Index, String
+from sqlalchemy import BigInteger, ForeignKey, Identity, Index, String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from models.base import Base
+from models.base import Base, string_enum
 from models.mixins import CreatedAtMixin
 
 
@@ -27,5 +27,5 @@ class TauntMessage(CreatedAtMixin, Base):
     # ADR-0031: no prose stored. Freezes the sender's send-time faction voice.
     faction_slug: Mapped[str] = mapped_column(String, nullable=False)
     trigger_type: Mapped[TauntTriggerType] = mapped_column(
-        Enum(TauntTriggerType, create_type=False), nullable=False
+        string_enum(TauntTriggerType), nullable=False
     )
