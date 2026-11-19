@@ -418,7 +418,7 @@ async def test_activity_panel_is_the_head_of_the_live_all_view(
     four_request_types: int,
     auth_headers: dict,
 ):
-    """#1556: panel and queue partition the feed (ADR-0070): the panel shows no unanswered request."""
+    """#1556: the panel shows no unanswered request (ADR-0070)."""
     response = await client.get("/me/sidebar", headers=auth_headers)
     assert response.status_code == 200
     body = response.json()

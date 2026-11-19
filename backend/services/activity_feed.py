@@ -1322,7 +1322,8 @@ def _scoped_query(
     """
     if not _needs_satisfied(source, ctx):
         return None
-    if ctx.answered_requests_only and source.item_type == FEED_ITEM_TYPE_AWAITING_SUBMISSION:
+    awaiting = source.item_type == FEED_ITEM_TYPE_AWAITING_SUBMISSION
+    if ctx.answered_requests_only and awaiting:
         # Answering clears the row; there is no answered state to show.
         return None
     dismissed_ids = archive_view.dismissed_source_ids.get(source.item_type, frozenset())
@@ -1407,7 +1408,8 @@ async def _fetch_sources(
     """
     items: list[ActivityFeedItemDC] = []
     for source in sources:
-        source_ctx = _stream_ctx(ctx) if stream and source.item_type in REQUEST_ITEM_TYPES else ctx
+        is_request = source.item_type in REQUEST_ITEM_TYPES
+        source_ctx = _stream_ctx(ctx) if stream and is_request else ctx
         items.extend(await _run_source_fetch(source, source_ctx, archive_view, session))
     return items
 
@@ -1579,7 +1581,8 @@ async def get_sidebar_feed(
     list newest-first and sliced to :data:`SIDEBAR_ACTIVITY_LIMIT`.
 
     Activity = the live ``all`` view: news plus answered requests, so panel
-    and Requests queue partition the feed exactly (ADR-0070). Requests are only a count (#1456), computed like
+    and Requests queue partition the feed exactly (ADR-0070). Requests are only a
+    count (#1456), computed like
     ``counts.requests`` (pinned by
     ``test_sidebar_badge_equals_the_requests_queue_card_count``).
 

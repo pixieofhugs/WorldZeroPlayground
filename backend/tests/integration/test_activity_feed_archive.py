@@ -825,7 +825,8 @@ async def test_an_unanswered_request_stays_out_of_the_stream(
 ):
     for tab in (ALL_FILTER, YOUR_STUFF_FILTER):
         feed = await _feed(client, auth_headers, tab)
-        assert {item["type"] for item in feed["items"]}.isdisjoint(REQUEST_ITEM_TYPES), tab
+        types = {item["type"] for item in feed["items"]}
+        assert types.isdisjoint(REQUEST_ITEM_TYPES), tab
 
 
 @pytest.mark.asyncio
