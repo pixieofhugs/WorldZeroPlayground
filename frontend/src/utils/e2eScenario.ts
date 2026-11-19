@@ -24,7 +24,7 @@ export interface E2EResponse {
 export interface E2EUpload {
   name: string
   mimeType: string
-  buffer: Uint8Array
+  buffer: Buffer
 }
 
 /** Slice of Playwright's `APIRequestContext`. */
@@ -173,7 +173,7 @@ export const proofPng = (): Uint8Array =>
 
 /** Scaffolding: attach one image so a later `submitPraxis` is accepted. */
 export async function attachProof(player: Player, praxisId: number): Promise<void> {
-  const buffer = proofPng()
+  const buffer = Buffer.from(proofPng())
   await readJson(
     await player.ctx.request.post(`${player.api}/praxes/${praxisId}/media`, {
       multipart: { file: { name: 'proof.png', mimeType: 'image/png', buffer } },
