@@ -58,7 +58,7 @@ async def test_the_selector_marks_live_from_the_row_not_the_process(
     would disagree.
     """
     await make_admin(db_session, account)
-    db_session.add(Era(name="whatever", config_key="era_2", started_by=account.id))
+    db_session.add(Era(name="whatever", config_key="era_2", started_by_id=account.id))
     await db_session.commit()
     assert game_config.CURRENT_ERA.config_key == "era_1", "the process has not moved"
 
@@ -147,7 +147,7 @@ async def test_the_refusal_reads_the_row_not_the_process(
     await make_admin(db_session, account)
     # Row says era_2; process is still on era_1.
     db_session.add(
-        Era(name="whatever", config_key="era_2", started_by=account.id)
+        Era(name="whatever", config_key="era_2", started_by_id=account.id)
     )
     await db_session.commit()
     assert game_config.CURRENT_ERA.config_key == "era_1"
@@ -281,7 +281,7 @@ async def test_the_rollover_appends_a_row_stamped_with_the_operator(
     assert new_row.id == resp.json()["era_id"]
     assert new_row.config_key == "era_2"
     assert new_row.name == era_config_for_key("era_2").name
-    assert new_row.started_by == account.id
+    assert new_row.started_by_id == account.id
 
 
 async def test_the_reset_applies_the_incoming_era_s_flags(
@@ -361,7 +361,9 @@ async def test_rebind_reads_the_latest_row_and_falls_back_on_an_unknown_key(
     """
     from services.era import rebind_live_era
 
-    db_session.add(Era(name="whatever", config_key=config_key, started_by=account.id))
+    db_session.add(
+        Era(name="whatever", config_key=config_key, started_by_id=account.id)
+    )
     await db_session.flush()
 
     bound = await rebind_live_era(db_session)

@@ -42,7 +42,7 @@ async def _task(
         point_value=points,
         level_required=0,
         status=TaskStatus.active,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=faction,
     )
     db_session.add(task)

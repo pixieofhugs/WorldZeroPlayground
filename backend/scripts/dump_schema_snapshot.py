@@ -50,6 +50,11 @@ HEADER = f"""\
 """
 
 
+def _alembic_url(database: str) -> str:
+    """``_dsn`` with the asyncpg driver; env.py no longer rewrites the scheme."""
+    return _dsn(database).replace("postgresql://", "postgresql+asyncpg://", 1)
+
+
 def _dsn(database: str) -> str:
     """A plain libpq DSN for ``database`` on the configured server."""
     base = make_url(os.environ.get("TEST_DATABASE_URL") or settings.DATABASE_URL)
@@ -153,7 +158,7 @@ async def _build_and_dump() -> str:
         upgrade = subprocess.run(
             [sys.executable, "-m", "alembic", "upgrade", "head"],
             cwd=BACKEND_DIR,
-            env={**os.environ, "DATABASE_URL": _dsn(SNAPSHOT_BUILD_DB)},
+            env={**os.environ, "DATABASE_URL": _alembic_url(SNAPSHOT_BUILD_DB)},
             capture_output=True,
             text=True,
         )

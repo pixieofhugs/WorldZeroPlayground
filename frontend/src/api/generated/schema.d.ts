@@ -2521,8 +2521,8 @@ export interface components {
             task_point_value: number;
             /** Task Title */
             task_title: string;
-            /** Viewer Has Submitted */
-            viewer_has_submitted: boolean;
+            /** Viewer Has Approved */
+            viewer_has_approved: boolean;
         };
         /**
          * CommentAuthor
@@ -4326,6 +4326,8 @@ export interface components {
         PraxisInviteStatus: "pending" | "accepted" | "declined";
         /** PraxisMemberOut */
         PraxisMemberOut: {
+            /** Approved At */
+            approved_at: string | null;
             /**
              * Character Avatar Url
              * @default
@@ -4335,8 +4337,8 @@ export interface components {
             character_display_name: string;
             /** Character Id */
             character_id: number;
-            /** Has Submitted */
-            has_submitted: boolean;
+            /** Has Approved */
+            has_approved: boolean;
             /** Id */
             id: number;
             /** Is Done */
@@ -4350,8 +4352,6 @@ export interface components {
             nudged_at: string | null;
             /** Praxis Id */
             praxis_id: number;
-            /** Submitted At */
-            submitted_at: string | null;
         };
         /** PraxisOut */
         PraxisOut: {
@@ -4505,8 +4505,6 @@ export interface components {
             from_character_id: number;
             /** Id */
             id: number;
-            /** Status */
-            status: string;
             /** To Avatar Url */
             to_avatar_url: string;
             /** To Character Id */
@@ -8340,7 +8338,6 @@ export interface operations {
         parameters: {
             query?: {
                 type?: string | null;
-                status?: string | null;
             };
             header?: never;
             path?: never;

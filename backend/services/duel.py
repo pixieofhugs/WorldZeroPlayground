@@ -385,7 +385,7 @@ async def respond_to_duel_challenge(
     opponent_member = PraxisMember(
         praxis_id=opponent_praxis.id,
         character_id=character_id,
-        has_submitted=False,
+        has_approved=False,
     )
     session.add(opponent_member)
     await session.flush()

@@ -121,7 +121,7 @@ to wipe), and you've read every model in `backend/models/` to know the final sch
 
 1. **Inventory enums.** `grep -rn "class.*enum.Enum" backend/models/`. For each,
    note the lowercase PG type name (`class AccountStatus` → `accountstatus`) and its values.
-2. **Order tables by FK tier.** Tier 0 = no FK deps (`faction`, `contact_messages`);
+2. **Order tables by FK tier.** Tier 0 = no FK deps (`faction`, `contact_message`);
    Tier 1 depends only on Tier 0 (`account`, `role`); Tier 2+ on prior tiers.
 3. **Delete the chain.** `rm backend/alembic/versions/*.py`.
 4. **Write the new root** with `down_revision = None`:
@@ -233,14 +233,14 @@ copy key, which is likewise written by a human and has no surrogate id.
 | `character_stats.py` | `character_stats` | `id` | `character_id`, `era_id` |
 | `comment.py` | `comment` | `id` | `praxis_id`, `task_id`, `created_by_id` |
 | `comment.py` | `comment_mention` | `id` | `comment_id`, `mentioned_character_id` |
-| `contact.py` | `contact_messages` | `id` | — |
-| `copy_override.py` | `copy_override` | `(ns, key)` — **composite VARCHAR, no `Identity()`** | `updated_by` |
+| `contact.py` | `contact_message` | `id` | — |
+| `copy_override.py` | `copy_override` | `(ns, key)` — **composite VARCHAR, no `Identity()`** | `updated_by_id` |
 | `duel.py` | `duel` | `id` | `task_id`, `challenger_praxis_id`, `opponent_praxis_id`, `opponent_character_id`, `forfeited_by_character_id`, `winner_character_id`, `resolved_era_id` |
-| `era.py` | `era` | `id` | `started_by` |
+| `era.py` | `era` | `id` | `started_by_id` |
 | `faction.py` | `faction` | `slug` (**VARCHAR — the exception**) | — |
 | `faction_defection_history.py` | `faction_defection_history` | `id` | `character_id`, `era_id` (+ `faction_slug`, string) |
 | `feed_dismissal.py` | `feed_dismissal` | `id` | `character_id` |
-| `flag.py` | `flag` | `id` | `praxis_id`, `comment_id`, `flagged_by` |
+| `flag.py` | `flag` | `id` | `praxis_id`, `comment_id`, `flagged_by_id` |
 | `invitation_letter.py` | `invitation_letter` | `id` | `character_id`, `era_id` (+ `faction_slug`, string) |
 | `meta_task.py` | `praxis_meta_task` | `(praxis_id, task_id)` — **composite, no `Identity()`** | `praxis_id`, `task_id` |
 | `nudge.py` | `nudge` | `id` | `from_character_id`, `to_character_id`, `praxis_id` |
@@ -251,8 +251,8 @@ copy key, which is likewise written by a human and has no surrogate id.
 | `praxis_room.py` | `praxis_room_update` | `id` | `praxis_id` |
 | `relationship.py` | `relationship` | `id` | `from_character_id`, `to_character_id` |
 | `roles.py` | `role` | `id` | — |
-| `roles.py` | `account_role` | `id` | `account_id`, `role_id`, `granted_by` |
-| `task.py` | `task` | `id` | `created_by` (+ `primary_faction_slug`, `metatask_faction_slug`, strings) |
+| `roles.py` | `account_role` | `id` | `account_id`, `role_id`, `granted_by_id` |
+| `task.py` | `task` | `id` | `created_by_id` (+ `primary_faction_slug`, `metatask_faction_slug`, strings) |
 | `taunt_message.py` | `taunt_message` | `id` | `from_character_id`, `to_character_id` |
 | `terms_acceptance.py` | `terms_acceptance` | `id` | `account_id` |
 | `vote.py` | `vote` | `id` | `praxis_id`, `voter_character_id`, `voter_account_id` |

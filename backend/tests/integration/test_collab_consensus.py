@@ -44,10 +44,10 @@ async def test_marking_done_changes_nothing_else(
 
     assert body["status"] == "in_progress"
     assert body["submit_proposed_at"] is None
-    assert not any(m["has_submitted"] for m in body["members"])
-    assert all(m["submitted_at"] is None for m in body["members"])
+    assert not any(m["has_approved"] for m in body["members"])
+    assert all(m["approved_at"] is None for m in body["members"])
     assert _member(body, character.id)["character_id"] == character.id
-    assert _member(body, character2.id)["has_submitted"] is False
+    assert _member(body, character2.id)["has_approved"] is False
 
 
 @pytest.mark.asyncio
@@ -100,7 +100,7 @@ async def test_a_cancelled_proposal_leaves_done_alone(
         f"/praxes/{praxis_collab.id}/unsubmit", headers=auth_headers2
     )
     assert withdrawn.status_code == 200, withdrawn.text
-    assert not any(m["has_submitted"] for m in withdrawn.json()["members"])
+    assert not any(m["has_approved"] for m in withdrawn.json()["members"])
 
     await db_session.commit()
     praxis = await db_session.get(Praxis, praxis_collab.id)
@@ -137,7 +137,7 @@ async def test_done_on_a_solo_praxis_publishes_nothing(
     assert body["status"] == "in_progress"
     assert body["submitted_at"] is None
     assert body["submit_proposed_at"] is None
-    assert not any(m["has_submitted"] for m in body["members"])
+    assert not any(m["has_approved"] for m in body["members"])
 
 
 @pytest.mark.asyncio
@@ -171,8 +171,8 @@ async def test_the_proposer_implicitly_approves(
 
     assert body["status"] == "pending"
     assert body["submit_proposed_at"] is not None
-    assert _member(body, character.id)["has_submitted"] is True
-    assert _member(body, character2.id)["has_submitted"] is False
+    assert _member(body, character.id)["has_approved"] is True
+    assert _member(body, character2.id)["has_approved"] is False
 
 
 @pytest.mark.asyncio
@@ -193,8 +193,8 @@ async def test_withdraw_returns_the_collab_to_drafting(
 
     assert body["status"] == "in_progress"
     assert body["submit_proposed_at"] is None
-    assert not any(m["has_submitted"] for m in body["members"])
-    assert all(m["submitted_at"] is None for m in body["members"])
+    assert not any(m["has_approved"] for m in body["members"])
+    assert all(m["approved_at"] is None for m in body["members"])
 
 
 @pytest.mark.asyncio

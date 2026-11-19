@@ -37,11 +37,11 @@ function member(
     character_id: id,
     character_display_name: name,
     character_avatar_url: "",
-    has_submitted: hasSubmitted,
+    has_approved: hasSubmitted,
     is_done: false,
     joined_at: OPENED,
     nudged_at: nudgedAt,
-    submitted_at: hasSubmitted ? OPENED : null,
+    approved_at: hasSubmitted ? OPENED : null,
   };
 }
 

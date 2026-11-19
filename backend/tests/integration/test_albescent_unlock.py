@@ -273,7 +273,7 @@ async def test_recalculate_character_stats_stamps_the_unlock(
         point_value=10,
         level_required=0,
         status=TaskStatus.active,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=_joinable_faction_slugs()[0],
     )
     db_session.add(task)

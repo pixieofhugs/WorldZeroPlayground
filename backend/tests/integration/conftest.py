@@ -161,7 +161,7 @@ async def era(db_session: AsyncSession, account: Account) -> Era:
     e = Era(
         name=CURRENT_ERA.name,
         config_key=CURRENT_ERA.config_key,
-        started_by=account.id,
+        started_by_id=account.id,
     )
     db_session.add(e)
     await db_session.commit()
@@ -315,7 +315,7 @@ async def active_task(db_session: AsyncSession, character: Character) -> Task:
         point_value=10,
         level_required=0,
         status=TaskStatus.active,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(task)

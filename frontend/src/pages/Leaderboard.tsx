@@ -132,8 +132,8 @@ function useViewerRelationships(myCharId: number | null): ViewerRelationships {
     }
     let cancelled = false
     Promise.all([
-      listRelationships({ type: 'friend', status: 'active' }).catch(() => []),
-      listRelationships({ type: 'foe', status: 'active' }).catch(() => []),
+      listRelationships({ type: 'friend' }).catch(() => []),
+      listRelationships({ type: 'foe' }).catch(() => []),
       getNearbyAirports().catch(() => null),
     ]).then(([friends, foes, nearby]) => {
       if (cancelled) return

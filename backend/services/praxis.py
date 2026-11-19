@@ -568,7 +568,7 @@ async def create_praxis(
     member = PraxisMember(
         praxis_id=praxis.id,
         character_id=character_id,
-        has_submitted=False,
+        has_approved=False,
     )
     session.add(member)
     await session.flush()
@@ -628,7 +628,7 @@ async def unsubmit_praxis(
     praxis.status = PraxisStatus.in_progress
     praxis.submit_proposed_at = None
     for member in praxis.members:
-        member.has_submitted = False
+        member.has_approved = False
     await session.flush()
     # The room reseeds from body_text on first connect (ADR-0073 rule 7).
 
@@ -885,7 +885,7 @@ async def account_already_flagged(
     )
     result = await session.execute(
         select(Flag.id)
-        .join(Character, Character.id == Flag.flagged_by)
+        .join(Character, Character.id == Flag.flagged_by_id)
         .where(target, Character.account_id == account_id)
         .limit(1)
     )
@@ -979,7 +979,7 @@ async def flag_praxis(
 
     flag = Flag(
         praxis_id=praxis.id,
-        flagged_by=flagged_by.id,
+        flagged_by_id=flagged_by.id,
         reason=reason.value,
         reason_detail=reason_detail,
     )
@@ -1140,7 +1140,7 @@ async def respond_to_invite(
     member = PraxisMember(
         praxis_id=praxis.id,
         character_id=character_id,
-        has_submitted=False,
+        has_approved=False,
     )
     session.add(member)
 

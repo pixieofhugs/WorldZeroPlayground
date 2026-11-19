@@ -44,11 +44,11 @@ function member(
     character_id: id,
     character_display_name: `M${id}`,
     character_avatar_url: "",
-    has_submitted: false,
+    has_approved: false,
     is_done: false,
     joined_at: "2026-01-01T00:00:00Z",
     nudged_at: null,
-    submitted_at: null,
+    approved_at: null,
     ...over,
   };
 }
@@ -106,11 +106,11 @@ function state(scenario: Scenario = {}): EditPraxisState {
     body_text: "## What I did\n\nCaught the papers.",
     members: [
       member(ME, {
-        has_submitted: proposalLive && (scenario.iApproved ?? false),
+        has_approved: proposalLive && (scenario.iApproved ?? false),
         is_done: scenario.iAmDone ?? false,
       }),
       // The proposer implicitly approves (ADR-0079), so mine is the last one out.
-      member(THEM, { has_submitted: proposalLive }),
+      member(THEM, { has_approved: proposalLive }),
     ],
     invites: [],
     media_items: [],

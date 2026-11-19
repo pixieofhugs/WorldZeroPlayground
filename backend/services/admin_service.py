@@ -232,7 +232,7 @@ def _build_flag_out(flag: Flag, flagged_by_name: str) -> FlagOut:
     return FlagOut(
         reason=flag.reason,
         reason_detail=flag.reason_detail,
-        flagged_by_id=flag.flagged_by,
+        flagged_by_id=flag.flagged_by_id,
         flagged_by_name=flagged_by_name,
         created_at=flag.created_at,
     )
@@ -246,7 +246,7 @@ async def flags_for_praxes(
         return {}
     result = await session.execute(
         select(Flag, Character.display_name)
-        .join(Character, Character.id == Flag.flagged_by)
+        .join(Character, Character.id == Flag.flagged_by_id)
         .where(Flag.praxis_id.in_(praxis_ids))
         .order_by(Flag.created_at.desc())
     )
@@ -266,7 +266,7 @@ async def flags_for_comments(
         return {}
     result = await session.execute(
         select(Flag, Character.display_name)
-        .join(Character, Character.id == Flag.flagged_by)
+        .join(Character, Character.id == Flag.flagged_by_id)
         .where(Flag.comment_id.in_(comment_ids))
         .order_by(Flag.created_at.desc())
     )
@@ -379,7 +379,7 @@ async def assign_or_revoke_role(
         session.add(AccountRole(
             account_id=account_id,
             role_id=role.id,
-            granted_by=admin_account_id,
+            granted_by_id=admin_account_id,
         ))
         await session.flush()
 
@@ -495,7 +495,7 @@ async def list_pending_tasks_with_proposer(
     """Return pending tasks paired with their proposer's display name (or None)."""
     result = await session.execute(
         select(Task, Character.display_name)
-        .outerjoin(Character, Character.id == Task.created_by)
+        .outerjoin(Character, Character.id == Task.created_by_id)
         .where(Task.status == TaskStatus.pending)
         .order_by(Task.created_at)
     )
@@ -666,7 +666,7 @@ async def roll_into_era(
 
     Delegates to the owners: new ``Era`` row (ADR-0042), roster mirror,
     ``apply_era_reset`` (incoming era's flags; freezes duels #824), then
-    ``commit_and_bind_live_era``. ``operator`` is the ``Era.started_by`` audit.
+    ``commit_and_bind_live_era``. ``operator`` is the ``Era.started_by_id`` audit.
 
     Refuses an unregistered key and the already-live era (a full destructive
     reset for nothing; a disabled <option> is not a control).
@@ -696,7 +696,7 @@ async def roll_into_era(
         # Fallback if the config file is later deleted; see models/era.py.
         name=era_config.name,
         config_key=era_config.config_key,
-        started_by=operator.id,
+        started_by_id=operator.id,
     )
     session.add(new_era_row)
     await session.flush()

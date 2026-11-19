@@ -92,7 +92,6 @@ ERA_N_FACTIONS = {
 #   faction_slug   -- a key above; "na" for cross-faction
 #   level_required -- 0 = anyone
 #   point_value    -- before modifiers
-#   is_task_vision_eligible -- Ephemerists see it after retirement
 #
 # DECIDE FIRST: tasks here are re-added by `seed.py::sync_era_tasks` on EVERY
 # deploy, so an admin-UI delete won't stick. Era 1 leaves this EMPTY and
