@@ -265,6 +265,7 @@
     "composer": {
       "statusDraft": "Draft",
       "statusSaved": "Saved {{ago}}",
+      "statusSavedOnPhone": "Saved on this phone, sends when you're back online",
       "statusUnsaved": "Not saved yet",
       "statusSubmitted": "Submitted",
       "taskLabel": "The task",
