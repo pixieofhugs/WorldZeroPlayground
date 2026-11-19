@@ -57,14 +57,17 @@ function widthOf(tag: string): string | undefined {
 describe('below 768px every task card asks for the whole column (#2763)', () => {
   it.each(SKINS)('%s: the outermost box fills the line on a phone', (_name, Card) => {
     dispatch.formFactor = 'mobile'
-    expect(widthOf(outerTag(Card)), 'the card fills the content column').toBe('100%')
+    // Albescent's width is `--alb-card-width`: 100% under the phone query, fit-content otherwise.
+    expect(widthOf(outerTag(Card)), 'the card fills the content column').toMatch(
+      /^(100%|var\(--alb-card-width\))$/,
+    )
   })
 
   it.each(SKINS)('%s: the desktop width is untouched', (_name, Card) => {
     dispatch.formFactor = 'desktop'
     // Albescent shrink-wraps the na card; the rest draw 384.
     expect(widthOf(outerTag(Card)), 'the desktop keeps its own width').toMatch(
-      /^(384px|fit-content)$/,
+      /^(384px|var\(--alb-card-width\))$/,
     )
   })
 })

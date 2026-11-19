@@ -2,7 +2,6 @@ import type { CSSProperties } from "react";
 import CardMasthead from "./CardMasthead";
 import SingularityLamps from "../factionMarks/SingularityLamps";
 import { UA_DISPLAY } from "../factionMarks/uaAtoms";
-import { useFormFactor } from "../../hooks/useFormFactor";
 import { factionName } from "../../utils/factions";
 
 /**
@@ -141,11 +140,10 @@ const EVERYMEN_LABEL: CSSProperties = {
 };
 
 /**
- * The union's red bar, naming the faction. Its padding is the file's one
- * form-factor branch: the mast is deeper on the desktop sheet.
+ * The union's red bar, naming the faction. The mast is deeper on the
+ * desktop sheet (`--everymen-band-pad`).
  */
 function EverymenBand({ inert }: { inert?: boolean } = {}) {
-  const formFactor = useFormFactor();
   return (
     <CardMasthead
       slug="everymen"
@@ -153,10 +151,7 @@ function EverymenBand({ inert }: { inert?: boolean } = {}) {
       /* On the red mast the sigil's own `--everymen-red` is invisible. */
       markColor="var(--faction-everymen-bill-mast-ink)"
       style={{
-        padding:
-          formFactor === "desktop"
-            ? "var(--space-md) var(--space-lg)"
-            : "var(--space-sm) var(--space-lg)",
+        padding: "var(--everymen-band-pad)",
         background: "var(--faction-everymen-bill-mast)",
         color: "var(--faction-everymen-bill-mast-ink)",
         borderBottom: "3px double var(--faction-everymen-bill-cta-bg)",

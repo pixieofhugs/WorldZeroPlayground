@@ -228,6 +228,8 @@
   --takeover-bottom: var(--space-lg);
   --letter-pad: var(--space-xl);
   --switcher-bottom: var(--space-xl);
+  --everymen-band-pad: var(--space-md) var(--space-lg);
+  --alb-card-width: fit-content;
 }
 @media (max-width: 767px) and (pointer: coarse) {
   :root, [data-theme] {
@@ -243,6 +245,8 @@
     --takeover-radius: 0;
     --letter-pad: 0;
     --letter-width: 100%;
+    --everymen-band-pad: var(--space-sm) var(--space-lg);
+    --alb-card-width: 100%;
     --switcher-bottom: calc(var(--space-xl) + var(--tab-bar-clearance));
   }
 }
