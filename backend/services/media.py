@@ -64,6 +64,9 @@ def _strip_image(contents: bytes) -> tuple[bytes, str]:
         if icc := source.info.get("icc_profile"):
             options["icc_profile"] = icc
         if fmt != "JPEG" and getattr(source, "n_frames", 1) > 1:
+            # Pillow's bomb check is per frame; every RGBA frame is held at once.
+            if source.n_frames * source.width * source.height > Image.MAX_IMAGE_PIXELS:
+                raise Image.DecompressionBombError("animated image too large to strip")
             frames, durations = [], []
             for frame in ImageSequence.Iterator(source):
                 durations.append(frame.info.get("duration", 100))

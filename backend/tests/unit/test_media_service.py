@@ -406,6 +406,20 @@ async def test_animated_gif_stays_animated(tmp_path, monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_animated_image_over_the_pixel_cap_is_refused(tmp_path, monkeypatch):
+    """Each 8x8 frame passes Pillow's own check; the 2-frame total (128 px) must not."""
+    buffer = io.BytesIO()
+    frames = [Image.new("RGB", (8, 8), c) for c in ("red", "blue")]
+    frames[0].save(buffer, "GIF", save_all=True, append_images=frames[1:])
+    monkeypatch.setattr(Image, "MAX_IMAGE_PIXELS", 100)
+
+    with pytest.raises(HTTPException) as refused:
+        await _store(tmp_path, monkeypatch, "bomb.gif", buffer.getvalue(), "image/gif")
+
+    assert refused.value.status_code == 422
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "name,mime,source",
     [
