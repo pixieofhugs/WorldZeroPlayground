@@ -1,9 +1,4 @@
-/**
- * The Coven tile and its task card name ONE token family (#2325), read off the
- * RENDER: the slip's colour arrives as `covenSlip` JS constants, which only
- * the markup shows resolved. Box + register invariants live in
- * `everySelectTileWearsItsCardsRegister` (#2816).
- */
+/** The slip's colour arrives as `covenSlip` JS constants; only the render shows them resolved. */
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect } from "vitest";
 

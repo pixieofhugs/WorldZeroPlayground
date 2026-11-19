@@ -1,8 +1,4 @@
-/**
- * The Singularity tile and its task card name ONE token family (#2326). The
- * tile sat on theme-INVARIANT `card-*` tokens while the card used the flipping
- * `term-*` contract; both pass contrast, so only the paint it names shows the fork.
- */
+/** The tile sat on theme-INVARIANT `card-*` tokens while the card flips with `term-*` (#2326); both pass contrast. */
 import { describe, it, expect } from "vitest";
 
 import { tileMarkup } from "./tileMarkup";
