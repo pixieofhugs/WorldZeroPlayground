@@ -15,6 +15,7 @@ import {
 } from "../sectionDisclosure";
 import type { CharacterOut } from "../../../api/auth";
 import type { FactionDetailState } from "../useFactionDetail";
+import { paragraphsOf } from "../../../utils/paragraphs";
 
 /**
  * The plate's na-spectrum hairline (#2497). `.spectrum-rule` is the shared ramp
@@ -87,10 +88,7 @@ export default function DefaultFactionBody({
   const champion: CharacterOut | undefined = ranked[0];
   const roll = ranked.slice(1);
 
-  const paragraphs = factionDescription(faction.slug)
-    .split(/\n\s*\n/)
-    .map((paragraph) => paragraph.trim())
-    .filter(Boolean);
+  const paragraphs = paragraphsOf(factionDescription(faction.slug));
 
   // Rendered once: inline on a laptop, pinned above the tab bar on a phone (#1566).
   const joinAction = membership.state === "eligible" && (

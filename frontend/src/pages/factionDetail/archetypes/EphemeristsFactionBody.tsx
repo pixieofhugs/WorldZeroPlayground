@@ -38,6 +38,7 @@ import {
 } from "../sectionDisclosure";
 import type { FactionDetailState } from "../useFactionDetail";
 import { factionBodyVars } from "../../../utils/factionBodyFace"
+import { paragraphsOf } from "../../../utils/paragraphs";
 
 /**
  * Ephemerists faction body, the Valley-card skin of the shared spine; marks are
@@ -109,7 +110,7 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
   // The burn (#1305) reuses the gate's chassis with neutral platform copy (ADR-0061).
   const burned = membership.state === "burned";
 
-  const paragraphs = factionDescription(faction.slug).split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
+  const paragraphs = paragraphsOf(factionDescription(faction.slug));
 
   const ranked = [...members].sort((a, b) => b.all_time_score - a.all_time_score);
   const spot: CharacterOut | undefined = ranked[0];

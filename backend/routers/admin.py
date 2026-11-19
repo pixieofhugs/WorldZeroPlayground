@@ -44,8 +44,7 @@ from schemas.task import TaskOut
 from schemas.praxis import PraxisCardOut, PraxisOut
 from schemas.comment import CommentModerationIn, CommentOut
 from services.praxis import PraxisEraScope, list_praxes, moderate_praxis
-from services.praxis_out import build_praxis_cards, build_praxis_out
-from services.vote_tally import crowned_praxis_ids
+from services.praxis_out import build_praxis_cards, build_praxis_out, crowned_praxis_ids
 from services.comment import build_comment_out, list_flagged_comments, moderate_comment
 from services.task import build_task_out, in_progress_counts_for_tasks
 from services.admin_service import (
@@ -228,9 +227,9 @@ async def admin_cli_token(
     """Return a JWT for the first admin account when the CLI secret matches."""
     # One refusal for "unset" and "wrong" so probers can't tell which; this
     # header is the whole boundary for a 7-day admin JWT. compare_digest, not
-    # `!=`, to avoid a timing leak.
+    # `!=`, to avoid a timing leak; bytes because str raises on non-ASCII.
     if not settings.ADMIN_CLI_SECRET or not hmac.compare_digest(
-        x_admin_cli_secret, settings.ADMIN_CLI_SECRET
+        x_admin_cli_secret.encode(), settings.ADMIN_CLI_SECRET.encode()
     ):
         raise HTTPException(status_code=403, detail="Invalid CLI secret.")
 
