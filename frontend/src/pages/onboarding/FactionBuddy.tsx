@@ -56,8 +56,8 @@ const ACC: Record<string, ReactNode> = {
 
 interface FactionBuddyProps {
   slug: string
-  /** Diameter in px. */
-  size?: number
+  /** Diameter: a number is px, a string (e.g. a clamp()) passes through. */
+  size?: number | string
   /** Seconds between blinks, and the offset into that cycle: give each instance its own. */
   blinkPeriod?: number
   blinkOffset?: number
@@ -65,7 +65,7 @@ interface FactionBuddyProps {
 
 export default function FactionBuddy({ slug, size = 24, blinkPeriod = 4.3, blinkOffset = 0 }: FactionBuddyProps) {
   const vars = {
-    '--s': `${size}px`,
+    '--s': typeof size === 'number' ? `${size}px` : size,
     '--c': factionCssVar(slug),
     '--bk': `${blinkPeriod}s`,
     '--bd': `${blinkOffset}s`,

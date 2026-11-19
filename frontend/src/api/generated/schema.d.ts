@@ -3157,6 +3157,10 @@ export interface components {
             era_id: number;
             /** Name */
             name: string;
+            /** Tasks Created */
+            tasks_created: number;
+            /** Tasks Reactivated */
+            tasks_reactivated: number;
         };
         /** FactionChoiceRequest */
         FactionChoiceRequest: {
@@ -3374,7 +3378,7 @@ export interface components {
          */
         FlaggedPraxisOut: {
             /** Admin Note */
-            admin_note: string | null;
+            admin_note: string;
             /**
              * Applied Metatasks
              * @default []
@@ -3391,7 +3395,7 @@ export interface components {
             /** Author Username */
             author_username: string;
             /** Body Text */
-            body_text: string | null;
+            body_text: string;
             /**
              * Can Flag
              * @default false
@@ -3477,7 +3481,7 @@ export interface components {
             /** Task Title */
             task_title: string;
             /** Title */
-            title: string | null;
+            title: string;
             type: components["schemas"]["PraxisType"];
             /**
              * Updated At
@@ -4223,8 +4227,11 @@ export interface components {
              * @default []
              */
             applied_metatasks: components["schemas"]["TaskOut"][];
-            /** Body Text */
-            body_text: string | null;
+            /**
+             * Body Text
+             * @default
+             */
+            body_text: string;
             /**
              * Created At
              * Format: date-time
@@ -4312,7 +4319,7 @@ export interface components {
             /** Task Title */
             task_title: string;
             /** Title */
-            title: string | null;
+            title: string;
             type: components["schemas"]["PraxisType"];
             /**
              * Updated At
@@ -4426,14 +4433,14 @@ export interface components {
         /** PraxisOut */
         PraxisOut: {
             /** Admin Note */
-            admin_note: string | null;
+            admin_note: string;
             /**
              * Applied Metatasks
              * @default []
              */
             applied_metatasks: components["schemas"]["TaskOut"][];
             /** Body Text */
-            body_text: string | null;
+            body_text: string;
             /**
              * Can Flag
              * @default false
@@ -4514,7 +4521,7 @@ export interface components {
             /** Task Title */
             task_title: string;
             /** Title */
-            title: string | null;
+            title: string;
             type: components["schemas"]["PraxisType"];
             /**
              * Updated At

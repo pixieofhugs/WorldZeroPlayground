@@ -594,9 +594,12 @@ async def soft_delete_character(
     character = await session.get(Character, character_id)
     if character is None:
         raise HTTPException(status_code=404, detail="Character not found.")
+    # Distinguishes self-deletion from a ban (#1577); never cleared. A life a
+    # moderator already banned stays unstamped, so MOD_BANNED (and its hidden
+    # votes) survives the player deleting their account.
+    if character.status != CharacterStatus.banned:
+        character.departed_at = datetime.now(timezone.utc)
     character.status = CharacterStatus.banned
-    # Distinguishes self-deletion from a ban (#1577); never cleared.
-    character.departed_at = character.departed_at or datetime.now(timezone.utc)
     erased_avatar_url = character.avatar_url
     character.avatar_url = ""
 

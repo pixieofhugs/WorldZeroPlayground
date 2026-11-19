@@ -4,6 +4,7 @@ from sqlalchemy import select
 
 from models.character import CharacterStatus
 from models.character_stats import CharacterStats
+from services.account_deletion import delete_account
 from services.vote_tally import tally_votes
 from tests.integration.factories import (
     cast_vote,
@@ -75,3 +76,34 @@ async def test_a_departed_voter_still_counts(db_session, rigged, character2):
     character2.departed_at = character2.created_at
     await db_session.flush()
     assert (await _votes(db_session, rigged))[1] == 2
+
+
+async def test_a_banned_voter_stays_hidden_after_deleting_the_account(
+    client, db_session, auth_headers, rigged, character, character2
+):
+    await client.post(
+        f"/admin/characters/{character2.id}/ban",
+        json={"banned": True},
+        headers=auth_headers,
+    )
+    banned = await _votes(db_session, rigged)
+    banned_score = await _stored_score(db_session, character)
+
+    await delete_account(character2.account_id, db_session)
+
+    assert await _votes(db_session, rigged) == banned
+    assert await _stored_score(db_session, character) == banned_score
+
+
+async def test_unban_of_a_deleted_accounts_banned_life_is_refused(
+    client, db_session, auth_headers, rigged, character2
+):
+    url = f"/admin/characters/{character2.id}/ban"
+    await client.post(url, json={"banned": True}, headers=auth_headers)
+    await delete_account(character2.account_id, db_session)
+
+    resp = await client.post(url, json={"banned": False}, headers=auth_headers)
+
+    assert resp.status_code == 409
+    await db_session.refresh(character2)
+    assert character2.status == CharacterStatus.banned

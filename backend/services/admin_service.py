@@ -48,6 +48,7 @@ from seed import upsert_era_factions
 from services.faction_service import refuse_hidden_faction
 from services.character import MOD_BANNED, record_level_reached
 from services.character_stats import recalculate_for_account_votes
+from services.era_tasks import sync_era_tasks, tasks_to_reactivate
 from services.duel import forfeit_settled_duels_for_character
 from services.praxis import moderate_praxis
 from services.era import (
@@ -437,8 +438,11 @@ async def apply_ban(
 
     Un-banning refuses a departed life: ``departed_at`` is written only by the
     player's own ``soft_delete_character``; ``status`` alone can't tell them apart.
+    A mod-banned life of a deleted account stays unstamped, so that is checked too.
     """
-    if not banned and character.departed_at is not None:
+    account = await session.get(Account, character.account_id)
+    deleted = account is not None and account.status == AccountStatus.deleted
+    if not banned and (character.departed_at is not None or deleted):
         raise_coded(
             409,
             ErrorCode.character_departed_not_restorable,
@@ -617,6 +621,8 @@ async def suspend_account(
     account = await session.get(Account, account_id)
     if account is None:
         raise HTTPException(status_code=404, detail="Account not found.")
+    if account.status == AccountStatus.deleted:
+        raise_coded(409, ErrorCode.account_deleted, "Account was deleted.")
     account.status = AccountStatus.suspended if suspended else AccountStatus.active
     await session.flush()
     await recalculate_for_account_votes(account_id, session, era)
@@ -814,7 +820,9 @@ async def roll_into_era(
     in the system, and there is no undo.
 
     Delegates to the owners: new ``Era`` row (ADR-0042), roster mirror,
-    ``apply_era_reset`` (incoming era's flags; freezes duels #824), then
+    ``apply_era_reset`` (incoming era's flags; freezes duels #824), the incoming
+    era's ``reactivate_tasks`` (named retired ones return) and ``tasks`` (new ones
+    are created); the onboarding task is spared by the retirement, not relisted), then
     ``commit_and_bind_live_era``. ``operator`` is the ``Era.started_by_id`` audit.
 
     Refuses an unregistered key and the already-live era (a full destructive
@@ -840,6 +848,27 @@ async def roll_into_era(
             f"{era_config.name} is already the live era.",
         )
 
+    # Before any write: a bad title refuses the whole roll.
+    to_reactivate = await tasks_to_reactivate(session, era_config)
+
+    creator_id = (
+        await session.execute(
+            select(Character.id)
+            .where(Character.account_id == operator.id)
+            .order_by(Character.id)
+            .limit(1)
+        )
+    ).scalar_one_or_none()
+    if creator_id is None:
+        board_titles = set((await session.execute(select(Task.title))).scalars())
+        if any(task.title not in board_titles for task in era_config.tasks):
+            raise_coded(
+                409,
+                ErrorCode.era_roll_needs_character,
+                "This era lists new tasks and the operator has no character "
+                "to author them.",
+            )
+
     characters = await list_characters_to_reset(session)
     new_era_row = Era(
         # Fallback if the config file is later deleted; see models/era.py.
@@ -856,6 +885,10 @@ async def roll_into_era(
 
     await apply_era_reset(characters, new_era_row, session, era=era_config)
 
+    for task in to_reactivate:
+        task.status = TaskStatus.active
+    tasks_created = await sync_era_tasks(session, era_config, creator_id)
+
     # Durable first, live second; see `commit_and_bind_live_era`.
     await commit_and_bind_live_era(session, era_config)
 
@@ -864,4 +897,6 @@ async def roll_into_era(
         config_key=era_config.config_key,
         name=era_config.name,
         characters_reset=len(characters),
+        tasks_reactivated=len(to_reactivate),
+        tasks_created=tasks_created,
     )

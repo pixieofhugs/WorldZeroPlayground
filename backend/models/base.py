@@ -7,7 +7,9 @@ ALTER/DROP has a stable target. CHECKs use a bare ``name=`` (becomes
 Enforced by ``tests/unit/test_model_conventions.py``.
 """
 
-from sqlalchemy import MetaData
+import enum
+
+from sqlalchemy import Enum, MetaData
 from sqlalchemy.orm import DeclarativeBase
 
 # Alembic's recommended set; `column_0_N_name` names every covered column.
@@ -22,3 +24,8 @@ NAMING_CONVENTION: dict[str, str] = {
 
 class Base(DeclarativeBase):
     metadata = MetaData(naming_convention=NAMING_CONVENTION)
+
+
+def string_enum(enum_class: type[enum.Enum]) -> Enum:
+    """A Python enum stored as VARCHAR(32) with a CHECK on its names (#3448)."""
+    return Enum(enum_class, native_enum=False, length=32, create_constraint=True)

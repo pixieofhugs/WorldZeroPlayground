@@ -353,6 +353,7 @@ export default function SnideCreateCharacter({ state }: { state: CreateCharacter
                 <button
                   type="button"
                   onClick={() => navigate('/')}
+                  className="touch-target"
                   style={punkLabel({
                     background: 'transparent',
                     border: 'none',

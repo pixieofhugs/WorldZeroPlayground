@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING, List, Optional
 from sqlalchemy import (
     BigInteger,
     DateTime,
-    Enum,
     ForeignKey,
     Identity,
     Index,
@@ -17,7 +16,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from models.base import Base
+from models.base import Base, string_enum
 from models.mixins import TimestampMixin
 
 if TYPE_CHECKING:
@@ -61,7 +60,7 @@ class Character(TimestampMixin, Base):
         String, ForeignKey("faction.slug"), nullable=False, server_default="na"
     )
     status: Mapped[CharacterStatus] = mapped_column(
-        Enum(CharacterStatus, create_type=False), nullable=False, default=CharacterStatus.active
+        string_enum(CharacterStatus), nullable=False, default=CharacterStatus.active
     )
     # Player ended this life (#1577); status is also ``banned``. Not a status
     # value so every "not playable" read keeps working. Written only by

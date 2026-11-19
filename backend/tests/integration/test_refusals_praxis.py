@@ -251,6 +251,28 @@ async def test_duplicate_pending_invite_is_refused(
 
 
 @pytest.mark.asyncio
+async def test_pending_invite_from_another_member_blocks_a_second_invite(
+    client: AsyncClient,
+    praxis_collab: Praxis,
+    character3: Character,
+    auth_headers: dict,
+    auth_headers2: dict,
+    db_session: AsyncSession,
+):
+    path = f"/praxes/{praxis_collab.id}/invite"
+    body = {"invitee_id": character3.id}
+    assert (await client.post(path, json=body, headers=auth_headers)).status_code == 200
+
+    second = await client.post(path, json=body, headers=auth_headers2)
+
+    assert second.status_code == 409
+    code = detail_code(second.json()["detail"])
+    assert code == ErrorCode.invite_already_pending.value
+    invites = await db_session.scalar(select(func.count()).select_from(PraxisInvite))
+    assert invites == 1
+
+
+@pytest.mark.asyncio
 async def test_invite_refused_when_the_invitees_faction_may_not_act_on_the_task(
     praxis_collab: Praxis,
     character: Character,

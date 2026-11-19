@@ -516,7 +516,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
         }}
       >
         <MarkdownPreview
-          source={praxis.body_text ?? ''}
+          source={praxis.body_text}
           className="markdown-preview content-text"
           style={{ fontFamily: TYPE, lineHeight: 1.6, color: PLATE_TEXT }}
         />

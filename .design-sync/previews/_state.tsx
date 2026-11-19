@@ -514,7 +514,7 @@ function duelSide(overrides: Partial<DuelSideOut> = {}): DuelSideOut {
 
 function duelPraxis(taskSlug: string | null, overrides: Partial<PraxisOut> = {}): PraxisOut {
   return {
-    admin_note: null,
+    admin_note: "",
     applied_metatasks: [],
     body_text:
       'I went up before the light six days running. The fourth morning the hold under the overhang was wet, so I sat on the ledge for an hour instead.',

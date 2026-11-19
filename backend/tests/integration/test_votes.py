@@ -718,15 +718,18 @@ async def test_non_participant_can_vote_on_duel_side(
     era: Era,
     some_faction,
     auth_headers: dict,
+    auth_headers2: dict,
 ):
     from models.duel import Duel, DuelStatus
     from services.auth import create_jwt
 
     challenger_pid = await _create_and_submit_solo(client, active_task, auth_headers)
+    opponent_pid = await _create_and_submit_solo(client, active_task, auth_headers2)
     db_session.add(
         Duel(
             task_id=active_task.id,
             challenger_praxis_id=challenger_pid,
+            opponent_praxis_id=opponent_pid,
             opponent_character_id=character2.id,
             status=DuelStatus.settled,
         )
