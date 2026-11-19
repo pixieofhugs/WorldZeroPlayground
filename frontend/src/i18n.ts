@@ -109,6 +109,9 @@ i18n.use(initReactI18next).use(copyRegistry).init({
   },
 })
 
+// Suites read copy at collection time, before any route has loaded it. Constant-folded out of production builds.
+if (import.meta.env.MODE === 'test') await loadAppCopy()
+
 /**
  * Apply DB copy overrides over the shipped catalog. Non-blocking (called from
  * `main.tsx`) so first paint never waits; failures are silent since the shipped

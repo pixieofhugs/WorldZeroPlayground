@@ -13,8 +13,6 @@ beforeAll(async () => {
   await import('../factions')
   const { preloadAllArchetypes } = await import('../factions/lazyArchetype')
   await preloadAllArchetypes()
-  // /start and app copy are route-loaded in the app; tests render its cards directly.
-  const i18nModule = await import('../i18n')
-  await i18nModule.loadOnboardingCopy()
-  await i18nModule.loadAppCopy()
+  // /start copy is route-loaded in the app; tests render its cards directly.
+  await (await import('../i18n')).loadOnboardingCopy()
 })

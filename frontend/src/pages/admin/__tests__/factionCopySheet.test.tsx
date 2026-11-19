@@ -40,6 +40,8 @@ function factionKeys(slug: string): string[] {
 const UNRENDERED = [
   // UA's locked card prints no status line. Dead copy.
   'feed:factionSelect.ua.status.locked',
+  // Welcome-flow bubbles: edit them on `/start`, which ships its own copy so guests skip the feed catalog.
+  ...FACTION_RAINBOW_ORDER.concat(ALBESCENT_FACTION_SLUG).map((slug) => `onboarding:beat7.taglines.${slug}`),
   // Post-press letters (busy, joined, failed): edit them in the live app.
   ...['cta.joined', 'cta.busy', 'declineError'].map((key) => `factions:albescent.letter.${key}`),
 ]
