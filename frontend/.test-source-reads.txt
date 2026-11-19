@@ -83,6 +83,7 @@ src/pages/settings/__tests__/notificationPrefs.test.tsx  # parity
 src/test/__tests__/editPraxisStateIsBuilt.test.ts  # walk
 src/test/__tests__/indexCss.test.ts  # walk
 src/test/__tests__/loopListsAreDerived.test.ts  # walk
+src/test/__tests__/modalDialogs.test.ts  # walk
 src/test/__tests__/noGluedClassInterpolation.test.ts  # walk
 src/test/__tests__/noPrivateSourceWalk.test.ts  # walk
 src/utils/__tests__/contrastSweep.test.ts  # legacy
