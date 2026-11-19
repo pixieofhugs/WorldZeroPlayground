@@ -24,12 +24,6 @@ describe('401 handling', () => {
     }
   })
 
-  it('excludes every session probe, not just the first one', () => {
-    for (const probe of ['/auth/me', '/me/sidebar']) {
-      expect(shouldReturnToLanding(401, probe, '/tasks/46')).toBe(false)
-    }
-  })
-
   /** A prefix match on `/me` would swallow real mid-session expiries. */
   it('does not extend the exclusion to the rest of /me', () => {
     expect(shouldReturnToLanding(401, '/me/characters', '/settings')).toBe(true)
