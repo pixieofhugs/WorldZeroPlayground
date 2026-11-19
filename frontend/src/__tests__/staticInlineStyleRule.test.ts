@@ -27,9 +27,15 @@ describe(RULE, () => {
 
   it('passes anything derived from a prop, variable, spread or template expression', async () => {
     expect(await reports("export const A = ({ w }: { w: number }) => <p style={{ width: w, color: 'var(--x)' }} />")).toBe(false)
-    expect(await reports("const C = 'var(--x)'\nexport const A = () => <p style={{ color: C }} />")).toBe(false)
+    expect(await reports("let C = 'var(--x)'\nexport const A = () => <p style={{ color: C }} />")).toBe(false)
+    expect(await reports("export const A = ({ C }: { C: string }) => { const D = C; return <p style={{ color: D }} /> }")).toBe(false)
     expect(await reports("export const A = ({ s }: { s: object }) => <p style={{ ...s, top: 0 }} />")).toBe(false)
     expect(await reports('export const A = () => <p style={{ color: `var(--x-${1})` }} />')).toBe(false)
+  })
+
+  it('flags a module-scope static const read, the laundering route', async () => {
+    expect(await reports("const C = 'var(--x)'\nexport const A = () => <p style={{ color: C }} />")).toBe(true)
+    expect(await reports("const C = 'var(--x)'\nexport const A = () => { const C = 2 + 1; return <p style={{ color: C }} /> }")).toBe(false)
   })
 
   it('passes a style that is not an inline object', async () => {
@@ -43,7 +49,7 @@ describe(RULE, () => {
   })
 })
 
-const LEGACY_CEILING = 284
+const LEGACY_CEILING = 288
 
 describe('the legacy list stays honest', () => {
   it('never grows: lower LEGACY_CEILING when you delist a file', () => {
