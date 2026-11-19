@@ -847,7 +847,11 @@ async def test_a_pending_invite_on_a_submitted_praxis_stays_out_of_the_stream(
     await db_session.execute(
         update(Praxis)
         .where(Praxis.id == full_feed["collab_praxis_id"])
-        .values(status=PraxisStatus.submitted)
+        .values(
+            status=PraxisStatus.submitted,
+            submitted_at=func.now(),
+            era_id=select(func.max(Era.id)).scalar_subquery(),
+        )
     )
     await db_session.commit()
 
