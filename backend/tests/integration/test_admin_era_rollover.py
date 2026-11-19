@@ -386,7 +386,12 @@ async def test_rebind_on_a_database_with_no_era_row_does_not_raise(
 
 
 async def test_an_era_roll_resets_a_mod_banned_life(
-    db_session: AsyncSession, era: Era, account: Account, some_faction: Faction
+    client: AsyncClient,
+    db_session: AsyncSession,
+    era: Era,
+    account: Account,
+    auth_headers: dict,
+    some_faction: Faction,
 ):
     from services.admin_service import roll_into_era
 
@@ -404,6 +409,14 @@ async def test_an_era_roll_resets_a_mod_banned_life(
 
     await roll_into_era("era_2", account, db_session)
 
+    await db_session.commit()
+    resp = await client.post(
+        f"/admin/characters/{banned.id}/ban",
+        json={"banned": False},
+        headers=auth_headers,
+    )
+
+    assert resp.status_code == 200
     await db_session.refresh(banned)
     assert era_2.reset_faction
     assert banned.faction_slug == era_2.reset_faction_slug
