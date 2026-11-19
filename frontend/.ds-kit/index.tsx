@@ -172,7 +172,6 @@ export { default as FeedUndoStrip } from "../src/components/feed/FeedUndoStrip";
 export { default as FilterLevelNodes } from "../src/components/ui/FilterLevelNodes";
 export { default as HoldoutPublishNotice } from "../src/pages/editPraxis/blocks/HoldoutPublishNotice";
 export { default as ImageEditModal } from "../src/components/imageEdit/ImageEditModal";
-export { default as IntroCard } from "../src/pages/onboarding/IntroCard";
 export { default as InvitationLetterPopup } from "../src/components/InvitationLetterPopup";
 export { default as InvitationWatcher } from "../src/components/InvitationWatcher";
 export { JoinControl } from "../src/components/JoinControl";

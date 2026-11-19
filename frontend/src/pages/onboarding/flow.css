@@ -1,0 +1,118 @@
+/* The flow's frame: header, title page, text box. Ported from .design-sync/onboarding-arc/src.html; ob- prefixed because this sheet stays loaded once /start has been visited. */
+.ob-root{position:relative;min-height:100vh;box-sizing:border-box;display:flex;flex-direction:column;overflow-x:clip;background:var(--color-bg-page);color:var(--faction-default-card-text);font-family:var(--font-body)}
+.ob-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.ob-cap{font-family:var(--font-body);font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:var(--faction-default-card-muted)}
+.ob-lora{font-family:var(--font-display);font-weight:600;font-style:italic}
+.ob-hair{height:1px;background:var(--faction-default-border)}
+.ob-srule{height:1px;background-image:var(--faction-default-rainbow);opacity:.6}
+
+.ob-header{position:relative;z-index:2;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px clamp(16px,4vw,40px);min-height:48px}
+.ob-header>span{display:flex;align-items:center;gap:6px}
+.ob-brand{display:flex;align-items:center;gap:10px}
+.ob-brand i{width:28px;height:1px;background-image:var(--faction-default-rainbow)}
+@media (max-width:859px){.ob-brand.ob-brand-hide{display:none}}
+
+.ob-ghost{min-height:44px;padding:0 14px;border:0;background:transparent;cursor:pointer;color:var(--faction-default-card-muted)}
+.ob-ghost:hover,.ob-ghost:focus-visible{color:var(--faction-default-card-text);outline:none}
+.ob-ghost.ob-next{color:var(--faction-default-card-text)}
+@keyframes ob-bkj{0%,100%{transform:none}35%{transform:translateX(-7px) scale(1.06,.94)}70%{transform:translateX(2px)}}
+.ob-bk:hover,.ob-bk:focus-visible{animation:ob-bkj .4s ease-in-out}
+
+@keyframes ob-aurora{to{opacity:var(--faction-default-aurora-opacity,.22)}}
+.ob-aurora{position:absolute;inset:-10%;pointer-events:none;background-image:var(--faction-default-aurora);filter:var(--faction-default-aurora-filter,blur(48px) saturate(.8));mix-blend-mode:var(--faction-default-aurora-blend,screen);opacity:0;animation:ob-aurora 3.5s ease-out forwards}
+
+@keyframes ob-caret{50%{opacity:0}}
+.ob-caret{display:inline-block;width:2px;height:1.05em;margin-left:.08em;vertical-align:-.16em;border-radius:1px;background:var(--faction-default-card-text);animation:ob-caret 1.06s step-end infinite}
+
+/* going back: the screen is yanked off, the last one bounces in */
+@keyframes ob-lv{0%{transform:none}28%{transform:translateX(-16px) scale(1.03,.97)}100%{opacity:0;transform:translateX(140px) rotate(5deg) scale(.9)}}
+.ob-lv{pointer-events:none;animation:ob-lv .46s cubic-bezier(.5,0,.8,.5) forwards}
+@keyframes ob-rew{0%{opacity:0;transform:translateX(-90px) rotate(-4deg) scale(.95)}55%{opacity:1;transform:translateX(12px) rotate(1.5deg)}78%{transform:translateX(-5px) rotate(-.5deg)}100%{transform:none}}
+.ob-rew{animation:ob-rew .6s cubic-bezier(.3,.7,.4,1) backwards}
+@keyframes ob-rwd{50%{opacity:.15}}
+.ob-rwd{position:absolute;z-index:5;top:66px;left:50%;transform:translateX(-50%);pointer-events:none;animation:ob-rwd .23s step-end infinite}
+
+/* title */
+.ob-title{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(26px,5vh,46px);padding:8px 16px 64px}
+.ob-rail{width:min(100%,620px);display:flex;align-items:center;gap:clamp(12px,3vw,28px)}
+.ob-level{display:flex;flex-direction:column;line-height:1}
+.ob-level b{font-family:var(--font-display);font-weight:600;font-size:clamp(44px,7vw,64px);line-height:.9}
+@keyframes ob-twang{0%,100%{transform:none}15%{transform:translateY(4px)}30%{transform:translateY(-3px)}45%{transform:translateY(2px)}60%{transform:translateY(-1px)}}
+.ob-line{position:relative;flex:1;animation:ob-twang .9s ease-out 1.55s}
+.ob-line .ob-srule{display:block;animation-delay:.4s}
+.ob-sleeper{position:absolute;left:50%;bottom:0;margin-left:-26px;line-height:0}
+@keyframes ob-drawX{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+.ob-draw{clip-path:inset(0 100% 0 0);animation:ob-drawX 1.1s cubic-bezier(.6,0,.2,1) forwards}
+@property --sweep{syntax:'<angle>';inherits:false;initial-value:0deg}
+@keyframes ob-sweep{to{--sweep:361deg}}
+@keyframes ob-thump{0%,82%{transform:scale(1)}90%{transform:scale(1.12,.9)}96%{transform:scale(.96,1.05)}100%{transform:scale(1)}}
+.ob-ring{box-sizing:border-box;border-radius:50%;padding:4px;width:clamp(84px,13vw,118px);height:clamp(84px,13vw,118px);background-image:var(--faction-default-rainbow-conic);-webkit-mask:conic-gradient(#000 var(--sweep),transparent 0);mask:conic-gradient(#000 var(--sweep),transparent 0);animation:ob-sweep 1.4s cubic-bezier(.5,0,.2,1) 2.2s forwards,ob-thump 1.7s ease-out 2.2s forwards}
+.ob-disc{width:100%;height:100%;border-radius:50%;background:var(--faction-default-card-bg);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:.9}
+.ob-disc b{font-family:var(--font-display);font-weight:600;font-size:clamp(30px,4.5vw,40px)}
+.ob-disc .ob-cap{font-size:11px;margin-top:4px}
+.ob-h1{margin:0;font-size:clamp(44px,8.4vw,104px);line-height:1.05;text-align:center;white-space:nowrap}
+@media (max-width:420px){.ob-h1{font-size:clamp(34px,11.5vw,44px)}}
+
+/* asleep on the line until the title speaks: slumped, snoring, a bubble at its mouth; the bubble pops as the title ends and wakes it */
+.ob-wake{display:block;position:relative;transform-origin:50% 100%;transform:rotate(-9deg) scale(1.06,.9);animation:ob-wakejump .78s cubic-bezier(.3,.7,.4,1) 4.2s forwards}
+@keyframes ob-wakejump{0%{transform:rotate(-9deg) scale(1.06,.9)}12%{transform:scale(1.22,.74)}38%{transform:translateY(-36px) scale(.88,1.18) rotate(5deg)}66%{transform:translateY(0) scale(1.2,.8)}82%{transform:translateY(-6px) rotate(-2deg)}100%{transform:none}}
+@keyframes ob-wakeeye{0%{transform:scale(.3)}60%{transform:scale(1.32)}100%{transform:scale(1)}}
+@keyframes ob-fadein{to{opacity:1}}
+@keyframes ob-lidsgone{to{opacity:0}}
+@keyframes ob-snore{0%,100%{scale:1 1}20%{scale:.97 .94}40%{scale:1.04 1.06}60%{scale:.97 .94}78%{scale:1.04 1.06}96%{scale:.95 .9}}
+@keyframes ob-bwake{to{opacity:.95}}
+.ob-snz .eyes{opacity:0;animation:ob-fadein .01s 4.2s forwards,ob-wakeeye .5s cubic-bezier(.3,1.8,.5,1) 4.2s,blink2 9.7s 5.6s infinite}
+.ob-snz .lids{opacity:1;animation:ob-lidsgone .01s 4.2s forwards}
+.ob-snz .msway{animation:ob-snore 2.5s ease-in-out 1.7s,msway 7.3s ease-in-out 5.2s infinite,breathe 3.1s ease-in-out 5.2s infinite}
+.ob-snz .mpup{animation:glance 11.3s ease-in-out 7.5s infinite}
+.ob-snz .blush{animation:ob-bwake .5s ease-out 4.4s both}
+@keyframes ob-sbub{0%{transform:scale(0)}20%{transform:scale(.95)}40%{transform:scale(.38)}60%{transform:scale(1.12)}78%{transform:scale(.5)}95%{opacity:1;transform:scale(1.75)}100%{opacity:0;transform:scale(2.5)}}
+.ob-sbub{position:absolute;left:28px;top:52px;width:20px;height:20px;box-sizing:border-box;border-radius:50%;border:1.6px solid var(--faction-default-card-text);background:radial-gradient(circle at 34% 30%,color-mix(in srgb,white 70%,transparent) 0 14%,color-mix(in srgb,var(--faction-default-card-text) 16%,transparent) 15%);transform-origin:0 62%;transform:scale(0);animation:ob-sbub 2.5s ease-in-out 1.7s forwards}
+@keyframes ob-zz{0%{opacity:0;transform:scale(.5)}25%{opacity:.9}100%{opacity:0;transform:translate(18px,-36px) scale(1.25) rotate(14deg)}}
+.ob-zz{position:absolute;left:72%;bottom:88%;font:italic 600 17px var(--font-display);color:var(--faction-default-card-muted);opacity:0;animation:ob-zz 1s ease-out}
+@keyframes ob-bang{0%{opacity:0;transform:scale(0)}20%{opacity:1;transform:scale(1.5) rotate(-8deg)}40%{transform:scale(1) rotate(4deg)}75%{opacity:1}100%{opacity:0;transform:translateY(-8px)}}
+.ob-bang{position:absolute;left:50%;bottom:168%;margin-left:-.2em;font:600 28px var(--font-display);opacity:0;animation:ob-bang 1.1s ease-out 4.25s both}
+
+.ob-start{position:relative;min-height:48px;padding:0 18px 0 30px;border:0;background:transparent;color:var(--faction-default-card-text);font-family:var(--font-body);font-size:15px;letter-spacing:.24em;text-transform:uppercase;cursor:pointer}
+.ob-start::before{content:"";position:absolute;left:14px;top:50%;width:2px;height:1.05em;margin-top:-.5em;background:currentColor;opacity:0}
+.ob-start::after{content:"";position:absolute;left:30px;right:18px;bottom:8px;height:1px;background-image:var(--faction-default-rainbow);transform:scaleX(0);transform-origin:left;transition:transform .35s cubic-bezier(.3,1.6,.5,1)}
+.ob-start:hover::before,.ob-start:focus-visible::before{opacity:1;animation:ob-caret 1s step-end infinite}
+.ob-start:hover::after,.ob-start:focus-visible::after{transform:scaleX(1)}
+.ob-start:focus-visible{outline:none}
+.ob-quick *{animation-delay:0s!important}
+.ob-quick .ob-zz,.ob-quick .ob-sbub{display:none}
+
+/* beats: a stage above a text box that stays put */
+.ob-beat{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;gap:34px;padding:4px clamp(16px,4vw,40px) 26px;min-height:0}
+.ob-stage{position:relative;flex:1;min-height:330px;display:flex;align-items:center;justify-content:center}
+.ob-sheet{box-sizing:border-box;border:3px solid transparent;border-radius:14px;background:linear-gradient(var(--faction-default-card-bg),var(--faction-default-card-bg)) padding-box,var(--faction-default-rainbow) border-box;box-shadow:0 12px 32px -14px var(--color-cast-shadow);color:var(--faction-default-card-text)}
+.ob-box{position:sticky;bottom:12px;z-index:5;width:100%;max-width:900px;align-self:center;padding:20px 24px 10px;display:flex;flex-direction:column;gap:10px}
+.ob-box-top{display:flex;align-items:center;gap:14px}
+.ob-pips{display:flex;gap:5px}
+.ob-pips i{width:7px;height:7px;border-radius:2px;background:var(--faction-default-border)}
+.ob-adv{padding:0;border:0;background:transparent;color:inherit;cursor:pointer;font:inherit;text-align:left}
+.ob-adv:focus-visible{outline:2px solid var(--faction-default-card-text);outline-offset:4px}
+.ob-line-text{display:block;font-size:clamp(20px,2.3vw,27px);line-height:1.4;min-height:2.8em}
+.ob-box-nav{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.ob-box-nav .ob-ghost:first-child{margin-left:-14px}
+.ob-box-nav .ob-ghost:last-child,.ob-box-nav .ob-hold{margin-right:-14px}
+.ob-hold{padding:0 14px}
+
+/* the escape and Back that the existing cards wear */
+.ob-box-top .ob-hair{flex:1}
+.ob-zz::before{content:"z"}
+.ob-bang::before{content:"!"}
+.ob-fwd::after{content:" ▸"}
+.ob-fwd2::after{content:" ▸▸"}
+.ob-prev::before{content:"◂ "}
+.ob-rwd-arrow::before{content:"◂◂ "}
+
+@media (prefers-reduced-motion: reduce){
+  .onboarding-arc .ob-aurora{opacity:var(--faction-default-aurora-opacity,.22)!important}
+  .onboarding-arc .ob-draw{clip-path:none!important}
+  .onboarding-arc .ob-ring{-webkit-mask:none!important;mask:none!important}
+  .onboarding-arc .ob-wake{transform:none!important}
+  .onboarding-arc .ob-snz .eyes{opacity:1!important}
+  .onboarding-arc .ob-snz .lids{opacity:0!important}
+  .onboarding-arc :is(.ob-zz,.ob-sbub,.ob-bang){display:none}
+}
