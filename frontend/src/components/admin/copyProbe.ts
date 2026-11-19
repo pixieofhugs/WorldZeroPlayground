@@ -14,10 +14,8 @@ function storedKeys({ ns, key }: CopyTarget): string[] {
   return own.filter((stored) => typeof i18n.getResource('en', ns, stored) === 'string')
 }
 
-/**
- * Marks each candidate's value and re-renders: the ones whose mark lands in `el`
- * are on screen there. The index only knows wording. No hit (memoised copy) keeps all.
- */
+/** Marks each candidate's value and re-renders: those whose mark lands in `el`
+ * are on screen there. No hit (memoised copy) keeps all. */
 export function candidatesShownIn(el: Element, candidates: CopyTarget[]): CopyTarget[] {
   const shown = candidates.filter((candidate) => {
     const { ns } = candidate
