@@ -224,3 +224,21 @@
 [data-laurel] [data-card-masthead] > :last-child {
   min-width: 3.5rem;
 }
+
+/* The duel reader's vote slot: a meter can be wider than the panel it sits in
+   (Snide's amp is ~270px). The slot bleeds into the panel's padding, the meter
+   sizes to itself and centres, and anything still wider scrolls rather than
+   escaping the frame. components/vote is frozen, so the fix lives here. */
+.duel-vote-slot {
+  overflow-x: auto;
+}
+@media (max-width: 479px) {
+  .duel-vote-slot {
+    margin-inline: calc(-1 * var(--space-md));
+  }
+}
+.duel-vote-slot-fit {
+  width: max-content;
+  min-width: 100%;
+  margin-inline: auto;
+}
