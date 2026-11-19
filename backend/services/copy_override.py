@@ -35,7 +35,11 @@ async def upsert_override(
         .values(ns=ns, key=key, value=value, updated_by_id=account_id)
         .on_conflict_do_update(
             index_elements=["ns", "key"],
-            set_={"value": value, "updated_by_id": account_id, "updated_at": func.now()},
+            set_={
+                "value": value,
+                "updated_by_id": account_id,
+                "updated_at": func.now(),
+            },
         )
         .returning(CopyOverride)
     )

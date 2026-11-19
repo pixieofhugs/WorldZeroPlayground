@@ -48,7 +48,8 @@ def upgrade() -> None:
         """
         DO $$ BEGIN
             IF EXISTS (SELECT 1 FROM information_schema.columns
-                       WHERE table_name = 'relationship' AND column_name = 'status') THEN
+                       WHERE table_name = 'relationship'
+                         AND column_name = 'status') THEN
                 INSERT INTO character_block (blocker_character_id, blocked_character_id)
                 SELECT from_character_id, to_character_id
                 FROM relationship

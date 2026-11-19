@@ -360,7 +360,9 @@ async def test_rebind_reads_the_latest_row_and_falls_back_on_an_unknown_key(
     """
     from services.era import rebind_live_era
 
-    db_session.add(Era(name="whatever", config_key=config_key, started_by_id=account.id))
+    db_session.add(
+        Era(name="whatever", config_key=config_key, started_by_id=account.id)
+    )
     await db_session.flush()
 
     bound = await rebind_live_era(db_session)

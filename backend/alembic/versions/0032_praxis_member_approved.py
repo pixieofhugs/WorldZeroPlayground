@@ -1,4 +1,4 @@
-"""``praxis_member.has_submitted`` and ``submitted_at`` become ``has_approved`` and ``approved_at`` (#3437).
+"""praxis_member approval columns say what they mean (#3437).
 
 Both mean approval of the live proposal (ADR-0079). Idempotent: a fresh DB's root
 already built the new names.
@@ -24,7 +24,8 @@ def _rename(old: str, new: str) -> None:
         f"""
         DO $$ BEGIN
             IF EXISTS (SELECT 1 FROM information_schema.columns
-                       WHERE table_name = 'praxis_member' AND column_name = '{old}') THEN
+                       WHERE table_name = 'praxis_member'
+                         AND column_name = '{old}') THEN
                 ALTER TABLE praxis_member RENAME COLUMN {old} TO {new};
             END IF;
         END $$

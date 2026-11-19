@@ -1,4 +1,4 @@
-"""CHECK constraints for ``vote.value``, ``task.point_value`` and no-self relationships (#3441).
+"""CHECK constraints: vote.value, task.point_value, no-self relationship (#3441).
 
 Era-independent invariants only; star maximums and point caps live in ``EraConfig``.
 Fails loudly, naming the row ids, if existing data violates one: fixing or deleting
@@ -11,6 +11,7 @@ Create Date: 2026-11-19
 from typing import Sequence, Union
 
 import sqlalchemy as sa
+
 from alembic import op
 
 revision: str = "0036_check_constraints"

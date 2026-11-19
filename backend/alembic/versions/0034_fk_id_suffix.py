@@ -1,4 +1,4 @@
-"""Five FK columns get the ``_id`` suffix; ``contact_messages`` becomes ``contact_message`` (#3439).
+"""FK columns get ``_id``; ``contact_messages`` becomes ``contact_message`` (#3439).
 
 Each rename is guarded by the old name existing, so a fresh DB (whose root already
 built the new names) is a no-op. The FK constraints and the identity sequence are
@@ -35,7 +35,8 @@ def _rename_column(table: str, old: str, new: str, referred: str) -> None:
                        WHERE table_name = '{table}' AND column_name = '{old}') THEN
                 ALTER TABLE {table} RENAME COLUMN {old} TO {new};
                 ALTER TABLE {table}
-                    RENAME CONSTRAINT fk_{table}_{old}_{referred} TO fk_{table}_{new}_{referred};
+                    RENAME CONSTRAINT fk_{table}_{old}_{referred}
+                    TO fk_{table}_{new}_{referred};
             END IF;
         END $$
         """

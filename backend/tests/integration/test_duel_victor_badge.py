@@ -26,7 +26,9 @@ DUEL_VICTOR_BADGE = {"key": "duel_victor", "name": "Duel Victor"}
 
 
 async def _next_era(session: AsyncSession, account: Account, *, name: str) -> Era:
-    era_row = Era(name=name, config_key=CURRENT_ERA.config_key, started_by_id=account.id)
+    era_row = Era(
+        name=name, config_key=CURRENT_ERA.config_key, started_by_id=account.id
+    )
     session.add(era_row)
     await session.commit()
     await session.refresh(era_row)

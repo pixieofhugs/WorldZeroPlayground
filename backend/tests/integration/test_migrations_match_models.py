@@ -525,9 +525,10 @@ async def test_check_constraint_migration_refuses_a_violating_row(
             " RETURNING id",
             account_id,
         )
-        # The root already built the constraint; drop it to stand in for a DB that predates it.
+        # The root already built it; drop it to stand in for a pre-0036 DB.
         await conn.execute(
-            "ALTER TABLE relationship DROP CONSTRAINT ck_relationship_no_self_relationship"
+            "ALTER TABLE relationship"
+            " DROP CONSTRAINT ck_relationship_no_self_relationship"
         )
         await conn.execute(
             "INSERT INTO relationship (from_character_id, to_character_id, type)"
