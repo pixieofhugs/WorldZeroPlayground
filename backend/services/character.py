@@ -55,7 +55,7 @@ def build_character_out(
         status=character.status.value,
         created_at=character.created_at,
         score=stats.score if stats else 0,
-        all_time_score=stats.all_time_score if stats else 0,
+        all_time_score=character.all_time_score,
         level=stats.level if stats else 0,
         badges=badges or [],
         invitations=invitations or [],
