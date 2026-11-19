@@ -6,7 +6,7 @@ from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from errors import ErrorCode
+from errors import ErrorCode, detail_code
 from faction_slugs import real_faction_slugs
 from game_config import CURRENT_ERA
 from models.account import Account
@@ -66,6 +66,23 @@ async def test_create_character(
     # ADR-0019; test_era_config pins the literal.
     assert data["faction_slug"] == CURRENT_ERA.starting_faction_slug
     assert "account_id" not in data
+
+
+@pytest.mark.asyncio
+async def test_create_character_refuses_a_case_variant_username(
+    client: AsyncClient,
+    character: Character,
+    account2: Account,
+    some_faction: Faction,
+    auth_headers2: dict,
+):
+    resp = await client.post(
+        "/characters",
+        json={"username": character.username.upper(), "display_name": "Other"},
+        headers=auth_headers2,
+    )
+    assert resp.status_code == 409
+    assert detail_code(resp.json()["detail"]) == ErrorCode.username_taken.value
 
 
 @pytest.mark.asyncio

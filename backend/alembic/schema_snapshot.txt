@@ -50,7 +50,7 @@ table account
   column updated_at timestamp with time zone NOT NULL DEFAULT now()
   constraint fk_account_active_character FOREIGN KEY (active_character_id) REFERENCES "character"(id)
   constraint pk_account PRIMARY KEY (id)
-  constraint uq_account_email UNIQUE (email)
+  index uq_account_email_lower CREATE UNIQUE INDEX uq_account_email_lower ON public.account USING btree (lower((email)::text))
 
 table account_role
   column account_id bigint NOT NULL
@@ -96,8 +96,8 @@ table character
   constraint fk_character_account_id_account FOREIGN KEY (account_id) REFERENCES account(id)
   constraint fk_character_faction_slug_faction FOREIGN KEY (faction_slug) REFERENCES faction(slug)
   constraint pk_character PRIMARY KEY (id)
-  constraint uq_character_username UNIQUE (username)
   index ix_character_account_id CREATE INDEX ix_character_account_id ON public."character" USING btree (account_id)
+  index uq_character_username_lower CREATE UNIQUE INDEX uq_character_username_lower ON public."character" USING btree (lower((username)::text))
 
 table character_block
   column blocked_character_id bigint NOT NULL
