@@ -2796,6 +2796,11 @@ export interface components {
              */
             email: string;
             /**
+             * Era Id
+             * @default 0
+             */
+            era_id: number;
+            /**
              * Era Name
              * @default
              */
@@ -3234,7 +3239,7 @@ export interface components {
          * FlagOut
          * @description One moderator-queue flag (ADR-0037).
          *
-         *     Legacy free text surfaces as ``other`` + ``reason_detail``. Reporter is
+         *     ``reason_detail`` is the optional ``other`` note. Reporter is
          *     character-scoped, never account/email.
          */
         FlagOut: {
@@ -3612,6 +3617,8 @@ export interface components {
             collab_auto_submit_days: number;
             /** Duel Level Required */
             duel_level_required: number;
+            /** Era Id */
+            era_id: number;
             /** Era Name */
             era_name: string;
             /** Factions */

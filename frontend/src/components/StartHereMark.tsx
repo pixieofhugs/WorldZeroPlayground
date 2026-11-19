@@ -10,10 +10,10 @@ import { useTranslation } from 'react-i18next'
  * ponytail: na's ink hardcoded, since only the `na` onboarding task carries it;
  * upgrade is a `slug` prop through `factionCssVar`.
  *
- * `mark.label` is sentence case; this surface uppercases it (#2766).
+ * `startHere.label` is sentence case; this surface uppercases it (#2766).
  */
 export default function StartHereMark() {
-  const { t } = useTranslation('onboarding')
+  const { t } = useTranslation('tasks')
 
   return (
     <span
@@ -31,7 +31,7 @@ export default function StartHereMark() {
         whiteSpace: 'nowrap',
       }}
     >
-      {t('mark.label')}
+      {t('startHere.label')}
     </span>
   )
 }

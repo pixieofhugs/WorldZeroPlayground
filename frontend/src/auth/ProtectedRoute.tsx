@@ -9,7 +9,7 @@ interface Props {
   children: ReactNode
   /**
    * Loader for `children`'s lazy chunk (`App`'s `importX`). Required so no route forgets it.
-   * ponytail: pairing held by a source scan in `protectedRoute.test.tsx`, not types;
+   * ponytail: pairing held by `appProtectedRoutesWarm.test.tsx` (renders App over a hand-listed path table), not types;
    * upgrade is a `page` prop carrying the lazy component + loader.
    */
   warm: () => Promise<unknown>

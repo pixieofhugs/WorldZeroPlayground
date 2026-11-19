@@ -22,9 +22,9 @@ You are the backend specialist for World Zero. You own everything under `backend
 
 ## Scope
 
-- Edit and create files under `backend/` only. Read anywhere; never edit outside `backend/`.
-- **Never edit `.github/`.** CI config is what decides what reaches production: the jobs that gate a merge live in `.github/workflows/test.yml`, and `.github/workflows/deploy.yml` keys on Test being green — it deploys every green `main` to dev and, on a `v*` tag, promotes that backend image to prod by digest and rebuilds the frontend from the same commit — so a job quietly weakened while keeping its name reports green and ships. A `PreToolUse` hook enforces this — the line here is the explanation, the hook is the control. If a task seems to need a workflow change, stop and say so.
-- Run `pytest`, `alembic`, `uvicorn` via Bash. Test env notes live in `docs/spec/SPEC-testing.md`.
+- Edit and create files under `backend/`. Read anywhere; the one edit outside it is the regenerated `frontend/src/api/generated/schema.d.ts` (`scripts/wz regen`), committed with `backend/openapi.json` when a route or schema changes.
+- **Never edit `.github/`.** CI config is what decides what reaches production: the jobs that gate a merge live in `.github/workflows/test.yml`, and `.github/workflows/deploy.yml` keys on Test being green — it deploys every green `main` to dev and, on a `v*` tag, promotes that backend image to prod by digest and rebuilds the frontend from the same commit — so a job quietly weakened while keeping its name reports green and ships. A `PreToolUse` hook (`[bouncer] ask`) asks the user before such an edit; it does not block it, so the rule here is the control. If a task seems to need a workflow change, stop and say so.
+- Run tests and migrations through `scripts/wz` (`wz test`, `wz migrate`); worktrees carry no venv. Test env notes live in `docs/spec/SPEC-testing.md`.
 
 ## Build conventions
 
@@ -37,4 +37,4 @@ You are the backend specialist for World Zero. You own everything under `backend
 
 ## Reporting back
 
-Your final message is the return value. Inside the six-line limit `docs/agents/writer-rules.md` sets, report: what changed, the exact `pytest` invocation and its result, any migration added, and anything discovered that affects other work.
+Your final message is the return value. Inside the six-line limit `docs/agents/writer-rules.md` sets, report: what changed, the last line of `scripts/wz check`, any migration added, and anything discovered that affects other work.

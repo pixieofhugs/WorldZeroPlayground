@@ -48,3 +48,10 @@ them**:
 Only UA's description is corrected in this change. Removing `is_selectable` and
 retiring `aged_out` (the latter needs a data migration for any legacy rows) is
 deferred to follow-up issue #428.
+
+## Amendment (2026-11-18, #3424)
+
+**"Gilt Salon" is retired wording.** The UA identity redesign (#788) removed the gilt
+salon entirely, and ADR-0026's amendment records it. UA is still an ordinary,
+invite-joinable faction with its own directory tile; read "the 'Gilt Salon' academy"
+as "a quiet, minimal practice".

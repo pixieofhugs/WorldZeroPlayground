@@ -65,3 +65,18 @@ unresolved duel.
   anti-participant voting — do not, because a resolved duel is over.
 - The resolved-duel **screen** is design work (#719); this ADR only guarantees
   the frozen data it will read.
+
+## Amendment (2026-11-18, #3419, #3427): ties and `resolved_era_id`
+
+**A tie can have a winner.** "Equal -> NULL" is no longer the whole rule. On level
+votes, `duel_winner()` (`services/duel_outcome.py`) gives the win to the **sole**
+faction holding the era's `takes_duel_ties` perk (`game_config.py`, #748, #2664).
+Two holders cancel and the tie stays NULL. The perk is **per-era faction data**,
+not a permanent advantage: Era 1 gives it to S.N.I.D.E., and another era may give
+it to a different faction or none. It is not inherited
+(`_NON_INHERITED_PERK_FIELDS`). Read `era.factions` for who holds it.
+
+**`Duel` now carries `resolved_era_id`** (FK `era.id`, `backend/models/duel.py`,
+#823), set by `apply_era_reset` beside `resolved_at`. "Which era resolved it" is no
+longer inferred from `resolved_at`, which lands after the new era's `started_at`
+and would name the wrong era. A duel still has no `era_id` for the era it began in.

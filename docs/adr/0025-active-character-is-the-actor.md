@@ -1,6 +1,6 @@
 # ADR-0025 — The active character is the actor for every write path
 
-**Status:** Accepted
+**Status:** Amended by ADR-0041
 **Date:** 2026-07-01
 
 **Relates to:** EPIC #275 (multi-life creation), ADR-0019 (invite gate is account-pooled), issue #293
@@ -82,3 +82,11 @@ guards below.
 - "Life" remains the player-facing and code term (`active_character_id`,
   `resolve_active_character`, FieldDesk "lives"); "sock puppet" is the design
   register for the anti-cheat intent. No renames.
+
+## Amendment (2026-11-18, #3419): one vote per account
+
+"Third-party vote stacking is allowed" no longer holds. `vote` carries
+`uq_vote_praxis_account` on `(praxis_id, voter_account_id)`
+(`backend/models/vote.py`, #1150, ADR-0041): an account casts **one vote per
+praxis**, whichever of its characters casts it. The owner agrees with one vote per
+account. The anti-self-vote guard above is unchanged.

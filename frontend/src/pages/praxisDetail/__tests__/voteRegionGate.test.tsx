@@ -61,6 +61,7 @@ function viewer(): CurrentUser {
     albescent_level_required: 8,
     second_character_level_required: 5,
     era_name: "Era 3",
+    era_id: 3,
     level_jump_reach: 0,
     level_jump_available: false,
     task_browse_defaults_to_eligible: false,
