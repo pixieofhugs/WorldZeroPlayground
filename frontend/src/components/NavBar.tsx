@@ -1,9 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import { useAdminMode } from '../auth/AdminModeContext'
-import { SignInSheet } from './SignInOptions'
 import { useSidebarPanels } from '../hooks/useSidebarPanels'
 import PendingBadge from './layout/PendingBadge'
 
@@ -19,6 +18,9 @@ interface NavLinkSpec {
    */
   readonly accessibleName?: string
 }
+
+// Off the initial payload: it only draws once opened.
+const SignInSheet = lazy(() => import('./SignInOptions').then((m) => ({ default: m.SignInSheet })))
 
 export default function NavBar() {
   const { t } = useTranslation('common')
@@ -207,7 +209,11 @@ export default function NavBar() {
               >
                 {t('nav.login')}
               </button>
-              <SignInSheet open={signInOpen} onClose={() => setSignInOpen(false)} />
+              {signInOpen && (
+                <Suspense fallback={null}>
+                  <SignInSheet open onClose={() => setSignInOpen(false)} />
+                </Suspense>
+              )}
             </>
           )}
         </div>

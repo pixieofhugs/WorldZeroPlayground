@@ -86,6 +86,7 @@
     "answer": "Answer",
     "fileYours": "Submit yours",
     "reply": "Reply",
+    "replyGated": "Reach level {{level}} to reply",
     "failed": "That didn't go through."
   },
   "badge": {
