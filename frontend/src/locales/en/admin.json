@@ -76,6 +76,15 @@
     "noCharacters": "No characters.",
     "ban": "ban",
     "unban": "unban",
+    "ring": {
+      "heading": "Vote ring: account #{{id}}",
+      "loadError": "Could not load the vote ring.",
+      "empty": "No votes cast this era.",
+      "summary": "{{votes}} votes. Top 3 recipients got {{share}}.",
+      "recipient": "{{votes}} votes · {{stars}}★ avg · {{share}}",
+      "reciprocal": "votes back",
+      "walk": "view ring"
+    },
     "status": {
       "active": "active",
       "suspended": "suspended",
@@ -259,6 +268,7 @@
         "suspend": "suspend account",
         "unsuspend": "unsuspend account",
         "viewAccount": "view account →",
+        "viewRing": "vote ring →",
         "removeAll": "remove all {{count}} flagged by this author",
         "removeAllConfirm": {
           "heading": "Remove {{count}} flagged posts by {{name}}?",
