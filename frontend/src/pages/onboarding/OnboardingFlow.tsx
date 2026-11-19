@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, type CSSProperties } from 're
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../auth/AuthContext'
 import AuthCard from './AuthCard'
+import SignInView from './SignInView'
 import TermsCard from './TermsCard'
 import Wisp from './Wisp'
 import { BEATS } from './beats'
@@ -232,7 +233,11 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
         </main>
       )}
 
-      {step === 'signin' && <div className={screenCls}><AuthCard onBack={onBack} /></div>}
+      {step === 'signin' && (
+        <div className={screenCls}>
+          <SignInView onRestart={() => move(() => initialFlow(false))} />
+        </div>
+      )}
 
       {step === 'contract' && (
         <div className={screenCls}>
