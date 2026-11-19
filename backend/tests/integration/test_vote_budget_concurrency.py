@@ -75,7 +75,7 @@ async def test_last_vote_is_spent_once_when_casts_race(test_engine) -> None:
             )
             # score 0: the cap is the base; leave exactly one vote.
             s.add(CharacterStats(
-                character_id=voter.id, era_id=era.id, score=0, all_time_score=0,
+                character_id=voter.id, era_id=era.id, score=0,
                 level=0, votes_spent_this_era=CURRENT_ERA.vote_budget_base - 1,
             ))
             await s.commit()

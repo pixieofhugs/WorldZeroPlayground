@@ -192,7 +192,6 @@ async def _add_second_life(
             character_id=alt.id,
             era_id=era.id,
             score=0,
-            all_time_score=0,
             level=0,
             votes_spent_this_era=0,
         )
@@ -899,7 +898,7 @@ async def test_duel_detail_returns_both_sides_with_tallies(
     await db_session.flush()
     db_session.add(CharacterStats(
         character_id=third_char.id, era_id=era.id, score=100,
-        all_time_score=100, level=3, votes_spent_this_era=0,
+        level=3, votes_spent_this_era=0,
     ))
     await db_session.commit()
     third_headers = {"Authorization": f"Bearer {create_jwt(third.id)}"}
