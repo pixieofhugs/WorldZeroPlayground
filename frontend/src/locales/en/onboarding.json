@@ -48,7 +48,7 @@
     "entered": "{{name}} has entered World Zero.",
     "firstTask": "Your first task.",
     "levelAway_one": "Level {{level}} is one praxis away.",
-    "levelAway_other": "Level {{level}} is {{count}} praxes away."
+    "levelAway_other": "Level {{level}} is {{count}} praxis away."
   },
   "returning": {
     "title": "Welcome back",

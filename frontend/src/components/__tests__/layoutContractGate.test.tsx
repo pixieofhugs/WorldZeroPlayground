@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /** The contract gate through the real `Layout` + `Onboarding` (#3468): the OAuth return and the unaccepted bounce. */
 import { useState, type ReactNode } from 'react'
-import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, render, screen } from '@testing-library/react'
 import { MemoryRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -25,7 +25,7 @@ vi.mock('../layout/MobileHeader', () => ({ default: () => null }))
 vi.mock('../layout/MobileTabBar', () => ({ default: () => null }))
 vi.mock('../layout/Sidebar', () => ({ default: () => null, panelStyle: {} }))
 vi.mock('../layout/SiteFooter', () => ({ default: () => null }))
-vi.mock('../../utils/onboardingHandoff', () => ({ resolveHandoffDestination: async () => '/' }))
+vi.mock('../../utils/onboardingHandoff', () => ({ resolveHandoffDestination: async () => '/', resolveHandoffTask: async () => undefined }))
 
 const noAcceptance = { account_id: 1, character: null, has_accepted_terms: false, is_admin: false } as unknown as CurrentUser
 
@@ -73,12 +73,13 @@ afterEach(() => {
 })
 
 describe('Layout with the contract', () => {
-  it('OAuth return: posts the held click once on /start, clears it, then reaches creation', async () => {
+  it('OAuth return: posts the held click once on /start, clears it, then creates the character inside the flow', async () => {
     store.set('wz_onboarding_handoff', 'true')
     store.set('wz_terms_accepted', 'true')
     render(<App user={noAcceptance} at="/" />)
 
-    await waitFor(() => expect(screen.getByTestId('where').textContent).toBe('/characters/create'))
+    expect(await screen.findByPlaceholderText(/character name/i)).toBeTruthy()
+    expect(screen.getByTestId('where').textContent).toBe('/start')
     expect(acceptTerms).toHaveBeenCalledTimes(1)
     expect(store.has('wz_terms_accepted')).toBe(false)
   })

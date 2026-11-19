@@ -18,7 +18,7 @@ export default function CharacterStep({ onCreated, onBack }: { onCreated: (c: Ch
   )
   return (
     <main className="ar-create">
-      <div className="toss" style={{ animationDelay: '.05s' }}>
+      <div className="toss ar-toss">
         <Suspense fallback={null}>
           <Form state={state} leadAction={back} />
         </Suspense>
