@@ -10,7 +10,9 @@ from sqlalchemy import (
     Index,
     Integer,
     UniqueConstraint,
+    event,
     func,
+    select,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -42,6 +44,11 @@ class Vote(Base):
         BigInteger, ForeignKey("account.id"), nullable=False
     )
     value: Mapped[int] = mapped_column(Integer, nullable=False)
+    # The era live when the vote was cast; vote points credit it, not the praxis's
+    # sealing era (ADR-0099). Stamped on insert, so it never follows a re-rate.
+    era_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("era.id"), nullable=False, index=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
@@ -56,3 +63,12 @@ class Vote(Base):
     praxis: Mapped["Praxis"] = relationship(
         "Praxis", foreign_keys=[praxis_id], back_populates="votes", lazy="raise"
     )
+
+
+@event.listens_for(Vote, "before_insert")
+def _stamp_cast_era(mapper, connection, vote: Vote) -> None:  # type: ignore[no-untyped-def]
+    # The live era is the latest row (ADR-0091); one place so no insert path forgets.
+    if vote.era_id is None:
+        from models.era import Era
+
+        vote.era_id = connection.scalar(select(func.max(Era.id)))

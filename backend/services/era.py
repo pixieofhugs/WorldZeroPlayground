@@ -202,8 +202,8 @@ async def get_next_era_row(era_row: Era, session: AsyncSession) -> Era | None:
 async def get_era_row_for_praxis(praxis: Praxis, session: AsyncSession) -> Era:
     """The latest era that started at or before the praxis's seal (#1362).
 
-    Unsealed (or sealed before any era) → current era. A vote on a closed era's
-    praxis credits that era's stats (#1345).
+    Unsealed (or sealed before any era) → current era. Where a praxis's base
+    points live; its votes credit the era they are cast in (ADR-0099).
     """
     if praxis.submitted_at is not None:
         result = await session.execute(
