@@ -1,7 +1,8 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
 
 import { THEME_STORAGE_KEY, type Theme } from '../../src/hooks/useTheme'
 import { settle } from './settle'
+import { openTitle, passBeats, signInAndArrive } from '../onboardingWalk'
 import { SWEEP_VIEWPORTS } from '../../src/utils/contrastSweep'
 
 /**
@@ -11,7 +12,8 @@ import { SWEEP_VIEWPORTS } from '../../src/utils/contrastSweep'
  *
  * Starts this checkout's Vite on :3000; the backend is whatever is on :8000.
  *
- *   SHOT_ROUTES  space-separated paths (required).
+ *   SHOT_ROUTES  space-separated paths (required). `flow` walks the welcome flow instead:
+ *                every step, guest to arrival, as `flow-<step>` (dark only, the flow's own theme).
  *   SHOT_LOGIN   extra /auth/dev-login params, e.g. "faction=snide&level=3"
  *                (default "level=1"); "guest" = signed out. The bot keeps its
  *                last faction, so name one when dress matters.
@@ -65,6 +67,13 @@ for (const route of ROUTES) {
     test('shot', async ({ page }) => {
       const errors: string[] = []
       page.on('pageerror', (e) => errors.push(String(e)))
+      if (route === 'flow') {
+        test.setTimeout(180_000)
+        await page.setViewportSize(SIZES[viewport])
+        await shootFlow(page, `${OUT}/flow`, `.${viewport}${themeTag}.1.png`)
+        expect(errors, errors.join('\n')).toHaveLength(0)
+        return
+      }
 
       let draftId: number | null = null
       const { width, height } = SIZES[viewport]
@@ -94,4 +103,26 @@ for (const route of ROUTES) {
     })
     })
   }
+}
+
+/** Each step at its settled frame: typed lines are waited out, CSS motion is fast-forwarded by `animations: 'disabled'`. */
+async function shootFlow(page: Page, prefix: string, suffix: string) {
+  const shoot = async (step: string | number) => {
+    await settle(page)
+    await page.screenshot({ path: `${prefix}-${step}${suffix}`, animations: 'disabled' })
+  }
+  await openTitle(page)
+  await shoot('title')
+  await page.getByTestId('onboarding-header-sign-in').click()
+  await expect(page.getByRole('heading', { name: 'Welcome back.' })).toBeVisible()
+  await shoot('returning')
+  await page.goto('/')
+  await openTitle(page)
+  await page.getByTestId('onboarding-start').click()
+  await passBeats(page, shoot)
+  await page.getByTestId('onboarding-look-around').click()
+  await expect(page.getByTestId('onboarding-reconsider')).toBeVisible()
+  await shoot('declined')
+  await page.getByTestId('onboarding-reconsider').click()
+  await signInAndArrive(page, shoot)
 }
