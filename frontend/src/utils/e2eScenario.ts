@@ -79,11 +79,13 @@ let loginSeq = 0
 /**
  * Dev-only `POST /auth/dev-login` in a fresh context, minting a character at
  * `level` (collab/duel chips only render at their `era.*_level_required`).
+ * `receivedVote` seeds a vote from another player, which unlocks voting.
  */
 export async function loginPlayer<Ctx extends E2EContext>(
   scenario: Scenario<Ctx>,
   role: string,
   level: number,
+  opts: { receivedVote?: boolean } = {},
 ): Promise<Player<Ctx>> {
   const seq = loginSeq++
   const name = playerName(role, seq, scenario.run)
@@ -91,7 +93,8 @@ export async function loginPlayer<Ctx extends E2EContext>(
   const response = await ctx.request.post(
     `${scenario.api}/auth/dev-login` +
       `?key=${encodeURIComponent(`${role}-${scenario.run}-${seq}`)}` +
-      `&name=${encodeURIComponent(name)}&level=${level}`,
+      `&name=${encodeURIComponent(name)}&level=${level}` +
+      (opts.receivedVote ? '&received_vote=true' : ''),
   )
   const body = await readJson<DevLoginOut>(
     response,

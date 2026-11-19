@@ -110,3 +110,13 @@ describe('VoteLoginGate', () => {
     expect(html).not.toContain('--faction-snide-card-accent')
   })
 })
+
+describe('VoteLoginGate received-vote lock (#3475)', () => {
+  it('shows the unlock copy in the same one-line gate', () => {
+    const html = renderToStaticMarkup(
+      <VoteLoginGate factionSlug="ua" levelRequired={1} needsReceivedVote />,
+    )
+    expect(text(html)).toContain('Your vote unlocks once another player rates your proof')
+    expect(html.match(/</g)?.length).toBe(2)
+  })
+})

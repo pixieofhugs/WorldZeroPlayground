@@ -18,7 +18,7 @@ from models.character import Character
 from models.era import Era
 from models.faction import Faction
 from models.invitation_letter import InvitationLetter
-from tests.integration.factories import DEFAULT_FACTION_SLUG
+from tests.integration.factories import DEFAULT_FACTION_SLUG, make_task
 
 #: Any real faction other than the fixtures'; derived, never named (#2708).
 OTHER_FACTION_SLUG = next(
@@ -210,3 +210,34 @@ async def test_dev_login_fixture_params_404_in_production(
         "/auth/dev-login?key=x&name=X&invited=snide&albescent=unlocked"
     )
     assert resp.status_code == 404
+
+
+@pytest.mark.received_vote_rule
+@pytest.mark.asyncio
+async def test_dev_login_received_vote_unlocks_voting_idempotently(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    era: Era,
+    some_faction: Faction,
+) -> None:
+    level = CURRENT_ERA.vote_level_required
+    first = await client.post(f"/auth/dev-login?key=rv&name=Rv%20Bot&level={level}")
+    creator = await db_session.get(Character, first.json()["character_id"])
+    await make_task(db_session, creator, commit=True)
+    me = (await client.get("/auth/me")).json()
+    assert me["vote_lock_reason"] == "no_received_vote"
+
+    for _ in range(2):
+        resp = await client.post("/auth/dev-login?key=rv&received_vote=true")
+        assert resp.status_code == 200
+        assert (await client.get("/auth/me")).json()["can_vote"] is True
+
+
+@pytest.mark.asyncio
+async def test_dev_login_received_vote_without_character_is_rejected(
+    client: AsyncClient,
+    era: Era,
+    some_faction: Faction,
+) -> None:
+    resp = await client.post("/auth/dev-login?key=rv-nochar&received_vote=true")
+    assert resp.status_code == 400
