@@ -305,7 +305,7 @@ export default function DefaultCreateCharacter({ state, leadAction }: { state: C
                 className="control-off"
                 style={{ ...primaryStyle, cursor: submitting ? 'wait' : 'pointer' }}
               >
-                {submitting ? t('createCharacter.submitBusy') : t('createCharacter.submitIdle')}
+                {submitting ? t('createCharacter.submitBusy') : (<>{t('createCharacter.submitIdle')}<span aria-hidden="true"> ▸</span></>)}
               </button>
             }
           />

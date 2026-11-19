@@ -2,7 +2,6 @@
 .ob-root{position:relative;min-height:100vh;box-sizing:border-box;display:flex;flex-direction:column;background:var(--color-bg-page);color:var(--faction-default-card-text);font-family:var(--font-body)}
 /* Stops sideways scroll from the aurora and beat 1's world without clipping at the root, which gave the world's soft mask hard edges. */
 html:has(.ob-root){overflow-x:hidden}
-.ob-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .ob-cap{font-family:var(--font-body);font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:var(--faction-default-card-muted)}
 .ob-lora{font-family:var(--font-display);font-weight:600;font-style:italic}
 .ob-hair{height:1px;background:var(--faction-default-border)}
@@ -147,10 +146,10 @@ html:has(.ob-root){overflow-x:hidden}
 .ob-box-top .ob-hair{flex:1}
 .ob-zz::before{content:"z"}
 .ob-bang::before{content:"!"}
-.ob-fwd::after{content:" ▸"}
-.ob-fwd2::after{content:" ▸▸"}
-.ob-prev::before{content:"◂ "}
-.ob-rwd-arrow::before{content:"◂◂ "}
+.ob-fwd::after{content:" ▸" / ""}
+.ob-fwd2::after{content:" ▸▸" / ""}
+.ob-prev::before{content:"◂ " / ""}
+.ob-rwd-arrow::before{content:"◂◂ " / ""}
 
 @media (prefers-reduced-motion: reduce){
   .onboarding-arc .ob-aurora{opacity:var(--faction-default-aurora-opacity,.22)!important}

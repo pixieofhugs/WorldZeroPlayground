@@ -435,7 +435,7 @@ export default function EverymenCreateCharacter({ state }: { state: CreateCharac
                   cursor: submitting ? 'wait' : 'pointer',
                 }}
               >
-                {submitting ? t('createCharacter.submitBusy') : t('createCharacter.submitIdle')}
+                {submitting ? t('createCharacter.submitBusy') : (<>{t('createCharacter.submitIdle')}<span aria-hidden="true"> ▸</span></>)}
               </button>
             }
           />

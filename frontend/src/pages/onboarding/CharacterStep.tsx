@@ -17,12 +17,12 @@ export default function CharacterStep({ onCreated, onBack }: { onCreated: (c: Ch
     </button>
   )
   return (
-    <main className="ar-create">
+    <section className="ar-create">
       <div className="toss ar-toss">
         <Suspense fallback={null}>
           <Form state={state} leadAction={back} />
         </Suspense>
       </div>
-    </main>
+    </section>
   )
 }
