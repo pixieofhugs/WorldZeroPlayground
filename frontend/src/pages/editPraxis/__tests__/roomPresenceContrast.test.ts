@@ -5,10 +5,7 @@
  * hue x viewer ground x theme. The bare hue failed 21/64 light pairings (worst
  * 1.86:1).
  */
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
-
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
@@ -28,6 +25,9 @@ import { paintedAwareness, type AwarenessLike } from "../roomPresence";
 import { BODY_EDITOR_BASE_THEME } from "../archetypes/bodyEditorTheme";
 import { resolveRoleReads } from "../../../test/sourceScan";
 import { readIndexCss } from "../../../test/indexCss";
+import { renderComposer } from "../archetypes/__tests__/renderComposer";
+
+vi.mock("../../../hooks/useFormFactor", () => ({ useFormFactor: () => "desktop" }));
 
 const THEMES = readThemes(
   readIndexCss(),
@@ -39,15 +39,15 @@ const BOTH_THEMES: Theme[] = ["light", "dark"];
  * `currentColor`. Eight rows: `na`/`albescent` resolve to `default` (ADR-0039).
  */
 const COMPOSER_GROUNDS = [
-  { key: "snide", ground: "--faction-snide-composer-field", ink: "--faction-snide-composer-ink", source: "../archetypes/SnideEditPraxis.tsx" },
-  { key: "coven", ground: "--faction-coven-ward-page", ink: "--faction-coven-slip-ink", source: "../archetypes/CovenEditPraxis.tsx" },
-  { key: "default", ground: "--faction-default-composer-field", ink: "--faction-default-card-text", source: "../archetypes/DefaultEditPraxis.tsx" },
+  { key: "snide", ground: "--faction-snide-composer-field", ink: "--faction-snide-composer-ink", source: "SnideEditPraxis" },
+  { key: "coven", ground: "--faction-coven-ward-page", ink: "--faction-coven-slip-ink", source: "CovenEditPraxis" },
+  { key: "default", ground: "--faction-default-composer-field", ink: "--faction-default-card-text", source: "DefaultEditPraxis" },
   // Ephemerists' plate primitives live in the shared mark module.
-  { key: "ephemerists", ground: "--faction-ephemerists-plate-inner", ink: "--faction-ephemerists-plate-ink", source: "../../../components/factionMarks/ephemeristsPlate.tsx" },
-  { key: "everymen", ground: "--faction-everymen-sheet-panel", ink: "--everymen-paper-text", source: "../archetypes/EverymenEditPraxis.tsx" },
-  { key: "singularity", ground: "--faction-singularity-term-panel", ink: "--faction-singularity-term-ink", source: "../archetypes/SingularityEditPraxis.tsx" },
-  { key: "ua", ground: "--faction-ua-panel", ink: "--faction-ua-card-text", source: "../archetypes/UaEditPraxis.tsx" },
-  { key: "wow", ground: "--faction-wow-chronicle-panel", ink: "--faction-wow-card-text", source: "../archetypes/WowEditPraxis.tsx" },
+  { key: "ephemerists", ground: "--faction-ephemerists-plate-inner", ink: "--faction-ephemerists-plate-ink", source: "EphemeristsEditPraxis" },
+  { key: "everymen", ground: "--faction-everymen-sheet-panel", ink: "--everymen-paper-text", source: "EverymenEditPraxis" },
+  { key: "singularity", ground: "--faction-singularity-term-panel", ink: "--faction-singularity-term-ink", source: "SingularityEditPraxis" },
+  { key: "ua", ground: "--faction-ua-panel", ink: "--faction-ua-card-text", source: "UaEditPraxis" },
+  { key: "wow", ground: "--faction-wow-chronicle-panel", ink: "--faction-wow-card-text", source: "WowEditPraxis" },
 ] as const;
 
 const REMOTE_SLUGS = [
@@ -223,15 +223,12 @@ describe("presence colour still tells collaborators apart (#2267)", () => {
 });
 
 describe("the ground manifest above still matches the skins (#2267)", () => {
-  // The rows are hand-written; guard them against the skin source.
   for (const ground of COMPOSER_GROUNDS) {
-    it(`${ground.key} still dresses its body field with ${ground.ground}`, () => {
+    it(`${ground.key} still dresses its body field with ${ground.ground}`, async () => {
       // A migrated composer reads the `ink` ROLE; `resolveRoleReads` folds it back.
-      const source = resolveRoleReads(
-        readFileSync(fileURLToPath(new URL(ground.source, import.meta.url)), "utf8"),
-      );
-      expect(source).toContain(ground.ground);
-      expect(source).toContain(ground.ink);
+      const markup = resolveRoleReads(await renderComposer(ground.source));
+      expect(markup).toContain(`var(${ground.ground})`);
+      expect(markup).toContain(`var(${ground.ink})`);
     });
   }
 });

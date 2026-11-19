@@ -1,6 +1,6 @@
 # Collaborations publish by lazy consensus, not unanimous submission
 
-**Status:** Accepted
+**Status:** Amended by ADR-0079
 **Date:** 2026-06-25
 
 ## Context
@@ -59,3 +59,7 @@ distinct removals, kept named apart.
     so this choice costs nothing later.
 - "What counts as an edit that resets" must be pinned (body/title/media yes; membership
   changes are their own thing) at implementation time.
+
+## Amendment (2026-11-19, #3426)
+
+The Drafting / Submit / Pending-publish state machine is replaced by three signals, Done / Propose / Approve (ADR-0079). The countdown now starts at Propose, not at a member's Submit, and approval is a vote on the live proposal. "An edit means we're not done" survives verbatim; so does `era.collab_auto_submit_days`.

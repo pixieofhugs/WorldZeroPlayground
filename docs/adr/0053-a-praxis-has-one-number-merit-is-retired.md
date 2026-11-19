@@ -1,6 +1,6 @@
 # ADR-0053 — A praxis has one number; Merit is retired
 
-**Status:** Amended by ADR-0086
+**Status:** Amended by ADR-0061, ADR-0063, ADR-0086
 **Date:** 2026-07-21
 
 **Supersedes:** **ADR-0047** (the praxis card shows the computed total, not Merit)
@@ -88,7 +88,7 @@ directly in `backend/tests/integration/test_praxis_card_breakdown.py`.
 ### A duel side's score is live and provisional
 
 `duel_multiplier` is computed from current tallies for `active` *and* `settled`
-duels, and duels do not settle until era close (ADR-0052). A side's score can
+duels, and duels do not resolve until era close (ADR-0052: `settled` is both sides submitted). A side's score can
 therefore change when the **opponent** receives a vote, and a Snide side that is
 currently behind shows ×0.0. This is intended, and it matches the #748 winner
 badge already on the same screen. Do not freeze it.
@@ -181,3 +181,7 @@ which is not what the game wants. `character_stats` banks with
 `ROUND_HALF_UP`, never `int()` and never banker's `round()`. It still rounds the
 **sum** once, not each term. The "Known gap" still exists, but with half-up the
 example banks `50`, not `49`: three praxes of `16.5` sum to `49.5`.
+
+## Amendment (2026-11-19, #3426)
+
+"The 14 praxis-detail archetypes are **not** retargeted at the card's score stamp" was overtaken by ADR-0061/0063: the one shared detail skin (`praxisDetailSkin.tsx`) mounts `<ScoreStamp>`. Also corrected above: in ADR-0052's lifecycle `settled` means both sides submitted and `resolved` means era close.

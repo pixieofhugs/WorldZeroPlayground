@@ -1,6 +1,6 @@
 # ADR-0038 — Faction identity is config-canonical; the DB row is slug + status
 
-**Status:** Accepted
+**Status:** Amended by ADR-0087
 **Date:** 2026-07-15
 
 **Relates to:** #461 (this decision), ADR-0031 (backend emits keys; the frontend
@@ -98,3 +98,7 @@ noted); faction *mechanics* stay config-owned.
 only `GET /factions`, `POST /factions/choose` and `GET /factions/status`: no
 create route. The only writer of a faction row is the seed (`backend/seed.py`),
 which adds a `Faction(slug, status)` for each slug in the era's config.
+
+## Amendment (2026-11-19, #3426)
+
+The row's status set is `visible` / `retired` / `hidden`, not "visible/hidden/deprecated" (ADR-0087; `FactionStatus` in `backend/models/faction.py`). `deprecated` does not exist; `retired` is a past-era faction whose task history stays archived.

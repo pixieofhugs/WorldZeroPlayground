@@ -1,6 +1,6 @@
 # The backend owns no faction color
 
-**Status:** Accepted
+**Status:** Amended by ADR-0038
 **Date:** 2026-06-22
 
 Faction color is a *design* fact (canon lives in the vault design docs; see ADR-0001), and
@@ -20,3 +20,7 @@ hex, so the purple-Singularity / gray-UA bug cannot recur.
 
 `era_1.py` keeps gameplay + identity (slug, name, ability, modifiers); it just no longer
 carries the brand color.
+
+## Amendment (2026-11-19, #3426)
+
+"`era_1.py` keeps gameplay + identity (slug, name, ...)" lost its `name`: ADR-0038 removed `name`/`description` from `FactionConfig`. Config keeps the slug and the mechanics; the words live in `frontend/src/locales/en/factions.json`. No color, as this record says.

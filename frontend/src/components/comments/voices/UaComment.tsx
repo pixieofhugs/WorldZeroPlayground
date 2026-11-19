@@ -18,7 +18,7 @@ import { factionRoleVars } from '../../../utils/factionRoles'
 import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 /**
- * UA comment — the marginal note (kit §14, #851, #1201; supersedes ADR-0026).
+ * UA comment — the marginal note (kit §14, #851, #1201; amends ADR-0026, ADR-0093).
  * Paper stock, a dashed orange left rule, an ensō on the composer; no mandala (the
  * densest text surface, brief §5). The owner row sits in a foot, not the header:
  * revealing it there reflowed the timestamp. One component, no mobile twin.
