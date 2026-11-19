@@ -1848,6 +1848,11 @@
             "title": "Email",
             "type": "string"
           },
+          "era_id": {
+            "default": 0,
+            "title": "Era Id",
+            "type": "integer"
+          },
           "era_name": {
             "default": "",
             "title": "Era Name",
@@ -1908,6 +1913,7 @@
           "second_character_level_required",
           "albescent_level_required",
           "era_name",
+          "era_id",
           "can_propose_task",
           "can_propose_metatask",
           "can_see_retired_tasks",
@@ -2832,7 +2838,7 @@
         "type": "object"
       },
       "FlagOut": {
-        "description": "One moderator-queue flag (ADR-0037).\n\nLegacy free text surfaces as ``other`` + ``reason_detail``. Reporter is\ncharacter-scoped, never account/email.",
+        "description": "One moderator-queue flag (ADR-0037).\n\n``reason_detail`` is the optional ``other`` note. Reporter is\ncharacter-scoped, never account/email.",
         "properties": {
           "created_at": {
             "format": "date-time",
@@ -3774,6 +3780,10 @@
             "title": "Duel Level Required",
             "type": "integer"
           },
+          "era_id": {
+            "title": "Era Id",
+            "type": "integer"
+          },
           "era_name": {
             "title": "Era Name",
             "type": "string"
@@ -3810,6 +3820,7 @@
         },
         "required": [
           "era_name",
+          "era_id",
           "level_thresholds",
           "duel_level_required",
           "collab_auto_submit_days",

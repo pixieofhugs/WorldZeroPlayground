@@ -1,4 +1,4 @@
-"""Single source for vote aggregation (ADR-0014), incl. the Task Crown (ADR-0028)."""
+"""Single source for vote aggregation (ADR-0014)."""
 from dataclasses import dataclass
 from typing import Collection, Optional
 
@@ -6,7 +6,6 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.character import Character
-from models.praxis import Praxis, PraxisStatus
 from models.vote import Vote
 
 
@@ -103,36 +102,3 @@ async def viewer_votes_for(
         mate = account_mate_name.get(praxis_id) if own is None else None
         votes[praxis_id] = ViewerVote(value=own, voted_by_name=mate)
     return votes
-
-
-async def crowned_praxis_ids(
-    task_ids: Collection[int],
-    session: AsyncSession,
-) -> set[int]:
-    """Praxes holding their task's Task Crown (ADR-0028): top vote sum among submitted.
-
-    Ties all crown (incl. all-zero) and a sole entrant crowns; no thresholds.
-    """
-    if not task_ids:
-        return set()
-
-    vote_points = func.coalesce(func.sum(Vote.value), 0)
-    ranked = (
-        select(
-            Praxis.id.label("praxis_id"),
-            func.rank()
-            .over(partition_by=Praxis.task_id, order_by=vote_points.desc())
-            .label("crown_rank"),
-        )
-        .join(Vote, Vote.praxis_id == Praxis.id, isouter=True)
-        .where(
-            Praxis.status == PraxisStatus.submitted,
-            Praxis.task_id.in_(task_ids),
-        )
-        .group_by(Praxis.id, Praxis.task_id)
-        .subquery()
-    )
-    result = await session.execute(
-        select(ranked.c.praxis_id).where(ranked.c.crown_rank == 1)
-    )
-    return set(result.scalars().all())

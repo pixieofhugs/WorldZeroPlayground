@@ -180,7 +180,6 @@
     "FilterLevelNodes": "src/components/ui/FilterLevelNodes.tsx",
     "HoldoutPublishNotice": "src/pages/editPraxis/blocks/HoldoutPublishNotice.tsx",
     "ImageEditModal": "src/components/imageEdit/ImageEditModal.tsx",
-    "IntroCard": "src/pages/onboarding/IntroCard.tsx",
     "InvitationLetterPopup": "src/components/InvitationLetterPopup.tsx",
     "InvitationWatcher": "src/components/InvitationWatcher.tsx",
     "JoinControl": "src/components/JoinControl.tsx",

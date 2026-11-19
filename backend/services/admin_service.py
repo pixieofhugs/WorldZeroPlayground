@@ -23,7 +23,7 @@ from models.roles import AccountRole, Role
 from models.comment import Comment
 from models.contact import ContactMessage
 from models.duel import Duel
-from models.flag import Flag, normalize_flag_reason
+from models.flag import Flag
 from models.meta_task import PraxisMetaTask
 from models.praxis import ModerationStatus, Praxis
 from models.task import Task, TaskStatus
@@ -219,11 +219,9 @@ async def game_overview(session: AsyncSession) -> OverviewStats:
 
 
 def _build_flag_out(flag: Flag, flagged_by_name: str) -> FlagOut:
-    """Normalize a stored Flag row onto the shared vocabulary (ADR-0037)."""
-    reason, reason_detail = normalize_flag_reason(flag.reason)
     return FlagOut(
-        reason=reason.value,
-        reason_detail=reason_detail,
+        reason=flag.reason,
+        reason_detail=flag.reason_detail,
         flagged_by_id=flag.flagged_by,
         flagged_by_name=flagged_by_name,
         created_at=flag.created_at,

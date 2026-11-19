@@ -91,15 +91,22 @@ YAGNI applies to tests too.
    gets clobbered and you run another agent's script against the wrong worktree and the wrong
    test DB — silently, and green. Second-best, if a file genuinely must live there: prefix it
    with the issue number.
-7. You have NO browser tools and no dev stack — verify via tests/tsc/eslint and state plainly
-   in the PR that visual QA is outstanding.
+7. You have NO browser tools — verify via tests/tsc/eslint and state plainly in the PR that
+   visual QA is outstanding. The backend pytest step needs the stack: bring it up with
+   `scripts/wz up`; if it won't come up, report the exact failing line rather than skipping.
 8. Base off the latest `origin/main` (fetch/rebase if stale).
 9. If the spec contradicts itself or the code, STOP and report back — do NOT guess.
 
 ## Hand-back
 
 The last thing you run before handing back is `scripts/wz check`; quote its final line (`bros check: PASS -- ...`) in
-your Report. It mirrors the CI jobs for the paths you changed, so "I did not run X" is out.
+your Report. It mirrors the CI jobs for the paths you changed, so "I did not run X" is out. If the stack is down (hazard 7), `scripts/wz up` first; if that fails, quote the failing line.
+
+Before handing back:
+- UI change: take the reviewer's shots (phone and desktop, light and dark) and look at them.
+- Each new test: break the code it guards once and watch it fail.
+- Re-read every comment and doc line you added against the code.
+- `Closes #N` only if the PR finishes the whole issue; otherwise `Refs #N`.
 
 ## Report
 

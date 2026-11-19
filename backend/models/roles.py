@@ -1,6 +1,14 @@
 from datetime import datetime
 
-from sqlalchemy import BigInteger, DateTime, ForeignKey, Identity, String, func
+from sqlalchemy import (
+    BigInteger,
+    DateTime,
+    ForeignKey,
+    Identity,
+    String,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column
 
 from models.base import Base
@@ -17,6 +25,9 @@ class Role(TimestampMixin, Base):
 
 class AccountRole(Base):
     __tablename__ = "account_role"
+    __table_args__ = (
+        UniqueConstraint("account_id", "role_id", name="uq_account_role"),
+    )
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
     account_id: Mapped[int] = mapped_column(

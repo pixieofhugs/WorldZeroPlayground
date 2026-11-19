@@ -12,7 +12,7 @@ import i18n from '../../i18n'
 import TaskCard from '../taskCard/TaskCard'
 import { aTask } from '../../test/fixtures'
 
-const LABEL = i18n.t('onboarding:mark.label')
+const LABEL = i18n.t('tasks:startHere.label')
 
 function text(task = aTask()): string {
   return renderToStaticMarkup(
