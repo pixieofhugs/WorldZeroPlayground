@@ -1029,6 +1029,30 @@ async def test_a_submit_that_changes_text_cancels_a_live_proposal(
         assert (await _proposal(rooms, collab.id))[1] is not None
 
 
+async def test_a_submit_after_unflushed_socket_edits_cancels_the_proposal(
+    db_session, collab, account, character, character2, monkeypatch
+) -> None:
+    """The room already holds the text (unflushed), so the merge adds nothing."""
+    async with running_rooms(
+        db_session, monkeypatch, flush_debounce_seconds=30
+    ) as rooms:
+        socket = await rooms.open(collab.id, account.id)
+        async with client_doc(socket) as doc:
+            await _wait_for_body(doc, SEED_BODY, "the editor")
+            await rooms.submit(collab.id, character2.id)  # B proposes
+            doc.get(ROOM_BODY_KEY, type=Text).insert(0, "unseen ")
+            await _wait_for_body(
+                rooms.room_doc(collab.id), f"unseen {SEED_BODY}", "the room"
+            )
+            state = base64.b64encode(doc.get_update()).decode()
+
+            result = await rooms.submit(collab.id, character.id, doc_state=state)
+
+        assert result.status == PraxisStatus.pending
+        approved = await _approved(rooms, collab.id)
+        assert approved[character.id] and not approved[character2.id]
+
+
 async def test_a_submit_that_changes_nothing_still_approves(
     db_session, collab, account2, character, character2, monkeypatch
 ) -> None:

@@ -518,26 +518,25 @@ class PraxisRoomServer(WebsocketServer):
                 )
             )
 
-    async def apply_client_update(self, praxis_id: int, update: bytes) -> bool:
+    async def apply_client_update(
+        self, praxis_id: int, update: bytes
+    ) -> dict[str, str]:
         """Merge the browser's whole Yjs state into the live room; a repeat is a no-op.
 
-        Returns whether the merge changed the document's text columns.
+        Returns the merged document's column values.
 
         ponytail: opens a room if none runs; a rejected submit strands it.
         """
         name = room_name_for(praxis_id)
         room = await self.get_room(name)
         flusher = self._flushers[name]
-        clean = not flusher._pending
-        before = _document_values(room.ydoc)
         try:
             room.ydoc.apply_update(update)
         except Exception:
             raise_coded(422, ErrorCode.praxis_doc_update_invalid, _INVALID_DRAFT)
-        # The submitter's own unsent edits are part of what they submit.
-        if clean:
-            flusher.absorb()
-        return _document_values(room.ydoc) != before
+        # The caller cancels on a difference; this text is then the new proposal.
+        flusher.absorb()
+        return _document_values(room.ydoc)
 
     def revoke(self, praxis_id: int, character_id: int) -> None:
         """Door two: close every socket this character holds on this praxis."""
@@ -670,8 +669,8 @@ async def discard_room_document(praxis: Praxis, session: AsyncSession) -> None:
     await PRAXIS_ROOM_SERVER.discard_document(praxis, session)
 
 
-async def merge_client_state(praxis_id: int, state_b64: str) -> bool:
-    """Decode a submit's base64 Yjs state and merge it; True if the text changed."""
+async def merge_client_state(praxis_id: int, state_b64: str) -> dict[str, str]:
+    """Decode a submit's base64 Yjs state and merge it; the merged column values."""
     if len(state_b64) > _MAX_CLIENT_UPDATE_BYTES * 4 // 3 + 4:
         raise_coded(413, ErrorCode.praxis_doc_update_invalid, _OVERSIZED_DRAFT)
     try:
