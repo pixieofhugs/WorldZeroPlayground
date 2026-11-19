@@ -9,7 +9,8 @@ import { describe, expect, it } from "vitest";
 
 import { SRC_DIR, readStripped } from "../../test/sourceScan";
 
-const source = (file: string) => readStripped(join(SRC_DIR, ...file.split("/")));
+const source = (file: string) =>
+  readStripped(join(SRC_DIR, ...file.split("/")));
 
 /** `na`'s family is `default` (ADR-0039). The lookahead keeps non-core tokens out. */
 const coreToken = (family: string) =>
@@ -18,9 +19,17 @@ const coreToken = (family: string) =>
     "g",
   );
 
-const KITS: ReadonlyArray<[family: string, modules: string[]]> = [
-  ["default", ["components/factionMarks/DefaultPointsRing.tsx", "pages/praxisDetail/DuelCard.tsx"]],
+const KITS: ReadonlyArray<[slug: string, family: string, modules: string[]]> = [
   [
+    "na",
+    "default",
+    [
+      "components/factionMarks/DefaultPointsRing.tsx",
+      "pages/praxisDetail/DuelCard.tsx",
+    ],
+  ],
+  [
+    "ua",
     "ua",
     [
       "components/factionMarks/uaAtoms.tsx",
@@ -30,6 +39,7 @@ const KITS: ReadonlyArray<[family: string, modules: string[]]> = [
   ],
   [
     "wow",
+    "wow",
     [
       "components/factionMarks/wowMobile.tsx",
       "components/duel/wowLists.tsx",
@@ -38,14 +48,23 @@ const KITS: ReadonlyArray<[family: string, modules: string[]]> = [
   ],
 ];
 
-const CASES = KITS.flatMap(([family, modules]) => modules.map((m) => [family, m] as const));
+const CASES = KITS.flatMap(([slug, family, modules]) =>
+  modules.map((m) => [slug, family, m] as const),
+);
 
 describe("a faction's rootless kit modules ask for a role, not a token", () => {
-  it.each(CASES)("%s: %s", (family, path) => {
+  it.each(CASES)("%s %s: %s", (slug, family, path) => {
     const text = source(path);
-    expect(text, "paints no role at all").toContain("factionRoleVar(");
-    expect(text, "having no root, it declares no prefix").not.toContain("factionRoleVars");
-    expect(text.match(coreToken(family)) ?? [], "names a core token directly").toEqual([]);
+    expect(text, "asks for another faction's roles").toMatch(
+      new RegExp(String.raw`factionRoleVar\(\s*['"]${slug}['"]`),
+    );
+    expect(text, "having no root, it declares no prefix").not.toContain(
+      "factionRoleVars",
+    );
+    expect(
+      text.match(coreToken(family)) ?? [],
+      "names a core token directly",
+    ).toEqual([]);
   });
 });
 
