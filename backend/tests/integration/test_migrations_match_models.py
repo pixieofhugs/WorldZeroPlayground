@@ -262,17 +262,17 @@ async def test_onboarding_seed_key_backfill_survives_a_pre_0019_title_collision(
         )
         real_id = await conn.fetchval(
             "INSERT INTO task (title, description, point_value, level_required,"
-            " status, task_type, created_by, primary_faction_slug,"
-            " is_task_vision_eligible) VALUES ($1, 'old desc', 10, 0, 'active',"
-            " 'standard', $2, 'na', false) RETURNING id",
+            " status, task_type, created_by_id, primary_faction_slug)"
+            " VALUES ($1, 'old desc', 10, 0, 'active',"
+            " 'standard', $2, 'na') RETURNING id",
             'Take a Picture of "Yourself"',
             character_id,
         )
         impostor_id = await conn.fetchval(
             "INSERT INTO task (title, description, point_value, level_required,"
-            " status, task_type, created_by, primary_faction_slug,"
-            " is_task_vision_eligible) VALUES ($1, 'a coincidence', 5, 0,"
-            " 'pending', 'standard', $2, 'na', false) RETURNING id",
+            " status, task_type, created_by_id, primary_faction_slug)"
+            " VALUES ($1, 'a coincidence', 5, 0,"
+            " 'pending', 'standard', $2, 'na') RETURNING id",
             "Introduce Yourself",
             character_id,
         )
@@ -329,17 +329,17 @@ async def test_onboarding_seed_key_backfill_matches_dev_recorded_state(
         )
         real_id = await conn.fetchval(
             "INSERT INTO task (title, description, point_value, level_required,"
-            " status, task_type, created_by, primary_faction_slug,"
-            " is_task_vision_eligible) VALUES ($1, 'new desc', 10, 0, 'active',"
-            " 'standard', $2, 'albescent', false) RETURNING id",
+            " status, task_type, created_by_id, primary_faction_slug)"
+            " VALUES ($1, 'new desc', 10, 0, 'active',"
+            " 'standard', $2, 'albescent') RETURNING id",
             "Introduce Yourself",
             character_id,
         )
         duplicate_id = await conn.fetchval(
             "INSERT INTO task (title, description, point_value, level_required,"
-            " status, task_type, created_by, primary_faction_slug,"
-            " is_task_vision_eligible) VALUES ($1, 'old desc', 10, 0, 'active',"
-            " 'standard', $2, 'na', false) RETURNING id",
+            " status, task_type, created_by_id, primary_faction_slug)"
+            " VALUES ($1, 'old desc', 10, 0, 'active',"
+            " 'standard', $2, 'na') RETURNING id",
             'Take a Picture of "Yourself"',
             character_id,
         )
@@ -452,3 +452,92 @@ async def test_albescent_booleans_become_secret_faction_rows(migration_db: str) 
     assert [tuple(row.values()) for row in rows] == [
         (stamped_id, "albescent", False, True, True)
     ]
+
+
+async def _columns(database: str, table: str) -> set[str]:
+    conn = await asyncpg.connect(_dsn(database))
+    try:
+        rows = await conn.fetch(
+            "SELECT column_name FROM information_schema.columns WHERE table_name = $1",
+            table,
+        )
+    finally:
+        await conn.close()
+    return {row["column_name"] for row in rows}
+
+
+async def _tables(database: str) -> set[str]:
+    conn = await asyncpg.connect(_dsn(database))
+    try:
+        rows = await conn.fetch(
+            "SELECT tablename FROM pg_tables WHERE schemaname = 'public'"
+        )
+    finally:
+        await conn.close()
+    return {row["tablename"] for row in rows}
+
+
+async def test_schema_cleanup_chain_round_trips_through_the_old_shape(
+    migration_db: str,
+) -> None:
+    """#3436-#3441: 0031-0036 reverse to the old schema and re-apply cleanly."""
+    assert _alembic("upgrade", "head").returncode == 0
+    back = _alembic("downgrade", "0030_account_secret_faction")
+    assert back.returncode == 0, _report("downgrade to 0030", back)
+
+    assert "status" in await _columns(migration_db, "relationship")
+    assert {"has_submitted", "submitted_at"} <= await _columns(
+        migration_db, "praxis_member"
+    )
+    assert "is_task_vision_eligible" in await _columns(migration_db, "task")
+    assert "created_by" in await _columns(migration_db, "task")
+    assert "contact_messages" in await _tables(migration_db)
+
+    up = _alembic("upgrade", "head")
+    assert up.returncode == 0, _report("upgrade head", up)
+    assert "status" not in await _columns(migration_db, "relationship")
+    assert {"has_approved", "approved_at"} <= await _columns(
+        migration_db, "praxis_member"
+    )
+    assert "created_by_id" in await _columns(migration_db, "task")
+    assert "contact_message" in await _tables(migration_db)
+    check = _alembic("check")
+    assert check.returncode == 0, _report("check", check)
+
+
+async def test_check_constraint_migration_refuses_a_violating_row(
+    migration_db: str,
+) -> None:
+    """#3441: 0036 names the offending rows instead of deleting them."""
+    assert _alembic("upgrade", "0035_index_hot_foreign_keys").returncode == 0
+    conn = await asyncpg.connect(_dsn(migration_db))
+    try:
+        await conn.execute(
+            "INSERT INTO faction (slug, status) VALUES ('na', 'visible')"
+        )
+        account_id = await conn.fetchval(
+            "INSERT INTO account (email, status)"
+            " VALUES ('self@example.com', 'active') RETURNING id"
+        )
+        character_id = await conn.fetchval(
+            "INSERT INTO character (account_id, username, display_name,"
+            " faction_slug, status) VALUES ($1, 'selfie', 'Selfie', 'na', 'active')"
+            " RETURNING id",
+            account_id,
+        )
+        # The root already built it; drop it to stand in for a pre-0036 DB.
+        await conn.execute(
+            "ALTER TABLE relationship"
+            " DROP CONSTRAINT ck_relationship_no_self_relationship"
+        )
+        await conn.execute(
+            "INSERT INTO relationship (from_character_id, to_character_id, type)"
+            " VALUES ($1, $1, 'friend')",
+            character_id,
+        )
+    finally:
+        await conn.close()
+
+    refused = _alembic("upgrade", "head")
+    assert refused.returncode != 0
+    assert "relationship has 1 rows violating" in refused.stderr

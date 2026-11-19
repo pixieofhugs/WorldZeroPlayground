@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import ConfigDict, Field
+from pydantic import AliasChoices, ConfigDict, Field
 from schemas.base import WireModel
 
 from models.praxis import PraxisType
@@ -18,7 +18,10 @@ class TaskOut(WireModel):
     level_required: int
     status: TaskStatus
     task_type: TaskType
-    created_by: int
+    # Wire name stays `created_by`; the ORM column is `created_by_id` (#3439).
+    created_by: int = Field(
+        validation_alias=AliasChoices("created_by", "created_by_id")
+    )
     primary_faction_slug: str
     metatask_faction_slug: Optional[str] = None
     created_at: datetime

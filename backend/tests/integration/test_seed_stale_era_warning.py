@@ -39,7 +39,7 @@ async def test_no_warning_when_the_row_names_a_registered_era_that_is_not_the_fi
         Era(
             name=era_config_for_key(other_key).name,
             config_key=other_key,
-            started_by=account.id,
+            started_by_id=account.id,
         )
     )
     await db_session.commit()
@@ -55,7 +55,7 @@ async def test_an_unresolvable_row_names_the_key_and_says_what_is_running(
 ):
     """Names the missing key and the fallback era."""
     db_session.add(
-        Era(name="Whatever", config_key=UNREGISTERED_ERA_KEY, started_by=account.id)
+        Era(name="Whatever", config_key=UNREGISTERED_ERA_KEY, started_by_id=account.id)
     )
     await db_session.commit()
 

@@ -467,7 +467,7 @@ async def test_an_admin_below_the_level_gate_can_actually_post(
     db_session.add(role)
     await db_session.flush()
     db_session.add(
-        AccountRole(account_id=account.id, role_id=role.id, granted_by=account.id)
+        AccountRole(account_id=account.id, role_id=role.id, granted_by_id=account.id)
     )
     await db_session.commit()
 

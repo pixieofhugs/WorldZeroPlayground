@@ -26,10 +26,10 @@ const aMember = (
   character_id: characterId,
   character_display_name: name,
   character_avatar_url: "",
-  has_submitted: false,
+  has_approved: false,
   is_done: false,
   joined_at: "2026-01-01T00:00:00Z",
-  submitted_at: null,
+  approved_at: null,
   nudged_at: null,
 });
 

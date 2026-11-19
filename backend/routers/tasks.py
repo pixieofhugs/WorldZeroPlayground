@@ -100,7 +100,7 @@ async def list_tasks(
             session,
             in_progress_count=in_progress_counts.get(task.id, 0),
             # Not None: None makes the builder query the author per task.
-            author=authors.get(task.created_by, UNKNOWN_TASK_AUTHOR),
+            author=authors.get(task.created_by_id, UNKNOWN_TASK_AUTHOR),
             signup_facts=signup_facts,
         )
         for task in tasks

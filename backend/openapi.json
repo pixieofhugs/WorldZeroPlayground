@@ -1247,8 +1247,8 @@
             "title": "Task Title",
             "type": "string"
           },
-          "viewer_has_submitted": {
-            "title": "Viewer Has Submitted",
+          "viewer_has_approved": {
+            "title": "Viewer Has Approved",
             "type": "boolean"
           }
         },
@@ -1259,7 +1259,7 @@
           "task_title",
           "task_point_value",
           "task_faction_slug",
-          "viewer_has_submitted"
+          "viewer_has_approved"
         ],
         "title": "CollaboratorSubmittedPayload",
         "type": "object"
@@ -5436,6 +5436,18 @@
       },
       "PraxisMemberOut": {
         "properties": {
+          "approved_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved At"
+          },
           "character_avatar_url": {
             "default": "",
             "title": "Character Avatar Url",
@@ -5449,8 +5461,8 @@
             "title": "Character Id",
             "type": "integer"
           },
-          "has_submitted": {
-            "title": "Has Submitted",
+          "has_approved": {
+            "title": "Has Approved",
             "type": "boolean"
           },
           "id": {
@@ -5481,18 +5493,6 @@
           "praxis_id": {
             "title": "Praxis Id",
             "type": "integer"
-          },
-          "submitted_at": {
-            "anyOf": [
-              {
-                "format": "date-time",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Submitted At"
           }
         },
         "required": [
@@ -5501,9 +5501,9 @@
           "character_id",
           "character_display_name",
           "character_avatar_url",
-          "has_submitted",
+          "has_approved",
           "is_done",
-          "submitted_at",
+          "approved_at",
           "joined_at",
           "nudged_at"
         ],
@@ -5882,10 +5882,6 @@
             "title": "Id",
             "type": "integer"
           },
-          "status": {
-            "title": "Status",
-            "type": "string"
-          },
           "to_avatar_url": {
             "title": "To Avatar Url",
             "type": "string"
@@ -5912,7 +5908,6 @@
           "from_character_id",
           "to_character_id",
           "type",
-          "status",
           "created_at",
           "to_display_name",
           "to_avatar_url",
@@ -13673,22 +13668,6 @@
                 }
               ],
               "title": "Type"
-            }
-          },
-          {
-            "in": "query",
-            "name": "status",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Status"
             }
           },
           {

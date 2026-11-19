@@ -9,7 +9,7 @@
  *   0 < cast < count, I didn't             → holdout   (S3) the crew waits on me
  *   cast_count === member_count           → published (S4) everyone approved
  *
- * Since ADR-0079 `has_submitted` approves the live proposal, so `writing` is
+ * Since ADR-0079 `has_approved` approves the live proposal, so `writing` is
  * the ordinary drafting state.
  */
 import type { PraxisMemberOut } from '../../api/praxis'
@@ -33,9 +33,9 @@ export function deriveCollabGate(
   currentCharacterId: number | null | undefined,
 ): CollabGate {
   const memberCount = members.length
-  const castCount = members.filter((m) => m.has_submitted).length
+  const castCount = members.filter((m) => m.has_approved).length
   const iCast = members.some(
-    (m) => m.character_id === currentCharacterId && m.has_submitted,
+    (m) => m.character_id === currentCharacterId && m.has_approved,
   )
   let state: CollabState
   // First, because every test below it lies at one member (#1274).

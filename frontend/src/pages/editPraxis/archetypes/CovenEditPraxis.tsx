@@ -206,7 +206,7 @@ export default function CovenEditPraxis({ state }: Props) {
     state.isPublished ||
     praxis.members.some(
       (member) =>
-        member.character_id === state.currentCharacterId && member.has_submitted,
+        member.character_id === state.currentCharacterId && member.has_approved,
     );
 
   const labelStyle: CSSProperties = { fontFamily: CHROME, color: LABEL };

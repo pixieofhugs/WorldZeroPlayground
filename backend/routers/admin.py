@@ -423,7 +423,7 @@ async def list_pending_tasks(
             level_required=task.level_required,
             status=task.status,
             task_type=task.task_type,
-            created_by=task.created_by,
+            created_by=task.created_by_id,
             primary_faction_slug=task.primary_faction_slug,
             metatask_faction_slug=task.metatask_faction_slug,
             created_at=task.created_at,

@@ -81,7 +81,7 @@ async def test_well_formed_csv_creates_exactly_those_tasks(
     assert swept.primary_faction_slug == DEFAULT_FACTION_SLUG
     assert swept.status == TaskStatus.active
     assert swept.task_type == TaskType.standard
-    assert swept.created_by == character.id
+    assert swept.created_by_id == character.id
 
     # Empty Faction column means cross-faction (`na`), as POST /admin/tasks does;
     # the column is NOT NULL.

@@ -50,7 +50,7 @@ async def _close_the_era(session: AsyncSession, starter: Account) -> Era:
     new_era_row = Era(
         name=CURRENT_ERA.name,
         config_key=CURRENT_ERA.config_key,
-        started_by=starter.id,
+        started_by_id=starter.id,
     )
     session.add(new_era_row)
     await session.flush()

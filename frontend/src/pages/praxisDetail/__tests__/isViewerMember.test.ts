@@ -9,7 +9,7 @@ const member = (characterId: number): PraxisMemberOut =>
     id: characterId * 10,
     character_id: characterId,
     character_display_name: `Character ${characterId}`,
-    has_submitted: false,
+    has_approved: false,
   });
 
 const praxis = (members: PraxisMemberOut[]): PraxisOut =>

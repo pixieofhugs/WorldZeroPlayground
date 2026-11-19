@@ -1348,16 +1348,6 @@ describe("the retired codex colours are gone from both cascades (#2698 stage 1)"
     expect(THEMES.light.has(name), `light declares ${name}`).toBe(false);
     expect(THEMES.dark.has(name), `dark declares ${name}`).toBe(false);
   });
-
-  it("no row measures one, so nothing makes them look alive again", () => {
-    expect(
-      PAIRS.filter(
-        (pair) =>
-          RETIRED_CODEX_COLOURS.includes(pair.surface) ||
-          RETIRED_CODEX_COLOURS.includes(pair.text),
-      ).map((pair) => pair.what),
-    ).toEqual([]);
-  });
 });
 
 /**

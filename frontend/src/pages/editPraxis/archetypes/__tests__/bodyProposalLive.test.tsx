@@ -22,8 +22,8 @@ function praxis(proposalLive: boolean): PraxisOut {
     submit_proposed_at: proposalLive ? "2026-08-17T10:00:00Z" : null,
     media_items: [],
     members: [
-      aMember({ id: 1, character_id: 1, has_submitted: false }),
-      aMember({ id: 2, character_id: 2, has_submitted: false }),
+      aMember({ id: 1, character_id: 1, has_approved: false }),
+      aMember({ id: 2, character_id: 2, has_approved: false }),
     ],
   });
 }

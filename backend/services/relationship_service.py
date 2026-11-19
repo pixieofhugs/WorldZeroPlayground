@@ -1,7 +1,7 @@
 """Character relationships: one-directional friend/foe edges.
 
 A→B plus B→A gives the display status. Blocking is its own record
-(``block_service``, ADR-0077); ``Relationship.status`` is dormant, always ``active``.
+(``block_service``, ADR-0077).
 """
 from typing import Optional
 
@@ -10,7 +10,7 @@ from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.character import Character
-from models.relationship import Relationship, RelationshipStatus, RelationshipType
+from models.relationship import Relationship, RelationshipType
 from schemas.relationship import RelationshipListItem
 
 
@@ -55,13 +55,11 @@ def _to_list_item(
 ) -> RelationshipListItem:
     """One display-ready edge, described from the edge's side, not the viewer's."""
     outgoing_type = relationship.type.value
-    outgoing_status = relationship.status.value
     return RelationshipListItem(
         id=relationship.id,
         from_character_id=relationship.from_character_id,
         to_character_id=relationship.to_character_id,
         type=outgoing_type,
-        status=outgoing_status,
         created_at=relationship.created_at,
         to_display_name=target_character.display_name,
         to_avatar_url=target_character.avatar_url,
@@ -120,7 +118,6 @@ async def create_relationship(
         from_character_id=from_character.id,
         to_character_id=to_character_id,
         type=rel_type,
-        status=RelationshipStatus.active,
     )
     session.add(relationship)
     await session.flush()
@@ -132,7 +129,6 @@ async def list_relationships(
     character_id: int,
     session: AsyncSession,
     type_filter: Optional[str] = None,
-    status_filter: Optional[str] = None,
 ) -> list[RelationshipListItem]:
     """List outgoing relationships for a character with display status computed."""
     query = (
@@ -142,8 +138,6 @@ async def list_relationships(
     )
     if type_filter is not None:
         query = query.where(Relationship.type == RelationshipType(type_filter))
-    if status_filter is not None:
-        query = query.where(Relationship.status == RelationshipStatus(status_filter))
 
     result = await session.execute(query)
     rows = result.all()

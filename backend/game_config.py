@@ -47,7 +47,6 @@ class TaskDef:
     faction_slug: str
     level_required: int
     point_value: int
-    is_task_vision_eligible: bool = False
     task_type: str = "standard"
     metatask_faction_slug: str | None = None
 

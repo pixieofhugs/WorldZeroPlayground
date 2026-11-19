@@ -95,7 +95,7 @@ async def test_admin_patch_refuses_hidden_faction(
     task = Task(
         title="Pending",
         point_value=10,
-        created_by=character.id,
+        created_by_id=character.id,
         status=TaskStatus.pending,
     )
     db_session.add(task)

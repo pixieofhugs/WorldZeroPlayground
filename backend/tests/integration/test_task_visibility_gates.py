@@ -61,7 +61,7 @@ async def _gated_task(
         level_required=0,
         primary_faction_slug="na",
         task_type=TaskType.standard,
-        created_by=author.id,
+        created_by_id=author.id,
         status=status,
         created_at=datetime.now(timezone.utc) - age,
     )
