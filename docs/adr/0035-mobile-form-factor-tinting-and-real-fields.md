@@ -1,11 +1,12 @@
 # ADR-0035: Mobile is a form-factor axis on the same surface seam, tinted by a theme×treatment cascade, showing only real domain fields
 
-**Status:** Amended by ADR-0056, ADR-0058, ADR-0063, ADR-0065, ADR-0067, ADR-0069, ADR-0078
+**Status:** Amended by ADR-0053, ADR-0056, ADR-0058, ADR-0063, ADR-0065, ADR-0067, ADR-0069, ADR-0076, ADR-0078
 **Date:** 2026-07-14
 
-> **Superseded per surface, not in whole.** The tinting cascade, the mandatory
-> `Default` (na) skin and the real-domain-fields rule below still govern every
-> mobile surface. What has moved is the **form-factor split itself**: surface by
+> **Superseded per surface, not in whole.** The mandatory `Default` (na) skin and
+> the real-domain-fields rule below still govern every mobile surface. The
+> tinting cascade (rule 2) was never built as written; see the 2026-11-19
+> amendments at the foot. What has moved is the **form-factor split itself**: surface by
 > surface, the parallel `MOBILE_ARCHETYPE_BY_SLUG` registry is being replaced by
 > one responsive component per faction. Each of these supersedes ADR-0035 for its
 > own surface and no other:
@@ -125,3 +126,11 @@ theme×treatment token cascade, and every mobile surface renders only real domai
   produce.
 - **Per-skin data access on mobile.** Rejected for the same reason as ADR-0016 on desktop —
   a surface must mean one thing regardless of faction or form factor.
+
+## Amendment (2026-11-19, #3421)
+
+Rule 2, "`data-treatment = <faction slug>` overrides `--accent`, `--headline`, `--cta-*`", does not exist. `data-treatment`, `--headline` and `--cta-` appear nowhere in `frontend/src`. Faction tinting reads `--faction-*` and the role vars (`utils/factionRoles.ts`) directly, scoped to the surface. The `data-theme` half and "no colors are invented in a skin" stand.
+
+## Amendment (2026-11-19, #3426)
+
+Rule 4's "the praxis score shows `{base} + {votePoints}`" is replaced by ADR-0053 (`score` is one computed total) and ADR-0076 (a base-only score reads as a bare total). The rule's real point stands: no 1-5 average, no voter count.
