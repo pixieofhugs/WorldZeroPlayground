@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import HTTPException
-from sqlalchemy import case, func, or_, select, union
+from sqlalchemy import and_, case, exists, func, or_, select, union
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import Select, false as sa_false
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,7 +16,7 @@ from faction_slugs import (
     faction_filter_slugs,
 )
 from game_config import CURRENT_ERA, EraConfig
-from models.account import Account
+from models.account import Account, AccountStatus
 from models.character import Character, CharacterStatus
 from models.character_stats import CharacterStats
 from models.faction_defection_history import FactionDefectionHistory
@@ -28,6 +28,15 @@ from services.secret_faction import has_stamp, set_stamp
 from services.era import get_current_era_row, get_current_era_row_safe, get_or_create_stats
 from services.era_gates import meets_albescent_level
 from services.media import delete_stored_avatar
+
+# A life a moderator banned, as opposed to one its player left (``departed_at``).
+MOD_BANNED = and_(
+    Character.status == CharacterStatus.banned, Character.departed_at.is_(None)
+)
+
+def _mod_banned_exists(account_id: int):
+    return exists().where(Character.account_id == account_id, MOD_BANNED)
+
 
 # The rule is "not banned"; a set so a future life state needs no rewrite.
 _ROSTER_STATUSES: frozenset[CharacterStatus] = frozenset({CharacterStatus.active})
@@ -96,26 +105,33 @@ def _sentinel_slugs(era: EraConfig) -> frozenset[str]:
     return frozenset({UNAFFILIATED_FACTION_SLUG, era.secret_faction_slug})
 
 
-async def account_peak_character_level(
+async def account_peak_level_and_ban(
     account_id: int,
     era_id: int,
     session: AsyncSession,
-) -> int:
-    """Highest level among the account's active characters in ``era_id``, or 0."""
-    peak = await session.scalar(
-        select(func.max(CharacterStats.level))
-        .select_from(Character)
-        .join(
-            CharacterStats,
-            (CharacterStats.character_id == Character.id)
-            & (CharacterStats.era_id == era_id),
+) -> tuple[int, bool]:
+    """Highest level among the active characters in ``era_id`` (or 0), and
+    whether a moderator ban stands, in one round trip."""
+    row = (
+        await session.execute(
+            select(
+                select(func.max(CharacterStats.level))
+                .select_from(Character)
+                .join(
+                    CharacterStats,
+                    (CharacterStats.character_id == Character.id)
+                    & (CharacterStats.era_id == era_id),
+                )
+                .where(
+                    Character.account_id == account_id,
+                    Character.status == CharacterStatus.active,
+                )
+                .scalar_subquery(),
+                _mod_banned_exists(account_id),
+            )
         )
-        .where(
-            Character.account_id == account_id,
-            Character.status == CharacterStatus.active,
-        )
-    )
-    return peak or 0
+    ).one()
+    return row[0] or 0, bool(row[1])
 
 
 async def _character_covers_every_faction(
@@ -227,6 +243,8 @@ class AccountEligibility:
 
     can_create_additional_character: bool = False
     can_start_as_albescent: bool = False
+    # A mod-banned life blocks every new one, first included.
+    character_creation_banned: bool = False
 
 
 async def load_account_eligibility(
@@ -236,14 +254,33 @@ async def load_account_eligibility(
     era: EraConfig = CURRENT_ERA,
 ) -> AccountEligibility:
     """Second-life gate is a live level query; Albescent is the stamped column."""
-    peak_level = await account_peak_character_level(account_id, era_id, session)
+    peak_level, mod_banned = await account_peak_level_and_ban(
+        account_id, era_id, session
+    )
     account = await session.get(Account, account_id)
     return AccountEligibility(
         can_create_additional_character=(
-            peak_level >= era.second_character_level_required
+            peak_level >= era.second_character_level_required and not mod_banned
         ),
         can_start_as_albescent=has_stamp(account, era.secret_faction_slug, "unlocked"),
+        character_creation_banned=mod_banned,
     )
+
+
+async def has_mod_banned_life(account_id: int, session: AsyncSession) -> bool:
+    return bool(
+        await session.scalar(
+            select(_mod_banned_exists(account_id))
+        )
+    )
+
+
+async def is_playable(character: Character, session: AsyncSession) -> bool:
+    """The life and its account are both active."""
+    if character.status != CharacterStatus.active:
+        return False
+    account = await session.get(Account, character.account_id)
+    return account is not None and account.status == AccountStatus.active
 
 
 async def can_create_additional_character(
@@ -445,6 +482,14 @@ async def create_character(
     )
     existing_count = result.scalar_one()
 
+    if await has_mod_banned_life(account_id, session):
+        raise_coded(
+            403,
+            ErrorCode.character_creation_banned,
+            "A moderator banned one of your characters, so you can't create "
+            "another until that's lifted.",
+        )
+
     if existing_count > 0:
         if not await can_create_additional_character(account_id, session, era):
             raise_coded(
@@ -545,12 +590,13 @@ async def soft_delete_character(
     Praxis media survives both. The unlink is last and non-transactional (the
     router commits), so a failed commit leaves at worst a dead ``avatar_url``.
     """
-    character = await get_character_by_id(character_id, session)
+    # Not get_character_by_id: an account's banned lives are deleted too.
+    character = await session.get(Character, character_id)
     if character is None:
         raise HTTPException(status_code=404, detail="Character not found.")
     character.status = CharacterStatus.banned
     # Distinguishes self-deletion from a ban (#1577); never cleared.
-    character.departed_at = datetime.now(timezone.utc)
+    character.departed_at = character.departed_at or datetime.now(timezone.utc)
     erased_avatar_url = character.avatar_url
     character.avatar_url = ""
 
@@ -575,7 +621,11 @@ def _character_stats_era_join(era_id: int | None) -> Select:
     return (
         select(Character, CharacterStats)
         .outerjoin(CharacterStats, join_condition)
-        .where(Character.status == CharacterStatus.active)
+        .join(Account, Account.id == Character.account_id)
+        .where(
+            Character.status == CharacterStatus.active,
+            Account.status == AccountStatus.active,
+        )
     )
 
 

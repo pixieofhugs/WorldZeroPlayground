@@ -58,6 +58,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       Boolean(user?.has_accepted_terms),
       pathname,
       onboardingHandoffPending(),
+      Boolean(user?.character_creation_banned),
     )
     if (!target) return
     // Landing at the contract is the flow's resume mark.

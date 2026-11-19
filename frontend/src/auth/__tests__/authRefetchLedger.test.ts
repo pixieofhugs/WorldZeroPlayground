@@ -6,6 +6,8 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { readStripped, sourceFiles, toRelative } from '../../test/sourceScan'
+import { shouldShowSuspendedNotice } from '../../api/sessionRedirect'
+import { messageForCode } from '../../utils/errors'
 import { refetchWhenVisible, runSessionProbe, runSignOut } from '../AuthContext'
 import { ApiError, ApiNetworkError } from '../../api/apiError'
 import type { CurrentUser } from '../../api/auth'
@@ -198,10 +200,32 @@ describe('runSessionProbe', () => {
     expect(h.settled()).toBe(1)
   })
 
+  it('forgets the viewer on a 403 ACCOUNT_SUSPENDED', async () => {
+    const body = { detail: { code: 'ACCOUNT_SUSPENDED', message: 'suspended' } }
+    const h = harness(async () => {
+      throw new ApiError(new Response(null, { status: 403 }), body)
+    })
+    await h.probe()
+    expect(h.adopted).toEqual([null])
+    expect(h.hints).toEqual([false])
+  })
+
+  it('sends a suspended session to the landing notice, and not in a loop', () => {
+    expect(shouldShowSuspendedNotice(403, 'ACCOUNT_SUSPENDED', '/tasks', '')).toBe(true)
+    expect(
+      shouldShowSuspendedNotice(403, 'ACCOUNT_SUSPENDED', '/', '?login=ACCOUNT_SUSPENDED'),
+    ).toBe(false)
+    expect(shouldShowSuspendedNotice(403, 'FORBIDDEN', '/tasks', '')).toBe(false)
+  })
+
+  it('words the landing notice from the catalog', () => {
+    expect(messageForCode('ACCOUNT_SUSPENDED')).toMatch(/suspended/i)
+  })
+
   it.each([
     ['the network drops', async () => Promise.reject(new ApiNetworkError(new TypeError('offline')))],
     ['the server answers 500', answers(500)],
-    ['the server answers 403', answers(403)],
+    ['the server answers a plain 403', answers(403)],
     ['something else throws', async () => Promise.reject(new Error('boom'))],
   ])('keeps the viewer, and leaves the hint unwritten, when %s', async (_case, whoAmI) => {
     const h = harness(whoAmI)
