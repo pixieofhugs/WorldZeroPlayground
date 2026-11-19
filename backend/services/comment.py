@@ -277,7 +277,7 @@ async def flag_comment(
     session.add(
         Flag(
             comment_id=comment.id,
-            flagged_by=flagged_by.id,
+            flagged_by_id=flagged_by.id,
             reason=reason.value,
             reason_detail=reason_detail,
         )

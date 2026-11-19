@@ -131,8 +131,8 @@ async def test_withdraw_collab_recalculates_every_member(
     await db_session.flush()
     db_session.add_all(
         [
-            PraxisMember(praxis_id=praxis.id, character_id=character.id, has_submitted=True),
-            PraxisMember(praxis_id=praxis.id, character_id=character2.id, has_submitted=True),
+            PraxisMember(praxis_id=praxis.id, character_id=character.id, has_approved=True),
+            PraxisMember(praxis_id=praxis.id, character_id=character2.id, has_approved=True),
         ]
     )
     await db_session.commit()
@@ -199,7 +199,7 @@ async def _submitted_solo(
     )
     db_session.add(praxis)
     await db_session.flush()
-    db_session.add(PraxisMember(praxis_id=praxis.id, character_id=author.id, has_submitted=True))
+    db_session.add(PraxisMember(praxis_id=praxis.id, character_id=author.id, has_approved=True))
     await db_session.commit()
     await db_session.refresh(praxis)
     return praxis
@@ -230,7 +230,7 @@ async def test_active_incomplete_duel_side_is_author_only(
     db_session.add(opponent_praxis)
     await db_session.flush()
     db_session.add(
-        PraxisMember(praxis_id=opponent_praxis.id, character_id=character2.id, has_submitted=False)
+        PraxisMember(praxis_id=opponent_praxis.id, character_id=character2.id, has_approved=False)
     )
     duel = Duel(
         task_id=active_task.id,
@@ -335,7 +335,7 @@ async def test_forfeit_reveals_surviving_submitted_side(
     db_session.add(forfeiter_praxis)
     await db_session.flush()
     db_session.add(
-        PraxisMember(praxis_id=forfeiter_praxis.id, character_id=character.id, has_submitted=False)
+        PraxisMember(praxis_id=forfeiter_praxis.id, character_id=character.id, has_approved=False)
     )
     duel = Duel(
         task_id=active_task.id,

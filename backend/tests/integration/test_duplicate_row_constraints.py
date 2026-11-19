@@ -18,7 +18,7 @@ async def test_account_role_is_unique_per_account(
 
     def grant() -> AccountRole:
         return AccountRole(
-            account_id=account.id, role_id=role.id, granted_by=account.id
+            account_id=account.id, role_id=role.id, granted_by_id=account.id
         )
 
     db_session.add(grant())

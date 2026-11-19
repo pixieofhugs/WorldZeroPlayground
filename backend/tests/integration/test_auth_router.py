@@ -33,7 +33,7 @@ async def _grant_admin(db_session: AsyncSession, account_id: int) -> None:
     db_session.add(role)
     await db_session.flush()
     db_session.add(
-        AccountRole(account_id=account_id, role_id=role.id, granted_by=account_id)
+        AccountRole(account_id=account_id, role_id=role.id, granted_by_id=account_id)
     )
     await db_session.commit()
 

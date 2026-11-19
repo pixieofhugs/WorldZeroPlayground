@@ -217,7 +217,7 @@ async def test_the_window_is_the_cast_time_not_the_seal_time(
     era_two = Era(
         name=CURRENT_ERA.name,
         config_key=CURRENT_ERA.config_key,
-        started_by=account.id,
+        started_by_id=account.id,
         started_at=era_two_start,
     )
     db_session.add(era_two)
@@ -276,7 +276,7 @@ async def test_recompute_refuses_an_era_that_carries_spend_forward(
     era_two = Era(
         name=CURRENT_ERA.name,
         config_key=CURRENT_ERA.config_key,
-        started_by=account.id,
+        started_by_id=account.id,
     )
     db_session.add(era_two)
     await db_session.commit()

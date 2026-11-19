@@ -112,7 +112,7 @@ async def propose_task(
             data.metatask_faction_slug if task_type == TaskType.metatask else None
         ),
         task_type=task_type,
-        created_by=character.id,
+        created_by_id=character.id,
         status=TaskStatus.pending,
     )
     session.add(task)
@@ -148,7 +148,7 @@ async def authors_for_tasks(
     Not a ``selectinload``: ``level`` needs current-era ``CharacterStats``. With
     no era row, levels fall back to 0 rather than raising.
     """
-    creator_ids = {task.created_by for task in tasks}
+    creator_ids = {task.created_by_id for task in tasks}
     if not creator_ids:
         return {}
 
@@ -200,7 +200,7 @@ async def build_task_out(
 
     if author is None:
         authors = await authors_for_tasks([task], session)
-        author = authors.get(task.created_by, UNKNOWN_TASK_AUTHOR)
+        author = authors.get(task.created_by_id, UNKNOWN_TASK_AUTHOR)
 
     return TaskOut(
         id=task.id,
@@ -210,7 +210,7 @@ async def build_task_out(
         level_required=task.level_required,
         status=task.status,
         task_type=task.task_type,
-        created_by=task.created_by,
+        created_by=task.created_by_id,
         primary_faction_slug=task.primary_faction_slug,
         metatask_faction_slug=task.metatask_faction_slug,
         created_at=task.created_at,
@@ -429,7 +429,7 @@ def pending_visibility_clause(
     if is_admin:
         return true()
     # The window withholds from *other* players; the author is exempt (#2126).
-    own = false() if viewer_id is None else Task.created_by == viewer_id
+    own = false() if viewer_id is None else Task.created_by_id == viewer_id
     # Same predicate as the ``/auth/me`` flag (#2868). It reads no faction
     # (#2863); anonymous is level ``-1``.
     if may_see_pending_tasks(viewer_level, None, is_admin, era):
@@ -523,7 +523,7 @@ async def list_tasks(
     query = select(Task)
 
     if created_by is not None:
-        query = query.where(Task.created_by == created_by)
+        query = query.where(Task.created_by_id == created_by)
 
     # Stats read once for every gate below; anonymous = level -1.
     viewer_stats: Optional[CharacterStats] = None
@@ -656,7 +656,7 @@ async def list_tasks(
             author_term = term.lstrip("@")
             if author_term:
                 conditions.append(
-                    Task.created_by.in_(
+                    Task.created_by_id.in_(
                         select(Character.id).where(
                             or_(
                                 Character.username.ilike(f"%{author_term}%"),

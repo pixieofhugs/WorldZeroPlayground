@@ -182,10 +182,10 @@ export function normalizeFeedItem(item: ActivityFeedItem): FeedRow | null {
             : null,
         level: null,
         // Only while the viewer still owes their part (#2284).
-        // `viewer_has_submitted` is about the READER; every other field
+        // `viewer_has_approved` is about the READER; every other field
         // describes the submitter.
         actions:
-          p.praxis_id != null && !p.viewer_has_submitted
+          p.praxis_id != null && !p.viewer_has_approved
             ? [
                 {
                   id: 'fileYours',

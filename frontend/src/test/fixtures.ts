@@ -73,12 +73,12 @@ export const aMember = (over: Partial<PraxisMemberOut> = {}): PraxisMemberOut =>
   character_id: AUTHOR.id,
   character_display_name: AUTHOR.name,
   character_avatar_url: '',
-  has_submitted: true,
+  has_approved: true,
   // Done is orthogonal to approval (ADR-0079).
   is_done: false,
   joined_at: '2026-01-01T00:00:00Z',
   nudged_at: null,
-  submitted_at: null,
+  approved_at: null,
   ...over,
 })
 

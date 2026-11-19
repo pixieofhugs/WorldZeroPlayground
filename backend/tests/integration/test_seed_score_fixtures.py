@@ -52,7 +52,7 @@ async def _board(
             level_required=0,
             status=TaskStatus.active,
             task_type=TaskType.standard,
-            created_by=author.id,
+            created_by_id=author.id,
             primary_faction_slug=slug,
         ))
     await db_session.flush()
@@ -217,7 +217,7 @@ async def test_collab_fixture_skips_when_the_board_has_no_collab_task(
             level_required=0,
             status=TaskStatus.active,
             task_type=TaskType.standard,
-            created_by=character.id,
+            created_by_id=character.id,
             primary_faction_slug=slug,
         ))
     await db_session.flush()
