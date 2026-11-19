@@ -8,38 +8,12 @@ export function scrollNeeded(rowBottom: number, boxTop: number): number {
   return Math.max(0, rowBottom - (boxTop - GAP))
 }
 
-function reveal() {
+/** Scrolls once so the live vote row clears the sticky box; call it when the beat has settled. */
+export function revealVoteRow(smooth: boolean) {
   const box = document.querySelector<HTMLElement>('.ob-box')
   const rows = document.querySelectorAll('.ob-stage button[aria-pressed]')
   if (!box || !rows.length) return
   const rowBottom = Math.max(...[...rows].map((b) => b.getBoundingClientRect().bottom))
   const over = scrollNeeded(rowBottom, box.getBoundingClientRect().top)
-  if (over > 0) window.scrollBy({ top: over, behavior: 'smooth' })
-}
-
-/** Keeps a beat's pressable row clear of the sticky box; returns the cleanup. */
-export function watchStageFit(): () => void {
-  let raf = 0
-  const run = () => {
-    cancelAnimationFrame(raf)
-    raf = requestAnimationFrame(reveal)
-  }
-  const root = document.querySelector('.ob-root')
-  // The box grows a line as its text types out on a narrow screen.
-  const ro = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(run)
-  const mo = new MutationObserver(() => {
-    ro?.disconnect()
-    const box = document.querySelector('.ob-box')
-    if (box) ro?.observe(box)
-    run()
-  })
-  if (root) mo.observe(root, { childList: true, subtree: true })
-  window.addEventListener('resize', run)
-  run()
-  return () => {
-    cancelAnimationFrame(raf)
-    mo.disconnect()
-    ro?.disconnect()
-    window.removeEventListener('resize', run)
-  }
+  if (over > 0) window.scrollBy({ top: over, behavior: smooth ? 'smooth' : 'auto' })
 }

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import PraxisCard from '../../../components/praxisCard/PraxisCard'
 import { VoteSandboxContext } from '../../../components/vote/voteSandbox'
 import { dragonPraxis } from '../fixtures'
+import { revealVoteRow } from '../fitStage'
 import FactionBuddy from '../FactionBuddy'
 import Wisp from '../Wisp'
 import '../beat5.css'
@@ -21,7 +22,11 @@ const COUNT_AFTER = SCORE_AFTER + 0.2
 /** Back plays every judge at 1s, behind the card. */
 const QUICK_LAND = 1
 
+/** The last score has risen and the count settled; the old 3.3s for the 2.4s judge. */
+const SETTLE_AFTER = COUNT_AFTER + 0.15
+
 const reducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+const motionOff = () => reducedMotion() || document.documentElement.dataset.motion === 'off'
 
 export default function Beat5({ confidence }: BeatProps) {
   const { t } = useTranslation('onboarding')
@@ -31,11 +36,19 @@ export default function Beat5({ confidence }: BeatProps) {
   useHoldNext(voted === null ? t('beat5.hold') : null)
 
   useEffect(() => {
-    if (reducedMotion()) return
+    // One scroll per mount: the judges stay in view while they land, then the vote row is brought up.
+    if (motionOff()) {
+      revealVoteRow(false)
+      if (reducedMotion()) return
+    }
     const quick = root.current?.closest('.ob-rew') != null
     const ids = JUDGES.map((j, i) =>
       setTimeout(() => setJudged(i + 1), ((quick ? QUICK_LAND : j.land) + COUNT_AFTER) * 1000),
     )
+    if (!motionOff()) {
+      const last = quick ? QUICK_LAND : Math.max(...JUDGES.map((j) => j.land))
+      ids.push(setTimeout(() => revealVoteRow(true), (last + SETTLE_AFTER) * 1000))
+    }
     return () => ids.forEach(clearTimeout)
   }, [])
 
