@@ -1,6 +1,6 @@
 # ADR-0046 — Albescent is frozen: new surfaces fall through to NA
 
-**Status:** Reversed
+**Status:** Amended by ADR-0048
 **Date:** 2026-07-18
 
 **Relates to:** #726 (the duel skin this decision parks), #718 (the duel-skin
@@ -114,3 +114,7 @@ conflating "has no faction" with "has a faction we haven't drawn". `na` means
 guess, not a commissioned design (it says so on its face), and the reskin is the
 reason the freeze exists. Four files with a known short half-life is precisely
 what this ADR is declining to spend.
+
+## Amendment
+
+Amended by [ADR-0048](0048-albescent-unfreezes-per-surface-as-designs-land.md): the freeze lifts one surface at a time as each design lands, so the "free to lift" consequence above is now the standing mode. A new surface still falls through to NA until its Albescent design exists.

@@ -1,6 +1,6 @@
 # The praxis read page is a per-faction archetype surface with an interactive vote caster
 
-**Status:** Superseded by ADR-0061
+**Status:** Superseded by ADR-0061, ADR-0083
 **Date:** 2026-06-25
 
 ADR-0005 enriched the praxis **card** (the register-row, list view) and explicitly
