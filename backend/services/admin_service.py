@@ -44,6 +44,7 @@ from schemas.admin import (
 # ``seed`` imports no service, so no cycle; it owns the mirror (runs every deploy).
 from seed import upsert_era_factions
 from services.faction_service import refuse_hidden_faction
+from services.character_stats import recalculate_for_account_votes
 from services.character import MOD_BANNED, record_level_reached
 from services.duel import forfeit_settled_duels_for_character
 from services.era import (
@@ -306,6 +307,7 @@ async def apply_ban(
         character.status = CharacterStatus.active
 
     await session.flush()
+    await recalculate_for_account_votes(character.account_id, session, era)
 
 
 async def set_character_stats(
@@ -465,12 +467,14 @@ async def suspend_account(
     account_id: int,
     suspended: bool,
     session: AsyncSession,
+    era: EraConfig = CURRENT_ERA,
 ) -> Account:
     account = await session.get(Account, account_id)
     if account is None:
         raise HTTPException(status_code=404, detail="Account not found.")
     account.status = AccountStatus.suspended if suspended else AccountStatus.active
     await session.flush()
+    await recalculate_for_account_votes(account_id, session, era)
     await session.refresh(account)
     return account
 

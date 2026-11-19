@@ -4,7 +4,7 @@
      script instead. backend/tests/test_adr_index.py fails if this file
      is out of step with docs/adr/. -->
 
-97 records, of which **89 still state a rule**.
+98 records, of which **90 still state a rule**.
 
 | Status | Meaning |
 |---|---|
@@ -112,3 +112,4 @@
 | [0095](0095-classes-own-paint-inline-style-is-for-computed-values.md) | Classes in the cascade own every nameable paint; inline style is for computed values | Accepted | — |
 | [0096](0096-the-constellation-is-retired-the-players-page-is-a-podium-a-race-and-a-roster.md) | The Constellation is retired; the Players page is a podium, a faction race and a roster | Accepted | — |
 | [0097](0097-secret-faction-state-is-per-account-and-per-faction-slug.md) | Secret-faction state is per account and per faction slug | Accepted | — |
+| [0098](0098-moderation-hides-votes-deletion-keeps-them.md) | Moderation hides votes; deletion keeps them | Accepted | — |
