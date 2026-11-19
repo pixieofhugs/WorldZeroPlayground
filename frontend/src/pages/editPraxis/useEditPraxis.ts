@@ -82,8 +82,6 @@ export {
   type EditPraxisPhase,
 } from "./editPraxisPhase";
 
-/** Covers y-websocket's reconnect backoff (up to 2.5 s) plus the sync round trip. */
-
 export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   const navigate = useNavigate();
   const { user, refetch, loading: authLoading } = useAuth();

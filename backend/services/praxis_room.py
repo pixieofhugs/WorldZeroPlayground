@@ -518,8 +518,10 @@ class PraxisRoomServer(WebsocketServer):
                 )
             )
 
-    async def apply_client_update(self, praxis_id: int, update: bytes) -> None:
+    async def apply_client_update(self, praxis_id: int, update: bytes) -> bool:
         """Merge the browser's whole Yjs state into the live room; a repeat is a no-op.
+
+        Returns whether the merge changed the document's text columns.
 
         ponytail: opens a room if none runs; a rejected submit strands it.
         """
@@ -527,6 +529,7 @@ class PraxisRoomServer(WebsocketServer):
         room = await self.get_room(name)
         flusher = self._flushers[name]
         clean = not flusher._pending
+        before = _document_values(room.ydoc)
         try:
             room.ydoc.apply_update(update)
         except Exception:
@@ -534,6 +537,7 @@ class PraxisRoomServer(WebsocketServer):
         # The submitter's own unsent edits are part of what they submit.
         if clean:
             flusher.absorb()
+        return _document_values(room.ydoc) != before
 
     def revoke(self, praxis_id: int, character_id: int) -> None:
         """Door two: close every socket this character holds on this praxis."""
@@ -666,8 +670,8 @@ async def discard_room_document(praxis: Praxis, session: AsyncSession) -> None:
     await PRAXIS_ROOM_SERVER.discard_document(praxis, session)
 
 
-async def merge_client_state(praxis_id: int, state_b64: str) -> None:
-    """Bound and decode a submit's base64 Yjs state, then merge it."""
+async def merge_client_state(praxis_id: int, state_b64: str) -> bool:
+    """Decode a submit's base64 Yjs state and merge it; True if the text changed."""
     if len(state_b64) > _MAX_CLIENT_UPDATE_BYTES * 4 // 3 + 4:
         raise_coded(413, ErrorCode.praxis_doc_update_invalid, _OVERSIZED_DRAFT)
     try:
@@ -676,7 +680,7 @@ async def merge_client_state(praxis_id: int, state_b64: str) -> None:
         raise_coded(422, ErrorCode.praxis_doc_update_invalid, _INVALID_DRAFT)
     if len(update) > _MAX_CLIENT_UPDATE_BYTES:
         raise_coded(413, ErrorCode.praxis_doc_update_invalid, _OVERSIZED_DRAFT)
-    await PRAXIS_ROOM_SERVER.apply_client_update(praxis_id, update)
+    return await PRAXIS_ROOM_SERVER.apply_client_update(praxis_id, update)
 
 
 def close_member_sockets(praxis_id: int, character_id: int) -> None:

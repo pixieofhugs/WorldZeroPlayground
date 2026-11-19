@@ -993,6 +993,59 @@ async def test_a_proposers_unsent_edits_are_proposed_not_cancelled(
             await _wait_for_drafting(rooms, collab.id, "the later edit to cancel")
 
 
+async def _approved(rooms: _Rooms, praxis_id: int) -> dict[int, bool]:
+    async with rooms.sessions() as session:
+        rows = await session.execute(
+            select(PraxisMember.character_id, PraxisMember.has_approved).where(
+                PraxisMember.praxis_id == praxis_id
+            )
+        )
+    return {cid: approved for cid, approved in rows}
+
+
+@pytest.mark.parametrize("extra_members", [0, 1])
+async def test_a_submit_that_changes_text_cancels_a_live_proposal(
+    db_session, collab, account2, character, character2, character3,
+    extra_members, monkeypatch,
+) -> None:
+    """ADR-0079: text the proposer never saw is a new proposal, not an approval."""
+    if extra_members:
+        db_session.add(PraxisMember(praxis_id=collab.id, character_id=character3.id))
+        await db_session.commit()
+    async with running_rooms(
+        db_session, monkeypatch, flush_debounce_seconds=30
+    ) as rooms:
+        holdout = await rooms.open(collab.id, account2.id)
+        async with client_doc(holdout) as doc:
+            await _wait_for_body(doc, SEED_BODY, "the holdout")
+            await rooms.submit(collab.id, character2.id)  # B proposes
+            state = _offline_state(doc, "unseen ")
+
+            result = await rooms.submit(collab.id, character.id, doc_state=state)
+
+        assert result.status == PraxisStatus.pending
+        approved = await _approved(rooms, collab.id)
+        assert approved[character.id] and not approved[character2.id]
+        assert (await _proposal(rooms, collab.id))[1] is not None
+
+
+async def test_a_submit_that_changes_nothing_still_approves(
+    db_session, collab, account2, character, character2, monkeypatch
+) -> None:
+    async with running_rooms(
+        db_session, monkeypatch, flush_debounce_seconds=30
+    ) as rooms:
+        holdout = await rooms.open(collab.id, account2.id)
+        async with client_doc(holdout) as doc:
+            await _wait_for_body(doc, SEED_BODY, "the holdout")
+            await rooms.submit(collab.id, character2.id)
+            same = base64.b64encode(doc.get_update()).decode()
+
+            result = await rooms.submit(collab.id, character.id, doc_state=same)
+
+        assert result.status == PraxisStatus.submitted
+
+
 async def test_an_awareness_update_never_cancels_a_proposal(
     db_session, collab, account2, character, monkeypatch
 ) -> None:
@@ -1146,7 +1199,6 @@ async def test_a_submit_carries_edits_the_room_never_received(
             state = base64.b64encode(offline.get_update()).decode()
 
             published = await rooms.submit(solo.id, character.id, doc_state=state)
-            # Resending the same state is a no-op merge, not duplicated text.
             assert await _record(rooms, solo.id) == (
                 "Solo Praxis",
                 f"OFFLINE synced {SEED_BODY}",

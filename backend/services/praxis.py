@@ -1321,8 +1321,10 @@ async def submit_praxis(
     praxis = await get_praxis_for_member(praxis_id, character_id, "submit", session)
 
     # The sealed text must hold every edit the browser had; sockets give no ack (#3611).
-    if doc_state is not None:
-        await merge_client_state(praxis_id, doc_state)
+    if doc_state is not None and await merge_client_state(praxis_id, doc_state):
+        # Text the other members never saw: a live proposal or published collab
+        # falls back, and this submit proposes the merged text afresh (ADR-0079).
+        await collab_consensus.on_member_edit(praxis, session, era)
 
     went_live = await collab_consensus.on_submit(praxis, character_id, session, era)
     if went_live:
