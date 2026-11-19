@@ -1,6 +1,7 @@
-import type { CSSProperties } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import { FACTION_RAINBOW_ORDER, factionCssVar } from '../../../utils/factions'
+import { lazyShipped, loadAppCopy } from '../../../i18n'
 import '../../../factionFaces'
 import FactionBuddy from '../FactionBuddy'
 import Wisp from '../Wisp'
@@ -35,8 +36,17 @@ const ink = 'var(--faction-default-on-fill)'
 const cream = 'var(--faction-default-card-text)'
 const num = (arr: number[], i: number) => arr[i % arr.length]
 
-export default function Beat7({ confidence }: BeatProps) {
-  const { t } = useTranslation('onboarding')
+/** `feed` is route-loaded; an override can create a partial bundle early, so the shipped table is the readiness signal. */
+export default function Beat7(props: BeatProps) {
+  const [ready, setReady] = useState(() => 'feed' in lazyShipped)
+  useEffect(() => {
+    if (!ready) void loadAppCopy().then(() => setReady(true))
+  }, [ready])
+  return ready ? <Scene {...props} /> : null
+}
+
+function Scene({ confidence }: BeatProps) {
+  const { t } = useTranslation('feed')
   const roster = FACTION_RAINBOW_ORDER
   const n = roster.length
   const colour = (i: number) => factionCssVar(roster[i % n])
@@ -66,7 +76,7 @@ export default function Beat7({ confidence }: BeatProps) {
                 data-faction={slug}
                 style={{ '--fc': colour(i), '--bcf': factionCssVar(slug, 'card-font'), animationDelay: `${(0.4 + i * 0.42).toFixed(2)}s` } as CSSProperties}
               >
-                {t(`beat7.taglines.${slug}` as never)}
+                {t(`factionSelect.${slug}.tagline` as never)}
               </span>
             </span>
             <span className="fx" style={vars}>
