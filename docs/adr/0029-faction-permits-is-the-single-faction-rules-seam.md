@@ -70,3 +70,13 @@ not a second parallel predicate.
   unrelated axes together" smell recurs for level/vote/flag/sign-up. Extracting
   those named homes is deferred to #292; this ADR only establishes the pattern
   and the faction seam.
+
+## Amendment (2026-11-18, #3419): no faction gate is active
+
+`faction_permits` returns `True` for every character and task, metatasks included,
+since #942. The metatask own-faction gate, the Albescent carve-out inside the
+seam, and the "False -> True" flag correction above describe a predicate that no
+longer exists. The seam stays on purpose, as its docstring says: the next faction
+rule is a one-function edit, and call sites still must not re-check factions.
+Whether a faction may apply metatasks below the apply level is a separate per-era
+perk (`can_apply_metatask_at_any_level`), not part of the seam.
