@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { useTranslation } from 'react-i18next'
 import { getLeaderboard } from '../api/leaderboard'
 import { getNearbyAirports } from '../api/me'
@@ -27,6 +28,7 @@ import {
  */
 export default function Leaderboard() {
   const { t } = useTranslation('common')
+  useDocumentTitle(t('leaderboard.title'))
   const { user } = useAuth()
   const config = useGameConfig()
   const formFactor = useFormFactor()
