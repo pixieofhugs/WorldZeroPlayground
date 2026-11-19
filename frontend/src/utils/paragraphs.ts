@@ -1,10 +1,7 @@
-/**
- * Any line break splits: in a `<p>` a lone `\n` collapses to a space, and
- * Enter in the copy editor types exactly that. `copyRegistry` uses it too.
- */
+/** A blank line splits (#3111); in a `<p>` a lone `\n` is ordinary whitespace. */
 export function paragraphsOf(text: string): string[] {
   return text
-    .split('\n')
-    .map((line) => line.trim())
+    .split(/\n\s*\n/)
+    .map((part) => part.trim())
     .filter(Boolean)
 }

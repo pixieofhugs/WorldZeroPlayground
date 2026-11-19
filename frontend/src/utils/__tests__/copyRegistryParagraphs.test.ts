@@ -46,10 +46,10 @@ describe('what a click borrows', () => {
     return div
   }
 
-  it('a lone newline is a paragraph too', () => {
+  it('a lone newline is not a paragraph break', () => {
     setCopyRecording(true)
     recordRenderedCopy('One line.\nNext line.', target)
-    expect(copyTargetsForText('Next line.')).toEqual([target])
+    expect(copyTargetsForText('Next line.')).toEqual([])
   })
 
   it("a player's text never takes the key of the badge beside it", () => {

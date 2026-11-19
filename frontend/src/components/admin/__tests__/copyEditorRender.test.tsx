@@ -96,24 +96,6 @@ describe('CopyEditor, mounted', () => {
     fireEvent.click(screen.getByText('cancel'))
     expect(screen.queryByRole('status')).toBeNull()
   })
-
-  it('warns when a line break would show as a space, and only there', async () => {
-    render(
-      <>
-        <div style={{ whiteSpace: 'nowrap' }}>
-          <Page />
-        </div>
-        <CopyEditor />
-      </>,
-    )
-    fireEvent.click(screen.getByText('edit copy'))
-    await screen.findByText('stop editing copy')
-    fireEvent.click(screen.getByText('Overridden Zero'))
-    const box = await screen.findByLabelText('Replacement wording')
-    expect(screen.queryByText(/keeps its wording on one line/)).toBeNull()
-    fireEvent.change(box, { target: { value: 'Two\nlines' } })
-    expect(screen.getByText(/keeps its wording on one line/)).toBeTruthy()
-  })
 })
 
 

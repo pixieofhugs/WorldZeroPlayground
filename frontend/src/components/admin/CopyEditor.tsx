@@ -128,11 +128,6 @@ export function keepEscapeInPanel(
 /** Room for a multi-paragraph description on desktop, so spellcheck marks can be seen. */
 const EDITING_WIDTH = 'min(40rem, calc(100vw - var(--space-xl)))'
 
-/** `body` sets `pre-line`; a spot that overrides it (`nowrap` labels) draws a typed break as a space. */
-export function showsLineBreaks(node: Element | null): boolean {
-  return node !== null && /pre|break-spaces/.test(getComputedStyle(node).whiteSpace)
-}
-
 const ROW: CSSProperties = {
   display: 'flex',
   gap: 'var(--space-xs)',
@@ -157,7 +152,6 @@ export default function CopyEditor() {
   const [choices, setChoices] = useState<CopyTarget[]>([])
   const [draft, setDraft] = useState('')
   const [notice, setNotice] = useState<string | null>(null)
-  const [breaksShow, setBreaksShow] = useState(true)
 
   /**
    * `t` in a ref, load-bearing: react-i18next hands back a new `t` on every store
@@ -215,7 +209,6 @@ export default function CopyEditor() {
         match && match.targets.length > 1
           ? candidatesShownIn(match.el, match.targets)
           : (match?.targets ?? [])
-      setBreaksShow(showsLineBreaks(node))
       if (found.length === 0) {
         setTarget(null)
         setChoices([])
@@ -356,11 +349,6 @@ export default function CopyEditor() {
               maxHeight: '50vh',
             }}
           />
-          {!breaksShow && draft.includes('\n') && (
-            <p className="card-meta" style={{ color: 'var(--color-danger)' }}>
-              {t('copyEdit.noLineBreaks')}
-            </p>
-          )}
           <div style={ROW}>
             <button type="button" onClick={save} style={BUTTON} className="label-caption">
               {t('copyEdit.save')}

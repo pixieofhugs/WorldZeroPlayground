@@ -272,7 +272,6 @@
     },
     "notSimpleKey": "\"{{key}}\" has variant forms the editor can't reach. Edit that one in the catalog file.",
     "textareaLabel": "Replacement wording",
-    "noLineBreaks": "This spot keeps its wording on one line, so a line break shows as a space.",
     "save": "save",
     "revert": "revert to default",
     "cancel": "cancel",
