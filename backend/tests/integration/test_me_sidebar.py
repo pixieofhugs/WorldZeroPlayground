@@ -208,7 +208,7 @@ async def test_activity_count_excludes_the_requests_it_is_shown_beside(
     assert feed.status_code == 200
     items = feed.json()["items"]
     answered = [item for item in items if item["type"] in REQUEST_ITEM_TYPES]
-    assert len(answered) == 4, "guard: only the four answered twins are in the stream"
+    assert len(answered) == 3, "guard: only the answered twins are in the stream"
     assert body["global_activity_count"] == len(items), (
         f"the news count {body['global_activity_count']} must be the "
         f"live view's {len(items)}"
@@ -234,7 +234,7 @@ async def four_request_types(
     ``invitation_letter``  faction is not the one you stand in
 
     ``collab_invite`` has a second twin (#2279): pending but its praxis is
-    submitted, so ``respond_to_invite`` would refuse it.
+    submitted, so ``respond_to_invite`` would refuse it. It is in neither list.
     """
     def praxis(owner_id: int, praxis_type: PraxisType, title: str) -> Praxis:
         return Praxis(

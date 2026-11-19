@@ -830,6 +830,27 @@ async def test_an_unanswered_request_stays_out_of_the_stream(
 
 
 @pytest.mark.asyncio
+async def test_a_pending_invite_on_a_submitted_praxis_stays_out_of_the_stream(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    full_feed: dict,
+    auth_headers: dict,
+):
+    await db_session.execute(
+        update(Praxis)
+        .where(Praxis.id == full_feed["collab_praxis_id"])
+        .values(status=PraxisStatus.submitted)
+    )
+    await db_session.commit()
+
+    for tab in (ALL_FILTER, YOUR_STUFF_FILTER):
+        feed = await _feed(client, auth_headers, tab)
+        types = {item["type"] for item in feed["items"]}
+        assert FEED_ITEM_TYPE_COLLAB_INVITE not in types, tab
+        assert feed["counts"][COUNT_KEYS[tab]] == len(feed["items"]), tab
+
+
+@pytest.mark.asyncio
 async def test_badge_counts_match_the_list_on_every_tab(
     client: AsyncClient,
     db_session: AsyncSession,

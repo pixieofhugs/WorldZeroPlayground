@@ -539,12 +539,7 @@ def _collab_invites_query(ctx: FeedContext) -> Select:
             Praxis.status != PraxisStatus.submitted,
         )
     elif ctx.answered_requests_only:
-        query = query.where(
-            or_(
-                PraxisInvite.status != PraxisInviteStatus.pending,
-                Praxis.status == PraxisStatus.submitted,
-            )
-        )
+        query = query.where(PraxisInvite.status != PraxisInviteStatus.pending)
     if ctx.before is not None:
         query = query.where(PraxisInvite.created_at < ctx.before)
     return query.order_by(PraxisInvite.created_at.desc()).limit(SUB_QUERY_LIMIT)
