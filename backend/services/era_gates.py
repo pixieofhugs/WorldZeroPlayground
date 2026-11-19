@@ -181,5 +181,5 @@ def may_vote(
     *,
     has_received_vote: bool,
 ) -> bool:
-    """``vote_lock_reason`` is ``None``. Required: omitting it would switch the rule off."""
+    """``vote_lock_reason`` is ``None``. Required: omitting it switches the rule off."""
     return vote_lock_reason(peak_level, has_received_vote, is_admin, era) is None

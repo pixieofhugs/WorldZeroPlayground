@@ -61,7 +61,7 @@ async def test_auth_me_query_count(
     dressed_viewer: Account,
     auth_headers: dict,
 ):
-    """Was 12 SELECTs before #1381; measured 11 at #3522 (budget = the measured count)."""
+    """Was 12 SELECTs before #1381; 11 measured (#3522)."""
     with capture_selects() as statements:
         resp = await client.get("/auth/me", headers=auth_headers)
 
