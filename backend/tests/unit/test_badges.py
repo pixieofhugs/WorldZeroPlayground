@@ -7,12 +7,14 @@ def _context(
     *,
     account_character_count: int = 1,
     is_earliest_on_account: bool = True,
+    puppeteer_revealed: bool = True,
     is_duel_winner: bool = False,
     won_duel_last_era: bool = False,
 ) -> BadgeContext:
     return BadgeContext(
         account_character_count=account_character_count,
         is_earliest_on_account=is_earliest_on_account,
+        puppeteer_revealed=puppeteer_revealed,
         is_duel_winner=is_duel_winner,
         won_duel_last_era=won_duel_last_era,
     )
@@ -80,3 +82,29 @@ def test_registry_keys_are_unique() -> None:
 
 def test_registry_badges_have_display_names() -> None:
     assert all(badge.name for badge in ALL_BADGES)
+
+
+def test_puppeteer_hidden_until_revealed_but_puppet_is_immediate() -> None:
+    hidden = _context(account_character_count=2, puppeteer_revealed=False)
+    assert _badge_keys(hidden) == []
+    puppet = _context(
+        account_character_count=2,
+        is_earliest_on_account=False,
+        puppeteer_revealed=False,
+    )
+    assert _badge_keys(puppet) == ["sock_puppet"]
+
+
+def test_puppeteer_delay_is_stable_and_within_bounds() -> None:
+    from badges import PUPPETEER_MAX_DELAY_SECONDS, PUPPETEER_MIN_DELAY_SECONDS
+    from services.badge import puppeteer_delay
+
+    delays = [puppeteer_delay(i) for i in range(200)]
+    assert delays == [puppeteer_delay(i) for i in range(200)]
+    assert len(set(delays)) > 100
+    for delay in delays:
+        assert (
+            PUPPETEER_MIN_DELAY_SECONDS
+            <= delay.total_seconds()
+            <= PUPPETEER_MAX_DELAY_SECONDS
+        )
