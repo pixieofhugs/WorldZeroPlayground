@@ -196,7 +196,7 @@ export default function FactionCopySheet() {
       {slug !== ALBESCENT_FACTION_SLUG && (
         <Section id="InvitationLetterPopup">
           <Frame height={820}>
-            <InvitationLetterPopup factionSlug={slug} onClose={noop} />
+            <InvitationLetterPopup factionSlug={slug} onClose={noop} preview />
           </Frame>
         </Section>
       )}

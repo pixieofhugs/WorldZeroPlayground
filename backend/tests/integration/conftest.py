@@ -31,10 +31,29 @@ from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.task import Task
 from models.vote import Vote
 from services.auth import create_jwt
-from tests.integration.factories import DEFAULT_FACTION_SLUG
+from tests.integration.factories import DEFAULT_FACTION_SLUG, attach_proof
 
 # Level-0 fixture voters have a past peak at the vote level (#3102).
 CURRENT_ERA_VOTE_LEVEL: int = CURRENT_ERA.vote_level_required
+
+
+@pytest.fixture(autouse=True)
+def _no_post_cooldown(restore_live_era):
+    """Most tests post many praxes from one account; the cap has its own tests."""
+    object.__setattr__(CURRENT_ERA, "praxis_post_cooldown_hours", 0)
+
+
+@pytest.fixture(autouse=True)
+def proof_rule_off(request, monkeypatch):
+    """Tests that POST /praxes then submit carry no media; only ``proof_rule`` tests
+    (#3473) see the rule."""
+    if request.node.get_closest_marker("proof_rule") is None:
+        from services import collab_consensus
+
+        async def _always(*args, **kwargs):
+            return True
+
+        monkeypatch.setattr(collab_consensus, "_has_proof", _always)
 
 
 @pytest.fixture(autouse=True)
@@ -68,6 +87,12 @@ async def test_engine():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
     await engine.dispose()
+
+
+@pytest.fixture
+def media_root(tmp_path, monkeypatch):
+    monkeypatch.setattr(settings, "MEDIA_ROOT", str(tmp_path))
+    return tmp_path
 
 
 @pytest_asyncio.fixture
@@ -161,7 +186,7 @@ async def era(db_session: AsyncSession, account: Account) -> Era:
     e = Era(
         name=CURRENT_ERA.name,
         config_key=CURRENT_ERA.config_key,
-        started_by=account.id,
+        started_by_id=account.id,
     )
     db_session.add(e)
     await db_session.commit()
@@ -315,7 +340,7 @@ async def active_task(db_session: AsyncSession, character: Character) -> Task:
         point_value=10,
         level_required=0,
         status=TaskStatus.active,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
     )
     db_session.add(task)
@@ -340,6 +365,7 @@ async def praxis_solo(
     db_session.add(praxis)
     await db_session.flush()
     db_session.add(PraxisMember(praxis_id=praxis.id, character_id=character.id))
+    await attach_proof(db_session, praxis)
     await db_session.commit()
     await db_session.refresh(praxis)
     return praxis
@@ -369,6 +395,7 @@ async def praxis_collab(
             PraxisMember(praxis_id=praxis.id, character_id=character2.id),
         ]
     )
+    await attach_proof(db_session, praxis)
     await db_session.commit()
     await db_session.refresh(praxis)
     return praxis

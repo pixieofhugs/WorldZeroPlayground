@@ -125,7 +125,7 @@ async def test_admin_skips_this_rule_but_not_the_level(
     role = await db_session.scalar(select(Role).where(Role.name == "admin"))
     db_session.add(
         AccountRole(
-            account_id=low.account_id, role_id=role.id, granted_by=low.account_id
+            account_id=low.account_id, role_id=role.id, granted_by_id=low.account_id
         )
     )
     await db_session.flush()

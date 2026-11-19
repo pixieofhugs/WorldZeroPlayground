@@ -16,6 +16,7 @@ import {
   fetchPraxis,
   fetchTasks,
   loginPlayer,
+  attachProof,
   submitPraxis,
   type Scenario,
 } from '../src/utils/e2eScenario'
@@ -67,7 +68,7 @@ test.describe('collaboration lifecycle', () => {
       const praxis = await fetchPraxis(draft.creator, draft.praxisId)
       const names = praxis.members.map((member) => member.character_display_name).sort()
       expect(names).toEqual([draft.creator.name, draft.invitee.name].sort())
-      expect(praxis.members.every((member) => member.has_submitted)).toBe(true)
+      expect(praxis.members.every((member) => member.has_approved)).toBe(true)
 
       const page = await draft.creator.ctx.newPage()
       await page.goto(`/praxis/${draft.praxisId}`)
@@ -189,6 +190,10 @@ test.describe('collaboration UI (clicked buttons)', () => {
         })
         .toContain('Alice weaves her part')
 
+      // A proposal needs proof (#3473); reload so the composer sees it.
+      await attachProof(alice, praxisId)
+      await aPage.goto(`/praxis/${praxisId}/edit`)
+
       // 6. Alice proposes. `data-collab-signal`, not catalog labels.
       const aPrimary = aPage.getByTestId('composer-primary')
       await expect(aPrimary).toHaveAttribute('data-collab-signal', 'propose')
@@ -256,6 +261,7 @@ test.describe('collaboration UI (clicked buttons)', () => {
   test('C3: a holdout on a pending collab is not shown the unsubmit control', async ({ browser }) => {
     const draft = await seedCollabDraft(scenarioFor(browser), 'ui-holdout')
     try {
+      await attachProof(draft.creator, draft.praxisId)
       await submitPraxis(draft.creator, draft.praxisId)
       const page = await draft.invitee.ctx.newPage()
       await page.goto(`/praxis/${draft.praxisId}`)

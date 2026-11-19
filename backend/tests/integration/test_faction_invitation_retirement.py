@@ -129,7 +129,7 @@ async def test_a_retired_letter_does_not_come_back_on_the_next_recalc(
             point_value=points,
             level_required=0,
             status=TaskStatus.active,
-            created_by=character.id,
+            created_by_id=character.id,
             primary_faction_slug=LEFT_SLUG,
         )
         db_session.add(task)

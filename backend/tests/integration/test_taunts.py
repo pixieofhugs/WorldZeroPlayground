@@ -19,7 +19,7 @@ from models.praxis import (
     PraxisType,
 )
 from models.character_block import CharacterBlock
-from models.relationship import Relationship, RelationshipStatus, RelationshipType
+from models.relationship import Relationship, RelationshipType
 from models.task import Task
 from models.taunt_message import TauntMessage, TauntTriggerType
 from services.character_stats import recalculate_character_stats
@@ -35,14 +35,12 @@ async def _declare_foe(
     db_session: AsyncSession,
     declarer: Character,
     target: Character,
-    status: RelationshipStatus = RelationshipStatus.active,
 ) -> Relationship:
     """Subscribes the declarer to ``target``'s taunts (ADR-0068)."""
     edge = Relationship(
         from_character_id=declarer.id,
         to_character_id=target.id,
         type=RelationshipType.foe,
-        status=status,
     )
     db_session.add(edge)
     await db_session.flush()
@@ -194,7 +192,6 @@ async def test_friend_edge_does_not_subscribe(
             from_character_id=character3.id,
             to_character_id=character.id,
             type=RelationshipType.friend,
-            status=RelationshipStatus.active,
         )
     )
     await _set_score(db_session, character3, era, 1)
@@ -343,7 +340,7 @@ async def test_era_reset_produces_no_taunts(
     new_era_row = Era(
         name=CURRENT_ERA.name,
         config_key=CURRENT_ERA.config_key,
-        started_by=character.account_id,
+        started_by_id=character.account_id,
     )
     db_session.add(new_era_row)
     await db_session.flush()

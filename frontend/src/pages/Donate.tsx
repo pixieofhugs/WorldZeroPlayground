@@ -1,8 +1,10 @@
 import { useTranslation } from 'react-i18next'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import PageTitle from '../components/ui/PageTitle'
 
 export default function Donate() {
   const { t } = useTranslation('common')
+  useDocumentTitle(t('donate.title'))
   return (
     <div className="py-8 max-w-2xl text-center">
       <PageTitle title={t('donate.title')} />

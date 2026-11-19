@@ -147,8 +147,8 @@ class CollaboratorSubmittedPayload(FeedPayloadBase):
     task_point_value: int
     task_faction_slug: str
     # Has the READER filed (#2284)? Gates the "Submit yours" action, not the row.
-    # ``has_submitted`` = approval of the live proposal (ADR-0079), not ``is_done``.
-    viewer_has_submitted: bool
+    # ``has_approved`` = approval of the live proposal (ADR-0079), not ``is_done``.
+    viewer_has_approved: bool
 
 
 class AwaitingSubmissionPayload(FeedPayloadBase):

@@ -90,6 +90,15 @@ What the ban does **not** cover:
 - Where a behavioural claim has no value seam at all, the residue stays source-reading
   and says so loudly. (`composerMount.test.tsx` converted the #2881 residue; none is left there.)
 
+**The ban is enforced (#3562).** `frontend/src/test/__tests__/noNewSourceReadTests.test.ts`
+fails when a `*.test.*` file under `src/` imports `node:fs` and is not listed in
+`frontend/.test-source-reads.txt`. That list only shrinks: converting a test means
+deleting its line, and a line whose file no longer imports `fs` also fails. Each line
+carries a kind as a trailing comment: `walk` (repo-wide scan), `css` (CSS/token/JSON
+read), `parity` (cross-language or config parity) are sanctioned and stay; `legacy` is
+the burn-down. The kinds were assigned by a first-pass heuristic; correct one when you
+touch its file.
+
 ### `src/test/sourceScan.ts` is the only walk
 
 A source-scanning guard answers a question no render can: *does any file, anywhere under

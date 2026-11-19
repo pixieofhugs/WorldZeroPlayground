@@ -24,7 +24,7 @@ async def _close_era(
     new_era_row = Era(
         name=CURRENT_ERA.name,
         config_key=CURRENT_ERA.config_key,
-        started_by=account.id,
+        started_by_id=account.id,
     )
     session.add(new_era_row)
     await session.flush()
@@ -40,7 +40,7 @@ async def _seed_board(session: AsyncSession, character: Character) -> dict[str, 
             point_value=10,
             level_required=1,
             status=TaskStatus.active,
-            created_by=character.id,
+            created_by_id=character.id,
             primary_faction_slug=DEFAULT_FACTION_SLUG,
         ),
         "pending": Task(
@@ -49,7 +49,7 @@ async def _seed_board(session: AsyncSession, character: Character) -> dict[str, 
             point_value=10,
             level_required=1,
             status=TaskStatus.pending,
-            created_by=character.id,
+            created_by_id=character.id,
             primary_faction_slug=DEFAULT_FACTION_SLUG,
         ),
         "metatask": Task(
@@ -59,7 +59,7 @@ async def _seed_board(session: AsyncSession, character: Character) -> dict[str, 
             level_required=1,
             status=TaskStatus.active,
             task_type=TaskType.metatask,
-            created_by=character.id,
+            created_by_id=character.id,
             primary_faction_slug=DEFAULT_FACTION_SLUG,
             metatask_faction_slug=DEFAULT_FACTION_SLUG,
         ),
@@ -69,7 +69,7 @@ async def _seed_board(session: AsyncSession, character: Character) -> dict[str, 
             point_value=10,
             level_required=1,
             status=TaskStatus.retired,
-            created_by=character.id,
+            created_by_id=character.id,
             primary_faction_slug=DEFAULT_FACTION_SLUG,
         ),
     }
@@ -125,7 +125,7 @@ async def test_era_reset_retires_a_player_task_that_shares_the_onboarding_title(
         level_required=1,
         status=TaskStatus.active,
         task_type=TaskType.standard,
-        created_by=character.id,
+        created_by_id=character.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
     ))
     await db_session.flush()

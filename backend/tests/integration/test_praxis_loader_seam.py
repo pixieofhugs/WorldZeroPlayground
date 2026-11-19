@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from game_config import CURRENT_ERA
 from models.character import Character
 from models.praxis import Praxis, PraxisStatus
-from models.relationship import Relationship, RelationshipStatus, RelationshipType
+from models.relationship import Relationship, RelationshipType
 from models.taunt_message import TauntMessage, TauntTriggerType
 from services import collab_consensus
 
@@ -107,7 +107,6 @@ async def test_approving_a_lapsed_collab_seals_it_exactly_once(
             from_character_id=character3.id,
             to_character_id=character.id,
             type=RelationshipType.foe,
-            status=RelationshipStatus.active,
         )
     )
     await db_session.commit()

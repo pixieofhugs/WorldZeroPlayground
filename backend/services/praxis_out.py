@@ -52,9 +52,9 @@ def _build_member_out(
         character_id=member.character_id,
         character_display_name=member.character.display_name,
         character_avatar_url=member.character.avatar_url,
-        has_submitted=member.has_submitted,
+        has_approved=member.has_approved,
         is_done=member.is_done,
-        submitted_at=member.submitted_at,
+        approved_at=member.approved_at,
         joined_at=member.joined_at,
         nudged_at=nudged_at,
     )

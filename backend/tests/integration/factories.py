@@ -19,6 +19,8 @@ from models.character import Character, CharacterStatus
 from models.character_stats import CharacterStats
 from models.duel import Duel, DuelStatus
 from models.praxis import (
+    MediaItem,
+    MediaType,
     ModerationStatus,
     Praxis,
     PraxisMember,
@@ -48,7 +50,7 @@ async def make_admin(session: AsyncSession, account: Account, *, commit: bool = 
     role = Role(name="admin", description="Administrator")
     session.add(role)
     await session.flush()
-    session.add(AccountRole(account_id=account.id, role_id=role.id, granted_by=account.id))
+    session.add(AccountRole(account_id=account.id, role_id=role.id, granted_by_id=account.id))
     if commit:
         await session.commit()
     else:
@@ -123,7 +125,7 @@ async def make_task(
         level_required=level_required,
         status=status,
         task_type=task_type,
-        created_by=creator.id,
+        created_by_id=creator.id,
         primary_faction_slug=faction_slug,
     )
     session.add(task)
@@ -135,6 +137,14 @@ async def make_task(
     return task
 
 
+async def attach_proof(session: AsyncSession, praxis: Praxis) -> None:
+    """One media row: a praxis needs proof to submit (#3473). No file on disk."""
+    session.add(
+        MediaItem(praxis_id=praxis.id, type=MediaType.image, file_path="proof.png")
+    )
+    await session.flush()
+
+
 async def make_solo_praxis(
     session: AsyncSession,
     task: Task,
@@ -144,8 +154,10 @@ async def make_solo_praxis(
     body_text: str = "proof",
     status: PraxisStatus = PraxisStatus.submitted,
     moderation_status: ModerationStatus = ModerationStatus.visible,
+    proof: bool = True,
 ) -> Praxis:
-    """A solo praxis on ``task`` with ``author`` as its one member."""
+    """A solo praxis on ``task`` with ``author`` as its one member, carrying one
+    media row unless ``proof=False``."""
     praxis = Praxis(
         task_id=task.id,
         created_by_id=author.id,
@@ -159,6 +171,8 @@ async def make_solo_praxis(
     await session.flush()
     session.add(PraxisMember(praxis_id=praxis.id, character_id=author.id))
     await session.flush()
+    if proof:
+        await attach_proof(session, praxis)
     return praxis
 
 

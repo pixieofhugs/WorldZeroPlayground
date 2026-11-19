@@ -40,7 +40,7 @@ async def test_last_vote_is_spent_once_when_casts_race(test_engine) -> None:
             era = Era(
                 name=CURRENT_ERA.name,
                 config_key=CURRENT_ERA.config_key,
-                started_by=owner.id,
+                started_by_id=owner.id,
             )
             owner_char = Character(
                 account_id=owner.id, username="owner", display_name="Owner",
@@ -56,7 +56,7 @@ async def test_last_vote_is_spent_once_when_casts_race(test_engine) -> None:
             await s.flush()
             task = Task(
                 title="T", description="d", point_value=10, level_required=0,
-                status=TaskStatus.active, created_by=owner_char.id,
+                status=TaskStatus.active, created_by_id=owner_char.id,
                 primary_faction_slug=DEFAULT_FACTION_SLUG,
             )
             s.add(task)

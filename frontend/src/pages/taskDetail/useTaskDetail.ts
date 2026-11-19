@@ -139,15 +139,14 @@ export function useTaskDetail(idParam: string | undefined): TaskDetailState {
       fetches.push(
         listRelationships()
           .then((rels) => {
-            const active = rels.filter((r) => r.status === "active");
             return {
               friends: new Set(
-                active
+                rels
                   .filter((r) => r.type === "friend")
                   .map((r) => r.to_character_id),
               ),
               foes: new Set(
-                active
+                rels
                   .filter((r) => r.type === "foe")
                   .map((r) => r.to_character_id),
               ),

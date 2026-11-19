@@ -28,7 +28,7 @@ export default function SignInView({ onRestart }: { onRestart: () => void }) {
   }, [title, instant])
 
   return (
-    <main className="ob-welcome">
+    <section className="ob-welcome">
       <span aria-hidden="true" className="jump shy">
         <Wisp size={64} confidence={1} />
       </span>
@@ -44,6 +44,6 @@ export default function SignInView({ onRestart }: { onRestart: () => void }) {
       <button type="button" className="ob-ghost ob-cap boing ob-restart" onClick={onRestart} data-testid="onboarding-restart">
         {t('signin.restart')}
       </button>
-    </main>
+    </section>
   )
 }

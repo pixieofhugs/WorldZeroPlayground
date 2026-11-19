@@ -1337,6 +1337,26 @@ function publishNeedsTitle(title: string): boolean {
 
 /** Fixed, not `useId`: tests call the primaries as plain hookless functions. */
 const PUBLISH_NEEDS_TITLE_ID = "composer-publish-needs-title";
+const PUBLISH_NEEDS_PROOF_ID = "composer-publish-needs-proof";
+
+/** Same affordance as the title notice, for the server's proof rule (#3473). */
+function PublishNeedsProofNotice() {
+  return (
+    <p
+      id={PUBLISH_NEEDS_PROOF_ID}
+      role="status"
+      className="label-caption"
+      style={{ width: "100%", margin: 0 }}
+    >
+      {i18n.t("forms:editPraxis.composer.publishNeedsProof")}
+    </p>
+  );
+}
+
+function describedBy(needsTitle: boolean, needsProof: boolean): string | undefined {
+  if (needsTitle) return PUBLISH_NEEDS_TITLE_ID;
+  return needsProof ? PUBLISH_NEEDS_PROOF_ID : undefined;
+}
 
 /**
  * The reason beside the disabled control. `role="status"`: a disabled button is
@@ -1396,6 +1416,7 @@ export function PublishButton({
   markDone,
   requestDuelSeal,
   skin,
+  needsProof = false,
 }: Pick<
   EditPraxisState,
   | "praxis"
@@ -1413,6 +1434,8 @@ export function PublishButton({
   | "requestDuelSeal"
 > & {
   skin: PublishButtonSkin;
+  /** No media attached and not an admin (#3473). */
+  needsProof?: boolean;
 }) {
   // NOT unreachable (#1177): a moderator-FAILED duel side still `submitted`
   // renders the composer (phase is `composing`, waiting surface refuses), and
@@ -1438,6 +1461,7 @@ export function PublishButton({
         pullBack={pullBack}
         markDone={markDone}
         skin={skin}
+        needsProof={needsProof}
       />
     );
   }
@@ -1454,15 +1478,17 @@ export function PublishButton({
       : publish;
   // Both publish paths are gated; pull-back is not (#1177).
   const needsTitle = !duelPullBack && publishNeedsTitle(title);
+  const lacksProof = !duelPullBack && needsProof;
+  const off = needsTitle || lacksProof;
   const button = (
     <button
       type="button"
       // Nightly presses the slot, not the label (#2453); shared with CollabSignals.
       data-testid="composer-primary"
-      aria-describedby={needsTitle ? PUBLISH_NEEDS_TITLE_ID : undefined}
+      aria-describedby={describedBy(needsTitle, lacksProof)}
       onClick={() => void onClick()}
-      disabled={needsTitle || submitting || switchingMode !== null}
-      className={offClassName(skin.className, needsTitle)}
+      disabled={off || submitting || switchingMode !== null}
+      className={offClassName(skin.className, off)}
       style={skin.style}
     >
       {skin.ornament}
@@ -1470,11 +1496,12 @@ export function PublishButton({
       {skin.trailingOrnament}
     </button>
   );
-  // Bare button when titled: tests read `onClick` straight off the return.
-  if (!needsTitle) return button;
+  // Bare button when ready: tests read `onClick` straight off the return.
+  if (!off) return button;
   return (
     <>
-      <PublishNeedsTitleNotice />
+      {needsTitle && <PublishNeedsTitleNotice />}
+      {lacksProof && <PublishNeedsProofNotice />}
       {button}
     </>
   );
@@ -1514,6 +1541,7 @@ export function CollabSignals({
   pullBack,
   markDone,
   skin,
+  needsProof = false,
 }: Pick<
   EditPraxisState,
   | "praxis"
@@ -1527,6 +1555,7 @@ export function CollabSignals({
   | "markDone"
 > & {
   skin: PublishButtonSkin;
+  needsProof?: boolean;
 }) {
   if (!praxis) return null;
   const slug = praxis.task_faction_slug;
@@ -1543,6 +1572,7 @@ export function CollabSignals({
     : collabCopy(slug, "proposeAction");
   // Only the publishing signal is title-gated (#2484).
   const needsTitle = publishNeedsTitle(title);
+  const off = needsTitle || needsProof;
   return (
     <div className="flex flex-wrap items-center gap-2">
       <button
@@ -1563,17 +1593,21 @@ export function CollabSignals({
           data-testid="composer-primary"
           data-collab-signal={proposalLive ? "approve" : "propose"}
           title={
-            needsTitle
-              ? i18n.t("forms:editPraxis.composer.publishNeedsTitle")
+            off
+              ? i18n.t(
+                  needsTitle
+                    ? "forms:editPraxis.composer.publishNeedsTitle"
+                    : "forms:editPraxis.composer.publishNeedsProof",
+                )
               : collabCopy(
                   slug,
                   proposalLive ? "approveDescription" : "proposeDescription",
                 )
           }
-          aria-describedby={needsTitle ? PUBLISH_NEEDS_TITLE_ID : undefined}
+          aria-describedby={describedBy(needsTitle, needsProof)}
           onClick={() => void (proposalLive ? publish() : propose())}
-          disabled={needsTitle || busy}
-          className={offClassName(skin.className, needsTitle)}
+          disabled={off || busy}
+          className={offClassName(skin.className, off)}
           style={skin.style}
         >
           {skin.ornament}
@@ -1595,6 +1629,7 @@ export function CollabSignals({
       )}
       {/* Below the row: it explains the one dead signal, not the group. */}
       {needsTitle && (!proposalLive || !gate.iCast) && <PublishNeedsTitleNotice />}
+      {needsProof && (!proposalLive || !gate.iCast) && <PublishNeedsProofNotice />}
     </div>
   );
 }

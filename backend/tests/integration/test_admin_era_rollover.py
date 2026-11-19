@@ -58,7 +58,7 @@ async def test_the_selector_marks_live_from_the_row_not_the_process(
     would disagree.
     """
     await make_admin(db_session, account)
-    db_session.add(Era(name="whatever", config_key="era_2", started_by=account.id))
+    db_session.add(Era(name="whatever", config_key="era_2", started_by_id=account.id))
     await db_session.commit()
     assert game_config.CURRENT_ERA.config_key == "era_1", "the process has not moved"
 
@@ -147,7 +147,7 @@ async def test_the_refusal_reads_the_row_not_the_process(
     await make_admin(db_session, account)
     # Row says era_2; process is still on era_1.
     db_session.add(
-        Era(name="whatever", config_key="era_2", started_by=account.id)
+        Era(name="whatever", config_key="era_2", started_by_id=account.id)
     )
     await db_session.commit()
     assert game_config.CURRENT_ERA.config_key == "era_1"
@@ -281,7 +281,7 @@ async def test_the_rollover_appends_a_row_stamped_with_the_operator(
     assert new_row.id == resp.json()["era_id"]
     assert new_row.config_key == "era_2"
     assert new_row.name == era_config_for_key("era_2").name
-    assert new_row.started_by == account.id
+    assert new_row.started_by_id == account.id
 
 
 async def test_the_reset_applies_the_incoming_era_s_flags(
@@ -361,7 +361,9 @@ async def test_rebind_reads_the_latest_row_and_falls_back_on_an_unknown_key(
     """
     from services.era import rebind_live_era
 
-    db_session.add(Era(name="whatever", config_key=config_key, started_by=account.id))
+    db_session.add(
+        Era(name="whatever", config_key=config_key, started_by_id=account.id)
+    )
     await db_session.flush()
 
     bound = await rebind_live_era(db_session)
@@ -384,7 +386,12 @@ async def test_rebind_on_a_database_with_no_era_row_does_not_raise(
 
 
 async def test_an_era_roll_resets_a_mod_banned_life(
-    db_session: AsyncSession, era: Era, account: Account, some_faction: Faction
+    client: AsyncClient,
+    db_session: AsyncSession,
+    era: Era,
+    account: Account,
+    auth_headers: dict,
+    some_faction: Faction,
 ):
     from services.admin_service import roll_into_era
 
@@ -402,6 +409,14 @@ async def test_an_era_roll_resets_a_mod_banned_life(
 
     await roll_into_era("era_2", account, db_session)
 
+    await db_session.commit()
+    resp = await client.post(
+        f"/admin/characters/{banned.id}/ban",
+        json={"banned": False},
+        headers=auth_headers,
+    )
+
+    assert resp.status_code == 200
     await db_session.refresh(banned)
     assert era_2.reset_faction
     assert banned.faction_slug == era_2.reset_faction_slug
