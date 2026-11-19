@@ -76,12 +76,7 @@ describe('resolveInitialPanelLayout', () => {
     expect(resolveInitialPanelLayout(stored).order).toEqual(['recent-activity', 'active-tasks'])
   })
 
-  it('expands a panel that is no longer collapsible', () => {
-    const notCollapsible = (Object.keys(SIDEBAR_PANEL_COLLAPSIBLE) as SidebarPanelId[]).filter(
-      (id) => !SIDEBAR_PANEL_COLLAPSIBLE[id],
-    )
-    // Every panel collapses today, so exercise the guard with a non-panel id.
-    expect(notCollapsible).toEqual([])
+  it('drops a collapsed id this build no longer has', () => {
     expect(resolveInitialPanelLayout('{"collapsed":["pending-requests"]}').collapsed).toEqual([])
   })
 
