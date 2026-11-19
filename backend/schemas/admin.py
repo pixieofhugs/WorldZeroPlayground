@@ -206,7 +206,7 @@ class AdminGrantIn(WireModel):
 
 
 class RingRecipient(WireModel):
-    """One account an account's votes went to (admin-only; ``account_id`` links the walk)."""
+    """One account an account's votes went to (admin-only)."""
 
     account_id: int
     display_name: str

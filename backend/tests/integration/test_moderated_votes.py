@@ -5,13 +5,20 @@ from sqlalchemy import select
 from models.character import CharacterStatus
 from models.character_stats import CharacterStats
 from services.vote_tally import tally_votes
-from tests.integration.factories import cast_vote, make_admin, make_solo_praxis, make_task
+from tests.integration.factories import (
+    cast_vote,
+    make_admin,
+    make_solo_praxis,
+    make_task,
+)
 
 pytestmark = pytest.mark.asyncio
 
 
 @pytest.fixture
-async def rigged(db_session, account, account2, account3, character, character2, character3):
+async def rigged(
+    db_session, account, account2, account3, character, character2, character3
+):
     await make_admin(db_session, account, commit=False)
     task = await make_task(db_session, character)
     praxis = await make_solo_praxis(db_session, task, character)

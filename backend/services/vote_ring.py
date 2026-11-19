@@ -36,7 +36,9 @@ async def get_vote_ring(account_id: int, session: AsyncSession) -> VoteRingOut:
     ).all()
     total_votes = (
         await session.scalar(
-            select(func.count(Vote.id)).where(Vote.voter_account_id == account_id, in_era)
+            select(func.count(Vote.id)).where(
+                Vote.voter_account_id == account_id, in_era
+            )
         )
         or 0
     )
