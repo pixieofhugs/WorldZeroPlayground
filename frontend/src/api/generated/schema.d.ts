@@ -2068,6 +2068,17 @@ export interface components {
             /** Status */
             status: string;
         };
+        /** AccountPage */
+        AccountPage: {
+            /** Items */
+            items: components["schemas"]["AccountSummary"][];
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Total */
+            total: number;
+        };
         /** AccountSummary */
         AccountSummary: {
             /**
@@ -2079,6 +2090,11 @@ export interface components {
             email: string;
             /** Id */
             id: number;
+            /**
+             * Matched Characters
+             * @default []
+             */
+            matched_characters: components["schemas"]["CharacterBrief"][];
             /** Status */
             status: string;
         };
@@ -5181,7 +5197,9 @@ export interface operations {
     admin_list_accounts_admin_accounts_get: {
         parameters: {
             query?: {
-                email?: string | null;
+                search?: string | null;
+                limit?: number;
+                offset?: number;
             };
             header?: never;
             path?: never;
@@ -5197,7 +5215,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AccountSummary"][];
+                    "application/json": components["schemas"]["AccountPage"];
                 };
             };
             /** @description Validation Error */

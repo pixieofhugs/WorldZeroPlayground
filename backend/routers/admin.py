@@ -20,7 +20,7 @@ from schemas.admin import (
     AdminGrantIn,
     AdminRow,
     AccountDetail,
-    AccountSummary,
+    AccountPage,
     AdminTaskPatch,
     BanAction,
     BanActionOut,
@@ -48,6 +48,8 @@ from services.praxis_out import build_praxis_cards, build_praxis_out, crowned_pr
 from services.comment import build_comment_out, list_flagged_comments, moderate_comment
 from services.task import build_task_out, in_progress_counts_for_tasks
 from services.admin_service import (
+    ACCOUNT_PAGE_DEFAULT,
+    ACCOUNT_PAGE_MAX,
     admin_edit_task,
     apply_ban,
     archive_message,
@@ -121,13 +123,15 @@ async def admin_archive_message(
     return ContactMessageOut.model_validate(message)
 
 
-@router.get("/accounts", response_model=list[AccountSummary])
+@router.get("/accounts", response_model=AccountPage)
 async def admin_list_accounts(
-    email: str | None = None,
+    search: str | None = None,
+    limit: int = Query(ACCOUNT_PAGE_DEFAULT, ge=1, le=ACCOUNT_PAGE_MAX),
+    offset: int = Query(0, ge=0),
     _: Account = Depends(require_admin),
     session: AsyncSession = Depends(get_db, scope="function"),
-) -> list[AccountSummary]:
-    return await list_accounts(session, email_filter=email)
+) -> AccountPage:
+    return await list_accounts(session, search=search, limit=limit, offset=offset)
 
 
 @router.get("/accounts/{account_id}", response_model=AccountDetail)

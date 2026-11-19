@@ -8,7 +8,7 @@ import {
   banCharacter,
 } from "../../api/admin";
 import type {
-  AccountSummary,
+  AccountPage,
   AccountDetail,
   CharacterStatus,
 } from "../../api/admin";
@@ -43,8 +43,10 @@ export function statusLabel(
 export default function AccountsTab() {
   const { t } = useTranslation(["admin", "common"]);
   const { user } = useAuth();
-  const [accounts, setAccounts] = useState<AccountSummary[]>([]);
-  const [searchEmail, setSearchEmail] = useState("");
+  const [page, setPage] = useState<AccountPage | null>(null);
+  const accounts = page?.items ?? [];
+  const [searchText, setSearchText] = useState("");
+  const [offset, setOffset] = useState(0);
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [detail, setDetail] = useState<AccountDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -52,10 +54,10 @@ export default function AccountsTab() {
   const [actionError, setActionError] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const refresh = (email?: string) => {
+  const refresh = (search: string = searchText, from: number = offset) => {
     setError(null);
-    getAccounts(email || undefined)
-      .then(setAccounts)
+    getAccounts(search || undefined, from)
+      .then(setPage)
       .catch((err) => setError(extractError(err, t("accounts.loadError"))))
       .finally(() => setLoading(false));
   };
@@ -65,11 +67,19 @@ export default function AccountsTab() {
   }, []);
 
   const handleSearch = (value: string) => {
-    setSearchEmail(value);
+    setSearchText(value);
+    setOffset(0);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      refresh(value);
+      refresh(value, 0);
     }, 300);
+  };
+
+  const goToOffset = (next: number) => {
+    setOffset(next);
+    setExpandedId(null);
+    setDetail(null);
+    refresh(searchText, next);
   };
 
   const handleExpand = async (accountId: number) => {
@@ -91,7 +101,7 @@ export default function AccountsTab() {
     setActionError(null);
     try {
       await suspendAccount(accountId, suspended);
-      refresh(searchEmail);
+      refresh();
       if (expandedId === accountId) {
         const d = await getAccountDetail(accountId);
         setDetail(d);
@@ -130,7 +140,7 @@ export default function AccountsTab() {
       <input
         type="text"
         placeholder={t("accounts.searchPlaceholder")}
-        value={searchEmail}
+        value={searchText}
         onChange={(e) => handleSearch(e.target.value)}
         className="border-2 border-border bg-card px-3 py-2 font-body content-text focus:outline-hidden focus:border-ink w-full mb-4"
       />
@@ -170,6 +180,11 @@ export default function AccountsTab() {
                     &middot; {t("accounts.idLabel", { id: account.id })} &middot;{" "}
                     {formatTimestamp(account.created_at)}
                   </p>
+                  {account.matched_characters.map((character) => (
+                    <p key={character.id} className="font-body text-xs">
+                      {character.display_name} (@{character.username})
+                    </p>
+                  ))}
                 </button>
                 <button
                   onClick={() =>
@@ -275,6 +290,34 @@ export default function AccountsTab() {
               )}
             </div>
           ))}
+        </div>
+      )}
+
+      {page && page.total > page.limit && (
+        <div className="flex items-center gap-4 mt-4 font-body text-xs">
+          <button
+            type="button"
+            className="btn-outline text-xs"
+            disabled={offset === 0}
+            onClick={() => goToOffset(Math.max(0, offset - page.limit))}
+          >
+            {t("accounts.prev")}
+          </button>
+          <span className="text-muted">
+            {t("accounts.pageRange", {
+              from: offset + 1,
+              to: offset + accounts.length,
+              total: page.total,
+            })}
+          </span>
+          <button
+            type="button"
+            className="btn-outline text-xs"
+            disabled={offset + page.limit >= page.total}
+            onClick={() => goToOffset(offset + page.limit)}
+          >
+            {t("accounts.next")}
+          </button>
         </div>
       )}
     </div>

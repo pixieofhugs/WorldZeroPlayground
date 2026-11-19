@@ -13,6 +13,10 @@ export type OverviewStats = components['schemas']['OverviewStats']
 
 export type AccountSummary = components['schemas']['AccountSummary']
 
+export type AccountPage = components['schemas']['AccountPage']
+
+export const ACCOUNT_PAGE_SIZE = 50
+
 export type CharacterBrief = components['schemas']['CharacterBrief']
 
 export type AccountDetail = components['schemas']['AccountDetail']
@@ -79,8 +83,10 @@ export async function getAdminCharacters(status?: CharacterStatus): Promise<Admi
   return data
 }
 
-export async function getAccounts(email?: string): Promise<AccountSummary[]> {
-  const { data } = await apiGet('/admin/accounts', { params: { query: { email } } })
+export async function getAccounts(search?: string, offset = 0): Promise<AccountPage> {
+  const { data } = await apiGet('/admin/accounts', {
+    params: { query: { search, limit: ACCOUNT_PAGE_SIZE, offset } },
+  })
   return data
 }
 

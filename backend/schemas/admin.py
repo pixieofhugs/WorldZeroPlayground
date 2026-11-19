@@ -8,15 +8,6 @@ from schemas.comment import CommentOut
 from schemas.praxis import PraxisOut
 
 
-class AccountSummary(WireModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    email: str
-    status: str
-    created_at: datetime
-
-
 class CharacterBrief(WireModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -25,6 +16,24 @@ class CharacterBrief(WireModel):
     display_name: str
     faction_slug: str
     status: str
+
+
+class AccountSummary(WireModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    email: str
+    status: str
+    created_at: datetime
+    # Only the characters a search hit; empty when there is no search.
+    matched_characters: list[CharacterBrief] = []
+
+
+class AccountPage(WireModel):
+    items: list[AccountSummary]
+    total: int
+    limit: int
+    offset: int
 
 
 class AccountDetail(WireModel):

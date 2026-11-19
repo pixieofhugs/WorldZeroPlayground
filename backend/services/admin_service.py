@@ -31,6 +31,7 @@ from models.vote import Vote
 from schemas.admin import (
     AdminRow,
     AccountDetail,
+    AccountPage,
     AccountSummary,
     AdminTaskPatch,
     CharacterBrief,
@@ -58,25 +59,80 @@ from services.scoring import compute_vote_budget, compute_votes_available
 
 logger = logging.getLogger(__name__)
 
+ACCOUNT_PAGE_DEFAULT = 50
+ACCOUNT_PAGE_MAX = 200
+
 
 async def list_accounts(
     session: AsyncSession,
-    email_filter: str | None = None,
-) -> list[AccountSummary]:
-    query = select(Account).order_by(Account.created_at.desc())
-    if email_filter:
-        query = query.where(Account.email.ilike(f"%{email_filter}%"))
-    result = await session.execute(query)
-    accounts = result.scalars().all()
-    return [
-        AccountSummary(
-            id=account.id,
-            email=account.email,
-            status=account.status.value,
-            created_at=account.created_at,
+    search: str | None = None,
+    limit: int = ACCOUNT_PAGE_DEFAULT,
+    offset: int = 0,
+) -> AccountPage:
+    """One page of accounts; ``search`` matches email or any character's name."""
+    match_clause = None
+    if search:
+        pattern = f"%{search}%"
+        match_clause = or_(
+            Character.username.ilike(pattern), Character.display_name.ilike(pattern)
         )
-        for account in accounts
-    ]
+    query = select(Account)
+    if match_clause is not None:
+        query = query.where(
+            or_(
+                Account.email.ilike(f"%{search}%"),
+                select(Character.id)
+                .where(Character.account_id == Account.id, match_clause)
+                .exists(),
+            )
+        )
+    total = (
+        await session.execute(select(func.count()).select_from(query.subquery()))
+    ).scalar_one()
+    accounts = (
+        (
+            await session.execute(
+                # id breaks created_at ties so pages stay disjoint.
+                query.order_by(Account.created_at.desc(), Account.id.desc())
+                .limit(limit)
+                .offset(offset)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    matched: dict[int, list[CharacterBrief]] = {}
+    if match_clause is not None and accounts:
+        rows = await session.execute(
+            select(Character)
+            .where(Character.account_id.in_([account.id for account in accounts]), match_clause)
+            .order_by(Character.created_at)
+        )
+        for character in rows.scalars():
+            matched.setdefault(character.account_id, []).append(
+                CharacterBrief(
+                    id=character.id,
+                    username=character.username,
+                    display_name=character.display_name,
+                    faction_slug=character.faction_slug,
+                    status=character.status.value,
+                )
+            )
+    return AccountPage(
+        items=[
+            AccountSummary(
+                id=account.id,
+                email=account.email,
+                status=account.status.value,
+                created_at=account.created_at,
+                matched_characters=matched.get(account.id, []),
+            )
+            for account in accounts
+        ],
+        total=total,
+        limit=limit,
+        offset=offset,
+    )
 
 
 async def get_account_detail(account_id: int, session: AsyncSession) -> AccountDetail:
