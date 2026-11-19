@@ -12,6 +12,8 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
+    func,
+    text,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -34,13 +36,19 @@ class Character(TimestampMixin, Base):
     __tablename__ = "character"
 
     # The roster reads by account on nearly every authenticated request.
-    __table_args__ = (Index("ix_character_account_id", "account_id"),)
+    __table_args__ = (
+        Index("ix_character_account_id", "account_id"),
+        # Handles are looked up lower-cased (mentions, search); display case is kept.
+        Index(
+            "uq_character_username_lower", func.lower(text("username")), unique=True
+        ),
+    )
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
     account_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("account.id"), nullable=False
     )
-    username: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+    username: Mapped[str] = mapped_column(String, nullable=False)
     display_name: Mapped[str] = mapped_column(String, nullable=False)
     bio: Mapped[str] = mapped_column(Text, nullable=False, server_default="")
     # Profile-header slogan (#1628); not a short bio, never backfilled from it.

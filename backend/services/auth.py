@@ -4,7 +4,7 @@ from typing import Any, Optional
 from authlib.jose import JoseError, JsonWebToken
 from fastapi import Cookie, Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import settings
@@ -173,7 +173,9 @@ async def create_or_get_account(
             deleted_on=tombstone.created_at.date(),
         )
 
-    result = await session.execute(select(Account).where(Account.email == email))
+    result = await session.execute(
+        select(Account).where(func.lower(Account.email) == email.lower())
+    )
     account = result.scalar_one_or_none()
 
     if account is None:
