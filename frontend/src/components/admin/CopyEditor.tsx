@@ -10,7 +10,7 @@
  * Accepted limit (#3136): no keyboard reach while a `ConfirmDialog` traps Tab.
  * Strings are picked by pointer anyway.
  */
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { deleteCopyOverride, putCopyOverride } from '../../api/copy'
@@ -192,13 +192,11 @@ export default function CopyEditor() {
   /** The clicked element, set only for a direct open: the choosers keep the panel textarea. */
   const [spot, setSpot] = useState<HTMLElement | null>(null)
   const spotRect = useSpotRect(isMobile ? null : spot)
-  const look = useRef<CSSProperties>({})
-  if (spotRect && target && spot && !Object.keys(look.current).length) look.current = spotLook(spot)
+  const look = useMemo(() => (spot ? spotLook(spot) : {}), [spot])
   const lastSpot = useRef<HTMLElement | null>(null)
   if (spot) lastSpot.current = spot
   useEffect(() => {
     if (target) return
-    look.current = {}
     setSpot(null)
     lastSpot.current?.focus({ preventScroll: true })
   }, [target])
@@ -392,7 +390,7 @@ export default function CopyEditor() {
             style={
               spotRect
                 ? {
-                    ...look.current,
+                    ...look,
                     position: 'fixed',
                     top: spotRect.top,
                     left: spotRect.left,
