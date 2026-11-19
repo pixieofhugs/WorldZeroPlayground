@@ -1,6 +1,6 @@
 # ADR-0082 — Albescent is redacted, not hidden
 
-**Status:** Accepted
+**Status:** Amended by ADR-0083
 **Date:** 2026-08-23
 
 **Supersedes:** [ADR-0027](0027-albescent-is-a-secret-society.md) — its **hiding posture** only.
@@ -211,9 +211,9 @@ would also let the contrast sweep pass for the wrong reason.
 The mark takes its own ground's colour, which is a 1.00:1 contrast ratio, which two guards
 would otherwise fight forever.
 
-- **The rendered sweep** (`e2e/contrastScan.ts`) gains a third exemption beside `aria-hidden`
+- **The rendered sweep** (`e2e/contrastScan.ts` *[2026-11-18, #3425: now `frontend/src/utils/contrastScan.ts`]*) gains a third exemption beside `aria-hidden`
   and inert controls, keyed on `data-redacted="true"`, with the reason recorded there.
-- **It is NOT added to `e2e/contrastBaseline.ts`.** That list is known debt awaiting a fix and
+- **It is NOT added to `e2e/contrastBaseline.ts` *[2026-11-18, #3425: now `frontend/src/utils/contrastBaseline.ts`]*.** That list is known debt awaiting a fix and
   only ever shrinks; an entry that is never going to be deleted would rot it.
 - **The style ratchet** (`no-raw-style-values`) needs no exemption at all. The mark is a class
   in `index.css` over `--color-*` tokens, so there is no raw value to catch.
@@ -276,3 +276,7 @@ would otherwise fight forever.
   that draws the catalogue directly says "Unaffiliated" like every other label. That is the
   correct default under this ruling: a third surface redacts only when someone decides it is
   about the society, and that decision belongs in a review, not in a fall-through.
+
+## Amendment (2026-11-18, #3423)
+
+The claim that #1891 ruling 1 ("the tile keeps its face throughout") is "untouched everywhere" no longer holds. [ADR-0083](0083-albescent-is-one-ornament-vocabulary-over-na-not-a-skin-per-surface.md) §8 deletes it by collapsing `AlbescentSelectCard` to a wrapper over `DefaultSelectCard`; the redaction itself is unchanged.

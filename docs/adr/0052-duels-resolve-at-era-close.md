@@ -61,7 +61,7 @@ unresolved duel.
 - Any query that means "this praxis is part of a duel" must now decide whether it
   includes `resolved`. Scoring and the praxis-card duel link do (a past duel must
   keep its win/loss modifier and its identity); the live-duel gates in
-  `services/duel.get_duel_for_praxis` — challenge dedupe, forfeit-on-withdraw,
+  `services/duel.get_duel_for_praxis` *[2026-11-18, #3425: now `services/praxis_duel.py`]* — challenge dedupe, forfeit-on-withdraw,
   anti-participant voting — do not, because a resolved duel is over.
 - The resolved-duel **screen** is design work (#719); this ADR only guarantees
   the frozen data it will read.

@@ -12,7 +12,7 @@ import '../factionFaces'
 
 /**
  * The Albescent invitation letter (#395), shown when `can_start_as_albescent`
- * (ADR-0021). The player picks a life; Accept switches to it, then defects it.
+ * (ADR-0080). The player picks a life; Accept switches to it, then defects it.
  * SECRECY (ADR-0027): never link to /factions or /factions/albescent.
  */
 
