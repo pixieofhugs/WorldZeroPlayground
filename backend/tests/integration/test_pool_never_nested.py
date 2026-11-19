@@ -71,7 +71,10 @@ async def test_concurrent_requests_survive_a_one_connection_pool(
         ) as client:
             responses = await asyncio.wait_for(
                 asyncio.gather(
-                    *(client.get(path, headers=headers) for _ in range(CONCURRENT_REQUESTS))
+                    *(
+                        client.get(path, headers=headers)
+                        for _ in range(CONCURRENT_REQUESTS)
+                    )
                 ),
                 timeout=4,
             )

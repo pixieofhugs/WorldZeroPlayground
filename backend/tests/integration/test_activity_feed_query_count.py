@@ -15,7 +15,6 @@ from httpx import AsyncClient
 from sqlalchemy import event
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from main import app
 from models.account import Account
 from models.character import Character
 from models.era import Era
