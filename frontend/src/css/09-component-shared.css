@@ -218,17 +218,12 @@
   }
 }
 
-/* The profile's FDL laurel (44px at right:14px) sits over the masthead's right
-   end. A floor on the empty gutter makes the 1fr track yield, so the title
-   clears the medallion without moving off-centre where it already clears. */
+/* Floors the empty gutter so the title yields to the profile's FDL laurel (44px at right:14px). */
 [data-laurel] [data-card-masthead] > :last-child {
   min-width: 3.5rem;
 }
 
-/* The duel reader's vote slot: a meter can be wider than the panel it sits in
-   (Snide's amp is ~270px). The slot bleeds into the panel's padding, the meter
-   sizes to itself and centres, and anything still wider scrolls rather than
-   escaping the frame. components/vote is frozen, so the fix lives here. */
+/* Snide's amp (~270px) outgrows the panel; components/vote is frozen, so the slot fits it. */
 .duel-vote-slot {
   overflow-x: auto;
 }
