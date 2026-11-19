@@ -586,6 +586,9 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
         title,
         taskRef,
         scoreHeading: sectionHead(t("detail.score.heading")),
+        /* The heading's 16px gap is measured to the panel, and the crown hangs
+           14px above it: 2px visible. The host's pad, never the stamp's. */
+        scoreStageStyle: { paddingTop: "var(--space-sm)" },
         panel,
         duelHeading: sectionHead(t("duelCrossLink.label")),
         duelInk,
