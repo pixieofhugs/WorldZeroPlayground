@@ -232,3 +232,71 @@ async def test_zero_member_state_is_unreachable(
     second_leave = await client.post(f"/praxes/{praxis_id}/leave", headers=auth_headers)
     assert second_leave.status_code == 400
     assert await _member_count(db_session, praxis_id) == 1
+
+
+# kick shares the same conversion (#3455)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("status", ["in_progress", "pending"])
+async def test_kicking_to_one_member_converts_to_solo(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+    status: str,
+):
+    praxis_id = await _collab_with_members(
+        client, active_task, auth_headers2, [(character.id, auth_headers)]
+    )
+    if status == "pending":
+        # One of two approving leaves a proposal live.
+        assert (
+            await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers)
+        ).json()["status"] == "pending"
+
+    kick_resp = await client.post(
+        f"/praxes/{praxis_id}/kick/{character2.id}", headers=auth_headers
+    )
+    assert kick_resp.status_code == 200
+    data = kick_resp.json()
+    assert data["type"] == "solo"
+    assert data["status"] == "in_progress"
+    assert data["created_by_id"] == character.id
+    assert data["title"] == "Group Work"
+    assert [m["character_id"] for m in data["members"]] == [character.id]
+
+    assert (
+        await client.delete(f"/praxes/{praxis_id}", headers=auth_headers)
+    ).status_code == 204
+
+
+@pytest.mark.asyncio
+async def test_kicking_down_to_two_members_stays_collab(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    character3: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+    auth_headers3: dict,
+):
+    praxis_id = await _collab_with_members(
+        client,
+        active_task,
+        auth_headers2,
+        [(character.id, auth_headers), (character3.id, auth_headers3)],
+    )
+    await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers)
+
+    resp = await client.post(
+        f"/praxes/{praxis_id}/kick/{character3.id}", headers=auth_headers
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["type"] == "collab"
+    assert data["status"] == "in_progress"
+    assert not any(m["has_approved"] for m in data["members"])
