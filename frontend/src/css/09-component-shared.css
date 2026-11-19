@@ -218,6 +218,35 @@
   }
 }
 
+/* ══ DIALOG SHELLS: card on desktop, sheet or takeover on a phone (#3002) ══
+   A var with no desktop declaration falls back at the use site (`var(--x, desktop)`),
+   so each dialog keeps its own card width, border and radius. ══ */
+:root, [data-theme] {
+  --sheet-align: center;
+  --sheet-pad: var(--space-lg);
+  --takeover-bg: var(--color-overlay-strong);
+  --takeover-bottom: var(--space-lg);
+  --letter-pad: var(--space-xl);
+  --switcher-bottom: var(--space-xl);
+}
+@media (max-width: 767px) and (pointer: coarse) {
+  :root, [data-theme] {
+    --sheet-align: flex-end;
+    --sheet-pad: 0;
+    --sheet-full: 100%;
+    --sheet-border: none;
+    --sheet-radius: 16px 16px 0 0;
+    --takeover-bg: var(--color-bg-page);
+    --takeover-bottom: calc(var(--space-lg) + env(safe-area-inset-bottom));
+    --takeover-height: 100%;
+    --takeover-max-height: 100%;
+    --takeover-radius: 0;
+    --letter-pad: 0;
+    --letter-width: 100%;
+    --switcher-bottom: calc(var(--space-xl) + var(--tab-bar-clearance));
+  }
+}
+
 /* Floors the empty gutter so the title yields to the profile's FDL laurel (44px at right:14px). */
 [data-laurel] [data-card-masthead] > :last-child {
   min-width: 3.5rem;

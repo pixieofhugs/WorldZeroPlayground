@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import { getMyCharacters, setActiveCharacter } from '../api/me'
 import type { CharacterOut } from '../api/auth'
-import { useFormFactor } from '../hooks/useFormFactor'
 import { factionCssVar, factionName } from '../utils/factions'
 import { mediaUrl } from '../utils/media'
 import { useModal } from '../hooks/useModal'
@@ -35,7 +34,6 @@ export default function CharacterSwitcherSheet({
   const { t } = useTranslation('common')
   const { user, applyUser } = useAuth()
   const navigate = useNavigate()
-  const isMobile = useFormFactor() === 'mobile'
   const [lives, setLives] = useState<CharacterOut[]>([])
   const [switching, setSwitching] = useState<number | null>(null)
 
@@ -66,7 +64,7 @@ export default function CharacterSwitcherSheet({
   return drawAtRoot(
     <div ref={ref} role="dialog" aria-modal="true" aria-label={t('fieldDesk.home.switcher.title')}>
       <button type="button" aria-label={t('fieldDesk.home.switcher.close')} onClick={onClose} style={scrim} />
-      <div style={{ ...sheet, paddingBottom: bottomRest(isMobile) }}>
+      <div style={{ ...sheet, paddingBottom: 'var(--switcher-bottom)' }}>
         <span style={grab} />
         <div style={sheetTitle}>{t('fieldDesk.home.switcher.title')}</div>
 
@@ -161,14 +159,6 @@ export function CharacterSwitcherRows({
       })}
     </div>
   )
-}
-
-/**
- * Bottom padding: clears the mobile tab bar via `--tab-bar-clearance` (#1590).
- * ponytail: its `env(safe-area-inset-bottom)` is 0 until `index.html` sets `viewport-fit=cover`.
- */
-function bottomRest(isMobile: boolean): string {
-  return isMobile ? 'calc(var(--space-xl) + var(--tab-bar-clearance))' : 'var(--space-xl)'
 }
 
 // Bottom-sheet band shared with `.filter-factions__*` in index.css: scrim 39, sheet 40

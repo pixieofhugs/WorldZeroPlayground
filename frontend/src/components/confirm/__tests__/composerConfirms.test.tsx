@@ -199,15 +199,10 @@ describe('ConfirmDialog — the static half of the accessibility contract', () =
     )
   })
 
-  it('draws on both form factors', () => {
-    mocks.formFactor = 'mobile'
-    const mobile = markup(dropTaskConfirm())
-    mocks.formFactor = 'desktop'
-    const desktop = markup(dropTaskConfirm())
-    for (const html of [mobile, desktop]) {
-      expect(html).toContain('role="dialog"')
-      expect(html).toContain(forms.editPraxis.confirm.dropTaskAction)
-    }
-    expect(mobile).not.toBe(desktop)
+  it('draws one tree; the sheet-vs-card dress is a media query', () => {
+    const html = markup(dropTaskConfirm())
+    expect(html).toContain('role="dialog"')
+    expect(html).toContain(forms.editPraxis.confirm.dropTaskAction)
+    expect(html).toContain('var(--sheet-align)')
   })
 })

@@ -12,7 +12,6 @@ import { useEffect, useId, useRef, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import { useModal } from '../../hooks/useModal'
-import { useFormFactor } from '../../hooks/useFormFactor'
 import { factionCssVar } from '../../utils/factions'
 
 /** One confirm, fully worded. */
@@ -47,7 +46,6 @@ export default function ConfirmDialog({
   children?: ReactNode
 }) {
   const { t } = useTranslation('forms')
-  const isMobile = useFormFactor() === 'mobile'
   const titleId = useId()
   const bodyId = useId()
   const panelRef = useModal(onDismiss)
@@ -66,11 +64,10 @@ export default function ConfirmDialog({
       onClick={(event) => {
         if (event.target === event.currentTarget) onDismiss()
       }}
-      className={`fixed inset-0 z-50 flex justify-center ${
-        isMobile ? 'items-end' : 'items-center'
-      }`}
+      className="fixed inset-0 z-50 flex justify-center"
       style={{
-        padding: isMobile ? 0 : 'var(--space-lg)',
+        alignItems: 'var(--sheet-align)',
+        padding: 'var(--sheet-pad)',
         background: 'var(--color-overlay-strong)',
       }}
     >
@@ -87,10 +84,10 @@ export default function ConfirmDialog({
         style={{
           gap: 'var(--space-md)',
           padding: 'var(--space-lg)',
-          width: isMobile ? '100%' : 'min(440px, 100%)',
+          width: 'var(--sheet-full, min(440px, 100%))',
           background: 'var(--color-bg-page)',
-          border: isMobile ? 'none' : `2px solid ${accent}`,
-          borderRadius: isMobile ? '16px 16px 0 0' : 12,
+          border: `var(--sheet-border, 2px solid ${accent})`,
+          borderRadius: 'var(--sheet-radius, 12px)',
           // No --shadow-* token; the colour half is the themed one.
           boxShadow: '0 8px 28px var(--color-cast-shadow)',
         }}

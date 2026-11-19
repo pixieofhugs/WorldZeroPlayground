@@ -163,6 +163,7 @@ describe('MetataskPicker on a phone', () => {
         <MetataskPicker {...mkState({})} />
       </MemoryRouter>,
     )
-    expect(html).toContain('env(safe-area-inset-bottom)')
+    expect(html).toContain('padding-bottom:var(--takeover-bottom)')
+    // The phone value lives in the cascade; dialogShellCss.test pins it.
   })
 })

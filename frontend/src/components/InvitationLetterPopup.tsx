@@ -6,7 +6,6 @@ import { factionName } from '../utils/factions'
 import { resolveVariant } from '../utils/factionDispatch'
 import { surfaceMap } from '../factions'
 import { useAuth } from '../auth/AuthContext'
-import { useFormFactor } from '../hooks/useFormFactor'
 import { chooseFaction } from '../api/factions'
 import { extractError } from '../utils/errors'
 import { JoinConfirm, type JoinTarget } from './JoinControl'
@@ -45,7 +44,6 @@ export default function InvitationLetterPopup({
 }: InvitationLetterPopupProps) {
   const { t } = useTranslation('factions')
   const { user, applyUser } = useAuth()
-  const mobile = useFormFactor() === 'mobile'
   const currentSlug = user?.character?.faction_slug
   // The host owns the step and the POST; the letter only draws.
   const [confirming, setConfirming] = useState(false)
@@ -94,7 +92,7 @@ export default function InvitationLetterPopup({
         alignItems: 'flex-start',
         justifyContent: 'center',
         // Full-bleed on a phone (#3294).
-        padding: mobile ? 0 : 'var(--space-xl)',
+        padding: 'var(--letter-pad)',
         overflowY: 'auto',
         overscrollBehavior: 'contain',
         zIndex: 1000,
@@ -106,7 +104,7 @@ export default function InvitationLetterPopup({
         role="dialog"
         aria-modal="true"
         aria-label={headline}
-        style={{ margin: 'auto', maxWidth: '100%', width: mobile ? '100%' : undefined }}
+        style={{ margin: 'auto', maxWidth: '100%', width: 'var(--letter-width, auto)' }}
         onClick={(e) => e.stopPropagation()}
       >
         <Letter
