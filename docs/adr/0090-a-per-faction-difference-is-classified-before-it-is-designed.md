@@ -186,7 +186,7 @@ cutting themselves.
 would pass vacuously for `na` and `albescent`, whose family is `default` — it would have
 cleared every surface whatever they said.
 
-`singularityRoleReads.test.ts`'s `CARVED_OUT` list is the non-vacuity half: each carved-out
+`singularityRoleReads.test.ts`'s `CARVED_OUT` list is the non-vacuity half *[2026-11-18, #3425: #3376 deleted that list; the census that survives is `stragglers` in `utils/__tests__/factionRoleFallbacks.test.ts`]*: each carved-out
 file must *still* name its faction directly (`"%s still names this faction directly"`), so a
 row that goes newly empty is a failure rather than a pass. `components/sigil/FactionSigil.tsx`
 is on that list.

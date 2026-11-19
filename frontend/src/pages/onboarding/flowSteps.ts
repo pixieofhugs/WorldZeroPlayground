@@ -1,5 +1,5 @@
-/** Title, beats, `contract` (or `declined`), then `signin` (skipped with a session), then `character` and `arrival` for a player with none. */
-export type Step = 'title' | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 'contract' | 'declined' | 'signin' | 'character' | 'arrival'
+/** Title, beats, `contract` (or `declined`), then `signin` (skipped with a session), then `character` and `arrival` for a player with none; `returning` is the sign-in view for a header sign-in. */
+export type Step = 'title' | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 'contract' | 'declined' | 'signin' | 'returning' | 'character' | 'arrival'
 
 export const BEAT_COUNT = 7
 
@@ -26,7 +26,7 @@ export const decline = (f: Flow): Flow => moveTo(f, 'declined')
 
 export const skip = (f: Flow): Flow => moveTo(f, 'contract')
 
-export const toSignIn = (f: Flow): Flow => moveTo(f, 'signin')
+export const toSignIn = (f: Flow): Flow => moveTo(f, 'returning')
 
 export const toCharacter = (f: Flow, hasCharacter = false): Flow => (hasCharacter ? f : moveTo(f, 'character'))
 

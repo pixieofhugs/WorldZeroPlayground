@@ -9,7 +9,7 @@ allowance), #815 (this issue).
 
 ## Context
 
-`meets_task_level` (`backend/services/praxis.py`) is the single named home for the
+`meets_task_level` (`backend/services/praxis.py` *[2026-11-18, #3425: now `services/signup_eligibility.py`]*) is the single named home for the
 task-level gate (#292) — the "level half" that used to be inlined per call site.
 Solo signup and collab signup both call it via `evaluate_signup`. A duel
 *challenger* also calls it: `issue_duel_challenge` attaches to the challenger's
@@ -60,7 +60,7 @@ is no task-level gate on this path for the allowance to extend.
   `era.duel_level_required` check as the sole level gate on the opponent; an
   intent comment beside it points here so the check is not "completed" with a
   `meets_task_level` call by a future refactor.
-- `backend/services/praxis.py::meets_task_level`'s docstring names its actual
+- `backend/services/praxis.py::meets_task_level` *[2026-11-18, #3425: now `services/signup_eligibility.py`]*'s docstring names its actual
   scope — solo signup, collab signup, duel initiation — and calls out duel
   acceptance as the deliberate exception, instead of claiming identical
   behaviour "across solo, collab and duel."

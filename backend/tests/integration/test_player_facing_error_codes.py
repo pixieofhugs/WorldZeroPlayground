@@ -222,7 +222,7 @@ async def test_defecting_without_an_invitation_is_coded(
 async def test_defecting_to_albescent_unqualified_is_coded(
     client: AsyncClient, character: Character, auth_headers: dict
 ):
-    """ADR-0021: Albescent skips the invitation gate and has its own bar."""
+    """ADR-0080: Albescent skips the invitation gate and has its own bar."""
     response = await client.post(
         "/factions/choose",
         json={"faction_slug": ALBESCENT_FACTION_SLUG},

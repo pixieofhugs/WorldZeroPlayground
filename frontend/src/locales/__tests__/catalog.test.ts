@@ -983,12 +983,9 @@ describe('the Disclaimer is the owner\'s text, character for character (#2789)',
  * #2620: the invitation's deferral control is one key on both surfaces. The feed
  * card announces a letter (it doesn't preview it), so other copy may differ;
  * only the shared "put it off" act (ADR-0070) shares a key. Catalog and
- * call-site halves each catch what the other can't.
+ * call-site halves (render tests) each catch what the other can't.
  */
 describe('the invitation deferral is one key on both surfaces (#2620)', () => {
-  const src = join(dirname(fileURLToPath(import.meta.url)), '..', '..')
-  const read = (parts: string) => readFileSync(join(src, ...parts.split('/')), 'utf8')
-
   it('keeps no second key for the act', () => {
     expect(feed.invitationLetter).not.toHaveProperty('notNow')
   })
@@ -997,15 +994,5 @@ describe('the invitation deferral is one key on both surfaces (#2620)', () => {
     // Don't also pin `forms:editPraxis.attach.cancel` here: a reword there would
     // fail with a message about the wrong issue.
     expect(i18n.t('factions:invitation.dismiss')).toBe('Not now')
-  })
-
-  it('points the feed card at the shared key — a move, not a copy', () => {
-    const card = read('components/feed/FeedCardInvitationLetter.tsx')
-    expect(card).toContain('factions:invitation.dismiss')
-    expect(card).not.toContain('invitationLetter.notNow')
-  })
-
-  it('leaves the letter on the key it always read', () => {
-    expect(read('components/InvitationLetterPopup.tsx')).toContain("t('invitation.dismiss')")
   })
 })

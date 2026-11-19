@@ -14,7 +14,7 @@ Decision: **remove `color` from the backend** — the `game_config.py` `FactionC
 dataclass field, the `era_1.py` values, and the `/game-config` response schema/payload.
 **No DB migration is involved**: there is no `faction.color` column — color was only ever
 backend *config* (in memory), never persisted. The frontend owns color outright: `index.css`
-(theme) and the `factions.ts` `FACTION_FALLBACKS` (raw hex), both mirroring the vault canon.
+(theme) and the `factions.ts` `FACTION_FALLBACKS` (raw hex), both mirroring the vault canon. *[2026-11-18, #3425: `FACTION_FALLBACKS` and `populateFactionRegistry()` are gone; the mirror table was removed in #1269, see WORLD_ZERO_STYLE.md]*
 With the backend no longer serving color, `populateFactionRegistry()` stops overwriting the
 hex, so the purple-Singularity / gray-UA bug cannot recur.
 

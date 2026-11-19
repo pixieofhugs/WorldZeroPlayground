@@ -132,7 +132,6 @@ async def bootstrap_admin(session, era, pixie_acc) -> Character:
         character_id=pixie_char.id,
         era_id=era_row.id,
         score=0,
-        all_time_score=0,
         level=0,
         votes_spent_this_era=0,
     ))
@@ -329,7 +328,6 @@ async def seed_dev_demo(session, created_by_id: int) -> None:
             character_id=molly.id,
             era_id=era_row.id,
             score=0,
-            all_time_score=0,
             level=0,
             votes_spent_this_era=0,
         ))

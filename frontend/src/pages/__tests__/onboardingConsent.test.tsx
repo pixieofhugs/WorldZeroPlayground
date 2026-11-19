@@ -49,6 +49,24 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
+describe('which sign-in leaves a resume mark', () => {
+  it('the header Sign in is plain; the step after the contract marks the hand-off', () => {
+    mount(null, false)
+    fireEvent.click(screen.getByTestId('onboarding-header-sign-in'))
+    fireEvent.click(screen.getByTestId('sign-in-google'))
+    expect(store.has('wz_onboarding_handoff')).toBe(false)
+
+    cleanup()
+    mount(null, false)
+    toContract()
+    fireEvent.click(screen.getByTestId('onboarding-accept-terms'))
+    return waitFor(() => expect(screen.getByTestId('sign-in-google')).toBeTruthy()).then(() => {
+      fireEvent.click(screen.getByTestId('sign-in-google'))
+      expect(store.get('wz_onboarding_handoff')).toBe('true')
+    })
+  })
+})
+
 describe('guest round trip', () => {
   it('holds the click at the contract, shows sign-in, and writes one row after the redirect', async () => {
     mount(null, false)
