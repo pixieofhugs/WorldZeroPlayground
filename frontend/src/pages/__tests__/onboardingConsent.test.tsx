@@ -26,9 +26,10 @@ function mount(user: CurrentUser | null, resumed: boolean, onAccepted = vi.fn())
   return onAccepted
 }
 
-const toContract = () => {
+const toContract = async () => {
   fireEvent.click(screen.getByTestId('onboarding-start'))
   fireEvent.click(screen.getByTestId('onboarding-skip'))
+  await screen.findByTestId('onboarding-accept-terms')
 }
 
 let store: Map<string, string>
@@ -50,15 +51,15 @@ afterEach(() => {
 })
 
 describe('which sign-in leaves a resume mark', () => {
-  it('the header Sign in is plain; the step after the contract marks the hand-off', () => {
+  it('the header Sign in is plain; the step after the contract marks the hand-off', async () => {
     mount(null, false)
     fireEvent.click(screen.getByTestId('onboarding-header-sign-in'))
-    fireEvent.click(screen.getByTestId('sign-in-google'))
+    fireEvent.click(await screen.findByTestId('sign-in-google'))
     expect(store.has('wz_onboarding_handoff')).toBe(false)
 
     cleanup()
     mount(null, false)
-    toContract()
+    await toContract()
     fireEvent.click(screen.getByTestId('onboarding-accept-terms'))
     return waitFor(() => expect(screen.getByTestId('sign-in-google')).toBeTruthy()).then(() => {
       fireEvent.click(screen.getByTestId('sign-in-google'))
@@ -70,7 +71,7 @@ describe('which sign-in leaves a resume mark', () => {
 describe('guest round trip', () => {
   it('holds the click at the contract, shows sign-in, and writes one row after the redirect', async () => {
     mount(null, false)
-    toContract()
+    await toContract()
     fireEvent.click(screen.getByTestId('onboarding-accept-terms'))
 
     await waitFor(() => expect(screen.queryByTestId('onboarding-accept-terms')).toBeNull())
@@ -84,9 +85,9 @@ describe('guest round trip', () => {
     expect(store.has('wz_terms_accepted')).toBe(false)
   })
 
-  it('shows the contract again after sign-in when storage refused the click', () => {
+  it('shows the contract again after sign-in when storage refused the click', async () => {
     mount(USER, true)
-    expect(screen.getByTestId('onboarding-accept-terms')).toBeTruthy()
+    expect(await screen.findByTestId('onboarding-accept-terms')).toBeTruthy()
     expect(acceptTerms).not.toHaveBeenCalled()
   })
 
@@ -104,7 +105,7 @@ describe('signed-in path', () => {
   it('a cold open runs the contract and writes exactly one row, with no sign-in card', async () => {
     store.set('wz_terms_accepted', 'true') // stale: must not skip the contract
     const onAccepted = mount(USER, false)
-    toContract()
+    await toContract()
     expect(acceptTerms).not.toHaveBeenCalled()
 
     fireEvent.click(screen.getByTestId('onboarding-accept-terms'))
@@ -168,7 +169,7 @@ describe('the welcome flow for a screen reader', () => {
 describe('declining', () => {
   it('writes nothing, lands on Declined, and Reconsider returns to the contract', async () => {
     mount(null, false)
-    toContract()
+    await toContract()
     store.set('wz_terms_accepted', 'true')
 
     fireEvent.click(screen.getByTestId('onboarding-look-around'))

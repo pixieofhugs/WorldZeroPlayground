@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useRef, useState, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthContext'
@@ -6,22 +6,27 @@ import { acceptTerms } from '../../api/terms'
 import type { TaskOut } from '../../api/tasks'
 import { resolveHandoffTask } from '../../utils/onboardingHandoff'
 import { clearTermsAcceptance, holdTermsAcceptance, termsAcceptanceHeld } from '../../utils/onboardingResume'
-import Arrival from './Arrival'
-import AuthCard from './AuthCard'
-import CharacterStep from './CharacterStep'
-import Declined from './Declined'
-import SignInView from './SignInView'
-import TermsCard from './TermsCard'
 import Wisp from './Wisp'
 import { BEATS } from './beats'
 import { HoldNextContext } from './beats/holdNext'
 import { back, decline, initialFlow, isBeat, next, skip, toArrival, toCharacter, toSignIn, type Flow, type Step } from './flowSteps'
 import './flow.css'
 
+// Past START only: out of the graph the title waits on. Warmed on mount so START never meets a gap.
+const Arrival = lazy(() => import('./Arrival'))
+const AuthCard = lazy(() => import('./AuthCard'))
+const CharacterStep = lazy(() => import('./CharacterStep'))
+const Declined = lazy(() => import('./Declined'))
+const SignInView = lazy(() => import('./SignInView'))
+const TermsCard = lazy(() => import('./TermsCard'))
+const warmSteps = () => void Promise.all([import('./Arrival'), import('./AuthCard'), import('./CharacterStep'), import('./Declined'), import('./SignInView'), import('./TermsCard')])
+
 const TYPE_MS = 28
 const LEAVE_MS = 460
 const TITLE_DELAY_MS = 2800
 const TITLE_CHAR_MS = 84
+// START bounces in as the Wisp starts to drop (1s), not after the title has typed: a player who wants in never waits on the bit.
+const START_DELAY_S = 0.8
 
 // The one beat whose stage holds a live control (Next waits on it), so it stays out of aria-hidden.
 const VOTE_BEAT = 5
@@ -87,7 +92,7 @@ function Title({ cameBack, onStart }: { cameBack: boolean; onStart: () => void }
           <span className="ob-caret" />
         </span>
       </h1>
-      <button type="button" className="boing ob-start" style={delay(4.3)} onClick={onStart} data-testid="onboarding-start">
+      <button type="button" className="boing ob-start" style={delay(START_DELAY_S)} onClick={onStart} data-testid="onboarding-start">
         {t('flow.start')}
       </button>
     </section>
@@ -112,6 +117,7 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
   const wrote = useRef(false)
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
   useEffect(() => () => clearTimeout(timer.current), [])
+  useEffect(warmSteps, [])
 
   // A player with a character goes where the hand-off sends them; one without creates it here.
   const hasCharacter = !!user?.character || arrival !== null
@@ -288,6 +294,7 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
         </section>
       )}
 
+      <Suspense fallback={null}>
       {step === 'signin' && <div className={screenCls}><AuthCard onBack={onBack} /></div>}
 
       {step === 'character' && (
@@ -348,6 +355,7 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
           )}
         </div>
       )}
+      </Suspense>
     </div>
   )
 }
