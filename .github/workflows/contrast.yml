@@ -1,0 +1,80 @@
+# The rendered contrast sweep on every PR (#3498). Unlike e2e.yml, this one
+# blocks: it is a required check, so it must report on every PR, hence no paths
+# filter. Same pipeline as e2e.yml (run-e2e.sh), one spec only.
+name: Contrast
+
+on:
+  # pull_request, NEVER pull_request_target: the repo is public and a fork PR
+  # must get no secrets.
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contrast:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: worldzero
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: worldzero
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      E2E_DATABASE_URL: postgresql+asyncpg://worldzero:test@localhost/worldzero_e2e
+      DATABASE_URL: postgresql+asyncpg://worldzero:test@localhost/worldzero_e2e
+      SECRET_KEY: ci-e2e-secret-key-not-for-production
+      GOOGLE_CLIENT_ID: dummy-client-id
+      GOOGLE_CLIENT_SECRET: dummy-client-secret
+      GOOGLE_REDIRECT_URI: http://localhost:8001/auth/google/callback
+      DISCORD_CLIENT_ID: dummy-discord-client-id
+      DISCORD_CLIENT_SECRET: dummy-discord-client-secret
+      DISCORD_REDIRECT_URI: http://localhost:8001/auth/discord/callback
+      MEDIA_BASE_URL: http://localhost:8001/media
+      MEDIA_ROOT: /tmp/media
+      ENVIRONMENT: development # dev-login must be enabled
+
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.12"
+
+      - name: Install backend dependencies
+        run: pip install -r backend/requirements.txt
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: frontend
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+        working-directory: frontend
+
+      - name: Run the contrast sweep (reset db, migrate, seed, backend, playwright)
+        run: bash frontend/e2e/run-e2e.sh e2e/contrast.spec.ts
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: contrast-report
+          path: frontend/playwright-report/
+          retention-days: 14
