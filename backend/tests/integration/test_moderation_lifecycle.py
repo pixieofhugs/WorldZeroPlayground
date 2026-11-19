@@ -59,8 +59,10 @@ async def test_account_deletion_survives_a_self_deleted_and_a_mod_banned_life(
     for life in (character, left, banned):
         await db_session.refresh(life)
         assert life.display_name == "Deleted player"
-        assert life.departed_at is not None
+    # A mod-banned life stays unstamped so its hidden votes stay hidden.
     assert left.departed_at == first_stamp
+    assert character.departed_at is not None
+    assert banned.departed_at is None
     assert account.status == AccountStatus.deleted
 
 

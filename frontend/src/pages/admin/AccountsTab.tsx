@@ -17,6 +17,7 @@ import { formatTimestamp } from "../../utils/dates";
 import { useAuth } from "../../auth/AuthContext";
 import AdminRosterSection from "./AdminRosterSection";
 import ModerateConfirm from "./ModerateConfirm";
+import VoteRingPanel from "./VoteRingPanel";
 
 /** Two backend enums, one `accounts.status.*` namespace (#1610). The account
  *  enum is not on the wire schema, so it is stated here. */
@@ -62,14 +63,20 @@ export default function AccountsTab({ initialSearch = "" }: { initialSearch?: st
 
   const refresh = (search: string = searchText, from: number = offset) => {
     setError(null);
-    getAccounts(search || undefined, from)
-      .then(setPage)
+    return getAccounts(search || undefined, from)
+      .then((p) => {
+        setPage(p);
+        return p;
+      })
       .catch((err) => setError(extractError(err, t("accounts.loadError"))))
       .finally(() => setLoading(false));
   };
 
   useEffect(() => {
-    refresh();
+    // A queue link lands on one account: open it so the vote ring is in view.
+    void refresh().then((p) => {
+      if (initialSearch && p?.items.length === 1) void handleExpand(p.items[0].id);
+    });
   }, []);
 
   const handleSearch = (value: string) => {
@@ -328,6 +335,7 @@ export default function AccountsTab({ initialSearch = "" }: { initialSearch?: st
                       />
                     </div>
                   )}
+                  <VoteRingPanel key={account.id} accountId={account.id} />
                 </div>
               )}
             </div>
