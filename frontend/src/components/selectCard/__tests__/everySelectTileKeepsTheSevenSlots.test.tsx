@@ -151,7 +151,7 @@ describe("the blocks branch on no faction (ADR-0090)", () => {
       renderToStaticMarkup(
         <div data-faction={slug}>
           <SelectCardFrame>
-            <SelectCardBand form="row" state={state} mark={<i />} seal={<b />}>
+            <SelectCardBand form="row" state={state} mark={<i />} seal={<b />} sealSize={16}>
               Name
             </SelectCardBand>
             <SelectCardBody>
