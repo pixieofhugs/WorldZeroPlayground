@@ -97,7 +97,7 @@ export default function PortraitPicker({
           type="button"
           onClick={() => ref.current?.click()}
           aria-describedby={statusId}
-          className="btn-outline"
+          className="btn-outline touch-target"
           style={buttonStyle}
         >
           {chosenFile || hasCurrentPortrait ? t('portrait.changeAction') : t('portrait.chooseAction')}
