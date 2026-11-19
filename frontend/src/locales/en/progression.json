@@ -23,7 +23,7 @@
     },
     "vote": {
       "name": "Vote on praxis",
-      "desc": "Rate what other questers have done, and send points their way."
+      "desc": "Once another quester rates your proof, you can rate theirs and send points their way."
     },
     "worn_paths": {
       "name": "Notice the paths already worn",

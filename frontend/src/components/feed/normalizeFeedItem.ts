@@ -111,15 +111,25 @@ function commentTargetHref(payload: Record<string, any>): string | null {
  * (`CommentThread` mounts the composer under the list), so the excerpt link
  * opens the thread and this CTA invites the answer.
  */
-function buildCommentActions(payload: Record<string, any>): FeedRowAction[] {
+function buildCommentActions(
+  payload: Record<string, any>,
+  commentGate: number | null,
+): FeedRowAction[] {
   const href = commentTargetHref(payload)
   if (href == null) return []
-  return [{ id: 'reply', label: i18n.t('feed:rowAction.reply'), tone: 'primary', href }]
+  const label =
+    commentGate == null
+      ? i18n.t('feed:rowAction.reply')
+      : i18n.t('feed:rowAction.replyGated', { level: commentGate })
+  return [{ id: 'reply', label, tone: 'primary', href }]
 }
 
 /** Map a faction-owned feed item to its row slots. Returns null for the
  *  structural/interactive types that render a companion body instead. */
-export function normalizeFeedItem(item: ActivityFeedItem): FeedRow | null {
+export function normalizeFeedItem(
+  item: ActivityFeedItem,
+  commentGate: number | null = null,
+): FeedRow | null {
   if (!FACTION_ROW_TYPES.has(item.type)) return null
   const p = item.payload ?? {}
   const actor = item.actor_display_name
@@ -277,7 +287,7 @@ export function normalizeFeedItem(item: ActivityFeedItem): FeedRow | null {
         headlineQuoted: true,
         points: null,
         level: null,
-        actions: buildCommentActions(p),
+        actions: buildCommentActions(p, commentGate),
       }
     case 'vote_on_mine':
     case 'vote_changed_on_mine':
