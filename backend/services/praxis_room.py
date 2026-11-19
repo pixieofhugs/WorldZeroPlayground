@@ -523,8 +523,6 @@ class PraxisRoomServer(WebsocketServer):
     ) -> dict[str, str]:
         """Merge the browser's whole Yjs state into the live room; a repeat is a no-op.
 
-        Returns the merged document's column values.
-
         ponytail: opens a room if none runs; a rejected submit strands it.
         """
         name = room_name_for(praxis_id)
@@ -534,7 +532,7 @@ class PraxisRoomServer(WebsocketServer):
             room.ydoc.apply_update(update)
         except Exception:
             raise_coded(422, ErrorCode.praxis_doc_update_invalid, _INVALID_DRAFT)
-        # The caller cancels on a difference; this text is then the new proposal.
+        # The caller cancels on a difference; this text is the new proposal.
         flusher.absorb()
         return _document_values(room.ydoc)
 
