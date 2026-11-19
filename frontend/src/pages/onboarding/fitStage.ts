@@ -31,11 +31,11 @@ export function watchStageFit(): () => void {
   }
   const root = document.querySelector('.ob-root')
   // The box grows a line as its text types out on a narrow screen.
-  const ro = new ResizeObserver(run)
+  const ro = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(run)
   const mo = new MutationObserver(() => {
-    ro.disconnect()
+    ro?.disconnect()
     const box = document.querySelector('.ob-box')
-    if (box) ro.observe(box)
+    if (box) ro?.observe(box)
     run()
   })
   if (root) mo.observe(root, { childList: true, subtree: true })
@@ -44,7 +44,7 @@ export function watchStageFit(): () => void {
   return () => {
     cancelAnimationFrame(raf)
     mo.disconnect()
-    ro.disconnect()
+    ro?.disconnect()
     window.removeEventListener('resize', run)
   }
 }
