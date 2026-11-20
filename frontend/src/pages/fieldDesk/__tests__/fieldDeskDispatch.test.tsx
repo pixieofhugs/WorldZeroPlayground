@@ -141,6 +141,12 @@ describe('FieldDesk form-factor dispatch', () => {
     expect(html.replace(/<[^>]*>/g, '')).toContain('Whose shoes today?')
   })
 
+  it('leaves no empty install-nudge band above the mobile skin', () => {
+    mocks.formFactor = 'mobile'
+    mocks.user = currentUser('coven')
+    expect(render().startsWith('<div data-skin=')).toBe(true)
+  })
+
   it('takes no mobile skin on desktop even when the roster is gated away (#1560)', () => {
     mocks.formFactor = 'desktop'
     mocks.user = currentUser('coven')
