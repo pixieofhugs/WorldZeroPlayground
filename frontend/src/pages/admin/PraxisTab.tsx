@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { listAdminPraxes } from "../../api/admin";
 import type { FactionOut } from "../../api/factions";
 import type { ModerationStatus, PraxisCardOut } from "../../api/praxis";
@@ -46,19 +46,22 @@ const MODERATION_TONE: Record<ModerationStatus, string> = {
 
 /**
  * Admin praxis finder (#3061) over every praxis, hidden and drafts included.
- * Shaped like `TasksTab`, but `adminPraxisRows` builds a server query (paged).
+ * Same console list shape as `TasksTab`, but `adminPraxisRows` builds a server query (paged).
  */
 export default function PraxisTab() {
   const { t } = useTranslation(["admin", "common"]);
   const gameConfig = useGameConfig();
-  // No `status` on `/game-config`; see `TasksTab`.
+  // `/game-config` factions carry no `status`; the roster only needs slugs.
   const factionRoster: FactionOut[] = (gameConfig?.factions ?? []).map(
     (faction) => ({ slug: faction.slug, status: "" }),
   );
 
-  const [criteria, setCriteria] = useState<AdminPraxisCriteria>(
-    DEFAULT_PRAXIS_CRITERIA,
-  );
+  // `?character=<id>` (the People panel's link) seeds the Character # filter.
+  const [params] = useSearchParams();
+  const [criteria, setCriteria] = useState<AdminPraxisCriteria>({
+    ...DEFAULT_PRAXIS_CRITERIA,
+    memberId: params.get("character") ?? "",
+  });
   const [page, setPage] = useState(0);
   const [rows, setRows] = useState<PraxisCardOut[]>([]);
   const [hasNext, setHasNext] = useState(false);

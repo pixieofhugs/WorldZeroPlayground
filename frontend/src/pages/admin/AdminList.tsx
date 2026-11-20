@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import './adminList.css'
@@ -91,8 +92,13 @@ export interface Column<T> {
   key: string
   header: string
   numeric?: boolean
+  /** Dropped below the phone breakpoint so the columns that matter fit 375px. */
+  wide?: boolean
   cell: (row: T) => ReactNode
 }
+
+const cellClass = (base: string, c: { numeric?: boolean; wide?: boolean }) =>
+  [base, c.numeric && 'adm-num', c.wide && 'adm-wide'].filter(Boolean).join(' ')
 
 /** The first column opens the row's panel; it is the row's one real button. */
 export function ListTable<T>({
@@ -116,7 +122,7 @@ export function ListTable<T>({
       <thead>
         <tr>
           {columns.map((c) => (
-            <th key={c.key} scope="col" className={c.numeric ? 'adm-th adm-num' : 'adm-th'}>
+            <th key={c.key} scope="col" className={cellClass('adm-th', c)}>
               {c.header}
             </th>
           ))}
@@ -126,7 +132,7 @@ export function ListTable<T>({
         {rows.map((row) => (
           <tr key={rowKey(row)} className={rowKey(row) === selectedKey ? 'adm-tr-on' : undefined}>
             {columns.map((c, i) => (
-              <td key={c.key} className={c.numeric ? 'adm-td adm-num' : 'adm-td'}>
+              <td key={c.key} className={cellClass('adm-td', c)}>
                 {i === 0 ? (
                   <button type="button" className="adm-open" onClick={() => onOpen(row)}>
                     {c.cell(row)}
@@ -158,8 +164,11 @@ export function SidePanel({
   children: ReactNode
 }) {
   const { t } = useTranslation('admin')
+  // Wrapped under the table on phone, the panel opens off-screen.
+  const ref = useRef<HTMLElement>(null)
+  useEffect(() => ref.current?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' }), [])
   return (
-    <aside aria-label={label} className="adm-card adm-split-side">
+    <aside ref={ref} aria-label={label} className="adm-card adm-split-side">
       <div className="adm-panel-top">
         {badge}
         <span className="adm-btns">

@@ -5,9 +5,9 @@ import { drawAtRoot } from '../ui/drawAtRoot'
 import CopyEditor from './CopyEditor'
 import './modMode.css'
 
-/** The accent frame and the status strip while mod mode is on; the copy editor lives in the strip. Mounted by `App.tsx` for admins in mod mode only. */
+/** The status strip (and, in mod mode, the accent frame); the copy editor lives in the strip. Mounted by `App.tsx` for admins in mod mode, and on the copy sheets always, where mod mode off shows a bare "Copy editor" strip. */
 export default function ModStrip() {
-  const { t } = useTranslation('common')
+  const { t } = useTranslation('admin')
   const { adminMode, toggleAdminMode } = useAdminMode()
 
   // The strip is fixed; publish its height so the page and the sticky nav clear it.
@@ -32,9 +32,9 @@ export default function ModStrip() {
 
   return drawAtRoot(
     <>
-      <div className="mod-frame" aria-hidden="true" />
+      {adminMode && <div className="mod-frame" aria-hidden="true" />}
       <div className="mod-strip" data-modal-free>
-        <span role="status">{t('nav.mod.stripText')}</span>
+        <span role="status">{adminMode ? t('nav.mod.stripText') : t('nav.mod.copyStripText')}</span>
         {adminMode && (
           <button type="button" onClick={toggleAdminMode} className="label-caption">
             {t('nav.mod.turnOff')}

@@ -73,8 +73,8 @@ export default function PeopleTab() {
         </>
       ),
     },
-    { key: 'account', header: t('console.people.cols.account'), cell: (p) => <span className="adm-muted">#{p.account_id}</span> },
-    { key: 'joined', header: t('console.people.cols.joined'), cell: (p) => <span className="adm-muted">{formatDate(p.created_at)}</span> },
+    { key: 'account', wide: true, header: t('console.people.cols.account'), cell: (p) => <span className="adm-muted">#{p.account_id}</span> },
+    { key: 'joined', wide: true, header: t('console.people.cols.joined'), cell: (p) => <span className="adm-muted">{formatDate(p.created_at)}</span> },
     { key: 'votes', header: t('console.people.cols.votes'), numeric: true, cell: (p) => p.votes_cast },
     {
       key: 'status',

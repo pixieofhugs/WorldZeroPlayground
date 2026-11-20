@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FlaggedPraxisOut } from "../../api/admin";
 import ModerateConfirm from "./ModerateConfirm";
@@ -9,7 +10,7 @@ interface AuthorRowProps {
   confirming: AuthorAction | null;
   onAsk: (kind: AuthorAction) => void;
   onCancel: () => void;
-  onModerate: (praxis: FlaggedPraxisOut, kind: AuthorAction, on: boolean) => Promise<void>;
+  onModerate: (praxis: FlaggedPraxisOut, kind: AuthorAction, on: boolean, note?: string) => Promise<void>;
   onViewAccount: (search: string) => void;
 }
 
@@ -56,19 +57,49 @@ export default function AuthorRow({
         </button>
       </div>
       {confirming && (
-        <ModerateConfirm
-          heading={t(`console.reports.author.${confirming}Confirm.heading`, { name, count })}
-          lead={t(`console.reports.author.${confirming}Confirm.lead`, {
-            name,
-            username: praxis.author_username,
-            count,
-          })}
-          confirmLabel={t(`console.reports.author.${confirming}Confirm.submit`, { count })}
-          errorFallback={t("console.reports.actionError")}
-          run={() => onModerate(praxis, confirming, true)}
-          onCancel={onCancel}
-        />
+        <AuthorConfirm praxis={praxis} kind={confirming} onModerate={onModerate} onCancel={onCancel} />
       )}
     </div>
+  );
+}
+
+/** Removing a post tells its author why, so "remove all" asks for the reason too. */
+function AuthorConfirm({
+  praxis,
+  kind,
+  onModerate,
+  onCancel,
+}: Pick<AuthorRowProps, "praxis" | "onModerate" | "onCancel"> & { kind: AuthorAction }) {
+  const { t } = useTranslation("admin");
+  const [note, setNote] = useState("");
+  const name = praxis.created_by_display_name;
+  const count = praxis.author_flagged_count;
+  const needsNote = kind === "removeAll";
+  return (
+    <ModerateConfirm
+      heading={t(`console.reports.author.${kind}Confirm.heading`, { name, count })}
+      lead={t(`console.reports.author.${kind}Confirm.lead`, {
+        name,
+        username: praxis.author_username,
+        count,
+      })}
+      confirmLabel={t(`console.reports.author.${kind}Confirm.submit`, { count })}
+      errorFallback={t("console.reports.actionError")}
+      confirmDisabled={needsNote && !note.trim()}
+      run={() => (needsNote ? onModerate(praxis, kind, true, note.trim()) : onModerate(praxis, kind, true))}
+      onCancel={onCancel}
+    >
+      {needsNote && (
+        <label className="rp-field">
+          {t("console.reports.decision.reasonLabel")}
+          <input
+            className="rp-input"
+            placeholder={t("console.reports.decision.reasonHint")}
+            value={note}
+            onChange={(event) => setNote(event.target.value)}
+          />
+        </label>
+      )}
+    </ModerateConfirm>
   );
 }
