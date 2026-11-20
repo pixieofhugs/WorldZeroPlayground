@@ -30,6 +30,7 @@ locales/
 | `progression.json` | Level-up ranks + unlock names/descriptions (backend emits keys — ADR-0031) |
 | `taunts.json` | Foe-taunt templates per faction/trigger (backend emits keys — ADR-0031) |
 | `errors.json` | What a failed request tells the player, keyed by error code (backend emits keys — ADR-0031) |
+| `push.json` | **Not a namespace.** What a web push says (backend sends a `kind` key; ADR-0031). The service worker can't read the i18n bundle, so `vite.config.ts` bakes this file into `dist/sw.js` at build. Say "rate/ratings", never "votes". |
 | `glosses.json` | **Not a namespace.** The Ephemerists' script casts — the same word written in Latin, Arabic, Japanese and cuneiform, cycled as ornament over an English label (#2148). It is imported by `components/factionMarks/EphemeristsGloss.tsx`, not registered with i18next, because the casts do not change with the reader's language. Adding a word here means re-running `scripts/fetch-fonts.mjs`, or its glyphs ship with no font. |
 
 ## How a key works

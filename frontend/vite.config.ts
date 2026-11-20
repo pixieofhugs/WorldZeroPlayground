@@ -1,6 +1,8 @@
 /// <reference types="vitest/config" />
 import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
+import { readFileSync, writeFileSync } from 'node:fs'
+import { join } from 'node:path'
 
 // The flow is lazy, so its chunk is found one waterfall level behind the entry's own preloads (#3593).
 // A guest on `/`, or anyone on `/start`, fetches it with the entry. Script-injected, not static tags: the byte
@@ -35,13 +37,32 @@ function preloadWelcomeFlow(): Plugin {
   }
 }
 
+// public/sw.js can't read the i18n bundle, so the build bakes src/locales/en/push.json into the copied worker.
+function bakePushStrings(): Plugin {
+  let outDir = 'dist'
+  return {
+    name: 'bake-push-strings',
+    apply: 'build',
+    configResolved(c) {
+      outDir = c.build.outDir
+    },
+    closeBundle() {
+      const strings = readFileSync('src/locales/en/push.json', 'utf8')
+      const file = join(outDir, 'sw.js')
+      const js = readFileSync(file, 'utf8')
+      if (!js.includes('const PUSH_STRINGS = null')) throw new Error('sw.js lost its PUSH_STRINGS placeholder')
+      writeFileSync(file, js.replace('const PUSH_STRINGS = null', () => `const PUSH_STRINGS = ${JSON.stringify(JSON.parse(strings))}`))
+    },
+  }
+}
+
 /**
  * DO NOT strip console output (esbuild `drop`, terser `drop_console`): Singularity's
  * Era 1 perk IS console output (#1869, `src/components/TheArray.tsx`), and losing it
  * fails nothing visibly. `theArray.test.ts` asserts the absence here.
  */
 export default defineConfig({
-  plugins: [react(), preloadWelcomeFlow()],
+  plugins: [react(), preloadWelcomeFlow(), bakePushStrings()],
   server: {
     port: 5173,
     strictPort: true,
