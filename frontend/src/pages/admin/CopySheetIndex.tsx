@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import './adminConsole.css'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { ALBESCENT_FACTION_SLUG, FACTION_RAINBOW_ORDER, factionName } from '../../utils/factions'
@@ -12,7 +13,7 @@ export default function CopySheetIndex() {
   const { t } = useTranslation('admin')
   const [picked, setPicked] = useState(COPY_SHEET_SLUGS[0])
   return (
-    <div className="flex flex-col gap-3" style={{ maxWidth: '24rem' }}>
+    <div className="flex flex-col gap-3 adm-copy-index">
       <PageTitle title={t('console.rail.items.factionCopy')} />
       <p className="card-meta">{t('copySheet.pickerHint')}</p>
       <FactionRow

@@ -5,7 +5,7 @@ import {
   getMessages,
   getOverview,
   getPendingTasks,
-} from '../api/admin'
+} from '../../api/admin'
 
 /** `null` = not loaded, or that endpoint failed: the rail then shows no number rather than a wrong one. */
 export interface AdminCounts {

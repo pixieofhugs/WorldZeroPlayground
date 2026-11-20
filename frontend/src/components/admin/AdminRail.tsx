@@ -1,6 +1,6 @@
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { useAdminCounts, type AdminCounts } from '../../hooks/useAdminCounts'
+import { useAdminCounts, type AdminCounts } from '../../pages/admin/useAdminCounts'
 
 type Badge = 'urgent' | 'quiet'
 type ItemKey = 'reports' | 'messages' | 'proposals' | 'praxis' | 'tasks' | 'people' | 'factionCopy' | 'levelCopy'

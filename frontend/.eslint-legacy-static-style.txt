@@ -168,7 +168,6 @@ src/components/vote/SingularityVote.tsx
 src/components/vote/SnideVote.tsx
 src/components/vote/UaVote.tsx
 src/components/vote/WowVote.tsx
-src/pages/Admin.tsx
 src/pages/AlbescentSecretPlaceholder.tsx
 src/pages/CharacterProfile.tsx
 src/pages/Contact.tsx

@@ -30,3 +30,4 @@
   .adm-rail > .adm-back { display: none; }
   .adm-main { padding: var(--space-md); }
 }
+.adm-copy-index { max-width: 24rem; }
