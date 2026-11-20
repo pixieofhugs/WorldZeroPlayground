@@ -96,7 +96,13 @@ export default function TasksTab() {
 
   const proposals = segment === 'proposals'
   const columns: Column<AdminTaskRow>[] = [
-    { key: 'title', header: proposals ? t('console.tasks.cols.proposal') : t('console.tasks.cols.task'), cell: (r) => r.title },
+    { key: 'title', header: proposals ? t('console.tasks.cols.proposal') : t('console.tasks.cols.task'), cell: (r) => (
+        <>
+          {r.title}
+          {r.task_type === 'metatask' && <span className="adm-tag adm-tag-wait">{t('console.tasks.metatask')}</span>}
+        </>
+      ),
+    },
     ...(proposals ? [{ key: 'by', header: t('console.tasks.cols.by'), cell: (r: AdminTaskRow) => r.created_by_name ?? '' }] : []),
     { key: 'faction', header: t('tasks.factionLabel'), cell: (r) => factionLabel(r.primary_faction_slug) },
     { key: 'level', header: t('console.tasks.cols.level'), numeric: true, cell: (r) => r.level_required },

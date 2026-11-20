@@ -92,7 +92,7 @@ export async function getVoteRing(id: number): Promise<VoteRing> {
  */
 export async function getAllTasks(): Promise<TaskOut[]> {
   const { data } = await apiGet('/tasks', {
-    params: { query: { status: 'all', limit: 500, sort: 'newest' } },
+    params: { query: { status: 'all', task_type: 'all', limit: 500, sort: 'newest' } },
   })
   return data
 }

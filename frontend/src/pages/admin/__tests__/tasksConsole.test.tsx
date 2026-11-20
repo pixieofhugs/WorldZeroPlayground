@@ -65,6 +65,14 @@ describe('Tasks segments', () => {
     expect(screen.getByText('Old Chore')).toBeTruthy()
   })
 
+  it('shows a metatask in Active, tagged, and the count includes it', async () => {
+    api.getAllTasks.mockResolvedValue([active, aTask({ id: 4, title: 'Do It Backwards', status: 'active', task_type: 'metatask' })])
+    at('/admin/tasks')
+    expect(await screen.findByText('Do It Backwards')).toBeTruthy()
+    expect(screen.getByText('Metatask')).toBeTruthy()
+    expect(screen.getByRole('tab', { name: 'Active 2' })).toBeTruthy()
+  })
+
   it('/admin/proposals opens on Proposals with hours left from era config', async () => {
     at('/admin/proposals')
     expect(await screen.findByText('Learn a Bird’s Name')).toBeTruthy()
