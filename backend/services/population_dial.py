@@ -15,7 +15,7 @@ from errors import ErrorCode, raise_coded
 from game_config import CURRENT_ERA, Dial, EraConfig
 from models.character import Character
 from models.population_dial import PopulationDial
-from services.era import get_current_era_row, overlay_population_dials
+from services.era import apply_dial_sides, get_current_era_row
 from services.mod_log import log_mod_action
 
 
@@ -130,6 +130,8 @@ async def set_dials(
             era_row.id,
             key,
         )
+    # Known before the commit, so nothing awaits between it and the writes.
+    new_sides = {k: r.side for k, r in rows.items()} | {k: sides[k] for k in changed}
     await session.commit()
-    await overlay_population_dials(session, era)
+    apply_dial_sides(era, new_sides)
     return changed
