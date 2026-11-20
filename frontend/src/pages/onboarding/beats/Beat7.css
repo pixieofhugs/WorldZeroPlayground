@@ -27,8 +27,8 @@
 @keyframes b7-flinch{0%,38.46%,56.31%,65.54%,100.00%{transform:none}58.15%{transform:translateY(-16px) scale(.9,1.14)}61.23%{transform:scale(1.15,.85)}63.08%{transform:translateY(-3px)}}
 .b7 .watch .mpup{animation:b7-follow 7.8s ease-in-out infinite}
 @keyframes b7-follow{9%{transform:translate(2.2px,-1px)}19%{transform:translate(-2.2px,-1px)}29%{transform:translate(2.2px,-1px)}0%,38.46%,43.38%{transform:translate(-2.2px,-1px)}50.77%{transform:translate(2.2px,-1px)}55.69%{transform:translate(0,-2.4px)}63.08%{transform:translate(-2px,-2px)}69.23%{transform:translate(2px,-2px)}75.38%{transform:translate(-1px,-2.4px)}87.69%{transform:translate(0,-2.4px)}95.08%,100.00%{transform:translate(-2.2px,-1px)}}
-.b7 .kern{position:absolute;left:12px;top:2px;width:7px;height:7px;border-radius:40%;background:var(--faction-default-card-text);opacity:0;animation:b7-kern 1.3s cubic-bezier(.3,.7,.4,1) var(--kd,0s) infinite}
-@keyframes b7-kern{0%,40%{opacity:1;transform:none}60%{transform:translate(var(--kx),-22px) rotate(140deg)}80%,100%{transform:translate(calc(var(--kx) * 1.6),-4px) rotate(260deg);opacity:0}}
+.b7 .kern{position:absolute;left:12px;top:2px;width:7px;height:7px;border-radius:40%;background:var(--faction-default-card-text);animation:b7-kern 1.3s cubic-bezier(.3,.7,.4,1) var(--kd,0s) infinite}
+@keyframes b7-kern{0%{opacity:1;transform:none}40%{transform:none}60%{transform:translate(var(--kx),-22px) rotate(140deg)}80%,100%{transform:translate(calc(var(--kx) * 1.6),-4px) rotate(260deg);opacity:0}}
 .b7 .fx .mth{animation:b7-yell 7.8s linear var(--ld,0s) infinite both}
 @keyframes b7-yell{0%,5%,95%,100%{top:67%;height:13%;border-width:0 0 2px;border-radius:0 0 100% 100%/0 0 180% 180%;background:transparent}8%,37%{top:74%;height:0%;border-width:0 0 2px;border-radius:0;background:transparent}40%,92%{top:62%;height:26%;border-width:2px;border-radius:50%;background:var(--faction-default-on-fill)}}
 .b7 .bpos{position:absolute;transform:translateX(-50%)}

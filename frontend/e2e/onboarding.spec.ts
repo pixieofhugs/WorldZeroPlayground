@@ -81,6 +81,9 @@ test('motion switch off: key elements rest on their settled frame', async ({ pag
     [5, '.b5-arrow path', 'strokeDashoffset', '0px'],
     [6, '.b6x', 'transform', 'matrix(1, 0, 0, 1, 266, 0)'],
     [6, '.b6-roll', 'transform', 'matrix(1, 0, 0, 1, 0, -48)'],
+    [7, '.b7 .kern', 'display', 'none'],
+    [7, '.b7 .clw', 'display', 'none'],
+    [7, '.b7 .trail', 'display', 'none'],
   ]
   await openTitle(page)
   await expect(page.locator('.ob-aurora')).toHaveCSS('opacity', /^0\.\d+$/)
