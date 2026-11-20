@@ -166,7 +166,9 @@ export function SidePanel({
   const { t } = useTranslation('admin')
   // Wrapped under the table on phone, the panel opens off-screen.
   const ref = useRef<HTMLElement>(null)
-  useEffect(() => ref.current?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' }), [])
+  useEffect(() => {
+    ref.current?.scrollIntoView?.({ block: 'start', behavior: 'smooth' })
+  }, [])
   return (
     <aside ref={ref} aria-label={label} className="adm-card adm-split-side">
       <div className="adm-panel-top">
