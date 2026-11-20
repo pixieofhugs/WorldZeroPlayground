@@ -1,6 +1,11 @@
 {
   "brand": "World Zero",
   "loading": "Loading…",
+  "offline": {
+    "title": "You're offline",
+    "body": "World Zero needs a connection. Check your signal and try again.",
+    "retry": "Try again"
+  },
   "skipToContent": "Skip to content",
   "states": {
     "tryRefreshing": "Try refreshing.",

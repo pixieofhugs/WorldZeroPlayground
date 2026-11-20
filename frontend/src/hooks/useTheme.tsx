@@ -18,6 +18,9 @@ export function nextTheme(theme: Theme): Theme {
 
 export function applyTheme(theme: Theme): void {
   document.documentElement.setAttribute('data-theme', theme)
+  const bar = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
+  const page = getComputedStyle(document.documentElement).getPropertyValue('--color-bg-page').trim()
+  if (bar && page) bar.content = page
 }
 
 /** #1698: dark by default. */
