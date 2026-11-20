@@ -187,7 +187,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
       <span
         style={{
           fontFamily: MONO,
-          fontSize: desktop ? "var(--text-xl)" : "var(--text-lg)",
+          fontSize: "var(--praxis-kicker-size, var(--text-xl))",
           color: BLUE_BRIGHT,
         }}
       >
@@ -254,7 +254,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
           praxis={praxis}
           linkStyle={{
             fontFamily: MONO,
-            fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
+            fontSize: "var(--praxis-lead-size, var(--text-title))",
             color: BRIGHT,
             textDecoration: "none",
             borderBottom: `1px solid ${BORDER}`,
@@ -274,7 +274,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
     <h1
       style={{
         fontFamily: MONO,
-        fontSize: desktop ? "var(--text-display)" : "var(--text-heading)",
+        fontSize: "var(--praxis-hero-size, var(--text-display))",
         lineHeight: 1.15,
         margin: "0 0 var(--space-lg)",
         color: BRIGHT,
@@ -508,9 +508,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
             style={{
               position: "relative",
               zIndex: 2,
-              padding: desktop
-                ? "var(--space-2xl) var(--space-2xl) var(--space-3xl)"
-                : "var(--space-lg) var(--space-md) var(--space-xl)",
+              padding: "var(--praxis-sheet-pad, var(--space-2xl) var(--space-2xl) var(--space-3xl))",
             }}
           >
             {body}

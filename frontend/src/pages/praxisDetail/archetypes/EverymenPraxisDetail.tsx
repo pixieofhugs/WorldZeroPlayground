@@ -243,14 +243,14 @@ export default function EverymenPraxisDetail({
           praxis={praxis}
           linkStyle={{
             fontFamily: BODY,
-            fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
+            fontSize: "var(--praxis-lead-size, var(--text-title))",
             color: INK,
             textDecoration: "none",
             borderBottom: `2px solid ${RED}`,
           }}
           separatorStyle={{
             fontFamily: BODY,
-            fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
+            fontSize: "var(--praxis-lead-size, var(--text-title))",
             color: MUTED,
           }}
         />
@@ -267,7 +267,7 @@ export default function EverymenPraxisDetail({
     <h1
       style={{
         fontFamily: BEBAS,
-        fontSize: desktop ? "var(--text-display)" : "var(--text-heading)",
+        fontSize: "var(--praxis-hero-size, var(--text-display))",
         lineHeight: 0.94,
         letterSpacing: "0.01em",
         textTransform: "uppercase",
@@ -486,7 +486,7 @@ export default function EverymenPraxisDetail({
           margin: "0 auto",
           border: `2px solid ${FRAME}`,
           borderRadius: 2,
-          padding: desktop ? "var(--space-2xl)" : "var(--space-xl)",
+          padding: "var(--praxis-everymen-pad, var(--space-2xl))",
           boxSizing: "border-box",
           overflow: "hidden",
         },
