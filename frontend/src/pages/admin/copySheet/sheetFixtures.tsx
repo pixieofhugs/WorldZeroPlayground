@@ -164,6 +164,7 @@ export const mockUser: CurrentUser = {
   second_character_level_required: 5,
   era_name: 'Era One',
   era_id: 1,
+  rules_revision: 0,
   // #811: only WOW has reach in Era 1; this is a UA player.
   level_jump_reach: 0,
   level_jump_available: false,

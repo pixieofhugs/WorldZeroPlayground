@@ -230,6 +230,7 @@ export const aCurrentUser = (over: Partial<CurrentUser> = {}): CurrentUser => ({
   second_character_level_required: 5,
   era_name: 'Era 1',
   era_id: 1,
+  rules_revision: 0,
   level_jump_reach: 0,
   level_jump_available: false,
   task_browse_defaults_to_eligible: false,

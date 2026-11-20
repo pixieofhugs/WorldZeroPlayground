@@ -6,6 +6,17 @@ import { describe, it, expect, vi } from 'vitest'
 import { createCacheEpoch } from '../cacheEpoch'
 
 describe('the era stamp', () => {
+  it('drops when only the rules revision moves (#3656)', () => {
+    const epoch = createCacheEpoch()
+    const drop = vi.fn()
+    epoch.register(drop)
+    epoch.noteEraStamp(1, 10)
+    epoch.noteEraStamp(1, 10)
+    expect(drop).not.toHaveBeenCalled()
+    epoch.noteEraStamp(1, 11)
+    expect(drop).toHaveBeenCalledTimes(1)
+  })
+
   it('the same era NAME under a new id still drops — a same-era reset appends an Era row', () => {
     const epoch = createCacheEpoch()
     const drop = vi.fn()

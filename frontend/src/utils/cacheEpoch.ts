@@ -1,7 +1,8 @@
 /**
  * The global cache epoch: a version key, orthogonal to staleness (ADR-0072).
- * When `/auth/me` or `/game-config` reports a different `era_id`, the whole
- * cache drops. The id, not the name: a same-era reset or a name-keeping switch
+ * When `/auth/me` or `/game-config` reports a different `era_id` or
+ * `rules_revision` (a population-dial flip changes rules without changing the
+ * era, #3656), the whole cache drops. The id, not the name: a same-era reset or a name-keeping switch
  * (ADR-0091) appends an Era row but keeps the name.
  */
 
@@ -11,8 +12,8 @@ type Droppable = () => void
 export interface CacheEpoch {
   /** Enrol a cache; returns an unregister function. */
   register: (drop: Droppable) => () => void
-  /** The first era seen only records; any later disagreement drops everything. */
-  noteEraStamp: (eraId: number) => void
+  /** The first stamp seen only records; any later disagreement drops everything. */
+  noteEraStamp: (eraId: number, rulesRevision?: number) => void
   /** Empty every cache and bump the version, so in-flight fetches can't write back. */
   dropAll: () => void
   onDrop: (listener: () => void) => () => void
@@ -27,6 +28,7 @@ export function createCacheEpoch(): CacheEpoch {
   const listeners = new Set<() => void>()
   let version = 0
   let lastSeenEra: number | null = null
+  let lastSeenRevision = 0
 
   const dropAll = (): void => {
     version += 1
@@ -41,10 +43,11 @@ export function createCacheEpoch(): CacheEpoch {
         caches.delete(drop)
       }
     },
-    noteEraStamp: (eraId) => {
-      if (lastSeenEra === eraId) return
+    noteEraStamp: (eraId, rulesRevision = 0) => {
+      if (lastSeenEra === eraId && lastSeenRevision === rulesRevision) return
       const rolled = lastSeenEra !== null
       lastSeenEra = eraId
+      lastSeenRevision = rulesRevision
       if (rolled) dropAll()
     },
     dropAll,
@@ -67,8 +70,8 @@ export const CACHE_EPOCH: CacheEpoch = createCacheEpoch()
  * Hand-fired, not in the transport (#2892): a body sniff would also catch
  * `EraAnnouncementPayload.era_name`, a PAST era, and drop every cache per feed page.
  */
-export function noteEraStamp(eraId: number): void {
-  CACHE_EPOCH.noteEraStamp(eraId)
+export function noteEraStamp(eraId: number, rulesRevision = 0): void {
+  CACHE_EPOCH.noteEraStamp(eraId, rulesRevision)
 }
 
 /**

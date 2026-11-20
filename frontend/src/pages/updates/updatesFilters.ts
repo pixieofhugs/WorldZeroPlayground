@@ -169,6 +169,7 @@ export const FEED_TYPE_LABEL_KEY = {
   friend_defection: 'feed:kicker.friend_defection',
   global_task: 'feed:kicker.global_task',
   era_announcement: 'feed:kicker.era_announcement',
+  rules_change: 'feed:kicker.rules_change',
   invitation_letter: 'feed:kicker.invitation_letter',
   collab_invite: 'feed:kicker.collab_invite',
   duel_challenge: 'feed:kicker.duel_challenge',

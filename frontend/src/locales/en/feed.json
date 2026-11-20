@@ -55,6 +55,7 @@
     "awaiting_submission": "Your turn",
     "nudge": "Nudge",
     "era_announcement": "Era",
+    "rules_change": "Rules",
     "invitation_letter": "Faction invitation",
     "duel_challenge": "Duel challenge",
     "collab_invite": "Collaboration invite",
@@ -152,6 +153,38 @@
       "dropError": "Could not drop that task. Try another.",
       "cancel": "Cancel"
     }
+  },
+  "rulesChange": {
+    "kicker": "RULES",
+    "label": "The world has changed",
+    "headline": "The world is a different size, so its rules have moved.",
+    "dial": {
+      "praxis_post_cooldown": {
+        "small": "Post as often as you like. The daily wait is lifted.",
+        "full": "One first post a day, again."
+      },
+      "vote_requires_received_vote": {
+        "small": "Anyone who has reached level 1 may rate praxes, even before being rated.",
+        "full": "You must have been rated by someone else before you may rate."
+      },
+      "comment_level": {
+        "small": "Comments open at level 1.",
+        "full": "Comments open at level 2."
+      },
+      "duel_level": {
+        "small": "Duels open at level 1.",
+        "full": "Duels open at level 2."
+      },
+      "invitation": {
+        "small": "Faction invitations come sooner: fewer tasks and fewer points.",
+        "full": "Faction invitations ask for the full number of tasks and points again."
+      },
+      "flag_level": {
+        "small": "Flagging opens at level 2.",
+        "full": "Flagging opens at level 4."
+      }
+    },
+    "footnote": "Nothing already done is taken back."
   },
   "eraAnnouncement": {
     "kicker": "ERA",
