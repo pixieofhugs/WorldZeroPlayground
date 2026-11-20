@@ -85,13 +85,9 @@ export interface PraxisRoom {
    * read-only.
    */
   unreachable: boolean;
-  /**
-   * The server closed the socket with 1008 (kick, leave, seal): the room is
-   * over, unlike {@link unreachable}, which also covers a server that was down
-   * at load. Latches for the room's life.
-   */
+  /** Server closed with 1008 (kick, seal). Unlike `unreachable`, never a server that was down at load. */
   ended: boolean;
-  /** Why it ended; null while the refetch that tells kick from seal is in flight. */
+  /** Null while the refetch is in flight. */
   endReason: RoomEndReason | null;
   /** The server's document is in step with ours; false while offline or reconnecting. */
   synced: boolean;
@@ -118,7 +114,7 @@ export function PraxisRoomProvider({
    * provider.
    */
   onUpdate?: (at: Date) => void;
-  /** The room ended: resolve why (a praxis refetch), since the close carries no reason. */
+  /** The close carries no reason; resolve it with a refetch. */
   onEnded?: () => Promise<RoomEndReason>;
   children: ReactNode;
 }) {
