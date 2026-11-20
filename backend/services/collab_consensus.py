@@ -19,6 +19,7 @@ from errors import ErrorCode, raise_coded
 from game_config import CURRENT_ERA, EraConfig
 from models.account import Account
 from models.character import Character
+from models.era import Era
 from models.praxis import (
     MediaItem,
     Praxis,
@@ -37,7 +38,14 @@ from services.praxis_room import discard_room_document
 from services.taunt_service import fan_out_taunt
 
 
-async def _apply_seal(praxis: Praxis, session: AsyncSession, era: EraConfig) -> None:
+async def _apply_seal(
+    praxis: Praxis,
+    session: AsyncSession,
+    era: EraConfig,
+    *,
+    era_id: int | None = None,
+    sealed_at: datetime | None = None,
+) -> None:
     """The only transition into ``submitted``. Caller flushes and recalcs.
 
     Sole writer of ``submitted_at``, establishing ``status == submitted ⟹
@@ -46,13 +54,17 @@ async def _apply_seal(praxis: Praxis, session: AsyncSession, era: EraConfig) -> 
     (#1617, re-evaluated on resubmit), one ``praxis_complete`` taunt per member
     (ADR-0068), and the room flattened then discarded (#1745, ADR-0073 rule 7)
     so text typed just before submit is not lost to the debounce.
+
+    ``era_id``/``sealed_at`` override the live era and the wall clock: the era
+    close seals lapsed windows into the closing era at their deadline.
     """
     await discard_room_document(praxis, session)
     # Read the era before touching the row: this query autoflushes, and a
     # half-stamped "submitted" praxis fails ck_praxis_submitted_has_stamps.
-    era_id = (await get_current_era_row(session)).id
+    if era_id is None:
+        era_id = (await get_current_era_row(session)).id
     praxis.status = PraxisStatus.submitted
-    now = datetime.now(timezone.utc)
+    now = sealed_at or datetime.now(timezone.utc)
     praxis.submitted_at = now
     praxis.submit_proposed_at = None
     praxis.era_id = era_id
@@ -137,9 +149,9 @@ async def settle_if_window_lapsed(
 
     Called from the read paths, so no scheduler is needed.
 
-    ponytail: a collab nobody ever reads stays in_progress until first touch (members'
-    scores understated); self-heals on next read of any kind. Upgrade path if deterministic
-    timing is ever needed: an in-process periodic sweep calling this same helper.
+    ponytail: a collab nobody reads stays in_progress until first touch (members' scores
+    understated). Era close settles lapsed windows into the closing era; list surfaces
+    other than ``list_praxes`` may lag. Upgrade path: a periodic sweep calling this helper.
     """
     if (
         praxis.type != PraxisType.collab
@@ -151,6 +163,39 @@ async def settle_if_window_lapsed(
     if datetime.now(timezone.utc) < deadline:
         return
     await seal_to_live(praxis, session, era)
+
+
+async def seal_lapsed_at_era_close(
+    session: AsyncSession, closing_era_row: Era, closing_era: EraConfig
+) -> set[int]:
+    """Seal every lapsed collab window into the closing era, stamped at its deadline.
+
+    Returns the sealed members' character ids; the caller re-scores them in the
+    closing era. A collab with no proof stays unsealed, as on the lazy path.
+    """
+    window = timedelta(days=closing_era.collab_auto_submit_days)
+    lapsed = (
+        await session.scalars(
+            select(Praxis).where(
+                Praxis.type == PraxisType.collab,
+                Praxis.status.in_((PraxisStatus.in_progress, PraxisStatus.pending)),
+                Praxis.submit_proposed_at.is_not(None),
+                Praxis.submit_proposed_at + window <= func.now(),
+            )
+        )
+    ).all()
+    sealed: set[int] = set()
+    for praxis in lapsed:
+        member_ids = [m.character_id for m in praxis.members]
+        if not await _has_proof(praxis, member_ids, session):
+            continue
+        deadline = praxis.submit_proposed_at + window
+        await _apply_seal(
+            praxis, session, closing_era, era_id=closing_era_row.id, sealed_at=deadline
+        )
+        sealed.update(member_ids)
+    await session.flush()
+    return sealed
 
 
 async def mark_done(
