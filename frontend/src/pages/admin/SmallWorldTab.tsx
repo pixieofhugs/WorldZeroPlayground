@@ -29,6 +29,7 @@ export default function SmallWorldTab() {
   const values = (key: string, side: Record<string, number | boolean>) =>
     t(`console.smallWorld.rules.${key}.value`, {
       ...Object.fromEntries(Object.entries(side).map(([k, v]) => [k, show(v)])),
+      count: Number(side.invitation_task_threshold) || undefined,
       defaultValue: Object.values(side).map(show).join(' · '),
     })
 

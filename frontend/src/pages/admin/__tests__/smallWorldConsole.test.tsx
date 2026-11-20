@@ -32,7 +32,7 @@ describe('Small world', () => {
     api.getSmallWorld.mockResolvedValue(dials())
     renderTab()
     expect(await screen.findByText('31 h')).toBeTruthy()
-    expect(screen.getByText('1 tasks · 10 pts')).toBeTruthy()
+    expect(screen.getByText('1 task · 10 pts')).toBeTruthy()
     expect(screen.getByText('2 tasks · 50 pts')).toBeTruthy()
     expect(screen.getByText(/Rook/)).toBeTruthy()
     const group = screen.getByRole('radiogroup', { name: 'Post cooldown' })

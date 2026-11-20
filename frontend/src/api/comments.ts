@@ -9,7 +9,7 @@ export type CommentMention = components['schemas']['CommentMentionOut']
 export type CommentAuthor = components['schemas']['CommentAuthor']
 
 /** `praxis_id` / `task_id`: exactly one set (DB CHECK), both keys always serialized. */
-export type CommentOut = components['schemas']['CommentOut'] & { admin_note?: string | null }
+export type CommentOut = components['schemas']['CommentOut']
 
 export type CommentTarget = 'praxes' | 'tasks'
 

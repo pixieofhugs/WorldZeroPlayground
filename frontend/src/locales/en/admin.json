@@ -472,7 +472,8 @@
         "duel_level": { "name": "Duels unlock at level",
         "value": "level {{duel_level_required}}", "when": "new players decline most duels" },
         "invitation": { "name": "Faction invitation (tasks, points)",
-        "value": "{{invitation_task_threshold}} tasks · {{invitation_point_threshold}} pts", "when": "a faction reaches about five in one community" },
+        "value_one": "{{invitation_task_threshold}} task · {{invitation_point_threshold}} pts",
+        "value_other": "{{invitation_task_threshold}} tasks · {{invitation_point_threshold}} pts", "when": "a faction reaches about five in one community" },
         "flag_level": { "name": "Flagging unlocks at level",
         "value": "level {{flag_level_required}}", "when": "flags start getting overturned" }
       }
