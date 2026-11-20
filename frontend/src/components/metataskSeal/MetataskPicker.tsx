@@ -88,7 +88,7 @@ export default function MetataskPicker({
       aria-label={t("editPraxis.attach.pickerTitle")}
       className="fixed inset-0 z-50 flex items-center justify-center"
       style={{
-        padding: "var(--sheet-pad)",
+        padding: "var(--sheet-pad, var(--space-lg))",
         background: "var(--takeover-bg, var(--color-overlay-strong))",
       }}
     >
@@ -98,10 +98,10 @@ export default function MetataskPicker({
           gap: "var(--space-md)",
           padding: "var(--space-lg)",
           // Over the tab bar, so the sheet holds the safe-area gap itself.
-          paddingBottom: "var(--takeover-bottom)",
+          paddingBottom: "var(--takeover-bottom, var(--space-lg))",
           width: "var(--sheet-full, min(560px, 100%))",
           height: "var(--takeover-height, auto)",
-          maxHeight: "var(--takeover-max-height, 85vh)",
+          maxHeight: "var(--takeover-height, 85vh)",
           background: "var(--faction-default-card-bg)",
           color: "var(--faction-default-card-text)",
           border: "var(--sheet-border, 2px solid var(--faction-default-border))",

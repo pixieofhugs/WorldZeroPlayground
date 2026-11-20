@@ -66,8 +66,8 @@ export default function ConfirmDialog({
       }}
       className="fixed inset-0 z-50 flex justify-center"
       style={{
-        alignItems: 'var(--sheet-align)',
-        padding: 'var(--sheet-pad)',
+        alignItems: 'var(--sheet-align, center)',
+        padding: 'var(--sheet-pad, var(--space-lg))',
         background: 'var(--color-overlay-strong)',
       }}
     >

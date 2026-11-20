@@ -203,6 +203,6 @@ describe('ConfirmDialog — the static half of the accessibility contract', () =
     const html = markup(dropTaskConfirm())
     expect(html).toContain('role="dialog"')
     expect(html).toContain(forms.editPraxis.confirm.dropTaskAction)
-    expect(html).toContain('var(--sheet-align)')
+    expect(html).toContain('var(--sheet-align, center)')
   })
 })

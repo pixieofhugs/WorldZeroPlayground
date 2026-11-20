@@ -105,7 +105,7 @@ describe('CharacterSwitcherSheet', () => {
   })
 
   it('clears the tab bar on the phone and nothing on the desktop rail', () => {
-    expect(switcher('mobile')).toContain('padding-bottom:var(--switcher-bottom)')
+    expect(switcher('mobile')).toContain('padding-bottom:var(--switcher-bottom, var(--space-xl))')
   })
 
   it('takes its scrim and shadow from a token, never a raw rgba', () => {

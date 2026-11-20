@@ -116,7 +116,7 @@ export default function DefaultTaskDetail({
     background: "var(--color-bg-page)",
     border: "1px solid var(--faction-default-border)",
     borderRadius: 11,
-    padding: "var(--fx-space-lg--md)",
+    padding: "var(--fx-space-lg--md, var(--space-lg))",
     boxSizing: "border-box",
   };
   const primaryButton: CSSProperties = {
@@ -127,14 +127,14 @@ export default function DefaultTaskDetail({
     textDecoration: "none",
     fontFamily: "var(--font-display)",
     fontWeight: 600,
-    fontSize: "var(--fx-text-content--xl)",
+    fontSize: "var(--fx-text-content--xl, var(--text-content))",
     letterSpacing: "0.14em",
     textTransform: "uppercase",
     color: "var(--color-bg-page)",
     background: "var(--color-text-primary)",
     border: "1px solid var(--color-text-primary)",
     borderRadius: 10,
-    padding: "var(--fx-space-lg-xl--md-lg)",
+    padding: "var(--fx-btn-pad-wide, var(--space-lg) var(--space-xl))",
   };
 
   /** A spectrum hairline that runs out from a label — the page's only rule. */
@@ -306,7 +306,7 @@ export default function DefaultTaskDetail({
           style={{
             ...innerBox,
             flex: hasAction ? "0 0 auto" : "1 1 auto",
-            minWidth: "var(--fx-worth-min-default)",
+            minWidth: "var(--fx-worth-min-default, 168px)",
           }}
         >
           {worthSlot ?? scoreBody}
@@ -380,7 +380,7 @@ export default function DefaultTaskDetail({
         className="font-display italic"
         style={{
           fontWeight: 600,
-          fontSize: "var(--fx-text-display--heading)",
+          fontSize: "var(--fx-text-display--heading, var(--text-display))",
           lineHeight: 1.12,
           letterSpacing: "-0.01em",
           margin: 0,
@@ -497,7 +497,7 @@ export default function DefaultTaskDetail({
         style={{
           display: "flex",
           alignItems: "center",
-          gap: "var(--fx-space-xl--lg)",
+          gap: "var(--fx-space-xl--lg, var(--space-xl))",
           flexWrap: "wrap",
         }}
       >
@@ -509,7 +509,7 @@ export default function DefaultTaskDetail({
             className="font-display"
             style={{
               fontWeight: 600,
-              fontSize: "var(--fx-text-heading--title)",
+              fontSize: "var(--fx-text-heading--title, var(--text-heading))",
               lineHeight: 0.9,
               color: "var(--color-text-primary)",
             }}
@@ -534,7 +534,7 @@ export default function DefaultTaskDetail({
             className="font-display"
             style={{
               fontWeight: 600,
-              fontSize: "var(--fx-text-title--content)",
+              fontSize: "var(--fx-text-title--content, var(--text-title))",
               lineHeight: 0.9,
               color: "var(--color-text-primary)",
             }}
@@ -548,7 +548,7 @@ export default function DefaultTaskDetail({
 
   // The brief in full: no clamp.
   const brief = (
-    <section style={{ marginBottom: "var(--fx-space-2xl--xl)" }}>
+    <section style={{ marginBottom: "var(--fx-space-2xl--xl, var(--space-2xl))" }}>
       {sectionHead(t("detail.brief.heading"))}
       {task.description && (
         <p
@@ -567,7 +567,7 @@ export default function DefaultTaskDetail({
   );
 
   const gallery = (
-    <section style={{ marginBottom: "var(--fx-space-2xl--xl)" }}>
+    <section style={{ marginBottom: "var(--fx-space-2xl--xl, var(--space-2xl))" }}>
       <div
         style={{
           display: "flex",
@@ -694,7 +694,7 @@ export default function DefaultTaskDetail({
           color: "var(--na-task-detail-ink)",
           border: "1px solid var(--faction-default-border)",
           borderRadius: 18,
-          padding: "var(--fx-space-2xl--lg)",
+          padding: "var(--fx-space-2xl--lg, var(--space-2xl))",
           boxSizing: "border-box",
         }}
       >
@@ -704,10 +704,10 @@ export default function DefaultTaskDetail({
         <div
           style={{
             display: "flex",
-            flexDirection: "var(--fx-row-direction)" as "row",
-            alignItems: "var(--fx-align)",
+            flexDirection: "var(--fx-row-direction, row)" as "row",
+            alignItems: "var(--fx-align, flex-start)",
             gap: "var(--space-xl)",
-            marginBottom: "var(--fx-space-2xl--xl)",
+            marginBottom: "var(--fx-space-2xl--xl, var(--space-2xl))",
           }}
         >
           <div style={{ flex: 1, minWidth: 0 }}>

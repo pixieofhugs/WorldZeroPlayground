@@ -105,7 +105,7 @@ export default function EverymenTaskDetail({
     background: PANEL,
     border: `2px solid ${FRAME}`,
     borderRadius: 2,
-    padding: "var(--fx-space-lg--md)",
+    padding: "var(--fx-space-lg--md, var(--space-lg))",
     boxSizing: "border-box",
   };
   const dashRule = (marginBottom?: string) => (
@@ -125,9 +125,9 @@ export default function EverymenTaskDetail({
     border: `2px solid ${MAST}`,
     borderRadius: 2,
     ...label,
-    fontSize: "var(--fx-text-content--xl)",
+    fontSize: "var(--fx-text-content--xl, var(--text-content))",
     letterSpacing: "0.16em",
-    padding: "var(--fx-space-md-lg--sm-md)",
+    padding: "var(--fx-space-md-lg--sm-md, var(--space-md) var(--space-lg))",
   };
 
   /** Cog · label · dashed rule running out to an optional gloss. */
@@ -213,7 +213,7 @@ export default function EverymenTaskDetail({
       <h1
         style={{
           fontFamily: BEBAS,
-          fontSize: "var(--fx-text-display--heading)",
+          fontSize: "var(--fx-text-display--heading, var(--text-display))",
           lineHeight: 0.94,
           letterSpacing: "0.01em",
           textTransform: "uppercase",
@@ -326,7 +326,7 @@ export default function EverymenTaskDetail({
         style={{
           display: "flex",
           alignItems: "flex-end",
-          gap: "var(--fx-space-xl--lg)",
+          gap: "var(--fx-space-xl--lg, var(--space-xl))",
           flexWrap: "wrap",
         }}
       >
@@ -344,7 +344,7 @@ export default function EverymenTaskDetail({
           <span
             style={{
               fontFamily: BEBAS,
-              fontSize: "var(--fx-text-heading--title)",
+              fontSize: "var(--fx-text-heading--title, var(--text-heading))",
               lineHeight: 0.86,
               color: INK,
             }}
@@ -375,7 +375,7 @@ export default function EverymenTaskDetail({
           <span
             style={{
               fontFamily: BEBAS,
-              fontSize: "var(--fx-text-title--content)",
+              fontSize: "var(--fx-text-title--content, var(--text-title))",
               lineHeight: 0.86,
               color: INK,
             }}
@@ -535,7 +535,7 @@ export default function EverymenTaskDetail({
       <div
         style={{
           display: "flex",
-          flexDirection: "var(--fx-row-direction)" as "row",
+          flexDirection: "var(--fx-row-direction, row)" as "row",
           gap: "var(--space-xs)",
           alignItems: "stretch",
         }}
@@ -543,8 +543,8 @@ export default function EverymenTaskDetail({
         <div
           style={{
             ...plateBox,
-            flex: hasAction ? "var(--fx-wage-flex)" : "1 1 auto",
-            minWidth: "var(--fx-wage-min)",
+            flex: hasAction ? "var(--fx-wage-flex, 0 0 auto)" : "1 1 auto",
+            minWidth: "var(--fx-wage-min, 156px)",
           }}
         >
           {wageBox}
@@ -570,7 +570,7 @@ export default function EverymenTaskDetail({
   // The brief, in full. No clamp.
   const brief = (
     <section
-      style={{ marginBottom: "var(--fx-space-2xl--xl)" }}
+      style={{ marginBottom: "var(--fx-space-2xl--xl, var(--space-2xl))" }}
     >
       {sectionHead(t("detail.brief.heading"))}
       {task.description && (
@@ -628,7 +628,7 @@ export default function EverymenTaskDetail({
 
   const gallery = (
     <section
-      style={{ marginBottom: "var(--fx-space-2xl--xl)" }}
+      style={{ marginBottom: "var(--fx-space-2xl--xl, var(--space-2xl))" }}
     >
       {/* Nothing to sort until something is filed (#1704). */}
       {sectionHead(
@@ -693,7 +693,7 @@ export default function EverymenTaskDetail({
           maxWidth: 1200,
           margin: "0 auto",
           borderRadius: 18,
-          padding: "var(--fx-space-2xl--lg)",
+          padding: "var(--fx-space-2xl--lg, var(--space-2xl))",
           overflow: "hidden",
           boxSizing: "border-box",
         }}
@@ -704,10 +704,10 @@ export default function EverymenTaskDetail({
         <div
           style={{
             display: "flex",
-            flexDirection: "var(--fx-row-direction)" as "row",
-            alignItems: "var(--fx-align)",
+            flexDirection: "var(--fx-row-direction, row)" as "row",
+            alignItems: "var(--fx-align, flex-start)",
             gap: "var(--space-xl)",
-            marginBottom: "var(--fx-space-2xl--xl)",
+            marginBottom: "var(--fx-space-2xl--xl, var(--space-2xl))",
           }}
         >
           <div style={{ flex: 1, minWidth: 0 }}>

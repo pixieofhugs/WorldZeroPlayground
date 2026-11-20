@@ -64,7 +64,7 @@ export default function CharacterSwitcherSheet({
   return drawAtRoot(
     <div ref={ref} role="dialog" aria-modal="true" aria-label={t('fieldDesk.home.switcher.title')}>
       <button type="button" aria-label={t('fieldDesk.home.switcher.close')} onClick={onClose} style={scrim} />
-      <div style={{ ...sheet, paddingBottom: 'var(--switcher-bottom)' }}>
+      <div style={{ ...sheet, paddingBottom: 'var(--switcher-bottom, var(--space-xl))' }}>
         <span style={grab} />
         <div style={sheetTitle}>{t('fieldDesk.home.switcher.title')}</div>
 

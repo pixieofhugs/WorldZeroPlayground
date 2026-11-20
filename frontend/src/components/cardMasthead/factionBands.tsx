@@ -151,7 +151,7 @@ function EverymenBand({ inert }: { inert?: boolean } = {}) {
       /* On the red mast the sigil's own `--everymen-red` is invisible. */
       markColor="var(--faction-everymen-bill-mast-ink)"
       style={{
-        padding: "var(--everymen-band-pad)",
+        padding: "var(--everymen-band-pad, var(--space-md) var(--space-lg))",
         background: "var(--faction-everymen-bill-mast)",
         color: "var(--faction-everymen-bill-mast-ink)",
         borderBottom: "3px double var(--faction-everymen-bill-cta-bg)",

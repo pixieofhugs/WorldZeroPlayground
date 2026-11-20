@@ -194,11 +194,11 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
     background: HARD,
     color: "var(--faction-snide-acid)",
     fontFamily: IMPACT,
-    fontSize: "var(--fx-text-title--content)",
+    fontSize: "var(--fx-text-title--content, var(--text-title))",
     letterSpacing: "0.2em",
     textTransform: "uppercase",
     border: "3px solid var(--faction-snide-acid)",
-    padding: "var(--fx-space-lg-xl--md)",
+    padding: "var(--fx-space-lg-xl--md, var(--space-lg) var(--space-xl))",
     boxShadow: `7px 7px 0 ${PINK}`,
     transform: "skewX(-4deg) rotate(-0.8deg)",
     display: "flex",
@@ -222,7 +222,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
       <span
         style={{
           fontFamily: IMPACT,
-          fontSize: "var(--fx-text-heading--title)",
+          fontSize: "var(--fx-text-heading--title, var(--text-heading))",
           lineHeight: 1.02,
           letterSpacing: "0.01em",
           textTransform: "uppercase",
@@ -243,8 +243,8 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
         style={{
           fontFamily: IMPACT,
           fontSize: big
-            ? "var(--fx-text-display--heading)"
-            : "var(--fx-text-heading--title)",
+            ? "var(--fx-text-display--heading, var(--text-display))"
+            : "var(--fx-text-heading--title, var(--text-heading))",
           lineHeight: 0.82,
           color: INK,
           transform: big ? "rotate(-1.5deg)" : "none",
@@ -304,7 +304,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
           <div
             style={{
               fontFamily: MARK,
-              fontSize: "var(--fx-text-title--content)",
+              fontSize: "var(--fx-text-title--content, var(--text-title))",
               lineHeight: 1.2,
               color: PLATE_TEXT,
               marginBottom: "var(--space-md)",
@@ -327,7 +327,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
           <div
             style={{
               fontFamily: MARK,
-              fontSize: "var(--fx-text-title--content)",
+              fontSize: "var(--fx-text-title--content, var(--text-title))",
               lineHeight: 1.2,
               color: PLATE_TEXT,
               marginBottom: "var(--space-md)",
@@ -403,7 +403,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
             ...innerBox,
             // Alone (no move, #1138) the worth sheet takes the whole width.
             flex: hasAction ? "0 0 auto" : "1 1 auto",
-            minWidth: "var(--fx-worth-min-snide)",
+            minWidth: "var(--fx-worth-min-snide, 178px)",
             position: "relative",
             display: "flex",
             alignItems: "center",
@@ -428,7 +428,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
               display: "flex",
               flexDirection: "column",
               justifyContent: "center",
-              padding: "var(--fx-space-xl--lg)",
+              padding: "var(--fx-space-xl--lg, var(--space-xl))",
             }}
           >
             {actionBody}
@@ -497,7 +497,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
           flex row (flex drops whitespace children and glues the words, #1023). */}
       <h1
         style={{
-          fontSize: "var(--fx-text-display--heading)",
+          fontSize: "var(--fx-text-display--heading, var(--text-display))",
           lineHeight: 1.3,
           margin: "0 0 var(--space-lg)",
         }}
@@ -613,7 +613,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
         style={{
           display: "flex",
           alignItems: "flex-end",
-          gap: "var(--fx-space-xl--lg)",
+          gap: "var(--fx-space-xl--lg, var(--space-xl))",
           flexWrap: "wrap",
         }}
       >
@@ -634,9 +634,9 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
 
   // The brief, in full, NOT ONE WORD REDACTED.
   const brief = (
-    <section style={{ marginBottom: "var(--fx-space-2xl--xl)" }}>
+    <section style={{ marginBottom: "var(--fx-space-2xl--xl, var(--space-2xl))" }}>
       {sectionHead(t("detail.brief.heading"))}
-      <div style={{ ...panel, padding: "var(--fx-space-xl--lg)" }}>
+      <div style={{ ...panel, padding: "var(--fx-space-xl--lg, var(--space-xl))" }}>
         {task.description && (
           <p
             className="content-text"
@@ -656,7 +656,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
   );
 
   const gallery = (
-    <section style={{ marginBottom: "var(--fx-space-2xl--xl)" }}>
+    <section style={{ marginBottom: "var(--fx-space-2xl--xl, var(--space-2xl))" }}>
       <div
         style={{
           display: "flex",
@@ -669,7 +669,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
         <span
           style={{
             fontFamily: IMPACT,
-            fontSize: "var(--fx-text-heading--title)",
+            fontSize: "var(--fx-text-heading--title, var(--text-heading))",
             lineHeight: 1.02,
             letterSpacing: "0.01em",
             textTransform: "uppercase",
@@ -788,7 +788,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
           maxWidth: 1200,
           margin: "0 auto",
           borderRadius: 18,
-          padding: "var(--fx-space-2xl--lg)",
+          padding: "var(--fx-space-2xl--lg, var(--space-2xl))",
           overflow: "hidden",
           boxSizing: "border-box",
         }}
@@ -796,10 +796,10 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
         <div
           style={{
             display: "flex",
-            flexDirection: "var(--fx-row-direction)" as "row",
-            alignItems: "var(--fx-align)",
+            flexDirection: "var(--fx-row-direction, row)" as "row",
+            alignItems: "var(--fx-align, flex-start)",
             gap: "var(--space-xl)",
-            marginBottom: "var(--fx-space-2xl--xl)",
+            marginBottom: "var(--fx-space-2xl--xl, var(--space-2xl))",
           }}
         >
           <div style={{ flex: 1, minWidth: 0 }}>
