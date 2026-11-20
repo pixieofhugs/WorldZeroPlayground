@@ -32,6 +32,25 @@ export function clearOnboardingHandoff(): void {
   }
 }
 
+// Set once the welcome title has played or START was tapped: a later load gets the instant title. Storage that refuses means the full version.
+export const TITLE_SEEN_KEY = 'wz-onboarding-title-seen'
+
+export function titleSeen(): boolean {
+  try {
+    return localStorage.getItem(TITLE_SEEN_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+export function markTitleSeen(): void {
+  try {
+    localStorage.setItem(TITLE_SEEN_KEY, '1')
+  } catch {
+    // Nothing was stored; the full title plays again.
+  }
+}
+
 // The contract click, held through the redirect; `false` = storage refused, so the contract shows again.
 export const HELD_TERMS_KEY = 'wz_terms_accepted'
 

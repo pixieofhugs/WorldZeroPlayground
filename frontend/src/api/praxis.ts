@@ -192,9 +192,10 @@ export async function setPraxisDone(id: number, isDone: boolean): Promise<Praxis
  * Propose, or Approve if a window is already open (ADR-0079). Proposing opens
  * the silence-is-consent window. All approved → Live.
  */
-export async function submitPraxis(id: number): Promise<PraxisOut> {
+export async function submitPraxis(id: number, docState: string | null = null): Promise<PraxisOut> {
   const { data } = await apiPost('/praxes/{praxis_id}/submit', {
     params: { path: { praxis_id: id } },
+    ...(docState === null ? {} : { body: { doc_state: docState } }),
   })
   notifyRequestsChanged()
   return data
