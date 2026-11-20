@@ -1,10 +1,12 @@
 /**
  * The onboarding flow's place across an OAuth round trip: the callback always
- * lands on `/` (`_signed_in_redirect`), so the flow marks before leaving,
- * `RootLanding` reads it once signed in, and the flow clears it on mount.
- * A client-side boolean in `sessionStorage`: its only destination is the terms
- * card, so tampering is harmless and it can redirect at most once. Storage can
- * throw or be absent; a refusal just means no resume.
+ * lands on `/` (`_signed_in_redirect`), so the flow (and `Layout`) mark before
+ * leaving, `RootLanding` reads it once signed in, and the flow clears it on mount.
+ * A client-side boolean in `sessionStorage`: its destination is the contract card,
+ * so tampering is harmless and it can redirect at most once. `wz_terms_accepted`
+ * below is a second key: a forged one makes the resume POST the acceptance, which
+ * the signed-in session could do directly. Storage can throw or be absent; a
+ * refusal just means no resume.
  */
 export const ONBOARDING_HANDOFF_KEY = 'wz_onboarding_handoff'
 

@@ -1,5 +1,5 @@
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
-import { useEffect, useState, type CSSProperties } from 'react'
+import { lazy, Suspense, useEffect, useState, type CSSProperties } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
@@ -21,6 +21,8 @@ import { useTaskSignup } from '../hooks/useTaskSignup'
 import { useSidebarPanels } from '../hooks/useSidebarPanels'
 import { rosterOffersAChoice } from '../hooks/useRosterChoice'
 import { useFieldDeskHome } from './fieldDesk/useFieldDeskHome'
+
+const InstallNudge = lazy(() => import('../components/install/InstallNudge'))
 
 /**
  * FieldDesk — the authenticated home at `/` (#274). On a phone with a carried
@@ -89,7 +91,14 @@ export default function FieldDesk() {
 
   if (formFactor === 'mobile' && homeState) {
     const Skin = resolveVariant(surfaceMap('mobileFieldDesk'), homeState.character.faction_slug)
-    return <Skin state={homeState} />
+    return (
+      <>
+        <Suspense fallback={null}>
+          <InstallNudge />
+        </Suspense>
+        <Skin state={homeState} />
+      </>
+    )
   }
 
   return (

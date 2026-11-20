@@ -1,0 +1,16 @@
+/* ══ PRAXIS DETAIL: phone vs desktop values (#3002) ══
+   Only the phone is declared; the use site's fallback is the desktop value, so nothing is
+   aliased into :root. Node trees (rail placement, aside track) still branch on the hook. ══ */
+@media (max-width: 767px) and (pointer: coarse) {
+  :root {
+    --praxis-section-gap: var(--space-xl);
+    --praxis-split-direction: column;
+    --praxis-pad: var(--space-lg);
+    --praxis-everymen-pad: var(--space-xl);
+    --praxis-sheet-pad: var(--space-lg) var(--space-md) var(--space-xl);
+    --praxis-lead-size: var(--text-content);
+    --praxis-hero-size: var(--text-heading);
+    --praxis-kicker-size: var(--text-lg);
+    --praxis-plate-size: var(--text-title);
+  }
+}

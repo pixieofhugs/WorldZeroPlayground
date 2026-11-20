@@ -165,6 +165,7 @@
     "heading_one": "{{count}} comment",
     "heading_other": "{{count}} comments",
     "loadError": "Could not load comments.",
+    "removedNote": "A mod removed this comment: {{note}}",
     "composerPlaceholder": "Say something worth keeping…",
     "mentionHint": "@ to mention",
     "levelGate": "Reach level {{level}} to join the discussion",

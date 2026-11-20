@@ -227,9 +227,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
           style={{
             fontFamily: IMPACT,
             fontSize: big
-              ? desktop
-                ? "var(--text-heading)"
-                : "var(--text-title)"
+              ? "var(--praxis-plate-size, var(--text-heading))"
               : "var(--text-title)",
             lineHeight: 1.02,
             letterSpacing: "0.01em",
@@ -290,14 +288,14 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
             praxis={praxis}
             linkStyle={{
               fontFamily: TYPE,
-              fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
+              fontSize: "var(--praxis-lead-size, var(--text-title))",
               color: INK,
               textDecoration: "none",
               borderBottom: "2px solid var(--faction-snide-acid-deep)",
             }}
             separatorStyle={{
               fontFamily: TYPE,
-              fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
+              fontSize: "var(--praxis-lead-size, var(--text-title))",
               color: MUTED,
             }}
           />
@@ -306,7 +304,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
             to={`/characters/${praxis.created_by_id}`}
             style={{
               fontFamily: TYPE,
-              fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
+              fontSize: "var(--praxis-lead-size, var(--text-title))",
               color: INK,
               textDecoration: "none",
               borderBottom: "2px solid var(--faction-snide-acid-deep)",
@@ -329,7 +327,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
   const title = (
     <h1
       style={{
-        fontSize: desktop ? "var(--text-display)" : "var(--text-heading)",
+        fontSize: "var(--praxis-hero-size, var(--text-display))",
         lineHeight: 1.3,
         margin: "0 0 var(--space-md)",
       }}
@@ -573,7 +571,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
           maxWidth: 1200,
           margin: "0 auto",
           borderRadius: 18,
-          padding: desktop ? "var(--space-2xl)" : "var(--space-lg)",
+          padding: "var(--praxis-pad, var(--space-2xl))",
           overflow: "hidden",
           boxSizing: "border-box",
         },

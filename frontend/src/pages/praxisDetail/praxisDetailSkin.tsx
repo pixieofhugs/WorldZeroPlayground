@@ -143,7 +143,7 @@ export function PraxisDetailSkin({
   if (!praxis) return null
 
   const sheetBody = kit.sheetBody ?? ((body: ReactNode) => body)
-  const sectionGap = desktop ? 'var(--space-2xl)' : 'var(--space-xl)'
+  const sectionGap = 'var(--praxis-section-gap, var(--space-2xl))'
 
   // Moderation chrome: mounted bare, platform not faction (ADR-0061); the two
   // ink knobs are a kit's whole say (#3016).
@@ -205,9 +205,9 @@ export function PraxisDetailSkin({
       style={{
         ...kit.splitStyle,
         display: 'flex',
-        flexDirection: desktop ? 'row' : 'column',
+        flexDirection: 'var(--praxis-split-direction, row)' as 'row',
         alignItems: 'stretch',
-        gap: desktop ? 'var(--space-2xl)' : 'var(--space-xl)',
+        gap: 'var(--praxis-section-gap, var(--space-2xl))',
       }}
     >
       {kit.splitPrelude}
