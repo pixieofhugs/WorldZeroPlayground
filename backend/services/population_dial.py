@@ -88,6 +88,9 @@ async def set_dials(
 ) -> list[str]:
     """Flip dials; returns the keys whose side actually changed.
 
+    ``updated_at`` is the wall clock, not the transaction start: it is the
+    cache stamp, so two flips must never share one.
+
     Commit first, then overlay (the order of ``commit_and_bind_live_era``).
     """
     unknown = sorted(set(sides) - set(era.dials))
@@ -107,12 +110,17 @@ async def set_dials(
             continue
         if row is None:
             session.add(
-                PopulationDial(dial_key=key, side=side, updated_by_id=admin_account_id)
+                PopulationDial(
+                    dial_key=key,
+                    side=side,
+                    updated_by_id=admin_account_id,
+                    updated_at=func.clock_timestamp(),
+                )
             )
         else:
             row.side = side
             row.updated_by_id = admin_account_id
-            row.updated_at = func.now()
+            row.updated_at = func.clock_timestamp()
         changed.append(key)
         await log_mod_action(
             session,
