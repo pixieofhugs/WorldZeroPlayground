@@ -9,6 +9,7 @@ one. A separate type, because ``FeedDismissal`` already silences
 import pytest
 from httpx import AsyncClient
 
+from models.account import Account, AccountStatus
 from models.character import Character
 from models.task import Task
 
@@ -150,3 +151,37 @@ async def test_repeated_changes_collapse_into_one_row(
     changed = _of_type(await _your_stuff(client, auth_headers), "vote_changed_on_mine")
     assert len(changed) == 1, f"four re-rates produced {len(changed)} rows"
     assert changed[0]["payload"]["value"] == 5, "the row is not showing the latest vote"
+
+
+@pytest.mark.asyncio
+async def test_a_suspended_voters_vote_leaves_the_feed_until_unsuspended(
+    client: AsyncClient,
+    db_session,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+):
+    praxis_id = await _praxis_and_vote(
+        client, active_task, auth_headers, auth_headers2, 3
+    )
+    voter = await db_session.get(Account, character2.account_id)
+    vote_types = {"vote_on_mine", "vote_changed_on_mine"}
+
+    async def kinds() -> set[str]:
+        return {i["type"] for i in await _your_stuff(client, auth_headers)}
+
+    assert "vote_on_mine" in await kinds()
+    voter.status = AccountStatus.suspended
+    await db_session.commit()
+    assert not vote_types & await kinds()
+
+    voter.status = AccountStatus.active
+    await db_session.commit()
+    await client.post(
+        f"/praxes/{praxis_id}/vote", json={"value": 5}, headers=auth_headers2
+    )
+    assert "vote_changed_on_mine" in await kinds()
+    voter.status = AccountStatus.suspended
+    await db_session.commit()
+    assert not vote_types & await kinds()

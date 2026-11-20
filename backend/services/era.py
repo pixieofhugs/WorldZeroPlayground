@@ -373,7 +373,7 @@ async def apply_era_reset(
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
 ) -> None:
-    """Create new-era CharacterStats rows, freeze duels, retire the board.
+    """Seal lapsed collabs, freeze duels, retire the board, create new-era stats rows.
 
     Prior-era stats are kept. Defection history isn't purged: every reader
     filters by era, so old rows can't gate a new-era join (#1372).
@@ -384,10 +384,10 @@ async def apply_era_reset(
     closing_era_row = (
         await session.get(Era, closing_era_id) if closing_era_id is not None else None
     )
-    if closing_era_row is not None and duels:
-        # Active duels froze as no-contests; their provisional winner multiplier
-        # must not stay banked in the closing era. Deferred: import cycle.
+    if closing_era_row is not None:
+        # Deferred: import cycles.
         from services.character_stats import recalculate_character_stats
+        from services.collab_consensus import seal_lapsed_at_era_close
 
         # The closing era's rules, not the opening era's: its score is frozen history.
         closing_era = era_config_for_key(closing_era_row.config_key)
@@ -397,14 +397,23 @@ async def apply_era_reset(
                 f"{closing_era_row.config_key!r}; cannot re-score its duels"
             )
 
-        challenger_ids = (
-            await session.execute(
-                select(Praxis.created_by_id).where(
-                    Praxis.id.in_([duel.challenger_praxis_id for duel in duels])
+        # Lapsed collabs belong to the closing era, not to whoever reads them first.
+        participants = await seal_lapsed_at_era_close(
+            session, closing_era_row, closing_era
+        )
+        if duels:
+            # Active duels froze as no-contests; their provisional winner multiplier
+            # must not stay banked in the closing era.
+            challenger_ids = (
+                await session.execute(
+                    select(Praxis.created_by_id).where(
+                        Praxis.id.in_([duel.challenger_praxis_id for duel in duels])
+                    )
                 )
+            ).scalars()
+            participants |= {d.opponent_character_id for d in duels} | set(
+                challenger_ids
             )
-        ).scalars()
-        participants = {d.opponent_character_id for d in duels} | set(challenger_ids)
         for character_id in participants:
             await recalculate_character_stats(
                 character_id,

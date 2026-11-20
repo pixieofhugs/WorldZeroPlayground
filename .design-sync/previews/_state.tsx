@@ -307,6 +307,7 @@ export function editPraxisState(slug: string): EditPraxisState {
     dismissConfirm: noop,
     autosaveAt: null,
     setAutosaveAt: () => {},
+    resolveRoomEnd: async () => "removed",
     autoSubmitDays: null,
     // Drafting: no proposal is live, so the editor asks nothing (ADR-0079).
     // #1745's `documentFrozen` and #1931's seal latch went with the freeze.

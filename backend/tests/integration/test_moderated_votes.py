@@ -1,11 +1,15 @@
 """Moderated voters' votes stop counting, reversibly (#3543, ADR-0081)."""
+from datetime import timedelta
+
 import pytest
 from sqlalchemy import select
 
 from models.character import CharacterStatus
 from models.character_stats import CharacterStats
+from models.praxis import PraxisStatus
 from services.account_deletion import delete_account
 from services.character_stats import recalculate_character_stats
+from services.praxis import PraxisSort, list_praxes
 from services.vote_tally import tally_votes
 from tests.integration.factories import (
     cast_vote,
@@ -125,3 +129,40 @@ async def test_unban_of_a_deleted_accounts_banned_life_is_refused(
     assert resp.status_code == 409
     await db_session.refresh(character2)
     assert character2.status == CharacterStatus.banned
+
+
+@pytest.mark.parametrize("how", ["ban", "suspend", "depart"])
+async def test_the_vote_sorts_count_only_counted_votes(
+    client, db_session, auth_headers, rigged, character, character2, how
+):
+    task = await make_task(db_session, character)
+    newer = await make_solo_praxis(db_session, task, character)
+    newer.submitted_at = rigged.submitted_at + timedelta(hours=1)
+    await cast_vote(db_session, newer, character, 4)
+
+    async def order(sort):
+        got = await list_praxes(db_session, status=PraxisStatus.submitted, sort=sort)
+        return [p.id for p in got]
+
+    assert await order(PraxisSort.most_voted) == [rigged.id, newer.id]
+    if how == "ban":
+        await client.post(
+            f"/admin/characters/{character2.id}/ban",
+            json={"banned": True},
+            headers=auth_headers,
+        )
+    elif how == "suspend":
+        await client.post(
+            f"/admin/accounts/{character2.account_id}/suspend",
+            json={"suspended": True},
+            headers=auth_headers,
+        )
+    else:
+        character2.status = CharacterStatus.banned
+        character2.departed_at = character2.created_at
+        await db_session.flush()
+    expected = [rigged.id, newer.id] if how == "depart" else [newer.id, rigged.id]
+    assert await order(PraxisSort.most_voted) == expected
+    # A tie falls to newest first in both directions.
+    least = expected[::-1] if how == "depart" else expected
+    assert await order(PraxisSort.least_voted) == least

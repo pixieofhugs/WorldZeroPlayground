@@ -89,6 +89,7 @@ from services.signup_eligibility import (
     meets_task_level,
 )
 from services.vote import void_account_vote_on_join
+from services.vote_tally import counted_votes
 
 
 def _require_member(praxis: Praxis, character_id: int, action: str) -> None:
@@ -370,8 +371,9 @@ async def list_praxes(
         if sort in (PraxisSort.most_voted, PraxisSort.least_voted):
             # See PraxisSort.
             vote_count = (
-                select(func.count(Vote.id))
+                counted_votes(select(func.count(Vote.id)))
                 .where(Vote.praxis_id == Praxis.id)
+                .correlate(Praxis)
                 .scalar_subquery()
             )
             order = (

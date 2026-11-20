@@ -49,4 +49,13 @@ describe('resolveMembershipState', () => {
     expect(resolveMembershipState(true, 'invited', false)).toBe('eligible')
     expect(resolveMembershipState(true, 'not_invited', true)).toBe('eligible')
   })
+
+  it('maps the New Game+ refusal to ng_plus, slug-blind; other refusals stay gate', () => {
+    const ngPlus = 'FACTION_ALBESCENT_NEW_GAME_PLUS_ONLY'
+    expect(resolveMembershipState(true, 'not_invited', false, ngPlus)).toBe('ng_plus')
+    expect(resolveMembershipState(true, 'not_invited', false, null)).toBe('gate')
+    expect(
+      resolveMembershipState(true, 'not_invited', false, 'FACTION_INVITATION_REQUIRED'),
+    ).toBe('gate')
+  })
 })

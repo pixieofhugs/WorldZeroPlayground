@@ -151,6 +151,9 @@ async def test_status_route_serves_joinable(
         ]
     }
     assert rows["coven"]["joinable"] is True
+    assert rows["coven"]["refusal"] is None
+    assert rows[ALBESCENT_FACTION_SLUG]["refusal"] is None
+    assert rows["ua"]["refusal"] == "FACTION_ALREADY_MEMBER"
     assert rows[ALBESCENT_FACTION_SLUG]["joinable"] is True
     assert (
         rows[ALBESCENT_FACTION_SLUG]["status"] == "not_invited"
@@ -158,3 +161,30 @@ async def test_status_route_serves_joinable(
     assert rows["ua"]["joinable"] is False  # no letter
     assert rows[character.faction_slug]["joinable"] is False  # current faction
     assert not rows.get(UNAFFILIATED_FACTION_SLUG, {}).get("joinable", False)
+
+
+@pytest.mark.asyncio
+async def test_status_row_names_the_new_game_plus_refusal_for_the_earner(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    account: Account,
+    character: Character,
+    era: Era,
+    auth_headers: dict,
+):
+    await _setup(db_session, account, character, era, unlocked=True, level=CEILING)
+    rows = {
+        r["slug"]: r
+        for r in (await client.get("/factions/status", headers=auth_headers)).json()[
+            "all_factions"
+        ]
+    }
+    row = rows[ALBESCENT_FACTION_SLUG]
+    assert row["joinable"] is False
+    assert row["refusal"] == "FACTION_ALBESCENT_NEW_GAME_PLUS_ONLY"
+    choose = await client.post(
+        "/factions/choose",
+        json={"faction_slug": ALBESCENT_FACTION_SLUG},
+        headers=auth_headers,
+    )
+    assert choose.status_code == 403

@@ -369,6 +369,7 @@
         "points": "Points",
         "goesPublic": "Unreviewed, goes public"
       },
+      "metatask": "Metatask",
       "inHours": "in {{hours}}h",
       "publicNow": "public now",
       "empty": "No {{segment}} tasks match.",

@@ -8,6 +8,7 @@ import { describe, it, expect } from 'vitest'
 import {
   PRE_OPEN_RETRY_LIMIT,
   WS_POLICY_VIOLATION,
+  closeEndsRoom,
   shouldReconnectRoom,
 } from '../roomReconnect'
 
@@ -51,5 +52,12 @@ describe('shouldReconnectRoom', () => {
     expect(
       shouldReconnectRoom(WS_ABNORMAL_CLOSURE, PRE_OPEN_RETRY_LIMIT * 100, true),
     ).toBe(true)
+  })
+})
+
+describe('closeEndsRoom', () => {
+  it('ends the room on 1008 only, not on a 1006 drop or refusal', () => {
+    expect(closeEndsRoom(WS_POLICY_VIOLATION)).toBe(true)
+    expect(closeEndsRoom(WS_ABNORMAL_CLOSURE)).toBe(false)
   })
 })

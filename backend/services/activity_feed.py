@@ -41,6 +41,7 @@ from models.duel import Duel, DuelStatus
 from models.praxis import ModerationStatus, Praxis, PraxisInvite, PraxisInviteStatus, PraxisMember, PraxisStatus, PraxisType
 from services.block_service import blocked_counterpart_ids
 from services.meta_task import character_sees_metatasks
+from services.vote_tally import counted_votes
 from services.praxis_visibility import praxis_visibility_condition
 from models.character_stats import CharacterStats
 from models.task import Task, TaskStatus, TaskType
@@ -270,16 +271,18 @@ def _vote_query_factory(changed: bool) -> Callable[[FeedContext], Select]:
     def build(ctx: FeedContext) -> Select:
         voter_char = Character.__table__.alias("voter_char")
         query = (
-            select(
-                Vote.id,
-                Vote.value,
-                moment.label("moment"),
-                Vote.praxis_id,
-                Praxis.title.label("praxis_title"),
-                Task.point_value.label("task_point_value"),
-                voter_char.c.display_name.label("voter_display_name"),
-                voter_char.c.faction_slug.label("voter_faction_slug"),
-                voter_char.c.avatar_url.label("voter_avatar_url"),
+            counted_votes(
+                select(
+                    Vote.id,
+                    Vote.value,
+                    moment.label("moment"),
+                    Vote.praxis_id,
+                    Praxis.title.label("praxis_title"),
+                    Task.point_value.label("task_point_value"),
+                    voter_char.c.display_name.label("voter_display_name"),
+                    voter_char.c.faction_slug.label("voter_faction_slug"),
+                    voter_char.c.avatar_url.label("voter_avatar_url"),
+                )
             )
             .join(Praxis, Vote.praxis_id == Praxis.id)
             .join(Task, Praxis.task_id == Task.id)

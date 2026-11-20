@@ -59,6 +59,7 @@ describe('what the picker may offer — exactly what the server says is joinable
     slug,
     status,
     joinable,
+    refusal: joinable ? null : "FACTION_INVITATION_REQUIRED",
   })
   const pageOf = (all_factions: FactionPageOut['all_factions']): FactionPageOut => ({
     current_faction_slug: 'wow',
