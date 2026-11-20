@@ -141,7 +141,7 @@ describe('CopyEditor, one wording from several keys', () => {
 })
 
 describe('CopyEditor, edit box over the spot (#3453)', () => {
-  const open = async (mobile: boolean) => {
+  const open = async (mobile: boolean, rect = new DOMRect(30, 50, 200, 24)) => {
     vi.stubGlobal('matchMedia', () => ({
       matches: mobile,
       addEventListener: () => {},
@@ -154,12 +154,64 @@ describe('CopyEditor, edit box over the spot (#3453)', () => {
       </>,
     )
     const spot = screen.getByText('Overridden Zero')
-    spot.getBoundingClientRect = () => new DOMRect(30, 50, 200, 24)
+    spot.getBoundingClientRect = () => rect
     fireEvent.click(screen.getByText('edit copy'))
     await screen.findByText('stop editing copy')
     fireEvent.click(spot)
     return (await screen.findByLabelText('Replacement wording')) as HTMLTextAreaElement
   }
+
+  it('desktop: the box takes focus once placed', async () => {
+    const box = await open(false)
+    expect(document.activeElement).toBe(box)
+  })
+
+  it('a spot too narrow, or off screen, keeps the panel textarea', async () => {
+    expect((await open(false, new DOMRect(30, 50, 20, 24))).style.position).not.toBe('fixed')
+    cleanup()
+    expect((await open(false, new DOMRect(30, -100, 200, 24))).style.position).not.toBe('fixed')
+  })
+
+  it('follows the spot on scroll', async () => {
+    const box = await open(false)
+    screen.getByText('Overridden Zero', { selector: 'p' }).getBoundingClientRect = () => new DOMRect(30, 80, 200, 24)
+    fireEvent.scroll(window)
+    await waitFor(() => expect(box.style.top).toBe('80px'))
+  })
+
+  it('without field-sizing it gets a row per line', async () => {
+    const box = await open(false)
+    fireEvent.change(box, { target: { value: 'one\n\nthree' } })
+    expect(box.rows).toBe(3)
+  })
+
+  it('closing a key picked from a chooser does not refocus an older spot', async () => {
+    const { container } = render(
+      <>
+        <SameWording />
+        <p id="both">
+          <SameWording />
+        </p>
+        <button>elsewhere</button>
+        <CopyEditor />
+      </>,
+    )
+    const link = container.querySelector('a')!
+    link.getBoundingClientRect = () => new DOMRect(30, 50, 200, 24)
+    fireEvent.click(screen.getByText('edit copy'))
+    await screen.findByText('stop editing copy')
+    fireEvent.click(link)
+    await screen.findByLabelText('Replacement wording')
+    fireEvent.click(screen.getByText('cancel'))
+    await waitFor(() => expect(document.activeElement).toBe(link))
+
+    screen.getByText('elsewhere').focus()
+    fireEvent.click(container.querySelector('#both')!)
+    fireEvent.click(await screen.findByText(/common:nav.tasks/, { selector: 'button' }))
+    expect(((await screen.findByLabelText('Replacement wording')) as HTMLTextAreaElement).style.position).not.toBe('fixed')
+    fireEvent.click(screen.getByText('cancel'))
+    expect(document.activeElement).toBe(screen.getByText('elsewhere'))
+  })
 
   it('desktop: the textarea sits at the clicked text', async () => {
     const box = await open(false)
