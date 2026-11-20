@@ -136,6 +136,21 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
   const hasCharacter = !!user?.character || arrival !== null
   const handOff = () => (hasCharacter ? onAccepted() : move((f) => toCharacter(f, hasCharacter)))
 
+  // Returning = signed in with a character. Skipping the contract writes no row, so it needs one for the current terms.
+  const player = !!user?.character
+  const contractOnFile = player && !!user?.has_accepted_terms
+  const canSkip = player && !['signin', 'returning', 'declined'].includes(flow.step as string)
+  const skipAhead = () => {
+    if (flow.step === 'contract' || flow.step === 'character' || flow.step === 'arrival' || contractOnFile) return onAccepted()
+    move(skip)
+  }
+  const passedContract = useRef(false)
+  useEffect(() => {
+    if (flow.step !== 'contract' || !contractOnFile || recording || passedContract.current) return
+    passedContract.current = true
+    onAccepted()
+  }, [flow.step, contractOnFile, recording, onAccepted])
+
   useEffect(() => {
     if (!recording || loading || recordedOnce.current) return
     if (!user) return setRecording(false)
@@ -244,9 +259,14 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
           </span>
         </span>
         <span>
-          {beat && (
-            <button type="button" className="ob-ghost ob-cap ob-fwd2" onClick={() => move(skip)} data-testid="onboarding-skip">
-              {t('flow.skip')}
+          {(beat || canSkip) && (
+            <button
+              type="button"
+              className="ob-ghost ob-cap ob-fwd2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--faction-default-card-text)]"
+              onClick={beat && !player ? () => move(skip) : skipAhead}
+              data-testid="onboarding-skip"
+            >
+              {t(player ? 'flow.skipReturning' : 'flow.skip')}
             </button>
           )}
           {!user && (step === 'title' || beat) && (
@@ -357,7 +377,7 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
 
       {step === 'contract' && (
         <div className={screenCls}>
-          {loading || recording ? (
+          {loading || recording || contractOnFile ? (
             <div className="page font-body text-muted">{tc('loading')}</div>
           ) : (
             <steps.TermsCard
