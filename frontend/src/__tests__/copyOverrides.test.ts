@@ -158,10 +158,10 @@ describe('an ambiguous string', () => {
 describe('resolving a click to a key', () => {
   it('walks up from the clicked node to the element whose whole text is copy', () => {
     setCopyRecording(true)
-    const rendered = i18n.t('admin:overview.loadError')
+    const rendered = i18n.t('admin:tasks.deleteError')
     const label = stub(rendered)
     const icon = stub('*', label)
-    expect(copyMatchForElement(icon)?.targets ?? []).toEqual([{ ns: 'admin', key: 'overview.loadError' }])
+    expect(copyMatchForElement(icon)?.targets ?? []).toEqual([{ ns: 'admin', key: 'tasks.deleteError' }])
   })
 
   it('finds a label one level DOWN, which is where a click on a button lands', () => {
@@ -239,21 +239,21 @@ describe('reverting to the shipped wording', () => {
   })
 
   it('keeps the exported catalog free of every override applied so far', () => {
-    i18n.addResource('en', 'admin', 'overview.loadError', 'nope')
-    expect((lazyShipped.admin as { overview: { loadError: string } }).overview.loadError).toBe("Couldn't load overview.")
+    i18n.addResource('en', 'admin', 'tasks.deleteError', 'nope')
+    expect((lazyShipped.admin as { tasks: { deleteError: string } }).tasks.deleteError).toBe("Could not delete the task.")
   })
 })
 
 describe('the boot load', () => {
   it('reads the overrides once and applies them over the shipped catalog', async () => {
-    wire.replyWith(json([{ ns: 'admin', key: 'tasks.filters.pending', value: 'waiting' }]))
+    wire.replyWith(json([{ ns: 'admin', key: 'tasks.deleteError', value: 'waiting' }]))
 
     await loadCopyOverrides()
 
     const [request] = wire.sent
     expect(request.method).toBe('GET')
     expect(new URL(request.url).pathname).toBe('/copy-overrides')
-    expect(i18n.t('admin:tasks.filters.pending')).toBe('waiting')
+    expect(i18n.t('admin:tasks.deleteError')).toBe('waiting')
   })
 
   it('emits languageChanged so components that call i18n.t directly re-read', async () => {
@@ -261,7 +261,7 @@ describe('the boot load', () => {
     const listen = (lng: string) => heard.push(lng)
     i18n.on('languageChanged', listen)
     try {
-      wire.replyWith(json([{ ns: 'admin', key: 'tasks.filters.all', value: 'every one' }]))
+      wire.replyWith(json([{ ns: 'admin', key: 'tasks.loadError', value: 'every one' }]))
       await loadCopyOverrides()
       expect(heard).toEqual([i18n.language])
 

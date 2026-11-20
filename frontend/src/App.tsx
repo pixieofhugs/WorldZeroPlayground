@@ -76,10 +76,10 @@ const ReturningCard = lazy(() => withOnboardingCopy(import('./pages/onboarding/R
 const ModStrip = lazy(() => withAppCopy(import('./components/admin/ModStrip')))
 
 /** Gate lives outside the lazy component so ordinary visitors never fetch its chunk (load-time.md). */
-export function ModStripMount() {
+export function ModStripMount({ always = false }: { always?: boolean }) {
   const { user } = useAuth()
   const { adminMode } = useAdminMode()
-  if (!user?.is_admin || !adminMode) return null
+  if (!user?.is_admin || !(adminMode || always)) return null
   return (
     <Suspense fallback={null}>
       <ModStrip />
@@ -127,6 +127,8 @@ function AlbescentGate() {
 
 /** `/admin/*` brings its own layout (#3665), so it sits beside `Layout`, not in it. */
 function AdminRoutes() {
+  // The console has no mod-mode toggle, so its copy sheets carry the editor themselves.
+  const onCopySheet = /^\/admin\/(copy\/|level-ups)/.test(useLocation().pathname)
   return (
     <ProtectedRoute adminOnly warm={importAdmin}>
       <Suspense fallback={<PageLoading />}>
@@ -149,7 +151,7 @@ function AdminRoutes() {
           </Route>
         </Routes>
       </Suspense>
-      <ModStripMount />
+      <ModStripMount always={onCopySheet} />
     </ProtectedRoute>
   )
 }
