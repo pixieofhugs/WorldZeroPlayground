@@ -15,7 +15,7 @@
 .note{position:absolute;left:50%;bottom:calc(100% + 40px);z-index:2;font:italic 600 20px var(--font-display,Lora,serif);color:var(--faction-default-card-text);opacity:0}
 .note.n0{animation-name:b4n0}.note.n1{margin-left:-16px;animation-name:b4n1}
 .b4w{margin-top:48px}.cL{left:20px}.cM{left:50%;margin-left:-22px}.cR{right:20px}.cW{left:0;transform-origin:104px 100%}
-@media (min-width:700px){.b4w{margin-top:0}.b4w .swing{position:relative;z-index:1}.b4w .crit{bottom:calc(100% - 300px)}.b4w .cL{left:-104px;bottom:calc(100% - 100px)}.cM{left:calc(100% + 53px);margin-left:0}.b4w .cR{right:auto;left:-110px;bottom:54px}.b4w .cW{z-index:0;left:0;top:0;bottom:0}.b4w .b4h{height:100%;animation-name:b4wh}.b4w .b4x{position:absolute;left:0;bottom:0}.b4w .note{left:calc(100% + 75px);bottom:calc(100% - 208px)}.b4x{animation-name:b4wx}.b4y{animation-name:b4wy}.b4s{animation-name:b4ws}}
+@container (min-width:700px){.b4w{margin-top:0}.b4w .swing{position:relative;z-index:1}.b4w .crit{bottom:calc(100% - 300px)}.b4w .cL{left:-104px;bottom:calc(100% - 100px)}.cM{left:calc(100% + 53px);margin-left:0}.b4w .cR{right:auto;left:-110px;bottom:54px}.b4w .cW{z-index:0;left:0;top:0;bottom:0}.b4w .b4h{height:100%;animation-name:b4wh}.b4w .b4x{position:absolute;left:0;bottom:0}.b4w .note{left:calc(100% + 75px);bottom:calc(100% - 208px)}.b4x{animation-name:b4wx}.b4y{animation-name:b4wy}.b4s{animation-name:b4ws}}
 .b4w{position:relative;width:min(100%,340px)}
 .b4-d1{animation-delay:2s}.b4-d2{animation-delay:2.25s}.b4-d3{animation-delay:2.5s}.b4-d4{animation-delay:2.8s}
 .b4-score{position:absolute;bottom:-18px;right:-10px;z-index:3;padding:4px 14px;border-radius:11px;background:var(--faction-default-card-bg);border:1px solid var(--faction-default-border);font:600 26px var(--font-display);transform:rotate(8deg);animation-delay:2.9s}
@@ -26,7 +26,7 @@
 .onboarding-arc :is(.b4h,.b4x,.b4y,.b4s,.b4a,.b4s .eyes,.b4s .lids,.b4s .mpup,.b4s .mo){animation:none!important}
 .onboarding-arc .b4s .eyes{opacity:1}
 }
-@media (prefers-reduced-motion: reduce) and (min-width:700px){
+@media (prefers-reduced-motion: reduce){@container (min-width:700px){
 .onboarding-arc .b4h{transform:translateY(-100%)}.onboarding-arc .b4x{transform:translateX(-39px)}.onboarding-arc .b4y{transform:translateY(100px)}
-}
+}}
 .note.n0::before{content:"\266A"}.note.n1::before{content:"\266B"}

@@ -32,14 +32,14 @@
 .b7 .fx .mth{animation:b7-yell 7.8s linear var(--ld,0s) infinite both}
 @keyframes b7-yell{0%,5%,95%,100%{top:67%;height:13%;border-width:0 0 2px;border-radius:0 0 100% 100%/0 0 180% 180%;background:transparent}8%,37%{top:74%;height:0%;border-width:0 0 2px;border-radius:0;background:transparent}40%,92%{top:62%;height:26%;border-width:2px;border-radius:50%;background:var(--faction-default-on-fill)}}
 .b7 .bpos{position:absolute;transform:translateX(-50%)}
-.b7 .bub{position:relative;display:block;box-sizing:border-box;width:max-content;max-width:clamp(70px,16vw,160px);padding:6px 10px;border-radius:12px;border:2px solid var(--fc);background:var(--faction-default-card-bg);color:var(--faction-default-card-text);font-size:clamp(11px,1.35vw,15px);line-height:1.2;text-align:center}
+.b7 .bub{position:relative;display:block;box-sizing:border-box;width:max-content;max-width:clamp(70px,16cqi,160px);padding:6px 10px;border-radius:12px;border:2px solid var(--fc);background:var(--faction-default-card-bg);color:var(--faction-default-card-text);font-size:clamp(11px,1.35cqi,15px);line-height:1.2;text-align:center}
 .b7 .bub::before{content:"";position:absolute;left:50%;bottom:100%;width:2px;height:var(--th);margin-left:-1px;background:var(--fc);opacity:.55}
 .b7 .bub::after{content:"";position:absolute;left:50%;top:-6px;width:9px;height:9px;margin-left:-5px;background:var(--faction-default-card-bg);border:2px solid var(--fc);border-bottom:0;border-right:0;transform:rotate(45deg)}
 .b7 .bpos.r1{top:calc(var(--gy) + 52px);--th:50px}
 .b7 .bpos.r2{top:calc(var(--gy) + 114px);--th:112px}
 .b7{animation:b7-shake 7.8s linear infinite;position:relative;width:min(100%,820px);height:360px;--gy:150px;--ay:56px}
-@media (max-width:500px){.b7{height:452px}.b7 .bub{max-width:82px}.b7 .bpos.r2{top:calc(var(--gy) + 158px);--th:156px}}
-.b7 .fb{--s:clamp(28px,4.4vw,40px)!important}
+@container (max-width:500px){.b7{height:452px}.b7 .bub{max-width:82px}.b7 .bpos.r2{top:calc(var(--gy) + 158px);--th:156px}}
+.b7 .fb{--s:clamp(28px,4.4cqi,40px)!important}
 .b7 .bub{font-family:var(--bf,var(--bcf))}
 .b7 .bub[data-faction="everymen"]{--bf:var(--font-faction-typewriter)}
 .b7 .bub[data-faction="ephemerists"]{--bf:var(--font-faction-engraved)}

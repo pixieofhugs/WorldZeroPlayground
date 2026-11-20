@@ -1,5 +1,5 @@
 /* The flow's frame: header, title page, text box. ob- prefixed because this sheet stays loaded once /start has been visited. */
-.ob-root{position:relative;min-height:100vh;box-sizing:border-box;display:flex;flex-direction:column;background:var(--color-bg-page);color:var(--faction-default-card-text);font-family:var(--font-body)}
+.ob-root{container-type:inline-size;position:relative;min-height:100vh;box-sizing:border-box;display:flex;flex-direction:column;background:var(--color-bg-page);color:var(--faction-default-card-text);font-family:var(--font-body)}
 /* Stops sideways scroll from the aurora and beat 1's world without clipping at the root, which gave the world's soft mask hard edges. */
 html:has(.ob-root){overflow-x:hidden}
 .ob-cap{font-family:var(--font-body);font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:var(--faction-default-card-muted)}
@@ -7,11 +7,11 @@ html:has(.ob-root){overflow-x:hidden}
 .ob-hair{height:1px;background:var(--faction-default-border)}
 .ob-srule{height:1px;background-image:var(--faction-default-rainbow);opacity:.6}
 
-.ob-header{position:relative;z-index:2;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px clamp(16px,4vw,40px);min-height:48px}
+.ob-header{position:relative;z-index:2;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px clamp(16px,4cqi,40px);min-height:48px}
 .ob-header>span{display:flex;align-items:center;gap:6px}
 .ob-brand{display:flex;align-items:center;gap:10px}
 .ob-brand i{width:28px;height:1px;background-image:var(--faction-default-rainbow)}
-@media (max-width:859px){.ob-brand.ob-brand-hide{display:none}}
+@container (max-width:859px){.ob-brand.ob-brand-hide{display:none}}
 
 .ob-ghost{min-height:44px;padding:0 14px;border:0;background:transparent;cursor:pointer;color:var(--faction-default-card-muted)}
 .ob-ghost:hover,.ob-ghost:focus-visible{color:var(--faction-default-card-text);outline:none}
@@ -35,9 +35,9 @@ html:has(.ob-root){overflow-x:hidden}
 
 /* title */
 .ob-title{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(26px,5vh,46px);padding:8px 16px 64px}
-.ob-rail{width:min(100%,620px);display:flex;align-items:center;gap:clamp(12px,3vw,28px)}
+.ob-rail{width:min(100%,620px);display:flex;align-items:center;gap:clamp(12px,3cqi,28px)}
 .ob-level{display:flex;flex-direction:column;line-height:1}
-.ob-level b{font-family:var(--font-display);font-weight:600;font-size:clamp(44px,7vw,64px);line-height:.9}
+.ob-level b{font-family:var(--font-display);font-weight:600;font-size:clamp(44px,7cqi,64px);line-height:.9}
 @keyframes ob-twang{0%,100%{transform:none}15%{transform:translateY(4px)}30%{transform:translateY(-3px)}45%{transform:translateY(2px)}60%{transform:translateY(-1px)}}
 .ob-line{position:relative;flex:1;animation:ob-twang .9s ease-out 1.55s}
 .ob-line .ob-srule{display:block;animation-delay:.4s}
@@ -47,12 +47,12 @@ html:has(.ob-root){overflow-x:hidden}
 @property --sweep{syntax:'<angle>';inherits:false;initial-value:0deg}
 @keyframes ob-sweep{to{--sweep:361deg}}
 @keyframes ob-thump{0%,82%{transform:scale(1)}90%{transform:scale(1.12,.9)}96%{transform:scale(.96,1.05)}100%{transform:scale(1)}}
-.ob-ring{box-sizing:border-box;border-radius:50%;padding:4px;width:clamp(84px,13vw,118px);height:clamp(84px,13vw,118px);background-image:var(--faction-default-rainbow-conic);-webkit-mask:conic-gradient(#000 var(--sweep),transparent 0);mask:conic-gradient(#000 var(--sweep),transparent 0);animation:ob-sweep 1.4s cubic-bezier(.5,0,.2,1) 2.2s forwards,ob-thump 1.7s ease-out 2.2s forwards}
+.ob-ring{box-sizing:border-box;border-radius:50%;padding:4px;width:clamp(84px,13cqi,118px);height:clamp(84px,13cqi,118px);background-image:var(--faction-default-rainbow-conic);-webkit-mask:conic-gradient(#000 var(--sweep),transparent 0);mask:conic-gradient(#000 var(--sweep),transparent 0);animation:ob-sweep 1.4s cubic-bezier(.5,0,.2,1) 2.2s forwards,ob-thump 1.7s ease-out 2.2s forwards}
 .ob-disc{width:100%;height:100%;border-radius:50%;background:var(--faction-default-card-bg);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:.9}
-.ob-disc b{font-family:var(--font-display);font-weight:600;font-size:clamp(30px,4.5vw,40px)}
+.ob-disc b{font-family:var(--font-display);font-weight:600;font-size:clamp(30px,4.5cqi,40px)}
 .ob-disc .ob-cap{font-size:11px;margin-top:4px}
-.ob-h1{margin:0;font-size:clamp(44px,8.4vw,104px);line-height:1.05;text-align:center;white-space:nowrap}
-@media (max-width:420px){.ob-h1{font-size:clamp(30px,9.5vw,44px)}}
+.ob-h1{margin:0;font-size:clamp(44px,8.4cqi,104px);line-height:1.05;text-align:center;white-space:nowrap}
+@container (max-width:420px){.ob-h1{font-size:clamp(30px,9.5cqi,44px)}}
 
 /* asleep on the line until the title speaks: slumped, snoring, a bubble at its mouth; the bubble pops as the title ends and wakes it */
 .ob-wake{display:block;position:relative;transform-origin:50% 100%;transform:rotate(-9deg) scale(1.06,.9);animation:ob-wakejump .78s cubic-bezier(.3,.7,.4,1) 4.2s forwards}
@@ -85,7 +85,7 @@ html:has(.ob-root){overflow-x:hidden}
 .ob-quick .ob-zz,.ob-quick .ob-sbub{display:none}
 
 /* beats: a stage above a text box that stays put */
-.ob-beat{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;gap:34px;padding:4px clamp(16px,4vw,40px) 26px;min-height:0}
+.ob-beat{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;gap:34px;padding:4px clamp(16px,4cqi,40px) 26px;min-height:0}
 .ob-stage{position:relative;flex:1;min-height:330px;display:flex;align-items:center;justify-content:center}
 .ob-sheet{box-sizing:border-box;border:3px solid transparent;border-radius:14px;background:linear-gradient(var(--faction-default-card-bg),var(--faction-default-card-bg)) padding-box,var(--faction-default-rainbow) border-box;box-shadow:0 12px 32px -14px var(--color-cast-shadow);color:var(--faction-default-card-text)}
 .ob-box{position:sticky;bottom:12px;z-index:5;width:100%;max-width:900px;align-self:center;padding:20px 24px 10px;display:flex;flex-direction:column;gap:10px}
@@ -97,13 +97,13 @@ html:has(.ob-root){overflow-x:hidden}
 .ob-adv:active{transform:scale(.995,.985)}
 .ob-adv:focus-visible{outline:2px solid var(--faction-default-card-text);outline-offset:4px}
 .ob-root h1:focus,.ob-root h2:focus,.ob-root section:focus{outline:none}
-.ob-line-text{display:block;font-size:clamp(20px,2.3vw,27px);line-height:1.4;min-height:2.8em}
+.ob-line-text{display:block;font-size:clamp(20px,2.3cqi,27px);line-height:1.4;min-height:2.8em}
 .ob-box-nav{display:flex;justify-content:space-between;align-items:center;gap:12px}
 .ob-box-nav .ob-ghost:first-child{margin-left:-14px}
 .ob-box-nav .ob-ghost:last-child,.ob-box-nav .ob-hold{margin-right:-14px}
 .ob-hold{padding:0 14px;white-space:nowrap}
 .ob-box-nav .ob-ghost{white-space:nowrap}
-@media (max-width:420px){.ob-box-nav .ob-cap{letter-spacing:.12em}}
+@container (max-width:420px){.ob-box-nav .ob-cap{letter-spacing:.12em}}
 
 /* contract: the quill wants a signature */
 .ob-contract{display:flex;flex-direction:column}
@@ -134,7 +134,7 @@ html:has(.ob-root){overflow-x:hidden}
 .ob-ink{position:absolute;left:48px;bottom:-4px;width:6px;height:9px;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;background:var(--faction-default-stop-6);animation:ob-inkdrop 2.2s ease-in .8s infinite}
 @keyframes ob-inkdrop{0%{opacity:0;transform:scale(.3)}30%{opacity:1;transform:none}100%{opacity:0;transform:translateY(18px)}}
 .ob-d2{animation-delay:.5s}.ob-d4{animation-delay:1.1s}.ob-d5{animation-delay:1.4s}
-.ob-dh{margin:0;font-size:clamp(30px,5vw,48px)}
+.ob-dh{margin:0;font-size:clamp(30px,5cqi,48px)}
 .ob-dp{margin:0;font-size:18px;max-width:30em;color:var(--faction-default-card-muted)}
 .ob-dnav{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
 .ob-opt{position:relative;display:flex;align-items:center;gap:12px;min-height:48px;padding:0 18px 0 30px;border:0;background:transparent;color:var(--faction-default-card-text);font-family:var(--font-body);font-size:15px;letter-spacing:.24em;text-transform:uppercase;cursor:pointer;text-decoration:none}

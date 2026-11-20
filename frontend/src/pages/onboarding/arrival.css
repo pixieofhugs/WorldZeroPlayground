@@ -3,7 +3,7 @@
 .ar-conf{position:fixed;top:0;width:9px;height:14px;border-radius:2px;opacity:0;pointer-events:none;z-index:30;animation:ar-fall var(--fd) cubic-bezier(.3,.2,.6,1) var(--fdl) forwards}
 .ar-create{position:relative;z-index:1;flex:1;padding:8px 0 32px}
 .ar-arrival{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:8px 16px 40px;text-align:center}
-.ar-h{margin:0;font-size:clamp(32px,5vw,56px);line-height:1.1}
+.ar-h{margin:0;font-size:clamp(32px,5cqi,56px);line-height:1.1}
 .ar-rule{width:min(100%,384px)}
 .ar-card{position:relative;text-align:left;margin-top:104px;max-width:100%}
 .ar-wisp{position:absolute;bottom:calc(100% - 2px);right:26px;z-index:2}
