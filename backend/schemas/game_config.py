@@ -38,6 +38,8 @@ class GameConfigOut(WireModel):
     collab_auto_submit_days: int
     # Copy states this window; never hardcode it (#1695).
     pending_task_admin_review_hours: int
+    # Lowest level that sees a proposal before review (#3668).
+    level_to_see_pending_tasks: int
     max_task_signups: int
     factions: list[FactionConfigOut]
     level_profiles: list[LevelProfileOut]

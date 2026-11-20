@@ -1,9 +1,9 @@
-import { Link, NavLink, useLocation } from 'react-router-dom'
+import { Link, NavLink } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { useAdminCounts, type AdminCounts } from '../../pages/admin/useAdminCounts'
+import type { AdminCounts } from '../../pages/admin/useAdminCounts'
 
 type Badge = 'urgent' | 'quiet'
-type ItemKey = 'reports' | 'messages' | 'proposals' | 'praxis' | 'tasks' | 'people' | 'factionCopy' | 'levelCopy'
+type ItemKey = 'era' | 'reports' | 'messages' | 'proposals' | 'praxis' | 'tasks' | 'people' | 'factionCopy' | 'levelCopy'
 type GroupKey = 'needs' | 'run' | 'words'
 interface Item {
   key: ItemKey
@@ -39,10 +39,25 @@ const GROUPS: { key: GroupKey; items: Item[] }[] = [
   },
 ]
 
+const ERA: Item = { key: 'era', to: '/admin/era' }
+
+/** The rail item for a path (sub-pages like /admin/copy/ua belong to their parent), so the phone bar can title itself. */
+export function itemAt(pathname: string): Item | undefined {
+  const all = [...GROUPS.flatMap((g) => g.items), ERA]
+  return all.find((i) => pathname === i.to || pathname.startsWith(`${i.to}/`))
+}
+
 /** The console's left rail. `onNavigate` lets the phone Menu close itself. */
-export default function AdminRail({ open, onNavigate }: { open: boolean; onNavigate: () => void }) {
+export default function AdminRail({
+  open,
+  onNavigate,
+  counts,
+}: {
+  open: boolean
+  onNavigate: () => void
+  counts: AdminCounts
+}) {
   const { t } = useTranslation('admin')
-  const counts = useAdminCounts(useLocation().pathname)
 
   return (
     <nav id="admin-rail" className="adm-rail" aria-label={t('console.rail.label')} data-open={open} onClick={onNavigate}>
@@ -80,7 +95,7 @@ export default function AdminRail({ open, onNavigate }: { open: boolean; onNavig
       <div className="adm-fill" />
       <hr className="adm-rule" />
       <p className="adm-grp adm-grp-danger">{t('console.rail.groups.danger')}</p>
-      <NavLink to="/admin/era" className="adm-nav adm-nav-danger">
+      <NavLink to={ERA.to} className="adm-nav adm-nav-danger">
         <span>{t('console.rail.items.era')}</span>
       </NavLink>
     </nav>

@@ -10,6 +10,7 @@ import { AdminModeProvider, ADMIN_MODE_STORAGE_KEY } from '../../../auth/AdminMo
 import { useAdminMode } from '../../../auth/AdminModeContext'
 import NavBar from '../../NavBar'
 import ModStrip from '../ModStrip'
+import { ModStripMount } from '../../../App'
 
 let user: { is_admin: boolean; character: null } | null = null
 vi.mock('../../../auth/AuthContext', () => ({ useAuth: () => ({ user }) }))
@@ -125,5 +126,29 @@ describe('the mod-mode strip', () => {
     expect(document.documentElement.hasAttribute('data-mod-strip')).toBe(true)
     fireEvent.click(screen.getByRole('button', { name: 'Turn off' }))
     expect(screen.getByTestId('mode').textContent).toBe('false')
+  })
+})
+
+describe('ModStripMount', () => {
+  const strip = (admin: boolean, mode: boolean) => {
+    user = { is_admin: admin, character: null }
+    if (mode) store.set(ADMIN_MODE_STORAGE_KEY, 'true')
+    render(
+      <AdminModeProvider>
+        <ModStripMount />
+      </AdminModeProvider>,
+    )
+  }
+  it.each([
+    ['an admin outside mod mode', true, false],
+    ['a player with the flag stored', false, true],
+  ])('renders no strip for %s', async (_n, admin, mode) => {
+    strip(admin, mode)
+    await new Promise((r) => setTimeout(r, 400))
+    expect(document.querySelector('.mod-strip')).toBeNull()
+  })
+  it('renders the strip for an admin in mod mode', async () => {
+    strip(true, true)
+    await waitFor(() => expect(document.querySelector('.mod-strip')).not.toBeNull())
   })
 })
