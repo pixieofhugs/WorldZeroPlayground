@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import { Link, Outlet, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
@@ -9,12 +9,20 @@ import './admin/adminConsole.css'
 /** The console's own layout (#3665): a rail and the page, no player chrome. */
 export default function Admin() {
   const { t } = useTranslation(['admin', 'common'])
-  useDocumentTitle(t('title'))
   const [menuOpen, setMenuOpen] = useState(false)
   const { pathname } = useLocation()
   useEffect(() => setMenuOpen(false), [pathname])
-  const counts = useAdminCounts(pathname)
+  const { reload: reloadCounts, ...counts } = useAdminCounts(pathname)
+  // Layout does this for the player pages; the console sits outside it.
+  const lastPath = useRef(pathname)
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+    if (lastPath.current === pathname) return
+    lastPath.current = pathname
+    document.getElementById('content')?.focus({ preventScroll: true })
+  }, [pathname])
   const item = itemAt(pathname)
+  useDocumentTitle(item ? t(`console.rail.items.${item.key}`) : t('title'))
   const count = item?.count ? counts[item.count] : null
 
   return (
@@ -44,7 +52,7 @@ export default function Admin() {
       <AdminRail counts={counts} open={menuOpen} onNavigate={() => setMenuOpen(false)} />
       <main id="content" className="adm-main" tabIndex={-1}>
         <Suspense fallback={<p className="font-body text-muted">{t('common:loading')}</p>}>
-          <Outlet />
+          <Outlet context={{ reloadCounts }} />
         </Suspense>
       </main>
     </div>

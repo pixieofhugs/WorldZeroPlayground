@@ -8,7 +8,7 @@ import './modMode.css'
 /** The accent frame and the status strip while mod mode is on; the copy editor lives in the strip. Mounted by `App.tsx` for admins in mod mode only. */
 export default function ModStrip() {
   const { t } = useTranslation('common')
-  const { toggleAdminMode } = useAdminMode()
+  const { adminMode, toggleAdminMode } = useAdminMode()
 
   // The strip is fixed; publish its height so the page and the sticky nav clear it.
   useEffect(() => {
@@ -35,9 +35,11 @@ export default function ModStrip() {
       <div className="mod-frame" aria-hidden="true" />
       <div className="mod-strip" data-modal-free>
         <span role="status">{t('nav.mod.stripText')}</span>
-        <button type="button" onClick={toggleAdminMode} className="label-caption">
-          {t('nav.mod.turnOff')}
-        </button>
+        {adminMode && (
+          <button type="button" onClick={toggleAdminMode} className="label-caption">
+            {t('nav.mod.turnOff')}
+          </button>
+        )}
         <CopyEditor />
       </div>
     </>,

@@ -4,10 +4,13 @@ import { archiveMessage, getMessages } from '../../api/admin'
 import type { ContactMessageOut } from '../../api/admin'
 import { formatTimestamp } from '../../utils/dates'
 import { extractError } from '../../utils/errors'
+import PageTitle from '../../components/ui/PageTitle'
+import { useReloadCounts } from './useAdminCounts'
 
 /** Contact-form messages, with an archive toggle. */
 export default function MessagesTab() {
   const { t } = useTranslation(['admin', 'common'])
+  const reloadCounts = useReloadCounts()
   const [messages, setMessages] = useState<ContactMessageOut[]>([])
   const [showArchived, setShowArchived] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -29,6 +32,7 @@ export default function MessagesTab() {
     try {
       await archiveMessage(id)
       refresh()
+      reloadCounts()
     } catch (err) {
       setActionError(extractError(err, t('moderation.archiveError')))
     }
@@ -39,6 +43,7 @@ export default function MessagesTab() {
 
   return (
     <div className="flex flex-col gap-8">
+      <PageTitle title={t('console.rail.items.messages')} />
       {actionError && (
         <p className="font-body content-text danger-text border-2 danger-edge px-3 py-2">{actionError}</p>
       )}

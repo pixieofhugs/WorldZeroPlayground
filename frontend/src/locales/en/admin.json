@@ -316,10 +316,12 @@
         "title": "Nothing needs you.",
         "last": "No open reports. The last decision: {{entry}} · {{age}}.",
         "none": "No open reports.",
-        "newest": "Newest praxis"
+        "newest": "Newest praxis",
+        "modLog": "Mod log"
       },
       "recent": {
         "heading": "Recent decisions",
+        "all": "Full mod log →",
         "none": "Nothing decided yet.",
         "entry": "{{actor}}: {{action}} ({{target}} #{{id}})",
         "unknownActor": "A moderator",

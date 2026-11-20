@@ -18,6 +18,7 @@ import MediaGallery from '../../components/MediaGallery'
 import { relativeTime } from '../../utils/dates'
 import { extractError } from '../../utils/errors'
 import { flagReasonLabel } from '../../utils/flagReasons'
+import { useReloadCounts } from './useAdminCounts'
 import AuthorRow from './AuthorRow'
 import type { AuthorAction } from './AuthorRow'
 import './adminReports.css'
@@ -253,13 +254,16 @@ function Calm({ last, newestPraxisId }: { last: ModActionOut | undefined; newest
           ? t('console.reports.empty.last', { entry: logLine(last), age: relativeTime(last.created_at) })
           : t('console.reports.empty.none')}
       </span>
-      {newestPraxisId !== null && (
-        <div className="rp-btns">
+      <div className="rp-btns">
+        {newestPraxisId !== null && (
           <Link to={`/praxis/${newestPraxisId}`} className="rp-btn">
             {t('console.reports.empty.newest')}
           </Link>
-        </div>
-      )}
+        )}
+        <Link to="/admin/mod-log" className="rp-btn">
+          {t('console.reports.empty.modLog')}
+        </Link>
+      </div>
     </section>
   )
 }
@@ -267,6 +271,7 @@ function Calm({ last, newestPraxisId }: { last: ModActionOut | undefined; newest
 export default function ReportsTab({ onViewAccount }: { onViewAccount: (search: string) => void }) {
   const { t } = useTranslation(['admin', 'common'])
   const logLine = useLogLine()
+  const reloadCounts = useReloadCounts()
   const [praxes, setPraxes] = useState<FlaggedPraxisOut[]>([])
   const [comments, setComments] = useState<FlaggedCommentOut[]>([])
   const [recent, setRecent] = useState<ModActionOut[]>([])
@@ -300,6 +305,7 @@ export default function ReportsTab({ onViewAccount }: { onViewAccount: (search: 
     try {
       await call()
       refresh()
+      reloadCounts()
     } catch (err) {
       setActionError(extractError(err, t('console.reports.actionError')))
       throw err
@@ -385,6 +391,9 @@ export default function ReportsTab({ onViewAccount }: { onViewAccount: (search: 
               {logLine(entry)} <span className="rp-muted">&middot; {relativeTime(entry.created_at)}</span>
             </p>
           ))}
+          <Link to="/admin/mod-log" className="rp-muted">
+            {t('console.reports.recent.all')}
+          </Link>
         </aside>
       </div>
     </>

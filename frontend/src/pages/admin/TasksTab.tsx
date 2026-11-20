@@ -16,6 +16,7 @@ import {
   type AdminTaskRow,
 } from './adminTaskRows'
 import { markTaskRowDeleted } from './taskDelete'
+import { useReloadCounts } from './useAdminCounts'
 
 type Segment = 'proposals' | 'active' | 'retired' | 'deleted'
 const SEGMENTS: { key: Segment; status: string }[] = [
@@ -32,6 +33,7 @@ export default function TasksTab() {
   const { pathname } = useLocation()
   const [params, setParams] = useSearchParams()
   const config = useGameConfig()
+  const reloadCounts = useReloadCounts()
   const [tasks, setTasks] = useState<AdminTaskRow[]>([])
   const [segment, setSegment] = useState<Segment>(pathname.endsWith('/proposals') ? 'proposals' : 'active')
   const [search, setSearch] = useState('')
@@ -176,10 +178,14 @@ export default function TasksTab() {
             task={selected}
             factions={factions}
             proposal={proposalWindow}
-            onChanged={refresh}
+            onChanged={() => {
+              refresh()
+              reloadCounts()
+            }}
             onDeleted={(id) => {
               // No refetch: it would flash the whole list for one row.
               setTasks((all) => markTaskRowDeleted(all, id))
+              reloadCounts()
               open(null)
             }}
             onClose={() => open(null)}
