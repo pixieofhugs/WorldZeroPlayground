@@ -44,5 +44,7 @@
 .adm-warn { margin: 0; padding: var(--space-sm) var(--space-md); border: 1px solid var(--color-warning-edge); background: var(--color-warning-veil); border-radius: var(--radius-md); font-size: var(--text-xl); }
 .adm-err { margin: 0; color: var(--color-danger); font-size: var(--text-xl); }
 .adm-field { display: flex; flex-direction: column; gap: var(--space-xs); font-size: var(--text-lg); font-weight: 600; color: var(--color-text-secondary); }
-.adm-fields3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-xs); }
+.adm-fields3 { display: grid; grid-template-columns: 1fr 1fr 2fr; gap: var(--space-xs); }
 .adm-panel-top { display: flex; justify-content: space-between; align-items: center; gap: var(--space-xs); }
+
+@media (max-width: 767px) { .adm-wide { display: none; } }

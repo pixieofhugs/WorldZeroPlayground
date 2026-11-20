@@ -9,6 +9,7 @@ interface AdminConfirmProps {
   busyLabel: string;
   cancelLabel: string;
   busy: boolean;
+  confirmDisabled?: boolean;
   error: string | null;
   onConfirm: () => void;
   onCancel: () => void;
@@ -27,6 +28,7 @@ export default function AdminConfirm({
   busyLabel,
   cancelLabel,
   busy,
+  confirmDisabled,
   error,
   onConfirm,
   onCancel,
@@ -56,7 +58,7 @@ export default function AdminConfirm({
         <button
           type="button"
           onClick={onConfirm}
-          disabled={busy}
+          disabled={busy || confirmDisabled}
           className="btn-primary text-xs control-off"
         >
           {busy ? busyLabel : confirmLabel}

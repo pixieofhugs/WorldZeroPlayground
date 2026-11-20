@@ -53,4 +53,5 @@
   .rp-long { display: none; }
   .rp-short { display: inline; }
   .rp-help { display: none; }
+  .rp-h1, .rp-lede { display: none; }
 }

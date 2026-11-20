@@ -46,7 +46,7 @@
   /* Sticky only beside the pane. */
   .wz-settings-body > nav {
     position: sticky;
-    top: var(--navbar-h, 56px);
+    top: calc(var(--navbar-h, 56px) + var(--modstrip-h));
     align-self: start;
   }
 }

@@ -1,3 +1,4 @@
+import { withAppCopy } from '../i18n'
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -20,7 +21,7 @@ interface NavLinkSpec {
 
 // Off the initial payload: it only draws once opened.
 // Admins only: the chunk and its counts never reach a player.
-const ModControl = lazy(() => import('./admin/ModControl'))
+const ModControl = lazy(() => withAppCopy(import('./admin/ModControl')))
 const SignInSheet = lazy(() => import('./SignInOptions').then((m) => ({ default: m.SignInSheet })))
 
 export default function NavBar() {

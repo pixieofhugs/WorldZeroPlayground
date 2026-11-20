@@ -62,10 +62,10 @@ export default function PersonPanel({
         <Link to={`/characters/${person.id}`} className="adm-btn">
           {t('console.people.panel.profile')}
         </Link>
-        <Link to="/admin/praxis" className="adm-btn">
+        <Link to={`/admin/praxis?character=${person.id}`} className="adm-btn">
           {t('console.people.panel.praxis')}
         </Link>
-        <Link to="/admin/reports" className="adm-btn">
+        <Link to={`/admin/reports?character=${person.id}`} className="adm-btn">
           {t('console.people.panel.reports')}
         </Link>
       </div>

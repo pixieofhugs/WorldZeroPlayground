@@ -80,4 +80,39 @@ describe('Reports', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Mark not met with this reason' }))
     await waitFor(() => expect(api.moderatePraxis).toHaveBeenCalledWith(7, 'failed', 'No proof.'))
   })
+
+  it('Remove moves focus to the reason field', async () => {
+    mount([flagged])
+    const card = await screen.findByRole('region', { name: 'Walked a new street' })
+    fireEvent.click(within(card).getByRole('button', { name: 'Remove' }))
+    expect(document.activeElement).toBe(within(card).getByLabelText('Reason the author sees'))
+  })
+
+  it('a mod-log failure does not hide the queue, and the log asks for reports only', async () => {
+    mount([flagged])
+    api.getModLog.mockRejectedValue(new Error('boom'))
+    cleanup()
+    render(<MemoryRouter><ReportsTab onViewAccount={vi.fn()} /></MemoryRouter>)
+    expect(await screen.findByRole('region', { name: 'Walked a new street' })).toBeTruthy()
+    expect(api.getModLog).toHaveBeenCalledWith(0, { kind: 'reports' })
+  })
+
+  it('?character= shows only that character\'s reports', async () => {
+    api.getFlaggedPraxes.mockResolvedValue([flagged, { ...flagged, id: 8, title: 'Other post', created_by_id: 4 }])
+    api.getFlaggedComments.mockResolvedValue([])
+    api.getModLog.mockResolvedValue({ items: [], total: 0, limit: 20, offset: 0 })
+    render(<MemoryRouter initialEntries={['/admin/reports?character=3']}><ReportsTab onViewAccount={vi.fn()} /></MemoryRouter>)
+    expect(await screen.findByRole('region', { name: 'Walked a new street' })).toBeTruthy()
+    expect(screen.queryByRole('region', { name: 'Other post' })).toBeNull()
+  })
+
+  it('Remove all their flagged asks for a reason and sends it', async () => {
+    mount([flagged])
+    fireEvent.click(await screen.findByRole('button', { name: /Remove all their flagged/ }))
+    const go = screen.getByRole('button', { name: /confirm . remove 2 posts/ }) as HTMLButtonElement
+    expect(go.disabled).toBe(true)
+    fireEvent.change(screen.getAllByLabelText('Reason the author sees').at(-1)!, { target: { value: ' Spam. ' } })
+    fireEvent.click(go)
+    await waitFor(() => expect(api.removeFlaggedPraxes).toHaveBeenCalledWith(3, 'Spam.'))
+  })
 })
