@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 /** The contract before sign-in: one consent row per account, none on decline. Seam: `OnboardingFlow` with `acceptTerms` mocked. */
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -112,6 +112,27 @@ describe('signed-in path', () => {
 
     await waitFor(() => expect(onAccepted).toHaveBeenCalledTimes(1))
     expect(acceptTerms).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('the signing pause', () => {
+  it('holds Accept for 900ms, then advances exactly once', async () => {
+    vi.stubGlobal('matchMedia', () => ({ matches: false, addEventListener: () => {}, removeEventListener: () => {} }))
+    mount(null, true)
+    const accept = await screen.findByTestId('onboarding-accept-terms')
+    vi.useFakeTimers()
+    try {
+      fireEvent.click(accept)
+      await act(() => vi.advanceTimersByTimeAsync(899))
+      expect((accept as HTMLButtonElement).disabled).toBe(true)
+      expect(screen.queryByTestId('sign-in-google')).toBeNull()
+      fireEvent.click(accept)
+      await act(() => vi.advanceTimersByTimeAsync(1))
+      expect(screen.getByTestId('sign-in-google')).toBeTruthy()
+      expect(store.has('wz_terms_accepted')).toBe(true)
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })
 

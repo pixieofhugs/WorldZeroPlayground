@@ -200,9 +200,15 @@ function CommentReport({
   act,
 }: {
   comment: FlaggedCommentOut
-  act: (status: 'visible' | 'deleted') => Promise<void>
+  act: (status: 'visible' | 'deleted', note?: string) => Promise<void>
 }) {
   const { t } = useTranslation('admin')
+  const [removing, setRemoving] = useState(false)
+  const [reason, setReason] = useState('')
+  const cancel = () => {
+    setRemoving(false)
+    setReason('')
+  }
   return (
     <section aria-label={comment.author.display_name} className="rp-card">
       <div className="rp-facts">
@@ -226,10 +232,44 @@ function CommentReport({
         <button type="button" className="rp-btn" onClick={() => void act('visible')}>
           {t('console.reports.decision.keep')}
         </button>
-        <button type="button" className="rp-btn rp-btn-dng" onClick={() => void act('deleted')}>
+        <button
+          type="button"
+          className="rp-btn rp-btn-dng"
+          aria-pressed={removing}
+          onClick={() => (removing ? cancel() : setRemoving(true))}
+        >
           {t('console.reports.decision.remove')}
         </button>
       </div>
+      {removing && (
+        <form
+          className="rp-reason-form"
+          data-deciding="hidden"
+          onSubmit={(event) => {
+            event.preventDefault()
+            void act('deleted', reason.trim()).then(cancel, () => {})
+          }}
+        >
+          <label className="rp-field">
+            {t('console.reports.decision.reasonLabel')}
+            <input
+              className="rp-input"
+              autoFocus
+              placeholder={t('console.reports.decision.reasonHintComment')}
+              value={reason}
+              onChange={(event) => setReason(event.target.value)}
+            />
+          </label>
+          <div className="rp-btns">
+            <button type="submit" className="rp-btn rp-btn-dng" disabled={!reason.trim()}>
+              {t('console.reports.decision.submitRemove')}
+            </button>
+            <button type="button" className="rp-btn" onClick={cancel}>
+              {t('console.reports.decision.cancel')}
+            </button>
+          </div>
+        </form>
+      )}
     </section>
   )
 }
@@ -341,13 +381,18 @@ export default function ReportsTab({ onViewAccount }: { onViewAccount: (search: 
   const shown = filter === 'all' ? items : items.filter((item) => item.kind === filter)
   const tabs: [Filter, string, number][] = [
     ['all', t('console.reports.filter.all'), items.length],
-    ['praxis', t('console.reports.filter.praxis'), praxes.length],
-    ['comment', t('console.reports.filter.comments'), comments.length],
+    ['praxis', t('console.reports.filter.praxis'), items.filter((item) => item.kind === 'praxis').length],
+    ['comment', t('console.reports.filter.comments'), items.filter((item) => item.kind === 'comment').length],
   ]
 
   let body: ReactNode
   if (shown.length === 0) {
-    body = <Calm last={recent[0]} newestPraxisId={newestPraxisId} />
+    body =
+      character && praxes.length + comments.length > 0 ? (
+        <p className="rp-muted">{t('console.reports.noneForCharacter')}</p>
+      ) : (
+        <Calm last={recent[0]} newestPraxisId={newestPraxisId} />
+      )
   } else {
     body = shown.map((item) =>
       item.kind === 'praxis' ? (
@@ -362,7 +407,7 @@ export default function ReportsTab({ onViewAccount }: { onViewAccount: (search: 
         <CommentReport
           key={`c${item.comment.id}`}
           comment={item.comment}
-          act={(status) => run(() => moderateComment(item.comment.id, status))}
+          act={(status, note) => run(() => moderateComment(item.comment.id, status, note))}
         />
       ),
     )

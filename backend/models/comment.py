@@ -56,6 +56,8 @@ class Comment(TimestampMixin, Base):
     is_withdrawn: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default="false"
     )
+    # The moderator's reason on Remove; shown to the author only.
+    admin_note: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     moderation_status: Mapped[ModerationStatus] = mapped_column(
         string_enum(ModerationStatus),
         nullable=False,

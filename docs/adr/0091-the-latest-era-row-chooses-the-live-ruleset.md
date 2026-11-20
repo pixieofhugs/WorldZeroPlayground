@@ -105,7 +105,13 @@ mid-refresh and raise `AttributeError` on a field that exists — under load, du
 operation this mechanism exists to enable. Overwriting key by key means a concurrent reader
 sees the closing era's value or the opening era's for any given field, never a missing one,
 which is exactly the straddling this record already accepts under *Consequences* and nothing
-worse. A clear also buys nothing: `EraConfig` is a frozen dataclass with a fixed field list
+worse.
+
+Amended by #3656: a bind is no longer the only writer of those fields. The population dial
+(`services/era.apply_dial_sides`) also writes the live era's fields, per key, after every
+bind and after a mod's flip. Both read the dial sides first and write with no `await`
+between the bind or commit and the field writes, so no request sees the era file's values
+in the gap. A clear also buys nothing: `EraConfig` is a frozen dataclass with a fixed field list
 and no `__slots__`, and both sides of every call carry all 43 declared fields, so there is
 never a stale key to remove. `bind_live_era` prunes unexpected extras after the update
 instead, which keeps that defensiveness without the empty state.

@@ -37,6 +37,9 @@ describe('title for a returning visitor (#3563)', () => {
     mount()
     expect(document.querySelector('.ob-quick')).toBeNull()
     expect(headline()).toBe('')
+    expect(localStorage.getItem(SEEN)).toBeNull()
+    await act(() => vi.advanceTimersByTimeAsync(2800 + 84 * 3))
+    expect(localStorage.getItem(SEEN)).toBeNull()
     await typed()
     expect(headline()).toBe(onboarding.flow.welcome)
     expect(localStorage.getItem(SEEN)).toBe('1')
@@ -51,6 +54,7 @@ describe('title for a returning visitor (#3563)', () => {
 
   it('remembers a START tap before the title has finished', () => {
     mount()
+    expect(localStorage.getItem(SEEN)).toBeNull()
     fireEvent.click(screen.getByTestId('onboarding-start'))
     expect(localStorage.getItem(SEEN)).toBe('1')
   })
