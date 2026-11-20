@@ -5,9 +5,9 @@ This file owns the *rules*; the latest DB ``Era`` row's ``config_key`` chooses
 which ruleset is live, via ``services.era.rebind_live_era`` (ADR-0091).
 CURRENT_ERA is a stable object identity — see "The live era binding" below.
 """
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, field, fields, replace
 from enum import Enum
-from typing import Literal
+from typing import Any, Literal, Mapping
 
 from faction_slugs import UNAFFILIATED_FACTION_SLUG
 
@@ -161,6 +161,15 @@ _STRUCTURAL_FACTION_ROLES: dict[str, str] = {
 
 
 @dataclass(frozen=True)
+class Dial:
+    """Two values per field; a mod picks the side. ``full`` is the era's own field."""
+
+    small: Mapping[str, Any]
+    full: Mapping[str, Any]
+    default: Literal["small", "full"]
+
+
+@dataclass(frozen=True)
 class EraConfig:
     name: str
     config_key: str                  # matched to Era.config_key in DB
@@ -265,6 +274,8 @@ class EraConfig:
     collab_invite_bypasses_faction: bool = True
     collab_invite_bypasses_task_bank: bool = False
 
+    dials: Mapping[str, Dial] = field(default_factory=dict)
+
     def __post_init__(self) -> None:
         """Enforce ADR-0087's structural clause, then resolve perk inheritance (#1871).
 
@@ -331,6 +342,29 @@ class EraConfig:
             )
 
 
+_FIELD_NAMES = frozenset(f.name for f in fields(EraConfig))
+
+
+def check_dials(era: EraConfig) -> None:
+    """Raise when a dial's ``full`` side drifts from the era's field.
+
+    Not in ``__post_init__``: tests vary a rule with ``dataclasses.replace``.
+    """
+    for key, dial in era.dials.items():
+        if set(dial.small) != set(dial.full):
+            raise ValueError(
+                f"{era.config_key}: dial {key!r} small and full must cover "
+                f"the same fields."
+            )
+        for name, value in dial.full.items():
+            if name not in _FIELD_NAMES or getattr(era, name) != value:
+                raise ValueError(
+                    f"{era.config_key}: dial {key!r} full side says "
+                    f"{name}={value!r}, but the era's own field is "
+                    f"{getattr(era, name, '<not a field>')!r}."
+                )
+
+
 # Era configs live in backend/eras/ (copy eras/_template.py for a new one),
 # loaded lazily via __getattr__ to avoid circular imports.
 
@@ -349,12 +383,14 @@ def __getattr__(name: str):
         return live
     if name in ("ERA_1", "ERA_1_FACTIONS"):
         from eras.era_1 import ERA_1 as _era_1
+        check_dials(_era_1)
         globals()["ERA_1"] = _era_1
         globals()["ERA_1_FACTIONS"] = _era_1.factions
         return globals()[name]
     if name in ("ERA_2", "ERA_2_FACTIONS"):
         # Resolving does not make Era 2 live; only bind_live_era does.
         from eras.era_2 import ERA_2 as _era_2
+        check_dials(_era_2)
         globals()["ERA_2"] = _era_2
         globals()["ERA_2_FACTIONS"] = _era_2.factions
         return globals()[name]

@@ -318,6 +318,14 @@ table oauth_provider
   constraint pk_oauth_provider PRIMARY KEY (id)
   constraint uq_oauth_provider_provider_provider_user_id UNIQUE (provider, provider_user_id)
 
+table population_dial
+  column dial_key character varying(64) NOT NULL
+  column side character varying(8) NOT NULL
+  column updated_at timestamp with time zone NOT NULL DEFAULT now()
+  column updated_by_id bigint NOT NULL
+  constraint fk_population_dial_updated_by_id_account FOREIGN KEY (updated_by_id) REFERENCES account(id)
+  constraint pk_population_dial PRIMARY KEY (dial_key)
+
 table praxis
   column admin_note text NOT NULL DEFAULT ''::text
   column body_text text NOT NULL DEFAULT ''::text

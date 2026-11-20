@@ -1,5 +1,6 @@
 """Era 1 — the founding era of World Zero."""
 from game_config import (
+    Dial,
     EraConfig,
     FactionConfig,
     LevelProfile,
@@ -269,4 +270,38 @@ ERA_1 = EraConfig(
     collab_invite_bypasses_level=True,
     collab_invite_bypasses_faction=True,
     collab_invite_bypasses_task_bank=False,
+    # Six rules that loosen while the game is small (#3656). `full` is the
+    # field above; a mod flips the side from the admin page.
+    dials={
+        "praxis_post_cooldown": Dial(
+            small={"praxis_post_cooldown_hours": 0},
+            full={"praxis_post_cooldown_hours": 24},
+            default="small",
+        ),
+        "vote_requires_received_vote": Dial(
+            small={"vote_requires_received_vote": False},
+            full={"vote_requires_received_vote": True},
+            default="small",
+        ),
+        "comment_level": Dial(
+            small={"comment_level_required": 1},
+            full={"comment_level_required": 2},
+            default="small",
+        ),
+        "duel_level": Dial(
+            small={"duel_level_required": 1},
+            full={"duel_level_required": 2},
+            default="small",
+        ),
+        "invitation": Dial(
+            small={"invitation_task_threshold": 1, "invitation_point_threshold": 10},
+            full={"invitation_task_threshold": 2, "invitation_point_threshold": 50},
+            default="small",
+        ),
+        "flag_level": Dial(
+            small={"flag_level_required": 2},
+            full={"flag_level_required": 4},
+            default="small",
+        ),
+    },
 )

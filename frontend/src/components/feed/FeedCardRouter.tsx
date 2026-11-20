@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { useCommentGate } from '../../hooks/useCommentGate'
 import type { ReactNode } from 'react'
 import type { ActivityFeedItem } from '../../api/activityFeed'
@@ -14,6 +15,9 @@ import FeedCardCollabInvite from './FeedCardCollabInvite'
 import FeedCardDuelChallenge from './FeedCardDuelChallenge'
 import FeedCardInvitationLetter from './FeedCardInvitationLetter'
 
+// Own chunk + CSS: rare card, off the initial-load budget.
+const FeedCardRulesChange = lazy(() => import('./FeedCardRulesChange'))
+
 /**
  * The chassis seam, assembled (#1194; see {@link FeedFrameProps}):
  *   FeedItemSlot      archive (control, swipe, write, undo). Faction-blind.
@@ -23,7 +27,8 @@ import FeedCardInvitationLetter from './FeedCardInvitationLetter'
  * A faction's feed card = claim `feedFrame` in its manifest.
  *
  * Exception: `era_announcement` (epic #1192 d6) stays unwrapped and neutral —
- * an era turn can strip a faction, so speaking in one is backwards.
+ * an era turn can strip a faction, so speaking in one is backwards. So does
+ * `rules_change` (#3656): the world speaks, not a faction.
  */
 
 /** `onNotNow`: the archive write under the body's own label; letter only (#1424). */
@@ -53,9 +58,10 @@ export default function FeedCardRouter({ item, archivedView = false, onArchiveCh
     ? COMPANION_BODIES[item.type]
     : undefined
   const isEraAnnouncement = item.type === 'era_announcement'
+  const isRulesChange = item.type === 'rules_change'
 
   // Guards a backend type that lands ahead of its frontend case (that hid every @mention once).
-  if (!row && !Companion && !isEraAnnouncement) return null
+  if (!row && !Companion && !isEraAnnouncement && !isRulesChange) return null
 
   // Archive only, and only if still pending (ADR-0070, #1342).
   const tag =
@@ -74,6 +80,10 @@ export default function FeedCardRouter({ item, archivedView = false, onArchiveCh
       {(archive, act) =>
         isEraAnnouncement ? (
           <FeedCardEraAnnouncement item={item} archive={archive} />
+        ) : isRulesChange ? (
+          <Suspense fallback={null}>
+            <FeedCardRulesChange item={item} archive={archive} />
+          </Suspense>
         ) : (
           <FactionFeedFrame
             slug={row ? row.slug : item.context_faction_slug}

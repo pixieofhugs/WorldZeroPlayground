@@ -402,6 +402,8 @@
         "levelUpHelp": "You reach a new level.",
         "eraAnnouncement": "Era announcements",
         "eraAnnouncementHelp": "A new era begins for everyone.",
+        "rulesChange": "Rule changes",
+        "rulesChangeHelp": "A mod tightens or loosens a rule for everyone.",
         "globalTask": "New tasks",
         "globalTaskHelp": "A new task is published for everyone to take on."
       }

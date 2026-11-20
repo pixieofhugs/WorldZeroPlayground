@@ -238,6 +238,7 @@ copy key, which is likewise written by a human and has no surrogate id.
 | `meta_task.py` | `praxis_meta_task` | `(praxis_id, task_id)` — **composite, no `Identity()`** | `praxis_id`, `task_id` |
 | `mod_action.py` | `mod_action` | `id` | `actor_account_id` |
 | `nudge.py` | `nudge` | `id` | `from_character_id`, `to_character_id`, `praxis_id` |
+| `population_dial.py` | `population_dial` | `dial_key` — **VARCHAR, no `Identity()`** | `updated_by_id` |
 | `praxis.py` | `praxis` | `id` | `task_id`, `created_by_id`, `era_id` |
 | `praxis.py` | `praxis_member` | `id` | `praxis_id`, `character_id` |
 | `praxis.py` | `media_item` | `id` | `praxis_id` |
@@ -251,7 +252,7 @@ copy key, which is likewise written by a human and has no surrogate id.
 | `terms_acceptance.py` | `terms_acceptance` | `id` | `account_id` |
 | `vote.py` | `vote` | `id` | `praxis_id`, `voter_character_id`, `voter_account_id`, `era_id` |
 
-33 tables, 60 integer foreign keys, 5 string ones.
+34 tables, 61 integer foreign keys, 5 string ones.
 
 `backend/tests/unit/test_model_conventions.py` parses this table and asserts both
 halves against `Base.metadata`, so a new model that skips this list fails there.

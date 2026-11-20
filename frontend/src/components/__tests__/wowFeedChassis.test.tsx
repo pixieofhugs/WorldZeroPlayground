@@ -163,7 +163,7 @@ describe('the proclamation chrome', () => {
 
 describe('every type the backend emits, inside this chassis', () => {
   /** All but `era_announcement`, neutral by design (epic decision 6). */
-  const TYPES = FEED_TYPES.filter((type) => type !== 'era_announcement')
+  const TYPES = FEED_TYPES.filter((type) => type !== 'era_announcement' && type !== 'rules_change')
 
   it('dresses every type but the exempt one in the proclamation, kicker and all', () => {
     for (const type of TYPES) {

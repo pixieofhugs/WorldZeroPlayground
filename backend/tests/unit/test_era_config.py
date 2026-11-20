@@ -188,6 +188,8 @@ def test_era_2_inherits_every_other_rule_from_era_1():
         "name",
         "config_key",
         "factions",
+        # Era 2 declares no population dials (#3656).
+        "dials",
         # Metamorphosis has no Ephemerists, so this set is empty.
         "allow_praxis_on_retired_task_factions",
     }

@@ -23,6 +23,7 @@ from services.activity_feed import (
     FEED_ITEM_TYPE_ERA_ANNOUNCEMENT,
     FEED_ITEM_TYPE_GLOBAL_TASK,
     FEED_ITEM_TYPE_INVITATION_LETTER,
+    FEED_ITEM_TYPE_RULES_CHANGE,
     FEED_ITEM_TYPE_VOTE_CHANGED_ON_MINE,
     FEED_ITEM_TYPE_VOTE_ON_MINE,
     REQUEST_ITEM_TYPES,
@@ -94,6 +95,11 @@ NOTIFICATION_EVENTS: tuple[NotificationEvent, ...] = (
     NotificationEvent(
         key=FEED_ITEM_TYPE_ERA_ANNOUNCEMENT,
         feed_types=(FEED_ITEM_TYPE_ERA_ANNOUNCEMENT,),
+        email_default=False,
+    ),
+    NotificationEvent(
+        key=FEED_ITEM_TYPE_RULES_CHANGE,
+        feed_types=(FEED_ITEM_TYPE_RULES_CHANGE,),
         email_default=False,
     ),
     NotificationEvent(

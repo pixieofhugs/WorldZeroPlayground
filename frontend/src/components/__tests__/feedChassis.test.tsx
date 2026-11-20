@@ -2,34 +2,40 @@
  * The feed chassis and archive (#1194). Static markup proves which controls
  * exist on which card; the timer and swipe are checked at their seams only.
  */
-import { renderToStaticMarkup } from 'react-dom/server'
-import { MemoryRouter } from 'react-router-dom'
-import { describe, it, expect } from 'vitest'
-import '../../i18n'
-import i18n from '../../i18n'
-import FeedCardRouter from '../feed/FeedCardRouter'
-import FeedUndoStrip from '../feed/FeedUndoStrip'
-import FeedBulkArchiveButton from '../feed/FeedBulkArchiveButton'
-import { FEED_TYPES, feedKicker, isArchivable, NON_ARCHIVABLE_TYPES } from '../feed/feedItemLabels'
-import { normalizeFeedItem } from '../feed/normalizeFeedItem'
-import feedCatalog from '../../locales/en/feed.json'
-import type { ActivityFeedItem } from '../../api/activityFeed'
+import { renderToStaticMarkup } from "react-dom/server";
+import { MemoryRouter } from "react-router-dom";
+import { describe, it, expect } from "vitest";
+import "../../i18n";
+import i18n from "../../i18n";
+import FeedCardRouter from "../feed/FeedCardRouter";
+import FeedCardRulesChange from "../feed/FeedCardRulesChange";
+import FeedUndoStrip from "../feed/FeedUndoStrip";
+import FeedBulkArchiveButton from "../feed/FeedBulkArchiveButton";
+import {
+  FEED_TYPES,
+  feedKicker,
+  isArchivable,
+  NON_ARCHIVABLE_TYPES,
+} from "../feed/feedItemLabels";
+import { normalizeFeedItem } from "../feed/normalizeFeedItem";
+import feedCatalog from "../../locales/en/feed.json";
+import type { ActivityFeedItem } from "../../api/activityFeed";
 
 function item(
   type: string,
   payload: Record<string, unknown> = {},
-  slug: string | null = 'coven',
+  slug: string | null = "coven",
 ): ActivityFeedItem {
   return {
     type,
     item_key: `${type}:1`,
-    timestamp: '2026-01-01T00:00:00Z',
-    actor_display_name: 'Ada',
+    timestamp: "2026-01-01T00:00:00Z",
+    actor_display_name: "Ada",
     actor_faction_slug: slug,
     actor_avatar_url: null,
     payload,
     context_faction_slug: slug,
-  }
+  };
 }
 
 function render(feedItem: ActivityFeedItem, archivedView = false): string {
@@ -37,199 +43,232 @@ function render(feedItem: ActivityFeedItem, archivedView = false): string {
     <MemoryRouter>
       <FeedCardRouter item={feedItem} archivedView={archivedView} />
     </MemoryRouter>,
-  )
+  );
 }
 
-const ARCHIVE_LABEL = i18n.t('feed:archive.dismissLabel')
-const RESTORE_LABEL = i18n.t('feed:archive.restoreLabel')
+const ARCHIVE_LABEL = i18n.t("feed:archive.dismissLabel");
+const RESTORE_LABEL = i18n.t("feed:archive.restoreLabel");
 
 /** A payload rich enough for whichever type is asking. */
 const FAT_PAYLOAD = {
   character_id: 3,
   praxis_id: 7,
   task_id: 9,
-  task_title: 'Reforest the verge',
+  task_title: "Reforest the verge",
   task_point_value: 40,
   task_level_required: 2,
   value: 4,
-  praxis_title: 'A returned proof',
-  praxis_type: 'collab',
+  praxis_title: "A returned proof",
+  praxis_type: "collab",
   from_character_id: 4,
-  from_name: 'Ada',
-  to_name: 'Bo',
-  faction_slug: 'coven',
-  old_faction_slug: 'coven',
-  new_faction_slug: 'snide',
-  era_name: 'Era One',
+  from_name: "Ada",
+  to_name: "Bo",
+  faction_slug: "coven",
+  old_faction_slug: "coven",
+  new_faction_slug: "snide",
+  era_name: "Era One",
   duel_id: 5,
   challenger_praxis_id: 6,
   challenger_character_id: 3,
   invite_id: 8,
   inviter_character_id: 3,
-  task_faction_slug: 'coven',
+  task_faction_slug: "coven",
   comment_id: 11,
-  excerpt: 'your name came up',
-}
+  excerpt: "your name came up",
+};
 
-describe('the archive control: which cards offer one', () => {
-  it('draws an archive control on every archivable type', () => {
+describe("the archive control: which cards offer one", () => {
+  it("draws an archive control on every archivable type", () => {
     for (const type of FEED_TYPES) {
-      if (NON_ARCHIVABLE_TYPES.has(type)) continue
+      // rules_change is lazy (own chunk): static markup stops at its Suspense; tested below.
+      if (NON_ARCHIVABLE_TYPES.has(type) || type === "rules_change") continue;
       expect(render(item(type, FAT_PAYLOAD)), `${type} offers the ✕`).toContain(
         ARCHIVE_LABEL,
-      )
+      );
     }
-  })
+  });
 
-  it('draws NO archive control on awaiting_submission, and none disabled', () => {
+  it("places the archive control inside the lazy rules_change card", () => {
+    const html = renderToStaticMarkup(
+      <FeedCardRulesChange
+        item={item("rules_change", { changes: [] }, null)}
+        archive={<b>{ARCHIVE_LABEL}</b>}
+      />,
+    );
+    expect(html).toContain(ARCHIVE_LABEL);
+  });
+
+  it("draws NO archive control on awaiting_submission, and none disabled", () => {
     // A standing obligation, not an event: the backend 400s an archive of it.
-    const html = render(item('awaiting_submission', FAT_PAYLOAD))
-    expect(html).not.toContain(ARCHIVE_LABEL)
-    expect(html).not.toContain(RESTORE_LABEL)
-    expect(html).not.toContain('disabled')
-    expect(isArchivable(item('awaiting_submission'))).toBe(false)
-  })
+    const html = render(item("awaiting_submission", FAT_PAYLOAD));
+    expect(html).not.toContain(ARCHIVE_LABEL);
+    expect(html).not.toContain(RESTORE_LABEL);
+    expect(html).not.toContain("disabled");
+    expect(isArchivable(item("awaiting_submission"))).toBe(false);
+  });
 
-  it('offers RESTORE, not archive, in the archived view', () => {
-    const html = render(item('friend_completion', FAT_PAYLOAD), true)
-    expect(html).toContain(RESTORE_LABEL)
-    expect(html).not.toContain(ARCHIVE_LABEL)
-  })
-})
+  it("offers RESTORE, not archive, in the archived view", () => {
+    const html = render(item("friend_completion", FAT_PAYLOAD), true);
+    expect(html).toContain(RESTORE_LABEL);
+    expect(html).not.toContain(ARCHIVE_LABEL);
+  });
+});
 
-describe('the chassis', () => {
-  it('names every type with a real label, never a raw key', () => {
+describe("the chassis", () => {
+  it("names every type with a real label, never a raw key", () => {
     for (const type of FEED_TYPES) {
-      const kicker = feedKicker(type)
-      expect(kicker, type).not.toContain('feed:')
-      expect(kicker, type).not.toContain('kicker.')
-      expect(kicker.length, type).toBeGreaterThan(0)
+      const kicker = feedKicker(type);
+      expect(kicker, type).not.toContain("feed:");
+      expect(kicker, type).not.toContain("kicker.");
+      expect(kicker.length, type).toBeGreaterThan(0);
     }
-  })
+  });
 
-  it('draws the kicker and the timestamp once each, on the chassis', () => {
-    const html = render(item('friend_completion', FAT_PAYLOAD))
-    const kicker = feedKicker('friend_completion')
-    expect(html.split(kicker).length - 1, 'kicker drawn exactly once').toBe(1)
-    expect(html.split('ago').length - 1).toBeLessThanOrEqual(1)
-  })
+  it("draws the kicker and the timestamp once each, on the chassis", () => {
+    const html = render(item("friend_completion", FAT_PAYLOAD));
+    const kicker = feedKicker("friend_completion");
+    expect(html.split(kicker).length - 1, "kicker drawn exactly once").toBe(1);
+    expect(html.split("ago").length - 1).toBeLessThanOrEqual(1);
+  });
 
-  it('puts the three interactive companions INSIDE the chassis, handlers intact', () => {
+  it("puts the three interactive companions INSIDE the chassis, handlers intact", () => {
     // Epic #1192 decision 9.
-    const duel = render(item('duel_challenge', FAT_PAYLOAD))
-    expect(duel, 'chassis kicker').toContain(feedKicker('duel_challenge'))
-    expect(duel, 'accept survives').toContain(i18n.t('feed:duelChallenge.accept'))
-    expect(duel, 'decline survives').toContain(i18n.t('common:actions.decline'))
+    const duel = render(item("duel_challenge", FAT_PAYLOAD));
+    expect(duel, "chassis kicker").toContain(feedKicker("duel_challenge"));
+    expect(duel, "accept survives").toContain(
+      i18n.t("feed:duelChallenge.accept"),
+    );
+    expect(duel, "decline survives").toContain(
+      i18n.t("common:actions.decline"),
+    );
 
-    const collab = render(item('collab_invite', FAT_PAYLOAD))
-    expect(collab).toContain(feedKicker('collab_invite'))
-    expect(collab, 'accept survives').toContain(i18n.t('common:actions.accept'))
-    expect(collab, 'decline survives').toContain(i18n.t('common:actions.decline'))
+    const collab = render(item("collab_invite", FAT_PAYLOAD));
+    expect(collab).toContain(feedKicker("collab_invite"));
+    expect(collab, "accept survives").toContain(
+      i18n.t("common:actions.accept"),
+    );
+    expect(collab, "decline survives").toContain(
+      i18n.t("common:actions.decline"),
+    );
 
-    const letter = render(item('invitation_letter', FAT_PAYLOAD))
-    expect(letter).toContain(feedKicker('invitation_letter'))
-    expect(letter, 'the letter keeps its way out').toContain(
-      i18n.t('feed:invitationLetter.viewFactions'),
-    )
-  })
+    const letter = render(item("invitation_letter", FAT_PAYLOAD));
+    expect(letter).toContain(feedKicker("invitation_letter"));
+    expect(letter, "the letter keeps its way out").toContain(
+      i18n.t("feed:invitationLetter.viewFactions"),
+    );
+  });
 
-  it('leaves era_announcement OUTSIDE the chassis, with only the ✕ added', () => {
+  it("leaves era_announcement OUTSIDE the chassis, with only the ✕ added", () => {
     // Epic decision 6: factionless, since an era turn can strip a player's faction.
-    const html = render(item('era_announcement', FAT_PAYLOAD, null))
-    expect(html, 'keeps its own always-dark chrome').toContain('--badge-admin-bg')
+    const html = render(item("era_announcement", FAT_PAYLOAD, null));
+    expect(html, "keeps its own always-dark chrome").toContain(
+      "--badge-admin-bg",
+    );
     // Checked on chassis tokens, not the kicker word (the card's own copy shares
     // it). A null slug resolves to `default`, whose edge is the vertical spectrum.
-    expect(html, 'no chassis tint').not.toContain('card-bg')
-    expect(html, 'no chassis edge rule').not.toContain('--faction-default-rainbow-vertical')
-    expect(html, 'gains the ✕').toContain(ARCHIVE_LABEL)
-  })
+    expect(html, "no chassis tint").not.toContain("card-bg");
+    expect(html, "no chassis edge rule").not.toContain(
+      "--faction-default-rainbow-vertical",
+    );
+    expect(html, "gains the ✕").toContain(ARCHIVE_LABEL);
+  });
 
   // #1196.
-  it('draws a real card for every type the backend emits', () => {
+  it("draws a real card for every type the backend emits", () => {
     for (const type of FEED_TYPES) {
-      expect(render(item(type, FAT_PAYLOAD)), `${type} renders`).not.toBe('')
+      expect(render(item(type, FAT_PAYLOAD)), `${type} renders`).not.toBe("");
     }
-  })
+  });
 
-  it('gives comment_mention the chassis with no change to the router (#1196)', () => {
-    const html = render(item('comment_mention', FAT_PAYLOAD))
-    expect(html, 'the kicker band').toContain(feedKicker('comment_mention'))
-    expect(html, 'the archive route').toContain(ARCHIVE_LABEL)
-    expect(html, 'the coven chassis').toContain('--faction-coven')
-  })
-})
+  it("gives comment_mention the chassis with no change to the router (#1196)", () => {
+    const html = render(item("comment_mention", FAT_PAYLOAD));
+    expect(html, "the kicker band").toContain(feedKicker("comment_mention"));
+    expect(html, "the archive route").toContain(ARCHIVE_LABEL);
+    expect(html, "the coven chassis").toContain("--faction-coven");
+  });
+});
 
-describe('archiving never answers anything (ADR-0070)', () => {
-  const stillWaiting = i18n.t('feed:archive.stillWaiting')
+describe("archiving never answers anything (ADR-0070)", () => {
+  const stillWaiting = i18n.t("feed:archive.stillWaiting");
 
   it('tags an archived duel challenge and collab invite "still waiting"', () => {
-    expect(render(item('duel_challenge', FAT_PAYLOAD), true)).toContain(stillWaiting)
-    expect(render(item('collab_invite', FAT_PAYLOAD), true)).toContain(stillWaiting)
-  })
-
-  it('does not tag them in the live feed — their own buttons say it there', () => {
-    expect(render(item('duel_challenge', FAT_PAYLOAD))).not.toContain(stillWaiting)
-  })
-
-  it('does not tag a plain event, archived or not', () => {
-    expect(render(item('friend_completion', FAT_PAYLOAD), true)).not.toContain(
+    expect(render(item("duel_challenge", FAT_PAYLOAD), true)).toContain(
       stillWaiting,
-    )
-  })
+    );
+    expect(render(item("collab_invite", FAT_PAYLOAD), true)).toContain(
+      stillWaiting,
+    );
+  });
 
-  it('keeps the tag while the request is genuinely pending (ADR-0070)', () => {
+  it("does not tag them in the live feed — their own buttons say it there", () => {
+    expect(render(item("duel_challenge", FAT_PAYLOAD))).not.toContain(
+      stillWaiting,
+    );
+  });
+
+  it("does not tag a plain event, archived or not", () => {
+    expect(render(item("friend_completion", FAT_PAYLOAD), true)).not.toContain(
+      stillWaiting,
+    );
+  });
+
+  it("keeps the tag while the request is genuinely pending (ADR-0070)", () => {
     const pending = [
-      ['collab_invite', { ...FAT_PAYLOAD, invite_status: 'pending' }],
-      ['duel_challenge', { ...FAT_PAYLOAD, duel_status: 'pending' }],
-    ] as const
+      ["collab_invite", { ...FAT_PAYLOAD, invite_status: "pending" }],
+      ["duel_challenge", { ...FAT_PAYLOAD, duel_status: "pending" }],
+    ] as const;
     for (const [type, payload] of pending) {
-      expect(render(item(type, payload), true), `${type} pending`).toContain(stillWaiting)
+      expect(render(item(type, payload), true), `${type} pending`).toContain(
+        stillWaiting,
+      );
     }
-  })
+  });
 
-  it('drops the tag once the request WAS answered (#1342)', () => {
+  it("drops the tag once the request WAS answered (#1342)", () => {
     // Reads the source row's payload status, not session-local card state
     // (empty on a fresh archive load).
     const answered = [
-      ['collab_invite', 'invite_status', 'accepted'],
-      ['collab_invite', 'invite_status', 'declined'],
+      ["collab_invite", "invite_status", "accepted"],
+      ["collab_invite", "invite_status", "declined"],
       // A duel reports 'active' rather than 'accepted' once taken up.
-      ['duel_challenge', 'duel_status', 'active'],
-      ['duel_challenge', 'duel_status', 'declined'],
-    ] as const
+      ["duel_challenge", "duel_status", "active"],
+      ["duel_challenge", "duel_status", "declined"],
+    ] as const;
     for (const [type, key, status] of answered) {
-      const html = render(item(type, { ...FAT_PAYLOAD, [key]: status }), true)
-      expect(html, `${type} ${status}`).not.toContain(stillWaiting)
+      const html = render(item(type, { ...FAT_PAYLOAD, [key]: status }), true);
+      expect(html, `${type} ${status}`).not.toContain(stillWaiting);
     }
-  })
-})
+  });
+});
 
-describe('the undo strip degrades rather than vanishing', () => {
-  const strip = (phase: 'undo' | 'expired', actionLabel: string) =>
+describe("the undo strip degrades rather than vanishing", () => {
+  const strip = (phase: "undo" | "expired", actionLabel: string) =>
     renderToStaticMarkup(
       <FeedUndoStrip
-        message={i18n.t('feed:archive.archived', { title: 'Reforest the verge' })}
+        message={i18n.t("feed:archive.archived", {
+          title: "Reforest the verge",
+        })}
         actionLabel={actionLabel}
         phase={phase}
         onAct={() => {}}
         error={null}
       />,
-    )
+    );
 
   it('reads Archived "{title}" with Undo inside the window', () => {
-    const html = strip('undo', i18n.t('feed:archive.undo'))
-    expect(html).toContain('Reforest the verge')
-    expect(html).toContain(i18n.t('feed:archive.undo'))
-  })
+    const html = strip("undo", i18n.t("feed:archive.undo"));
+    expect(html).toContain("Reforest the verge");
+    expect(html).toContain(i18n.t("feed:archive.undo"));
+  });
 
-  it('offers Restore once the window has lapsed, still standing in the slot', () => {
-    const html = strip('expired', i18n.t('feed:archive.restore'))
-    expect(html).toContain('Reforest the verge')
-    expect(html).toContain(i18n.t('feed:archive.restore'))
-    expect(html).toContain('data-feed-undo-strip="expired"')
-  })
+  it("offers Restore once the window has lapsed, still standing in the slot", () => {
+    const html = strip("expired", i18n.t("feed:archive.restore"));
+    expect(html).toContain("Reforest the verge");
+    expect(html).toContain(i18n.t("feed:archive.restore"));
+    expect(html).toContain('data-feed-undo-strip="expired"');
+  });
 
-  it('shows an error in place of the message when the reversal fails', () => {
+  it("shows an error in place of the message when the reversal fails", () => {
     const html = renderToStaticMarkup(
       <FeedUndoStrip
         message="Archived “x”"
@@ -238,71 +277,98 @@ describe('the undo strip degrades rather than vanishing', () => {
         onAct={() => {}}
         error="Couldn't restore that update."
       />,
-    )
+    );
     // The apostrophe comes back HTML-escaped, so match the unambiguous tail.
-    expect(html).toContain('restore that update.')
-    expect(html).not.toContain('Archived')
-  })
-})
+    expect(html).toContain("restore that update.");
+    expect(html).not.toContain("Archived");
+  });
+});
 
-describe('the bulk controls', () => {
+describe("the bulk controls", () => {
   const bulk = (archivedView: boolean) =>
     renderToStaticMarkup(
-      <FeedBulkArchiveButton archivedView={archivedView} onAct={() => {}} pending={false} />,
-    )
+      <FeedBulkArchiveButton
+        archivedView={archivedView}
+        onAct={() => {}}
+        pending={false}
+      />,
+    );
 
-  it('is Archive all on the feed and Restore all in the archive', () => {
-    expect(bulk(false)).toContain(i18n.t('feed:archive.archiveAll'))
-    expect(bulk(true)).toContain(i18n.t('feed:archive.restoreAll'))
-  })
+  it("is Archive all on the feed and Restore all in the archive", () => {
+    expect(bulk(false)).toContain(i18n.t("feed:archive.archiveAll"));
+    expect(bulk(true)).toContain(i18n.t("feed:archive.restoreAll"));
+  });
 
-  it('draws them at different weights — a pill vs an underlined text button', () => {
-    expect(bulk(false)).toContain('border-radius:999px')
-    expect(bulk(true)).toContain('text-decoration:underline')
-  })
-})
+  it("draws them at different weights — a pill vs an underlined text button", () => {
+    expect(bulk(false)).toContain("border-radius:999px");
+    expect(bulk(true)).toContain("text-decoration:underline");
+  });
+});
 
-describe('the row action slot (epic §2b)', () => {
-  it('offers File it AND Drop out on a collab awaiting submission', () => {
+describe("the row action slot (epic §2b)", () => {
+  it("offers File it AND Drop out on a collab awaiting submission", () => {
     const row = normalizeFeedItem(
-      item('awaiting_submission', { praxis_id: 7, praxis_type: 'collab', task_title: 'x' }),
-    )!
-    expect(row.actions.map((action) => action.id)).toEqual(['fileIt', 'dropOut'])
-  })
+      item("awaiting_submission", {
+        praxis_id: 7,
+        praxis_type: "collab",
+        task_title: "x",
+      }),
+    )!;
+    expect(row.actions.map((action) => action.id)).toEqual([
+      "fileIt",
+      "dropOut",
+    ]);
+  });
 
-  it('offers only File it on a DUEL side — leave_praxis refuses any other type', () => {
+  it("offers only File it on a DUEL side — leave_praxis refuses any other type", () => {
     const row = normalizeFeedItem(
-      item('awaiting_submission', { praxis_id: 7, praxis_type: 'duel', task_title: 'x' }),
-    )!
-    expect(row.actions.map((action) => action.id)).toEqual(['fileIt'])
-  })
+      item("awaiting_submission", {
+        praxis_id: 7,
+        praxis_type: "duel",
+        task_title: "x",
+      }),
+    )!;
+    expect(row.actions.map((action) => action.id)).toEqual(["fileIt"]);
+  });
 
-  it('renders the CTAs inside the card', () => {
+  it("renders the CTAs inside the card", () => {
     const html = render(
-      item('awaiting_submission', { praxis_id: 7, praxis_type: 'collab', task_title: 'x' }),
-    )
-    expect(html).toContain(i18n.t('feed:rowAction.fileIt'))
-    expect(html).toContain(i18n.t('feed:rowAction.dropOut'))
-  })
+      item("awaiting_submission", {
+        praxis_id: 7,
+        praxis_type: "collab",
+        task_title: "x",
+      }),
+    );
+    expect(html).toContain(i18n.t("feed:rowAction.fileIt"));
+    expect(html).toContain(i18n.t("feed:rowAction.dropOut"));
+  });
 
-  it('builds no action a payload cannot address', () => {
-    const row = normalizeFeedItem(item('awaiting_submission', { task_title: 'x' }))!
-    expect(row.actions).toEqual([])
-  })
-})
+  it("builds no action a payload cannot address", () => {
+    const row = normalizeFeedItem(
+      item("awaiting_submission", { task_title: "x" }),
+    )!;
+    expect(row.actions).toEqual([]);
+  });
+});
 
-describe('the copy is neutral: no faction sheet dialect ships', () => {
-  it('carries none of the eight sheets\' archive verbs', () => {
+describe("the copy is neutral: no faction sheet dialect ships", () => {
+  it("carries none of the eight sheets' archive verbs", () => {
     // Epic #1192: faction identity is carried by the skin, not the words.
-    const catalog = JSON.stringify(feedCatalog)
-    for (const dialect of ['Tuck away', 'Bin it', 'Spike it', 'rm --event', 'Shelve']) {
-      expect(catalog, `${dialect} must not ship`).not.toContain(dialect)
+    const catalog = JSON.stringify(feedCatalog);
+    for (const dialect of [
+      "Tuck away",
+      "Bin it",
+      "Spike it",
+      "rm --event",
+      "Shelve",
+    ]) {
+      expect(catalog, `${dialect} must not ship`).not.toContain(dialect);
     }
-  })
+  });
 
-  it('says Archive, Restore and Undo in the domain\'s own plain nouns', () => {
-    expect(i18n.t('feed:archive.dismiss')).toBe('Archive')
-    expect(i18n.t('feed:archive.restore')).toBe('Restore')
-    expect(i18n.t('feed:archive.undo')).toBe('Undo')
-  })
-})
+  it("says Archive, Restore and Undo in the domain's own plain nouns", () => {
+    expect(i18n.t("feed:archive.dismiss")).toBe("Archive");
+    expect(i18n.t("feed:archive.restore")).toBe("Restore");
+    expect(i18n.t("feed:archive.undo")).toBe("Undo");
+  });
+});

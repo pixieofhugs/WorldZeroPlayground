@@ -21,6 +21,7 @@ from models.era import Era
 from models.faction_defection_history import FactionDefectionHistory
 from models.feed_dismissal import FeedDismissal
 from models.invitation_letter import InvitationLetter
+from models.mod_action import ModAction
 from models.nudge import Nudge
 from models.praxis import (
     ModerationStatus,
@@ -70,11 +71,11 @@ REQUESTS_FILTER = "requests"
 # ADR-0070: the four request types leave the live stream, so ALL and YOUR_STUFF
 # read four short of their registry membership.
 SEEDED_ITEM_COUNTS = {
-    ALL_FILTER: 13,
+    ALL_FILTER: 14,
     FRIENDS_FILTER: 3,
     FOES_FILTER: 2,
     YOUR_STUFF_FILTER: 6,
-    GLOBAL_FILTER: 2,
+    GLOBAL_FILTER: 3,
     REQUESTS_FILTER: 4,
 }
 
@@ -99,7 +100,7 @@ async def full_feed(
     active_task: Task,
     some_faction,
 ) -> dict:
-    """Seed one feed item of each of the 17 types for ``character``."""
+    """Seed one feed item of each of the 18 types for ``character``."""
     now = datetime.now(timezone.utc)
 
     # character2 friend, character3 foe: feeds the friend_*/foe_* sources.
@@ -282,6 +283,15 @@ async def full_feed(
         ]
     )
 
+    db_session.add(
+        ModAction(
+            actor_account_id=character.account_id,
+            action="small_world_off",
+            target_type="era",
+            target_id=era.id,
+            detail="duel_level",
+        )
+    )
     # global_task and era_announcement need no seeding.
     await db_session.commit()
 
@@ -339,7 +349,7 @@ def _key_of(feed: dict, item_type: str) -> str:
 async def test_every_feed_type_yields_a_stable_item_key(
     client: AsyncClient, full_feed: dict, auth_headers: dict
 ):
-    """All 17 types present, keyed, and stable across two requests (stream + queue)."""
+    """All 18 types present, keyed, and stable across two requests (stream + queue)."""
     first = await _feed(client, auth_headers)
     second = await _feed(client, auth_headers)
     queue = await _feed(client, auth_headers, REQUESTS_FILTER)
