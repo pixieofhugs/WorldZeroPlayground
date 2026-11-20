@@ -149,7 +149,7 @@ export function PraxisBody({
           />
           <PraxisExcerpt praxis={praxis} style={{ color: muted }} fonts={fonts} />
         </div>
-        {/* Dispatched per-faction stamp (ADR-0047, ADR-0049, ADR-0053). */}
+        {/* Dispatched per-faction stamp (ADR-0049, ADR-0053, ADR-0076). */}
         {stampStyle ? (
           <div style={stampStyle}>
             <ScoreStamp praxis={praxis} showCrown={showCrown} />

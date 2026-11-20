@@ -92,7 +92,7 @@ export function scoreBreakdown(praxis: ScoredPraxis): ScoreBreakdown {
 }
 
 /**
- * `×0.80`: a multiplier keeps its trailing zeros (ADR-0047). Totals go through
+ * `×0.80`: a multiplier keeps its trailing zeros. Totals go through
  * `formatPoints` in `utils/points` instead (#1866).
  */
 export function formatMult(mult: number): string {

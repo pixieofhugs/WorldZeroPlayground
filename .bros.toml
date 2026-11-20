@@ -9,7 +9,7 @@ run = "bros ratchet ruff"
 [[check]]
 name = "pytest"
 paths = ["backend/*"]
-run = "scripts/wz test --cov=. --cov-fail-under=92"
+run = "scripts/wz test --cov=. --cov-fail-under=96"
 
 [[check]]
 name = "node_modules"

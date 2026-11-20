@@ -732,7 +732,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
           </div>
           <div
             style={{
-              ...actionColumnSize({ desktop, hasAction, width: size.plate }),
+              ...actionColumnSize({ hasAction, width: size.plate }),
               marginTop: desktop ? "var(--space-sm)" : 0,
             }}
           >

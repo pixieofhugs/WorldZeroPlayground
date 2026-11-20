@@ -16,6 +16,7 @@ vi.mock('../../api/terms', () => ({ acceptTerms: () => Promise.resolve({}) }))
 vi.mock('../../api/auth', () => ({ loginWith: () => {} }))
 
 import AuthCard from '../onboarding/AuthCard'
+import Disclaimer from '../Disclaimer'
 import TermsCard from '../onboarding/TermsCard'
 import { RING_CAPTION_MAX_CHARS } from '../onboarding/OnboardingCard'
 
@@ -128,6 +129,12 @@ describe('the auth card', () => {
   })
 })
 
+describe('the Disclaimer page', () => {
+  it('shows the deleted-account record paragraph (p4)', () => {
+    expect(render(<Disclaimer />)).toContain(asRendered(common.disclaimer.p4))
+  })
+})
+
 describe('the terms card', () => {
   it('shows the real Disclaimer, not a placeholder', () => {
     const markup = render(<TermsCard onAccepted={() => {}} />)
@@ -136,6 +143,7 @@ describe('the terms card', () => {
       common.disclaimer.p1,
       common.disclaimer.p2,
       common.disclaimer.p3,
+      common.disclaimer.p4,
       common.disclaimer.lastUpdated,
     ]) {
       expect(markup).toContain(asRendered(paragraph))

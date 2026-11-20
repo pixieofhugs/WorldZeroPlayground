@@ -19,7 +19,7 @@ import type { ScoreStampProps } from "./ScoreStamp";
  * ruled `✦` off the card's plaque. Neither star crosses; do not "unify" it.
  *
  * Rows match {@link DefaultScoreStamp}; selection and order are
- * `scoreBreakdown`'s (ADR-0047, #1131, #2634).
+ * `scoreBreakdown`'s (ADR-0053/0076, #1131, #2634).
  */
 export default function WowScoreStamp({ praxis, showCrown }: ScoreStampProps) {
   const { t } = useTranslation("praxis");
