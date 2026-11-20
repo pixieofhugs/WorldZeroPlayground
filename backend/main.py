@@ -10,7 +10,7 @@ from sqlalchemy.exc import IntegrityError
 from starlette.middleware.sessions import SessionMiddleware
 
 from config import settings
-from db import engine, get_session_factory
+from db import AsyncSessionLocal, engine
 from routers import activity_feed, admin, auth, characters, duel, factions, game_config, leaderboard, praxes, relationships, tasks, votes
 from routers import comments, contact, copy, google_photos, me, terms
 from schemas.system import HealthOut
@@ -43,7 +43,7 @@ async def lifespan(app: FastAPI):
     try:
         # Live era is a DB fact (ADR-0091); sound process-wide only because one
         # worker runs. Inside the try so a DB down at boot still releases the lock.
-        async with get_session_factory()() as session:
+        async with AsyncSessionLocal() as session:
             await rebind_live_era(session)
 
         # The room server's task group must outlive every socket it serves.

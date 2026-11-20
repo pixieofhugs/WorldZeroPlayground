@@ -5,7 +5,7 @@ import { useAuth } from '../../auth/AuthContext'
 import { acceptTerms } from '../../api/terms'
 import type { TaskOut } from '../../api/tasks'
 import { resolveHandoffTask } from '../../utils/onboardingHandoff'
-import { clearTermsAcceptance, holdTermsAcceptance, termsAcceptanceHeld } from '../../utils/onboardingResume'
+import { clearTermsAcceptance, holdTermsAcceptance, markTitleSeen, termsAcceptanceHeld, titleSeen } from '../../utils/onboardingResume'
 import Wisp from './Wisp'
 import { BEATS } from './beats'
 import { HoldNextContext } from './beats/holdNext'
@@ -49,13 +49,17 @@ function useTitleTyping(text: string, instant: boolean): string {
   return text.slice(0, n)
 }
 
-function Title({ cameBack, onStart }: { cameBack: boolean; onStart: () => void }) {
+function Title({ cameBack, returning, onStart }: { cameBack: boolean; returning: boolean; onStart: () => void }) {
   const { t } = useTranslation('onboarding')
   const welcome = t('flow.welcome')
-  const shown = useTitleTyping(welcome, cameBack || reducedMotion())
+  const shown = useTitleTyping(welcome, cameBack || returning || reducedMotion())
+  const played = shown === welcome
+  useEffect(() => {
+    if (played) markTitleSeen()
+  }, [played])
   const delay = (s: number): CSSProperties => ({ animationDelay: `${s}s` })
   return (
-    <section className={`ob-title ${cameBack ? 'ob-rew ob-quick' : ''}`}>
+    <section className={`ob-title ${cameBack ? 'ob-rew ob-quick' : returning ? 'ob-quick' : ''}`}>
       <div aria-hidden="true" className="ob-rail">
         <div className="boing ob-level">
           <span className="ob-cap">{t('flow.level')}</span>
@@ -89,7 +93,12 @@ function Title({ cameBack, onStart }: { cameBack: boolean; onStart: () => void }
           <span className="ob-caret" />
         </span>
       </h1>
-      <button type="button" className="boing ob-start" style={delay(START_DELAY_S)} onClick={onStart} data-testid="onboarding-start">
+      <button type="button" className="boing ob-start" style={delay(START_DELAY_S)} onClick={() => {
+          markTitleSeen()
+          onStart()
+        }}
+        data-testid="onboarding-start"
+      >
         {t('flow.start')}
       </button>
     </section>
@@ -101,6 +110,7 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
   const { t } = useTranslation('onboarding')
   const { t: tc } = useTranslation('common')
   const [flow, setFlow] = useState<Flow>(() => initialFlow(resumed))
+  const [returning] = useState(titleSeen)
   const [reveal, setReveal] = useState(0)
   const [leaving, setLeaving] = useState(false)
   const [cameFrom, setCameFrom] = useState<Step | null>(null)
@@ -226,7 +236,7 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
 
   return (
     <div ref={rootRef} className="onboarding-arc ob-root" data-theme="dark" style={{ ['--conf' as string]: CONFIDENCE[String(step)] ?? 1 }}>
-      <span aria-hidden="true" className="ob-aurora" style={{ animationDelay: step === 'title' && !cameBack ? '3.4s' : '0s' }} />
+      <span aria-hidden="true" className="ob-aurora" style={{ animationDelay: step === 'title' && !cameBack && !returning ? '3.4s' : '0s' }} />
       <header className="ob-header">
         <span>
           <span className={`ob-brand ob-cap ${step === 'title' ? '' : 'ob-brand-hide'}`}>
@@ -252,7 +262,7 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
         </span>
       )}
 
-      {step === 'title' && <Title cameBack={cameBack} onStart={() => move(next)} />}
+      {step === 'title' && <Title cameBack={cameBack} returning={returning} onStart={() => move(next)} />}
 
       {Beat && n !== null && (
         <section className={`ob-beat ${screenCls}`}>

@@ -55,23 +55,17 @@ export function discardRoomStore(praxisId: number): void {
   indexedDB.deleteDatabase(roomStoreName(praxisId));
 }
 
-/** Per open room: resolves true once the server is proven to hold every local edit. */
-const deliveryProofs = new Map<number, (timeoutMs: number) => Promise<boolean>>();
+/** Per open room: the whole Yjs state, base64, which a submit carries to the server (#3611). */
+const stateEncoders = new Map<number, () => string>();
 
-export function trackRoomDelivery(
-  praxisId: number,
-  prove: (timeoutMs: number) => Promise<boolean>,
-): () => void {
-  deliveryProofs.set(praxisId, prove);
+export function trackRoomState(praxisId: number, encode: () => string): () => void {
+  stateEncoders.set(praxisId, encode);
   return () => {
-    if (deliveryProofs.get(praxisId) === prove) deliveryProofs.delete(praxisId);
+    if (stateEncoders.get(praxisId) === encode) stateEncoders.delete(praxisId);
   };
 }
 
-/** Publish seals the server's document and the discard deletes our only copy, so prove delivery first. No open room, nothing to lose. */
-export async function whenRoomFlushed(
-  praxisId: number,
-  timeoutMs: number,
-): Promise<boolean> {
-  return (await deliveryProofs.get(praxisId)?.(timeoutMs)) ?? true;
+/** `null` when no room is open here: the server's copy is then the only one. */
+export function roomState(praxisId: number): string | null {
+  return stateEncoders.get(praxisId)?.() ?? null;
 }
