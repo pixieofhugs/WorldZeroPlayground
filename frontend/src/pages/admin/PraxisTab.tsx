@@ -11,6 +11,7 @@ import FilterBar, {
 import { useDebouncedValue } from "../../hooks/useDebouncedValue";
 import { useGameConfig } from "../../hooks/useGameConfig";
 import { extractError } from "../../utils/errors";
+import PageTitle from "../../components/ui/PageTitle";
 import AdminConfirm from "./AdminConfirm";
 import {
   ALL,
@@ -234,6 +235,7 @@ export default function PraxisTab() {
 
   return (
     <div>
+      <PageTitle title={t("console.rail.items.praxis")} />
       <FilterBar
         rails={rails}
         facets={[

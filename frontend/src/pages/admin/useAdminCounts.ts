@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useOutletContext } from 'react-router-dom'
 import {
   getFlaggedComments,
   getFlaggedPraxes,
@@ -24,10 +25,12 @@ const ok = <T,>(r: PromiseSettledResult<T>): T | null => (r.status === 'fulfille
 /**
  * What needs a moderator, for the admin rail (and #3666's MOD badge). Class C
  * (ADR-0072): these are obligations, so never cached; `refreshKey` re-reads
- * after the moderator has moved (the rail passes the pathname).
+ * after the moderator has moved (the rail passes the pathname); `reload`
+ * re-reads on demand, for a decision that doesn't change the route.
  */
-export function useAdminCounts(refreshKey = ''): AdminCounts {
+export function useAdminCounts(refreshKey = ''): AdminCounts & { reload: () => void } {
   const [counts, setCounts] = useState<AdminCounts>(NONE)
+  const [bump, setBump] = useState(0)
 
   useEffect(() => {
     let cancelled = false
@@ -54,7 +57,12 @@ export function useAdminCounts(refreshKey = ''): AdminCounts {
     return () => {
       cancelled = true
     }
-  }, [refreshKey])
+  }, [refreshKey, bump])
 
-  return counts
+  return { ...counts, reload: () => setBump((n) => n + 1) }
+}
+
+/** The console layout's `reload`, for a page's action handlers; a no-op where the page is mounted outside the console. */
+export function useReloadCounts(): () => void {
+  return useOutletContext<{ reloadCounts: () => void } | undefined>()?.reloadCounts ?? (() => {})
 }

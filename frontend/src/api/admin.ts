@@ -272,3 +272,13 @@ export async function grantAdmin(username: string): Promise<AdminRow> {
 export async function revokeAdmin(username: string): Promise<void> {
   await apiDelete('/admin/admins/{username}', { params: { path: { username } } })
 }
+
+/** What rolling into `configKey` would do, counted from the live game. Read-only. */
+export type EraPreflight = components['schemas']['EraPreflightOut']
+
+export async function getEraPreflight(configKey: string): Promise<EraPreflight> {
+  const { data } = await apiGet('/admin/eras/{config_key}/preflight', {
+    params: { path: { config_key: configKey } },
+  })
+  return data
+}
