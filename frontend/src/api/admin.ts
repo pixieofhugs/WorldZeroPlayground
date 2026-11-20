@@ -210,10 +210,11 @@ export async function suspendAccount(id: number, suspended: boolean): Promise<vo
   })
 }
 
-/** Hides every open-flagged praxis by one author; returns how many. */
-export async function removeFlaggedPraxes(characterId: number): Promise<number> {
+/** Hides every open-flagged praxis by one author, telling them why; returns how many. */
+export async function removeFlaggedPraxes(characterId: number, note?: string): Promise<number> {
   const { data } = await apiPost('/admin/characters/{character_id}/praxes/remove-flagged', {
     params: { path: { character_id: characterId } },
+    body: { note },
   })
   return data.removed
 }

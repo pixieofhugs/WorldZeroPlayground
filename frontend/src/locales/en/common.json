@@ -211,19 +211,6 @@
     "bell": "Requests — nothing waiting on you",
     "bellWithPending_one": "Requests — {{count}} waiting on you",
     "bellWithPending_other": "Requests — {{count}} waiting on you",
-    "mod": {
-      "label": "Mod",
-      "buttonWithCount_one": "Mod, {{count}} waiting",
-      "buttonWithCount_other": "Mod, {{count}} waiting",
-      "edit": "Edit on the page",
-      "editHint": "Reword copy and change a task's status, right where it is.",
-      "open": "Open admin",
-      "reports": "Reports",
-      "messages": "Messages",
-      "proposals": "Task proposals",
-      "stripText": "Mod mode: you're editing the page",
-      "turnOff": "Turn off"
-    },
     "createCharacter": "create character",
     "login": "Login"
   },

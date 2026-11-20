@@ -18,7 +18,7 @@ by ``uncoded_error_scan.py``.
 from __future__ import annotations
 
 #: Duplicated on purpose: the one number a reviewer reads; the test checks it.
-UNCODED_RAISE_TOTAL = 108
+UNCODED_RAISE_TOTAL = 107
 
 UNCODED_RAISE_ALLOWLIST: dict[str, int] = {
     "dependencies.py::get_current_character": 1,
@@ -45,7 +45,6 @@ UNCODED_RAISE_ALLOWLIST: dict[str, int] = {
     "services/admin_service.py::admin_edit_task": 2,
     "services/admin_service.py::archive_message": 1,
     "services/admin_service.py::assign_or_revoke_role": 2,
-    "services/admin_service.py::get_account_detail": 1,
     "services/admin_service.py::suspend_account": 1,
     "services/admin_service.py::update_task_status": 2,
 
