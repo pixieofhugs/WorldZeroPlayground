@@ -26,7 +26,11 @@ export default function SmallWorldTab() {
   }, [])
 
   const show = (v: number | boolean) => (typeof v === 'boolean' ? t(`console.smallWorld.${v ? 'on' : 'off'}`) : String(v))
-  const values = (side: Record<string, number | boolean>) => Object.values(side).map(show).join(' · ')
+  const values = (key: string, side: Record<string, number | boolean>) =>
+    t(`console.smallWorld.rules.${key}.value`, {
+      ...Object.fromEntries(Object.entries(side).map(([k, v]) => [k, show(v)])),
+      defaultValue: Object.values(side).map(show).join(' · '),
+    })
 
   const apply = async (sides: Record<string, DialSide>, done: (changed: number) => string) => {
     setBusy(true)
@@ -109,8 +113,8 @@ export default function SmallWorldTab() {
                         {t('console.smallWorld.turnUp', { when: t(`console.smallWorld.rules.${d.dial_key}.when`) })}
                       </span>
                     </td>
-                    <td className="adm-td" data-label={t('console.smallWorld.cols.small')}>{values(d.small)}</td>
-                    <td className="adm-td" data-label={t('console.smallWorld.cols.full')}>{values(d.full)}</td>
+                    <td className="adm-td" data-label={t('console.smallWorld.cols.small')}>{values(d.dial_key, d.small)}</td>
+                    <td className="adm-td" data-label={t('console.smallWorld.cols.full')}>{values(d.dial_key, d.full)}</td>
                     <td className="adm-td">
                       <div className="adm-segs" role="radiogroup" aria-label={name}>
                         {SIDES.map((side) => (

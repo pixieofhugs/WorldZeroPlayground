@@ -106,6 +106,35 @@ describe('Reports', () => {
     expect(screen.queryByRole('region', { name: 'Other post' })).toBeNull()
   })
 
+  it('?character= counts the tabs from the filtered list and says when nothing is left', async () => {
+    const comment = { id: 5, body_text: 'rude', author: { id: 4, display_name: 'Pike' }, praxis_id: 1, task_id: null, created_at: now, flags: flagged.flags }
+    api.getFlaggedPraxes.mockResolvedValue([flagged, { ...flagged, id: 8, created_by_id: 4 }])
+    api.getFlaggedComments.mockResolvedValue([comment])
+    api.getModLog.mockResolvedValue({ items: [], total: 0, limit: 20, offset: 0 })
+    render(<MemoryRouter initialEntries={['/admin/reports?character=3']}><ReportsTab onViewAccount={vi.fn()} /></MemoryRouter>)
+    expect((await screen.findByRole('tab', { name: 'Praxis 1' }))).toBeTruthy()
+    expect(screen.getByRole('tab', { name: 'Comments 0' })).toBeTruthy()
+    fireEvent.click(screen.getByRole('tab', { name: 'Comments 0' }))
+    expect(screen.getByText(/No open reports about this character/)).toBeTruthy()
+    expect(screen.queryByText('No open reports.')).toBeNull()
+  })
+
+  it('a comment Remove asks for a reason and sends it', async () => {
+    const comment = { id: 5, body_text: 'rude', author: { id: 4, display_name: 'Pike' }, praxis_id: 1, task_id: null, created_at: now, flags: flagged.flags }
+    api.getFlaggedPraxes.mockResolvedValue([])
+    api.getFlaggedComments.mockResolvedValue([comment])
+    api.getModLog.mockResolvedValue({ items: [], total: 0, limit: 20, offset: 0 })
+    api.moderateComment.mockResolvedValue({})
+    render(<MemoryRouter><ReportsTab onViewAccount={vi.fn()} /></MemoryRouter>)
+    const card = await screen.findByRole('region', { name: 'Pike' })
+    fireEvent.click(within(card).getByRole('button', { name: 'Remove' }))
+    const submit = screen.getByRole('button', { name: 'Remove with this reason' }) as HTMLButtonElement
+    expect(submit.disabled).toBe(true)
+    fireEvent.change(screen.getByLabelText('Reason the author sees'), { target: { value: 'Rude to a newcomer.' } })
+    fireEvent.click(submit)
+    await waitFor(() => expect(api.moderateComment).toHaveBeenCalledWith(5, 'deleted', 'Rude to a newcomer.'))
+  })
+
   it('Remove all their flagged asks for a reason and sends it', async () => {
     mount([flagged])
     fireEvent.click(await screen.findByRole('button', { name: /Remove all their flagged/ }))

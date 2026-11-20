@@ -188,10 +188,12 @@ export async function moderatePraxis(
 export async function moderateComment(
   id: number,
   status: 'visible' | 'hidden' | 'deleted',
+  adminNote?: string,
 ): Promise<CommentOut> {
   const { data } = await apiPatch('/admin/comments/{comment_id}/moderate', {
     params: { path: { comment_id: id } },
-    body: { status },
+    // ponytail: schema.d.ts predates the backend's admin_note; the cast goes when `wz regen` runs after it lands.
+    body: { status, admin_note: adminNote || null } as { status: typeof status },
   })
   return data
 }

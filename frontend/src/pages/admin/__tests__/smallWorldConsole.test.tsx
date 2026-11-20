@@ -18,7 +18,7 @@ const dials = (cooldownSide: 'small' | 'full' = 'small') => [
   dial('praxis_post_cooldown', cooldownSide, { praxis_post_cooldown_hours: 0 }, { praxis_post_cooldown_hours: 31 },
     { updated_by: 'Rook', updated_at: '2026-11-19T10:00:00Z' }),
   dial('vote_requires_received_vote', 'small', { vote_requires_received_vote: false }, { vote_requires_received_vote: true }),
-  dial('invitation', 'full', { a: 1, b: 10 }, { a: 2, b: 50 }),
+  dial('invitation', 'full', { invitation_task_threshold: 1, invitation_point_threshold: 10 }, { invitation_task_threshold: 2, invitation_point_threshold: 50 }),
 ]
 const renderTab = () => render(<MemoryRouter><SmallWorldTab /></MemoryRouter>)
 
@@ -31,9 +31,9 @@ describe('Small world', () => {
   it('renders both values from the API, who changed it, and the current side', async () => {
     api.getSmallWorld.mockResolvedValue(dials())
     renderTab()
-    expect(await screen.findByText('31')).toBeTruthy()
-    expect(screen.getByText('1 · 10')).toBeTruthy()
-    expect(screen.getByText('2 · 50')).toBeTruthy()
+    expect(await screen.findByText('31 h')).toBeTruthy()
+    expect(screen.getByText('1 tasks · 10 pts')).toBeTruthy()
+    expect(screen.getByText('2 tasks · 50 pts')).toBeTruthy()
     expect(screen.getByText(/Rook/)).toBeTruthy()
     const group = screen.getByRole('radiogroup', { name: 'Post cooldown' })
     expect(group.querySelector('[aria-checked="true"]')?.textContent).toBe('Small world')

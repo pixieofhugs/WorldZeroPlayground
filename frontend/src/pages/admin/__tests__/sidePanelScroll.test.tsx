@@ -10,7 +10,10 @@ afterEach(cleanup)
 it('scrolls into view on mount and unmounts cleanly', () => {
   const scroll = vi.fn(() => 'not-a-cleanup')
   Element.prototype.scrollIntoView = scroll as unknown as typeof Element.prototype.scrollIntoView
+  const errors = vi.spyOn(console, 'error').mockImplementation(() => {})
   const view = render(<SidePanel label="P" badge={<b>P</b>} onClose={() => {}}>x</SidePanel>)
+  view.unmount()
   expect(scroll).toHaveBeenCalledWith({ block: 'start', behavior: 'smooth' })
-  expect(() => view.unmount()).not.toThrow()
+  expect(errors.mock.calls.flat().join(' ')).not.toContain('must not return anything besides a function')
+  errors.mockRestore()
 })
