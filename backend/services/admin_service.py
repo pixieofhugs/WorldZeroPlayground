@@ -791,6 +791,18 @@ _TASK_REFERENCES = (
 )
 
 
+def _has_history(task_id):
+    """SQL predicate: something in ``_TASK_REFERENCES`` points at ``task_id``."""
+    return or_(
+        *(select(c).where(c == task_id).exists() for c in _TASK_REFERENCES)
+    )
+
+
+async def task_ids_with_history(session: AsyncSession) -> list[int]:
+    """Ids of tasks Delete would refuse for history — one query, for the admin list."""
+    return list(await session.scalars(select(Task.id).where(_has_history(Task.id))))
+
+
 def _refuse_task_with_history() -> None:
     raise_coded(
         409,
@@ -810,16 +822,7 @@ async def _refuse_if_undeletable(task: Task, session: AsyncSession) -> None:
             ErrorCode.task_seed_owned,
             "This task is owned by the seeder and cannot be deleted.",
         )
-    referenced = await session.scalar(
-        select(
-            or_(
-                *(
-                    select(column).where(column == task.id).exists()
-                    for column in _TASK_REFERENCES
-                )
-            )
-        )
-    )
+    referenced = await session.scalar(select(_has_history(task.id)))
     if referenced:
         _refuse_task_with_history()
 

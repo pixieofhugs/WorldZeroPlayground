@@ -18,6 +18,7 @@
 .adm-rule { height: 1px; background: var(--color-border); border: 0; margin: 0; }
 .adm-main { flex: 1 1 0; min-width: 0; box-sizing: border-box; padding: var(--space-xl) var(--space-2xl); display: flex; flex-direction: column; gap: var(--space-lg); }
 .adm-bar { display: none; }
+.adm-title { display: flex; align-items: center; gap: var(--space-xs); font-family: var(--font-display); font-size: var(--text-xl); font-weight: 700; }
 
 /* Phone: the rail folds behind the Menu button (ReportsPhone). */
 @media (max-width: 767px) and (pointer: coarse) {

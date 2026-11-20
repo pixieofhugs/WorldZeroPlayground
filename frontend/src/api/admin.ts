@@ -97,6 +97,12 @@ export async function getAllTasks(): Promise<TaskOut[]> {
   return data
 }
 
+/** Ids of tasks the server would refuse to delete for history (#3667). */
+export async function getTaskIdsWithHistory(): Promise<number[]> {
+  const { data } = await apiGet('/admin/tasks/with-history')
+  return data
+}
+
 /** Leaving `deleted` is the undo. */
 export type AdminTaskStatus = components['schemas']['TaskStatusAction']['status']
 

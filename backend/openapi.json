@@ -9428,6 +9428,65 @@
         ]
       }
     },
+    "/admin/tasks/with-history": {
+      "get": {
+        "description": "Admin-only: ids of tasks Delete would refuse (#3667).",
+        "operationId": "list_task_ids_with_history_admin_tasks_with_history_get",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "type": "integer"
+                  },
+                  "title": "Response List Task Ids With History Admin Tasks With History Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Task Ids With History",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/admin/tasks/{task_id}": {
       "delete": {
         "description": "Soft-delete (status=deleted) a task nothing references; 409 if it has history.",

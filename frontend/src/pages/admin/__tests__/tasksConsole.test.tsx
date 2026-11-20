@@ -10,6 +10,7 @@ const NOW = Date.parse('2026-06-10T12:00:00Z')
 const api = vi.hoisted(() => ({
   getAllTasks: vi.fn(),
   getPendingTasks: vi.fn(),
+  getTaskIdsWithHistory: vi.fn(),
   adminPatchTask: vi.fn(async () => ({})),
   updateTaskStatus: vi.fn(async () => ({})),
   deleteTask: vi.fn(async () => undefined),
@@ -43,6 +44,7 @@ const at = (path: string) =>
 beforeEach(() => {
   vi.spyOn(Date, 'now').mockReturnValue(NOW)
   api.getAllTasks.mockResolvedValue([active, retired, proposal])
+  api.getTaskIdsWithHistory.mockResolvedValue([])
   api.getPendingTasks.mockResolvedValue([{ ...proposal, created_by_name: 'Ada Quill', notes: 'Birds are everywhere.' }])
 })
 afterEach(() => {
@@ -73,6 +75,18 @@ describe('Tasks segments', () => {
 })
 
 describe('the task panel', () => {
+  it('offers Delete only to a task with no history (#3667)', async () => {
+    api.getTaskIdsWithHistory.mockResolvedValue([1])
+    const first = at('/admin/tasks')
+    fireEvent.click(await screen.findByRole('button', { name: 'Walk Barefoot' }))
+    expect(screen.queryByRole('button', { name: /^delete$/i })).toBeNull()
+    first.unmount()
+    api.getTaskIdsWithHistory.mockResolvedValue([])
+    at('/admin/tasks')
+    fireEvent.click(await screen.findByRole('button', { name: 'Walk Barefoot' }))
+    expect(screen.getByRole('button', { name: /^delete$/i })).toBeTruthy()
+  })
+
   it('opens from a row, warns with the era level and hours, shows the note', async () => {
     at('/admin/proposals')
     fireEvent.click(await screen.findByRole('button', { name: 'Learn a Bird’s Name' }))

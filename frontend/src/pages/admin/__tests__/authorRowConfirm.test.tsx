@@ -32,7 +32,7 @@ function setup(row: FlaggedPraxisOut, confirming: "ban" | "suspend" | null = nul
 describe("AuthorRow", () => {
   it("asks first: ban fires nothing until confirmed", () => {
     const props = setup(praxis());
-    fireEvent.click(screen.getByRole("button", { name: "ban character" }));
+    fireEvent.click(screen.getByRole("button", { name: "Ban character…" }));
     expect(props.onAsk).toHaveBeenCalledWith("ban");
     expect(props.onModerate).not.toHaveBeenCalled();
   });
@@ -48,14 +48,14 @@ describe("AuthorRow", () => {
     const row = praxis({ author_status: "banned" });
     const props = setup(row);
     expect(screen.getByText("banned")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "unban character" }));
+    fireEvent.click(screen.getByRole("button", { name: "Unban character" }));
     expect(props.onModerate).toHaveBeenCalledWith(row, "ban", false);
     expect(props.onAsk).not.toHaveBeenCalled();
   });
 
   it("links to the author's account by username", () => {
     const props = setup(praxis());
-    fireEvent.click(screen.getByRole("button", { name: "view account →" }));
+    fireEvent.click(screen.getByRole("button", { name: "Open in People" }));
     expect(props.onViewAccount).toHaveBeenCalledWith("junk");
   });
 });

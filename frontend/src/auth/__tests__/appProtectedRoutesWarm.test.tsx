@@ -30,7 +30,7 @@ vi.mock('../../pages/EditCharacter', () => ({ default: () => 'EditCharacter' }))
 vi.mock('../../pages/Updates', () => ({ default: () => 'Updates' }))
 vi.mock('../../pages/Settings', () => ({ default: () => 'Settings' }))
 vi.mock('../../pages/Admin', () => ({ default: () => <Outlet /> }))
-vi.mock('../../pages/admin/consolePages', () => ({ ModerationPage: () => 'ModerationPage' }))
+vi.mock('../../pages/admin/consolePages', () => ({ ReportsPage: () => 'ReportsPage' }))
 vi.mock('../../pages/admin/FactionCopySheet', () => ({ default: () => 'FactionCopySheet' }))
 vi.mock('../../pages/admin/LevelUpCopySheet', () => ({ default: () => 'LevelUpCopySheet' }))
 vi.mock('../../pages/CreateCharacter', () => ({ default: () => 'CreateCharacter' }))
@@ -41,7 +41,7 @@ const GUARDED: [path: string, page: string][] = [
   ['/characters/1/edit', 'EditCharacter'],
   ['/updates', 'Updates'],
   ['/settings', 'Settings'],
-  ['/admin/reports', 'ModerationPage'],
+  ['/admin/reports', 'ReportsPage'],
   ['/admin/copy/ua', 'FactionCopySheet'],
   ['/admin/level-ups', 'LevelUpCopySheet'],
   ['/characters/create', 'CreateCharacter'],

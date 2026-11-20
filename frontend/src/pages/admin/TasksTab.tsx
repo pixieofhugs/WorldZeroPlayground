@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useLocation, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { getAllTasks, getPendingTasks } from '../../api/admin'
+import { getAllTasks, getPendingTasks, getTaskIdsWithHistory } from '../../api/admin'
 import { extractError } from '../../utils/errors'
 import { useGameConfig } from '../../hooks/useGameConfig'
 import { factionName, isFactionHiddenFromChoosers, UNAFFILIATED_FACTION_SLUG } from '../../utils/factions'
@@ -45,8 +45,8 @@ export default function TasksTab() {
 
   const refresh = useCallback(() => {
     setError(null)
-    Promise.all([getAllTasks(), getPendingTasks()])
-      .then(([all, pending]) => setTasks(mergeAdminTaskRows(all, pending)))
+    Promise.all([getAllTasks(), getPendingTasks(), getTaskIdsWithHistory()])
+      .then(([all, pending, history]) => setTasks(mergeAdminTaskRows(all, pending, history)))
       .catch((err) => setError(extractError(err, t('tasks.loadError'))))
       .finally(() => setLoading(false))
   }, [t])

@@ -21,7 +21,8 @@ vi.mock('../../../auth/AuthContext', () => ({
 vi.mock('../../../auth/AdminModeContext', () => ({ useAdminMode: () => ({ adminMode: false }) }))
 vi.mock('../../../components/Layout', () => ({ default: () => 'PLAYER LAYOUT' }))
 vi.mock('../consolePages', () => ({
-  ModerationPage: () => 'ModerationPage',
+  ReportsPage: () => 'ReportsPage',
+  MessagesPage: () => 'MessagesPage',
   TasksPage: () => 'TasksPage',
   PraxisPage: () => 'PraxisPage',
   PeoplePage: () => 'PeoplePage',
@@ -43,12 +44,12 @@ const at = (path: string) =>
 describe('admin console shell', () => {
   it('redirects /admin to reports, outside the player layout', async () => {
     at('/admin')
-    expect(await screen.findByText('ModerationPage')).toBeTruthy()
+    expect(await screen.findByText('ReportsPage')).toBeTruthy()
     expect(screen.queryByText('PLAYER LAYOUT')).toBeNull()
   })
 
   it.each([
-    ['/admin/messages', 'ModerationPage'],
+    ['/admin/messages', 'MessagesPage'],
     ['/admin/proposals', 'TasksPage'],
     ['/admin/tasks', 'TasksPage'],
     ['/admin/praxis', 'PraxisPage'],
@@ -75,5 +76,14 @@ describe('admin console shell', () => {
     const current = within(rail).getAllByRole('link').filter((a) => a.getAttribute('aria-current') === 'page')
     expect(current.map((a) => a.textContent)).toEqual(['Tasks10'])
     expect(within(rail).getByRole('link', { name: '← Back to World Zero' }).getAttribute('href')).toBe('/')
+  })
+
+  it('phone top bar titles the current page with its count, no second brand', async () => {
+    at('/admin/reports')
+    const bar = (await screen.findByRole('banner')) as HTMLElement
+    expect(await within(bar).findByLabelText('3 waiting')).toBeTruthy()
+    expect(within(bar).getByText('Reports')).toBeTruthy()
+    expect(within(bar).queryByText('World Zero')).toBeNull()
+    expect(within(bar).getByRole('link', { name: '← World Zero' })).toBeTruthy()
   })
 })
