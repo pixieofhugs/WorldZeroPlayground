@@ -224,30 +224,31 @@ systemctl --user enable --now wz-backup-pull.timer
 The installed script is a **copy**. After the one in this directory changes,
 `cp` it again or the timer keeps running the old one.
 
-**A failure opens a GitHub issue** (#3043). The desktop notification only
-reaches the desk the timer runs on, so a run that finds a problem also makes
-sure exactly one open issue labelled `backup-red` exists: it files one, or
-comments on the one already open, never a second. The issue carries each
-problem, the time of the run, the newest prod dump's name and age, the last
-lines of the job's output, and which part of `RESTORE.md` applies. The next
-healthy run comments and closes it — so an open `backup-red` issue means the
-backups are red *right now*. Same shape as `nightly-red` (#2463).
+**A failure opens a GitHub issue** (#3043, #3621). The desktop notification only
+reaches the desk the timer runs on, and GitHub never notifies you of your own
+actions, so the script does not touch issues. After every run, red or green,
+it sends one `repository_dispatch` event (`backup-pull`) carrying the status,
+the problems, the run time, the newest prod dump's name and age, the
+`RESTORE.md` advice and the tail of its output. `.github/workflows/backup-pull.yml`
+acts on it as `github-actions[bot]`: red keeps exactly one open `backup-red`
+issue (files it, or comments on the open one); green comments on and closes
+it. So an open `backup-red` issue means the backups are red *right now*, and
+you are notified as a repo watcher. The payload only ever reaches the workflow
+through `env:`, never interpolated into a script.
 
-It files as whoever `gh` is logged in as on that workstation: the token from
-`gh auth login`, which `gh` keeps in the desktop keyring, with the `repo`
-scope. Nothing is stored in the unit or in this repo. Two things follow:
+**The credential** is the workstation's `gh` login (`gh auth login`, kept in
+the desktop keyring): classic `repo` scope. Sending a dispatch needs nothing
+more than write access to this repo's contents. If you would rather the box
+hold less, make a **fine-grained token on this repo only with Contents:
+read-and-write** (the permission GitHub requires for `POST /dispatches`; it
+grants no issue access) and give it to the unit: `systemctl --user edit
+wz-backup-pull.service`, `EnvironmentFile=` a `chmod 600` file holding
+`GH_TOKEN=`. Either way `gh` must be on the `systemd --user` PATH; check with
+`systemd-run --user --wait --pipe -q gh auth status`.
 
-- `gh` must be on the `systemd --user` PATH and the keyring must be unlocked
-  when the timer fires. Check both the way the timer sees them:
-  `systemd-run --user --wait --pipe -q gh auth status`.
-- If that ever stops holding (a run with nobody logged in at the desktop, say),
-  give the unit a token instead — `systemctl --user edit wz-backup-pull.service`
-  and an `EnvironmentFile=` pointing at a `chmod 600` file holding `GH_TOKEN=`.
-
-If GitHub cannot be reached the script says so (`could not file a GitHub
-issue`) and still exits 1 for the original problem. A healthy pull that cannot
-reach GitHub still exits 0 and sends no desktop alert: it prints one
-`warning:` line to the journal, because the backups themselves are fine.
+If the dispatch fails the script says `could not report to GitHub` and still
+exits 1 for the original problem. A healthy pull that cannot reach GitHub still
+exits 0 and sends no desktop alert: one `warning:` line goes to the journal.
 
 Test it, in this order. The first line stubs everything; the rest are real
 pulls that really write to GitHub:
