@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { adminPatchTask, updateTaskStatus, type AdminTaskStatus } from '../../api/admin'
 import { extractError } from '../../utils/errors'
+import { useGameConfig } from '../../hooks/useGameConfig'
 import TaskStatusControl from '../../components/admin/TaskStatusControl'
 import { SidePanel } from './AdminList'
 import TaskDeleteConfirm from './TaskDeleteConfirm'
@@ -32,6 +33,7 @@ interface Props {
 
 export default function TaskPanel({ task, factions, proposal, onChanged, onDeleted, onClose }: Props) {
   const { t } = useTranslation('admin')
+  const config = useGameConfig()
   const [form, setForm] = useState({
     title: task.title,
     description: task.description,
@@ -126,7 +128,7 @@ export default function TaskPanel({ task, factions, proposal, onChanged, onDelet
         </label>
         <label className="adm-field">
           {t('console.tasks.panel.level')}
-          <input className="adm-input" type="number" min={0} max={8} value={form.level} onChange={set('level')} />
+          <input className="adm-input" type="number" min={0} max={config ? config.level_thresholds.length - 1 : undefined} value={form.level} onChange={set('level')} />
         </label>
         {factions.length > 0 && (
           <label className="adm-field">

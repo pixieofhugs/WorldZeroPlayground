@@ -1,3 +1,4 @@
+import { withAppCopy } from '../../i18n'
 import { lazy, Suspense } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -7,7 +8,7 @@ import { REQUESTS_QUEUE_LINK } from '../../pages/updates/requestsQueueAnchor'
 import PendingBadge from './PendingBadge'
 
 // Admins only: the chunk and its counts never reach a player.
-const ModControl = lazy(() => import('../admin/ModControl'))
+const ModControl = lazy(() => withAppCopy(import('../admin/ModControl')))
 
 /**
  * Mobile chrome, top: sticky wordmark bar with bell + Settings (#495/#520).

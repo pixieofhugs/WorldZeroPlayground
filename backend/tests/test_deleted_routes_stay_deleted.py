@@ -42,6 +42,9 @@ DELETED_OPERATIONS: frozenset[tuple[str, str]] = frozenset(
         ("get", "/praxes/{praxis_id}/votes"),
         # Leaked the social graph to anonymous callers
         ("get", "/characters/{character_id}/relationships"),
+        # No frontend caller (#3706)
+        ("get", "/admin/accounts"),
+        ("get", "/admin/accounts/{account_id}"),
         # ADR-0068
         ("get", "/taunts"),
     }

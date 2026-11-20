@@ -26,6 +26,7 @@ export default function EraTab() {
   const [typed, setTyped] = useState("");
   const [rolling, setRolling] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [preflightError, setPreflightError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [result, setResult] = useState<EraRollOut | null>(null);
 
@@ -41,12 +42,13 @@ export default function EraTab() {
 
   useEffect(() => {
     setPreflight(null);
+    setPreflightError(null);
     setTyped("");
     if (!target) return;
     let live = true;
     getEraPreflight(target)
       .then((next) => live && setPreflight(next))
-      .catch((err) => live && setError(extractError(err, i18n.t("admin:console.era.preflightError"))));
+      .catch((err) => live && setPreflightError(extractError(err, i18n.t("admin:console.era.preflightError"))));
     return () => {
       live = false;
     };
@@ -117,7 +119,7 @@ export default function EraTab() {
       {targets.length === 0 ? (
         <p className="adm-muted">{t("console.era.noTarget")}</p>
       ) : (
-        <section className="adm-card adm-era-card" aria-busy={!preflight}>
+        <section className="adm-card adm-era-card" aria-busy={!preflight && !preflightError}>
           <label className="adm-field" htmlFor={TARGET_SELECT_ID}>
             {t("console.era.next")}
             <select
@@ -138,6 +140,8 @@ export default function EraTab() {
               ))}
             </select>
           </label>
+
+          {preflightError && <p className="adm-err" role="alert">{preflightError}</p>}
 
           {preflight && (
             <>
