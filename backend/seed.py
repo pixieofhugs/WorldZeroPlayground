@@ -35,7 +35,7 @@ HIDDEN_FACTION_SLUGS = frozenset({"aged_out", UNAFFILIATED_FACTION_SLUG})
 
 
 def factions_leaving_roster(existing: dict, era) -> list[str]:
-    """Slugs `upsert_era_factions` retires; the admin era preflight counts the same set."""
+    """Slugs `upsert_era_factions` retires; the era preflight counts the same."""
     return [
         slug
         for slug, row in existing.items()

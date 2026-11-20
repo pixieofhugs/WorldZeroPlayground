@@ -860,16 +860,19 @@ async def preflight_era_roll(config_key: str, session: AsyncSession) -> EraPrefl
         raise_coded(422, ErrorCode.era_config_unknown, f"Unknown era: {config_key}.")
 
     async def count(model, *where) -> int:
-        return await session.scalar(select(func.count()).select_from(model).where(*where))
+        stmt = select(func.count()).select_from(model).where(*where)
+        return await session.scalar(stmt)
 
     characters = await list_characters_to_reset(session)
     factions = (await session.execute(select(Faction))).scalars()
     in_faction: dict[str, int] = {}
     for character in characters:
-        in_faction[character.faction_slug] = in_faction.get(character.faction_slug, 0) + 1
+        slug = character.faction_slug
+        in_faction[slug] = in_faction.get(slug, 0) + 1
     leaving = factions_leaving_roster({row.slug: row for row in factions}, era_config)
 
     board_titles = set((await session.execute(select(Task.title))).scalars())
+    flagged = ModerationStatus.flagged
     return EraPreflightOut(
         name=era_config.name,
         characters_reset=len(characters),
@@ -878,11 +881,12 @@ async def preflight_era_roll(config_key: str, session: AsyncSession) -> EraPrefl
         tasks_arriving=len(await tasks_to_reactivate(session, era_config))
         + sum(task.title not in board_titles for task in era_config.tasks),
         leaving_factions=[
-            LeavingFaction(slug=slug, characters=in_faction.get(slug, 0)) for slug in leaving
+            LeavingFaction(slug=slug, characters=in_faction.get(slug, 0))
+            for slug in leaving
         ],
         duels_awaiting_answer=await count(Duel, Duel.status == DuelStatus.pending),
-        open_reports=await count(Praxis, Praxis.moderation_status == ModerationStatus.flagged)
-        + await count(Comment, Comment.moderation_status == ModerationStatus.flagged),
+        open_reports=await count(Praxis, Praxis.moderation_status == flagged)
+        + await count(Comment, Comment.moderation_status == flagged),
     )
 
 

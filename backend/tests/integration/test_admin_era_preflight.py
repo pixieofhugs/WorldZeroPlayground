@@ -1,4 +1,4 @@
-"""``GET /admin/eras/{key}/preflight`` counts what the roll does and writes nothing (#3673)."""
+"""``GET /admin/eras/{key}/preflight``: counts what the roll does, writes nothing."""
 import dataclasses
 
 from httpx import AsyncClient
@@ -125,7 +125,8 @@ async def test_preflight_writes_nothing(
 
     db_session.expire_all()
     assert await _row_counts(db_session) == before
-    assert (await db_session.execute(select(Task.status))).scalars().all() == live_before
+    statuses = (await db_session.execute(select(Task.status))).scalars().all()
+    assert statuses == live_before
     duel = (await db_session.execute(select(Duel))).scalars().first()
     assert duel.status == DuelStatus.active
 
