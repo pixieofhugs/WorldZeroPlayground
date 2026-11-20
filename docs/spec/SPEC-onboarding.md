@@ -194,6 +194,9 @@ arc**, which has exactly one destination.
   for their own safety and the legality of real-world actions. What it lacks is a version
   identifier, a statement of what agreeing binds you to, and any mention of the photographs
   the player is about to post publicly.
+- **Deleted-account record (#3451).** The Disclaimer's `p4` says what ADR-0081 keeps after
+  deletion: the provider plus a salted hash of the sign-in ID, for 90 days. **The wording is
+  a placeholder** pending the owner's site-wide copy pass.
 - **Accepted before sign-in.** The contract comes after the intro and before the auth
   card. Pre-auth acceptance was first rejected on what the record would be worth: with no
   identity yet, the server can bind the click only to a browser session and must then trust
