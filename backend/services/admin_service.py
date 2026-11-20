@@ -176,11 +176,27 @@ async def list_characters(
     faction: str | None = None,
     status: CharacterStatus | None = None,
     era: EraConfig = CURRENT_ERA,
+    search: str | None = None,
 ) -> list[CharacterSummary]:
+    """Live lives (not player-deleted); ``search`` matches name, username or the account's email.
+
+    ponytail: the whole roster, unpaged. Page it when the roster outgrows a screen (#3545).
+    """
     era_row = await get_current_era_row(session)
+    votes_cast = (
+        select(func.count(Vote.id))
+        .where(
+            Vote.voter_account_id == Character.account_id,
+            Vote.created_at >= era_row.started_at,
+        )
+        .correlate(Character)
+        .scalar_subquery()
+    )
 
     query = (
-        select(Character, CharacterStats)
+        select(Character, CharacterStats, Account.status, votes_cast)
+        .join(Account, Account.id == Character.account_id)
+        .where(Character.departed_at.is_(None))
         .outerjoin(
             CharacterStats,
             (CharacterStats.character_id == Character.id)
@@ -194,6 +210,15 @@ async def list_characters(
         query = query.where(Character.faction_slug == faction)
     if status:
         query = query.where(Character.status == status)
+    if search:
+        pattern = f"%{search}%"
+        query = query.where(
+            or_(
+                Character.username.ilike(pattern),
+                Character.display_name.ilike(pattern),
+                Account.email.ilike(pattern),
+            )
+        )
 
     result = await session.execute(query)
     rows = result.all()
@@ -210,8 +235,10 @@ async def list_characters(
             level=stats.level if stats else 0,
             votes_available=compute_votes_available(stats, era) if stats else era.vote_budget_base,
             created_at=character.created_at,
+            account_status=account_status.value,
+            votes_cast=cast,
         )
-        for character, stats in rows
+        for character, stats, account_status, cast in rows
     ]
 
 

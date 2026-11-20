@@ -409,6 +409,37 @@ async def test_admin_list_characters(
 
 
 @pytest.mark.asyncio
+async def test_people_search_by_email_and_status_columns(
+    client: AsyncClient,
+    account: Account,
+    account2: Account,
+    character: Character,
+    era: Era,
+    auth_headers: dict,
+    db_session: AsyncSession,
+):
+    await make_admin(db_session, account)
+    account2.status = AccountStatus.suspended
+    other = await make_character(db_session, era, username="other_p", account=account2)
+    await db_session.commit()
+
+    rows = (
+        await client.get("/admin/characters", params={"search": account2.email[:6]}, headers=auth_headers)
+    ).json()
+    assert [r["id"] for r in rows] == [other.id]
+    assert rows[0]["account_status"] == "suspended" and rows[0]["votes_cast"] == 0
+    assert "email" not in rows[0]
+
+
+@pytest.mark.asyncio
+async def test_people_list_is_admin_only(
+    client: AsyncClient, character: Character, auth_headers2: dict
+):
+    resp = await client.get("/admin/characters", headers=auth_headers2)
+    assert resp.status_code == 403
+
+
+@pytest.mark.asyncio
 async def test_admin_suspend_account(
     client: AsyncClient,
     account: Account,

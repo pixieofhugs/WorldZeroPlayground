@@ -1,6 +1,9 @@
 """Admin ring view (#3546): concentration, reciprocity, admin-only."""
 import pytest
 
+from models.account import Account
+from models.character import CharacterStatus
+
 from tests.integration.factories import (
     cast_vote,
     make_admin,
@@ -39,15 +42,28 @@ async def test_ring_is_concentrated_and_reciprocal_honest_voter_is_not(
     await db_session.commit()
 
     body = (await client.get(_ring_url(ring[0]), headers=auth_headers)).json()
-    assert body["total_votes"] == 3 and body["top3_share"] == 1.0
-    assert all(r["reciprocal"] for r in body["recipients"])
+    assert body["total_votes"] == 3
+    assert all(r["votes_back"] == 1 and r["votes_back_of"] == 3 for r in body["recipients"])
     assert all(r["share"] == pytest.approx(1 / 3) for r in body["recipients"])
     assert {r["average_stars"] for r in body["recipients"]} == {5.0}
 
     body = (await client.get(_ring_url(honest), headers=auth_headers)).json()
     assert body["total_votes"] == 5
-    assert body["top3_share"] == pytest.approx(3 / 5)
-    assert not any(r["reciprocal"] for r in body["recipients"])
+    assert not any(r["votes_back"] for r in body["recipients"])
 
     forbidden = await client.get(_ring_url(ring[0]), headers=auth_headers2)
     assert forbidden.status_code == 403
+
+
+async def test_eligible_excludes_own_account_and_banned(
+    client, db_session, era, account, auth_headers, character
+):
+    await make_admin(db_session, account)
+    voter = await make_character(db_session, era, username="voter")
+    await make_character(db_session, era, username="voter_alt", account=await db_session.get(Account, voter.account_id))
+    await make_character(db_session, era, username="banned", status=CharacterStatus.banned)
+    await make_character(db_session, era, username="fine")
+
+    body = (await client.get(_ring_url(voter), headers=auth_headers)).json()
+    # The admin's character and "fine": not the voter or their alt, not the banned one.
+    assert body["eligible"] == 2
