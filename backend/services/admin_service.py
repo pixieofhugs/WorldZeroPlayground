@@ -178,9 +178,9 @@ async def list_characters(
     era: EraConfig = CURRENT_ERA,
     search: str | None = None,
 ) -> list[CharacterSummary]:
-    """Live lives (not player-deleted); ``search`` matches name, username or the account's email.
+    """Live lives (not player-deleted); ``search``: name, username or account email.
 
-    ponytail: the whole roster, unpaged. Page it when the roster outgrows a screen (#3545).
+    ponytail: the whole roster, unpaged; page it when it outgrows a screen (#3545).
     """
     era_row = await get_current_era_row(session)
     votes_cast = (

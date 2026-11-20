@@ -424,7 +424,11 @@ async def test_people_search_by_email_and_status_columns(
     await db_session.commit()
 
     rows = (
-        await client.get("/admin/characters", params={"search": account2.email[:6]}, headers=auth_headers)
+        await client.get(
+            "/admin/characters",
+            params={"search": account2.email[:6]},
+            headers=auth_headers,
+        )
     ).json()
     assert [r["id"] for r in rows] == [other.id]
     assert rows[0]["account_status"] == "suspended" and rows[0]["votes_cast"] == 0

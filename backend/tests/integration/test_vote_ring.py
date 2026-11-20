@@ -3,7 +3,6 @@ import pytest
 
 from models.account import Account
 from models.character import CharacterStatus
-
 from tests.integration.factories import (
     cast_vote,
     make_admin,
@@ -43,7 +42,9 @@ async def test_ring_is_concentrated_and_reciprocal_honest_voter_is_not(
 
     body = (await client.get(_ring_url(ring[0]), headers=auth_headers)).json()
     assert body["total_votes"] == 3
-    assert all(r["votes_back"] == 1 and r["votes_back_of"] == 3 for r in body["recipients"])
+    assert {(r["votes_back"], r["votes_back_of"]) for r in body["recipients"]} == {
+        (1, 3)
+    }
     assert all(r["share"] == pytest.approx(1 / 3) for r in body["recipients"])
     assert {r["average_stars"] for r in body["recipients"]} == {5.0}
 
@@ -60,8 +61,11 @@ async def test_eligible_excludes_own_account_and_banned(
 ):
     await make_admin(db_session, account)
     voter = await make_character(db_session, era, username="voter")
-    await make_character(db_session, era, username="voter_alt", account=await db_session.get(Account, voter.account_id))
-    await make_character(db_session, era, username="banned", status=CharacterStatus.banned)
+    voter_account = await db_session.get(Account, voter.account_id)
+    await make_character(db_session, era, username="alt", account=voter_account)
+    await make_character(
+        db_session, era, username="banned", status=CharacterStatus.banned
+    )
     await make_character(db_session, era, username="fine")
 
     body = (await client.get(_ring_url(voter), headers=auth_headers)).json()
