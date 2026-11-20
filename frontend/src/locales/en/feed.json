@@ -164,24 +164,24 @@
         "full": "One first post a day, again."
       },
       "vote_requires_received_vote": {
-        "small": "Anyone at level 1 may rate any praxis, even before being rated.",
+        "small": "Anyone may rate any praxis, even before being rated.",
         "full": "You must have been rated by someone else before you may rate."
       },
       "comment_level": {
-        "small": "Comments open at level 1.",
-        "full": "Comments open at level 2."
+        "small": "Comments open sooner.",
+        "full": "Comments open at the usual level again."
       },
       "duel_level": {
-        "small": "Duels open at level 1.",
-        "full": "Duels open at level 2."
+        "small": "Duels open sooner.",
+        "full": "Duels open at the usual level again."
       },
       "invitation": {
         "small": "Faction invitations come sooner: fewer tasks and fewer points.",
         "full": "Faction invitations ask for the full number of tasks and points again."
       },
       "flag_level": {
-        "small": "Flagging opens at level 2.",
-        "full": "Flagging opens at level 4."
+        "small": "Flagging opens sooner.",
+        "full": "Flagging opens at the usual level again."
       }
     },
     "footnote": "Nothing already done is taken back."

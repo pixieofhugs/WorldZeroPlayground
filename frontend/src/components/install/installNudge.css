@@ -1,0 +1,90 @@
+.install-nudge {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  padding: var(--space-xl);
+  margin: 0 0 var(--space-lg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-surface);
+}
+.install-nudge-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.install-nudge-icon {
+  flex-shrink: 0;
+}
+.install-nudge-titles {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.install-nudge-kicker {
+  font-family: var(--font-accent);
+  font-size: var(--text-lg);
+  letter-spacing: 0.14em;
+  color: var(--color-text-secondary);
+}
+.install-nudge-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-title);
+  font-weight: 600;
+  line-height: 1.2;
+}
+.install-nudge-body,
+.install-nudge-once {
+  margin: 0;
+  font-family: var(--font-body);
+}
+.install-nudge-body {
+  font-size: var(--text-content);
+  line-height: 1.55;
+  color: var(--color-text-secondary);
+}
+.install-nudge-once {
+  font-size: var(--text-lg);
+  line-height: 1.5;
+  color: var(--color-text-tertiary);
+}
+.install-nudge-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.install-nudge-actions > button {
+  min-height: 44px;
+}
+.install-nudge-actions > .btn-primary {
+  border: 0;
+  flex-grow: 1;
+}
+.install-steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.install-step {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-surface-alt);
+}
+.install-step-num {
+  width: 18px;
+  font-family: var(--font-accent);
+  font-size: var(--text-title);
+  color: var(--color-accent-primary);
+}
+.install-step-text {
+  font-family: var(--font-body);
+  font-size: var(--text-content);
+  line-height: 1.4;
+}

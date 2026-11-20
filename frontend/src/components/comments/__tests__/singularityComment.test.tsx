@@ -19,6 +19,7 @@ const COMMENT: CommentOut = {
   id: 7,
   praxis_id: 1,
   task_id: null,
+  admin_note: null,
   body_text: 'signal acquired on the estuary relay',
   is_edited: false,
   created_at: '2026-01-01T00:00:00Z',

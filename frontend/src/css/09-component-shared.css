@@ -123,31 +123,31 @@
 :root {
   --composer-max-width: 720px;
   --composer-padding: var(--space-xl) var(--space-2xl) var(--space-2xl);
-  --fx-space-2xl--lg: var(--space-2xl);
-  --fx-space-2xl--xl: var(--space-2xl);
-  --fx-space-xl--lg: var(--space-xl);
-  --fx-text-heading--title: var(--text-heading);
+  --composer-pad-x: var(--space-2xl);
+  --composer-pad-bottom: var(--space-2xl);
+  --composer-gap: var(--space-xl);
+  --composer-title-size: var(--text-heading);
   --composer-head-height: 96px;
   --composer-heading-height: 48px;
   --composer-sheet-padding: var(--space-2xl) var(--space-lg) var(--space-4xl);
   --composer-bar-padding: var(--space-md) var(--space-lg);
   --composer-page-inset: var(--space-lg);
-  --fx-row-direction: row;
+  --composer-row-direction: row;
 }
 @media (max-width: 767px) and (pointer: coarse) {
   :root {
     --composer-max-width: 100%;
     --composer-padding: var(--space-lg) var(--space-lg) var(--space-xl);
-    --fx-space-2xl--lg: var(--space-lg);
-    --fx-space-2xl--xl: var(--space-xl);
-    --fx-space-xl--lg: var(--space-lg);
-    --fx-text-heading--title: var(--text-title);
+    --composer-pad-x: var(--space-lg);
+    --composer-pad-bottom: var(--space-xl);
+    --composer-gap: var(--space-lg);
+    --composer-title-size: var(--text-title);
     --composer-head-height: 80px;
     --composer-heading-height: 82px;
     --composer-sheet-padding: var(--space-lg) var(--space-md) var(--space-3xl);
     --composer-bar-padding: var(--space-sm) var(--space-lg);
     --composer-page-inset: var(--space-md);
-    --fx-row-direction: column;
+    --composer-row-direction: column;
   }
 }
 

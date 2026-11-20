@@ -40,7 +40,6 @@ from models.praxis import (
 from models.task import Task, TaskStatus
 from models.vote import Vote
 from schemas.praxis import (
-    MediaItemOut,
     MediaUploadResultOut,
 )
 from services import collab_consensus
@@ -59,6 +58,7 @@ from services.era_gates import may_create_collab_praxis
 from services.faction_service import faction_permits
 from services.level_jump import consume_level_jump
 from services.media import (
+    media_item_out,
     process_and_save_media,
     resolve_stored_media_path,
     restore_media_to_mount,
@@ -76,6 +76,7 @@ from services.praxis_visibility import (
     praxis_membership_condition,
     praxis_visibility_condition,
 )
+from services.push import notify_collab_invite
 from services.signup_eligibility import (
     # Re-exported for existing callers; defined in signup_eligibility.
     SIGNUP_REASON_MULTI_MEMBERSHIP,  # noqa: F401 - re-export, see comment above
@@ -779,7 +780,7 @@ async def add_media_batch(
         results.append(
             MediaUploadResultOut(
                 filename=filename,
-                media_item=MediaItemOut.model_validate(media_item),
+                media_item=media_item_out(media_item),
             )
         )
         display_order += 1
@@ -1095,6 +1096,8 @@ async def invite_to_praxis(
     session.add(invite)
     await session.flush()
     await session.refresh(invite)
+    inviter = await session.get(Character, inviter_id)
+    await notify_collab_invite(session, invite, inviter)
     return invite
 
 

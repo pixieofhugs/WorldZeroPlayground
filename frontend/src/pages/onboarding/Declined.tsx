@@ -1,10 +1,12 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { useAuth } from '../../auth/AuthContext'
 import Quill from './Quill'
 
 /** Step `declined`: nothing was written; Reconsider is Back to the contract. */
 export default function Declined({ onReconsider }: { onReconsider?: () => void }) {
   const { t } = useTranslation('onboarding')
+  const { user } = useAuth()
   return (
     <section className="ob-declined">
       <span aria-hidden="true" className="boing ob-dq">
@@ -22,9 +24,12 @@ export default function Declined({ onReconsider }: { onReconsider?: () => void }
             {t('declined.reconsider')}
           </button>
         )}
-        <Link to="/tasks" className="ob-opt" data-testid="onboarding-look-around">
-          {t('declined.lookAround')}
-        </Link>
+        {/* Layout sends a signed-in account with no acceptance straight back to the contract. */}
+        {!user && (
+          <Link to="/tasks" className="ob-opt" data-testid="onboarding-look-around">
+            {t('declined.lookAround')}
+          </Link>
+        )}
       </nav>
     </section>
   )

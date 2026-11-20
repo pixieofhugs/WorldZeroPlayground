@@ -40,6 +40,7 @@ const COMMENT: CommentOut = {
   id: 7,
   praxis_id: null,
   task_id: 207,
+  admin_note: null,
   body_text: "seedlings along the estuary",
   is_edited: false,
   created_at: "2026-01-04T00:00:00Z",
@@ -126,7 +127,7 @@ const PANEL_BAND_FLOOR = 400;
 
 /** Inline `width:` only; `min-width` is a floor, not a pin. */
 function pinnedWidths(html: string): number[] {
-  return [...html.matchAll(/[;"]width:(?:var\(--fx-col-width, )?(\d{3})px/g)]
+  return [...html.matchAll(/[;"]width:(?:var\(--detail-col-width, )?(\d{3})px/g)]
     .map(([, value]) => Number(value))
     .filter((value) => value >= PANEL_BAND_FLOOR);
 }

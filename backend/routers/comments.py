@@ -32,8 +32,11 @@ async def list_praxis_comments(
     praxis = await get_praxis_settling_consensus(praxis_id, session)
     if not await can_view_praxis(viewer, praxis, session):
         raise HTTPException(status_code=404, detail="Praxis not found.")
-    comments = await list_comments(praxis_id=praxis_id, session=session)
-    return [build_comment_out(c) for c in comments]
+    viewer_id = viewer.id if viewer else None
+    comments = await list_comments(
+        praxis_id=praxis_id, session=session, viewer_id=viewer_id
+    )
+    return [build_comment_out(c, viewer_id) for c in comments]
 
 
 @router.post(
@@ -53,10 +56,15 @@ async def create_praxis_comment(
 
 @router.get("/tasks/{task_id}/comments", response_model=list[CommentOut])
 async def list_task_comments(
-    task_id: int, session: AsyncSession = Depends(get_db, scope="function")
+    task_id: int,
+    session: AsyncSession = Depends(get_db, scope="function"),
+    viewer: Optional[Character] = Depends(get_current_character_optional),
 ):
-    comments = await list_comments(task_id=task_id, session=session)
-    return [build_comment_out(c) for c in comments]
+    viewer_id = viewer.id if viewer else None
+    comments = await list_comments(
+        task_id=task_id, session=session, viewer_id=viewer_id
+    )
+    return [build_comment_out(c, viewer_id) for c in comments]
 
 
 @router.post("/tasks/{task_id}/comments", response_model=CommentOut, status_code=201)

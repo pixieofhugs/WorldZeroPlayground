@@ -370,6 +370,7 @@ cmd_regen() {
         -o src/api/generated/schema.d.ts)
 }
 
+cmd_vapid() { run_in_backend python scripts/generate_vapid_keys.py; }
 cmd_psql()  { $DC exec db psql -U worldzero -d worldzero "$@"; }
 cmd_shell() { require_running; $DC exec backend sh; }
 cmd_logs()  { $DC logs -f "$@"; }
@@ -397,6 +398,7 @@ wz — the local World Zero
   regen              rebuild backend/openapi.json + generated schema.d.ts from this tree
   check              mirror test.yml for the paths this branch changed; last line is the verdict
   install-hooks      opt in: run `check` before every git push
+  vapid              print a fresh VAPID key pair for .env (web push)
   psql [args...]   psql on the dev database
   shell              a shell in the backend container
   logs [service]     follow logs
@@ -422,6 +424,7 @@ case "$command" in
     regen)   cmd_regen "$@" ;;
     check)   cmd_check "$@" ;;
     install-hooks) cmd_install_hooks ;;
+    vapid)   cmd_vapid ;;
     psql)    cmd_psql "$@" ;;
     shell)   cmd_shell "$@" ;;
     logs)    cmd_logs "$@" ;;

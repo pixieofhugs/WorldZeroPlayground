@@ -46,17 +46,20 @@ async def lock_era_rollover(session: AsyncSession) -> None:
     await session.execute(select(func.pg_advisory_xact_lock(_ERA_ROLLOVER_LOCK_KEY)))
 
 
-async def overlay_population_dials(
-    session: AsyncSession, live: EraConfig = CURRENT_ERA
-) -> None:
-    """Write each dial's side onto the live era, a field at a time (#3656).
-
-    Never ``dataclasses.replace``: perk inheritance is not idempotent (ADR-0091).
-    """
+async def read_dial_sides(session: AsyncSession) -> dict[str, str]:
     rows = await session.execute(
         select(PopulationDial.dial_key, PopulationDial.side)
     )
-    sides = dict(rows.all())
+    return dict(rows.all())
+
+
+def apply_dial_sides(live: EraConfig, sides: dict[str, str]) -> None:
+    """Write each dial's side onto the live era, a field at a time (#3656).
+
+    Sync on purpose: read the sides first, so no ``await`` can sit between a
+    bind or commit and these writes (other requests would see half-set rules).
+    Never ``dataclasses.replace``: perk inheritance is not idempotent (ADR-0091).
+    """
     for key, dial in live.dials.items():
         for name, value in getattr(dial, sides.get(key, dial.default)).items():
             object.__setattr__(live, name, value)
@@ -74,6 +77,7 @@ async def rebind_live_era(session: AsyncSession) -> EraConfig:
     unknown ``config_key`` (deploy mistake, warned) both fall back to the
     compile-time era.
     """
+    sides = await read_dial_sides(session)
     era_row = await get_current_era_row_safe(session)
     era_config = (
         None if era_row is None else era_config_for_key(era_row.config_key)
@@ -103,7 +107,7 @@ async def rebind_live_era(session: AsyncSession) -> EraConfig:
             era_row.id,
         )
     live = bind_live_era(era_config)
-    await overlay_population_dials(session, live)
+    apply_dial_sides(live, sides)
     return live
 
 
@@ -119,8 +123,9 @@ async def commit_and_bind_live_era(
     commit is a no-op.
     """
     await session.commit()
+    sides = await read_dial_sides(session)
     live = bind_live_era(era)
-    await overlay_population_dials(session, live)
+    apply_dial_sides(live, sides)
     return live
 
 

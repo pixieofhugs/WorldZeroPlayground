@@ -171,3 +171,11 @@ session-long because the **epoch** covers this: the stamp is
 a differently named era, a same-name switch, or a reset all drop every cache.
 `useTasks` and `usePraxes` hold viewer-keyed Class B first pages on that epoch and
 inherit it.
+
+## Amendment (#3656) — a population-dial flip also moves the epoch
+
+The stamp is now the pair (`Era.id`, `rules_revision`) (`frontend/src/utils/cacheEpoch.ts`).
+`rules_revision` is the time of the latest population-dial flip (0 before any), served on
+`/auth/me` and `/game-config`. A mod flip changes `CURRENT_ERA` fields with no new `Era`
+row, so `Era.id` alone would leave Class A caches holding the old rules. Any change to
+either half of the pair drops every cache, as an era switch does.

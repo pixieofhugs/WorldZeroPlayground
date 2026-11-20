@@ -41,6 +41,7 @@ from services.praxis_scoring import Contribution, compute_contributions
 from services.vote_tally import tally_votes
 from services.scoring import compute_level, exact, round_half_up
 from services.taunt_service import emit_recalc_taunts
+from services.push import notify_invitation_letter, notify_level_up
 
 _NON_INVITE_FACTION_SLUGS: frozenset[str] = frozenset(
     {UNAFFILIATED_FACTION_SLUG, ALBESCENT_FACTION_SLUG}
@@ -141,6 +142,7 @@ async def _deliver_earned_invitations(
         session.add(
             InvitationLetter(character_id=character.id, faction_slug=slug, era_id=era_row.id)
         )
+        await notify_invitation_letter(session, character)
 
 
 async def _scored_praxes(
@@ -240,6 +242,9 @@ async def recalculate_character_stats(
     record_level_reached(author, stats.level)
     if score_delta:
         author.all_time_score += score_delta
+
+    if emit_taunts and stats.level > previous_level:
+        await notify_level_up(session, author)
 
     if emit_taunts and score_delta:
         await emit_recalc_taunts(

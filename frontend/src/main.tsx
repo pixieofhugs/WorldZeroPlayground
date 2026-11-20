@@ -12,8 +12,10 @@ import i18n, { loadCopyOverrides } from './i18n'
 import './index.css'
 import './registerSw'
 import OfflineGate from './components/OfflineGate'
+import { captureInstallPrompt } from './utils/installPrompt'
 
 // Deliberately not awaited: first paint must not wait on copy overrides.
+captureInstallPrompt()
 void loadCopyOverrides()
 warmMe()
 

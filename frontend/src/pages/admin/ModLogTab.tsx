@@ -9,8 +9,8 @@ type Kind = NonNullable<ModLogFilters['kind']>
 const KINDS: Kind[] = ['reports', 'tasks', 'people', 'rules']
 const BAD = new Set(['ban', 'suspend', 'praxis_hidden', 'comment_hidden', 'remove_flagged', 'task_delete', 'role_revoke'])
 const OK = new Set(['unban', 'unsuspend', 'praxis_visible', 'comment_visible'])
-// praxis_failed carries the note the author was shown; every other detail is a count or a name.
-const REASON = new Set(['praxis_failed'])
+// praxis_failed and comment_deleted carry the note the author was shown; every other detail is a count or a name.
+const REASON = new Set(['praxis_failed', 'comment_deleted'])
 
 const tone = (action: string) => (BAD.has(action) ? 'adm-tag-bad' : OK.has(action) ? 'adm-tag-ok' : 'adm-tag-wait')
 const when = (iso: string) =>

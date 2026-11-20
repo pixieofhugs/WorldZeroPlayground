@@ -312,7 +312,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
             praxis={praxis}
             linkStyle={{
               fontFamily: READING,
-              fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
+              fontSize: "var(--praxis-lead-size, var(--text-title))",
               color: INK,
               textDecoration: "none",
             }}
@@ -322,7 +322,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
             to={`/characters/${praxis.created_by_id}`}
             style={{
               fontFamily: READING,
-              fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
+              fontSize: "var(--praxis-lead-size, var(--text-title))",
               color: INK,
               textDecoration: "none",
             }}

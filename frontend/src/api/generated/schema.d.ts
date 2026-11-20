@@ -1947,6 +1947,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/push/subscriptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Subscribe
+         * @description Idempotent on endpoint. A device belongs to whoever subscribed last: a browser
+         *     holds one subscription per origin, so a shared phone must not keep pushing the
+         *     previous account's events.
+         */
+        post: operations["subscribe_push_subscriptions_post"];
+        /** Unsubscribe */
+        delete: operations["unsubscribe_push_subscriptions_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/relationships": {
         parameters: {
             query?: never;
@@ -2632,6 +2655,8 @@ export interface components {
         };
         /** CommentModerationIn */
         CommentModerationIn: {
+            /** Admin Note */
+            admin_note?: string | null;
             /**
              * Status
              * @enum {string}
@@ -2675,6 +2700,8 @@ export interface components {
         };
         /** CommentOut */
         CommentOut: {
+            /** Admin Note */
+            admin_note: string | null;
             author: components["schemas"]["CommentAuthor"];
             /** Body Text */
             body_text: string;
@@ -3361,6 +3388,8 @@ export interface components {
          * @description CommentOut plus its flag rows.
          */
         FlaggedCommentOut: {
+            /** Admin Note */
+            admin_note: string | null;
             author: components["schemas"]["CommentAuthor"];
             /** Body Text */
             body_text: string;
@@ -3918,11 +3947,8 @@ export interface components {
             created_at: string;
             /** Display Order */
             display_order: number;
-            /**
-             * Display Path
-             * @description Smaller copy of an image for cards and tiles; null when none was made.
-             */
-            readonly display_path: string | null;
+            /** Display Path */
+            display_path: string | null;
             /** File Path */
             file_path: string;
             /** Id */
@@ -4038,6 +4064,8 @@ export interface components {
         NotificationPrefIn: {
             /** By Email */
             by_email: boolean;
+            /** By Push */
+            by_push?: boolean | null;
             /** On Updates */
             on_updates: boolean;
         };
@@ -4050,6 +4078,8 @@ export interface components {
         NotificationPrefOut: {
             /** By Email */
             by_email: boolean;
+            /** By Push */
+            by_push: boolean;
             /** Locked */
             locked: boolean;
             /** On Updates */
@@ -4074,6 +4104,10 @@ export interface components {
             events: {
                 [key: string]: components["schemas"]["NotificationPrefOut"];
             };
+            /** Push Available */
+            push_available: boolean;
+            /** Vapid Public Key */
+            vapid_public_key: string | null;
         };
         /** NudgeItem */
         NudgeItem: {
@@ -4673,6 +4707,24 @@ export interface components {
         PraxisVoteIn: {
             /** Value */
             value: number;
+        };
+        /** PushKeysIn */
+        PushKeysIn: {
+            /** Auth */
+            auth: string;
+            /** P256Dh */
+            p256dh: string;
+        };
+        /** PushSubscriptionIn */
+        PushSubscriptionIn: {
+            /** Endpoint */
+            endpoint: string;
+            keys: components["schemas"]["PushKeysIn"];
+        };
+        /** PushUnsubscribeIn */
+        PushUnsubscribeIn: {
+            /** Endpoint */
+            endpoint: string;
         };
         /** RelationshipCreate */
         RelationshipCreate: {
@@ -8799,6 +8851,72 @@ export interface operations {
             };
         };
     };
+    subscribe_push_subscriptions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PushSubscriptionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unsubscribe_push_subscriptions_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PushUnsubscribeIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_my_relationships_relationships_get: {
         parameters: {
             query?: {
@@ -9114,7 +9232,9 @@ export interface operations {
             path: {
                 task_id: number;
             };
-            cookie?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
         };
         requestBody?: never;
         responses: {
