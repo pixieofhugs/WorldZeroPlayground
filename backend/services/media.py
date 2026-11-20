@@ -41,6 +41,10 @@ MEDIA_MAX_BYTES = MEDIA_MAX_MEGABYTES * BYTES_PER_MEGABYTE
 MEDIA_FILENAME_MAX_LEN = 100
 
 
+DISPLAY_MAX_SIDE = 1600
+DISPLAY_QUALITY = 80
+DISPLAY_SUFFIX = ".display.webp"
+
 FFMPEG_TIMEOUT_SECONDS = 120
 #: Output formats we write; anything else Pillow opens (MPO, TIFF, HEIF...) is JPEG.
 _OUTPUT_EXTENSIONS = {
@@ -87,6 +91,56 @@ def _strip_image(contents: bytes) -> tuple[bytes, str]:
         buffer = io.BytesIO()
         image.save(buffer, format=fmt, **options)
     return buffer.getvalue(), fmt
+
+
+def display_path_for(file_path: str) -> str:
+    """Deterministic sibling name of an image's display derivative (no column)."""
+    return os.path.splitext(file_path)[0] + DISPLAY_SUFFIX
+
+
+def make_display_bytes(contents: bytes) -> bytes | None:
+    """WebP display copy, or ``None`` when it would not help (animated, or not smaller).
+
+    ``contents`` is already stripped and upright, so this keeps no metadata.
+    """
+    with Image.open(io.BytesIO(contents)) as source:
+        if getattr(source, "n_frames", 1) > 1:
+            return None
+        image = source.copy()
+    image.thumbnail((DISPLAY_MAX_SIDE, DISPLAY_MAX_SIDE), Image.LANCZOS)
+    if image.mode not in ("RGB", "RGBA", "L"):
+        image = image.convert("RGBA" if "transparency" in image.info else "RGB")
+    image.info = {}
+    buffer = io.BytesIO()
+    image.save(buffer, format="WEBP", quality=DISPLAY_QUALITY)
+    return buffer.getvalue() if buffer.tell() < len(contents) else None
+
+
+def existing_display_path(file_path: str) -> str | None:
+    """The derivative's relative path if it is on disk, else ``None``."""
+    sibling = display_path_for(file_path)
+    absolute = resolve_stored_media_path(sibling)
+    return sibling if absolute and os.path.isfile(absolute) else None
+
+
+def write_missing_display_copy(file_path: str, apply: bool) -> bool:
+    """Backfill one image's derivative; True if one was (or, dry-run, would be) written.
+
+    False when it exists, the original is gone, or a copy would not help.
+    """
+    absolute = resolve_stored_media_path(file_path)
+    if not absolute or not os.path.isfile(absolute) or existing_display_path(file_path):
+        return False
+    try:
+        with open(absolute, "rb") as handle:
+            display = make_display_bytes(handle.read())
+    except Exception:
+        logger.warning("Could not read %s for a display copy", file_path)
+        return False
+    if display and apply:
+        with open(display_path_for(absolute), "wb") as handle:
+            handle.write(display)
+    return bool(display)
 
 
 def _strip_av(contents: bytes, extension: str) -> bytes:
@@ -235,7 +289,8 @@ def withdraw_media_from_mount(stored_paths: Iterable[str]) -> int:
     """
     return sum(
         _move_stored_media(path, settings.MEDIA_ROOT, quarantine_root())
-        for path in stored_paths
+        for each in stored_paths
+        for path in (each, display_path_for(each))
     )
 
 
@@ -247,7 +302,8 @@ def restore_media_to_mount(stored_paths: Iterable[str]) -> int:
     """
     return sum(
         _move_stored_media(path, quarantine_root(), settings.MEDIA_ROOT)
-        for path in stored_paths
+        for each in stored_paths
+        for path in (each, display_path_for(each))
     )
 
 
@@ -289,11 +345,10 @@ def delete_stored_media(stored_path: str, character_id: int) -> bool:
     Only account deletion calls this; removing a single item or moderation
     never erases files.
     """
-    return _unlink_owned(
-        stored_path,
-        os.path.join(settings.MEDIA_ROOT, str(character_id)),
-        f"character {character_id}",
-    )
+    owner_directory = os.path.join(settings.MEDIA_ROOT, str(character_id))
+    owner = f"character {character_id}"
+    _unlink_owned(display_path_for(stored_path), owner_directory, owner)
+    return _unlink_owned(stored_path, owner_directory, owner)
 
 
 def delete_stored_avatar(stored_avatar_url: str | None, character_id: int) -> None:
@@ -441,6 +496,15 @@ async def process_and_save_media(
         os.makedirs(absolute_directory, exist_ok=True)
         with open(absolute_path, "wb") as file_handle:
             file_handle.write(contents)
+        if media_type is MediaType.image:
+            # Best-effort: without one the API reports null and the UI uses the original.
+            try:
+                display = await asyncio.to_thread(make_display_bytes, contents)
+                if display:
+                    with open(display_path_for(absolute_path), "wb") as file_handle:
+                        file_handle.write(display)
+            except Exception:
+                logger.exception("Could not make display copy for praxis %s", praxis_id)
     except HTTPException:
         raise
     except OSError:
