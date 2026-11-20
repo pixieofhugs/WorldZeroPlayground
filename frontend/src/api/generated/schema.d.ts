@@ -2655,6 +2655,8 @@ export interface components {
         };
         /** CommentModerationIn */
         CommentModerationIn: {
+            /** Admin Note */
+            admin_note?: string | null;
             /**
              * Status
              * @enum {string}
@@ -2698,6 +2700,8 @@ export interface components {
         };
         /** CommentOut */
         CommentOut: {
+            /** Admin Note */
+            admin_note: string | null;
             author: components["schemas"]["CommentAuthor"];
             /** Body Text */
             body_text: string;
@@ -3384,6 +3388,8 @@ export interface components {
          * @description CommentOut plus its flag rows.
          */
         FlaggedCommentOut: {
+            /** Admin Note */
+            admin_note: string | null;
             author: components["schemas"]["CommentAuthor"];
             /** Body Text */
             body_text: string;
@@ -9229,7 +9235,9 @@ export interface operations {
             path: {
                 task_id: number;
             };
-            cookie?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
         };
         requestBody?: never;
         responses: {

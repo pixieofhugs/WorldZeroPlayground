@@ -6,7 +6,7 @@ import re
 from typing import Optional
 
 from fastapi import HTTPException
-from sqlalchemy import delete, func, select
+from sqlalchemy import and_, delete, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -227,14 +227,23 @@ async def list_comments(
     praxis_id: Optional[int] = None,
     task_id: Optional[int] = None,
     session: AsyncSession,
+    viewer_id: Optional[int] = None,
 ) -> list[Comment]:
-    """Public list for a target: visible, non-withdrawn, chronological ascending."""
+    """Visible, non-withdrawn, oldest first; plus the viewer's own removed
+    comments that carry a reason, so the author is told why."""
+    own_removed = and_(
+        Comment.created_by_id == viewer_id,
+        Comment.moderation_status.in_(
+            (ModerationStatus.hidden, ModerationStatus.deleted)
+        ),
+        Comment.admin_note.is_not(None),
+    )
     query = (
         select(Comment)
         .options(*_COMMENT_LOADERS)
         .where(
             Comment.is_withdrawn.is_(False),
-            Comment.moderation_status == ModerationStatus.visible,
+            or_(Comment.moderation_status == ModerationStatus.visible, own_removed),
         )
         .order_by(Comment.created_at.asc())
     )
@@ -303,6 +312,7 @@ async def moderate_comment(
     session: AsyncSession,
     *,
     actor_id: int,
+    admin_note: Optional[str] = None,
 ) -> Comment:
     """Admin moderation: hidden (reversible hold) / deleted (tombstone) / visible."""
     comment = await get_comment(comment_id, session)
@@ -312,9 +322,15 @@ async def moderate_comment(
         raise HTTPException(
             status_code=422, detail=f"Invalid moderation status: {new_status}"
         )
+    removed = comment.moderation_status in (
+        ModerationStatus.hidden,
+        ModerationStatus.deleted,
+    )
+    note = (admin_note or "").strip() or None if removed else None
+    comment.admin_note = note
     await session.flush()
     await log_mod_action(
-        session, actor_id, f"comment_{new_status}", "comment", comment_id
+        session, actor_id, f"comment_{new_status}", "comment", comment_id, note
     )
     return await get_comment(comment_id, session)
 
@@ -329,8 +345,13 @@ async def list_flagged_comments(session: AsyncSession) -> list[Comment]:
     return list(result.scalars().all())
 
 
-def build_comment_out(comment: Comment) -> CommentOut:
-    """API shape; needs created_by + mentions loaded. Shared by both routers."""
+def build_comment_out(
+    comment: Comment, viewer_id: Optional[int] = None
+) -> CommentOut:
+    """API shape; needs created_by + mentions loaded. Shared by both routers.
+
+    The moderator's reason goes to the author alone.
+    """
     return CommentOut(
         id=comment.id,
         praxis_id=comment.praxis_id,
@@ -340,6 +361,7 @@ def build_comment_out(comment: Comment) -> CommentOut:
         created_at=comment.created_at,
         updated_at=comment.updated_at,
         author=CommentAuthor.model_validate(comment.created_by),
+        admin_note=comment.admin_note if viewer_id == comment.created_by_id else None,
         mentions=[
             CommentMentionOut(
                 character_id=mention.mentioned_character.id,

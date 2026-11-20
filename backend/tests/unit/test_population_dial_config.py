@@ -48,6 +48,23 @@ def test_a_full_side_that_disagrees_with_the_field_fails_at_import():
         check_dials(dataclasses.replace(ERA_1, dials=bad))
 
 
+def test_resolving_an_era_by_key_runs_the_dial_check(monkeypatch):
+    import eras.era_1
+    import game_config
+
+    bad = Dial(
+        small={"duel_level_required": 1},
+        full={"duel_level_required": 9},
+        default="small",
+    )
+    monkeypatch.setattr(
+        eras.era_1, "ERA_1", dataclasses.replace(ERA_1, dials={"duel_level": bad})
+    )
+    monkeypatch.delitem(game_config.__dict__, "ERA_1", raising=False)
+    with pytest.raises(ValueError, match="full side"):
+        era_config_for_key("era_1")
+
+
 def test_sides_must_cover_the_same_fields():
     bad = {"x": Dial(small={"duel_level_required": 1}, full={}, default="small")}
     with pytest.raises(ValueError, match="same fields"):

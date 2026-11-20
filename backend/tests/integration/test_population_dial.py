@@ -1,5 +1,6 @@
 """The population dial: overlay, admin API, mod log, feed and cache stamp (#3656)."""
 
+import asyncio
 from datetime import datetime, timedelta, timezone
 
 import pytest
@@ -11,20 +12,20 @@ from game_config import CURRENT_ERA, ERA_1, era_config_for_key
 from models.mod_action import ModAction
 from models.population_dial import PopulationDial
 from services.collab_consensus import _check_post_cooldown
-from services.era import commit_and_bind_live_era, overlay_population_dials
+from services.era import (
+    apply_dial_sides,
+    commit_and_bind_live_era,
+    read_dial_sides,
+)
 from services.era_gates import may_comment, may_create_duel, vote_lock_reason
 from tests.integration.factories import make_admin
 
-SMALL = {
-    "praxis_post_cooldown_hours": 0,
-    "vote_requires_received_vote": False,
-    "comment_level_required": 1,
-    "duel_level_required": 1,
-    "invitation_task_threshold": 1,
-    "invitation_point_threshold": 10,
-    "flag_level_required": 2,
-}
+SMALL = {n: v for d in ERA_1.dials.values() for n, v in d.small.items()}
 FULL = {name: getattr(ERA_1, name) for name in SMALL}
+
+
+async def overlay(session):
+    apply_dial_sides(CURRENT_ERA, await read_dial_sides(session))
 
 
 def live():
@@ -35,7 +36,7 @@ def live():
 async def test_no_rows_means_the_declared_small_default_and_era_1_is_untouched(
     db_session,
 ):
-    await overlay_population_dials(db_session)
+    await overlay(db_session)
     assert live() == SMALL
     assert {name: getattr(ERA_1, name) for name in SMALL} == FULL
 
@@ -56,7 +57,7 @@ async def test_put_flips_logs_posts_one_feed_item_and_bumps_the_revision(
     client, db_session, account, character, auth_headers
 ):
     await make_admin(db_session, account)
-    await overlay_population_dials(db_session)
+    await overlay(db_session)
     assert (await client.get("/game-config")).json()["rules_revision"] == 0
 
     response = await client.put(
@@ -153,7 +154,7 @@ async def test_each_rule_loosens_in_its_service_on_small_and_tightens_on_full(
     class Poster:
         last_praxis_posted_at = now - timedelta(minutes=1)
 
-    await overlay_population_dials(db_session)
+    await overlay(db_session)
     _check_post_cooldown(Poster(), now, CURRENT_ERA)
     assert may_comment(1, None, False) and may_create_duel(1, None, False)
     assert vote_lock_reason(1, False, False) is None
@@ -165,3 +166,21 @@ async def test_each_rule_loosens_in_its_service_on_small_and_tightens_on_full(
     assert vote_lock_reason(1, False, False, ERA_1) == "no_received_vote"
     with pytest.raises(HTTPException):
         _check_post_cooldown(Poster(), now, ERA_1)
+
+
+@pytest.mark.asyncio
+async def test_a_rollover_never_exposes_full_rules_to_other_requests(db_session):
+    await overlay(db_session)
+    seen = []
+
+    async def watcher():
+        while True:
+            seen.append(live())
+            await asyncio.sleep(0)
+
+    task = asyncio.create_task(watcher())
+    await asyncio.sleep(0)
+    await commit_and_bind_live_era(db_session, era_config_for_key("era_1"))
+    task.cancel()
+    assert len(seen) > 1
+    assert all(snapshot == SMALL for snapshot in seen)
