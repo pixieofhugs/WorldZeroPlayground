@@ -4600,6 +4600,17 @@
             "title": "By Email",
             "type": "boolean"
           },
+          "by_push": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "By Push"
+          },
           "on_updates": {
             "title": "On Updates",
             "type": "boolean"
@@ -4619,6 +4630,10 @@
             "title": "By Email",
             "type": "boolean"
           },
+          "by_push": {
+            "title": "By Push",
+            "type": "boolean"
+          },
           "locked": {
             "title": "Locked",
             "type": "boolean"
@@ -4631,6 +4646,7 @@
         "required": [
           "on_updates",
           "by_email",
+          "by_push",
           "locked"
         ],
         "title": "NotificationPrefOut",
@@ -4662,10 +4678,27 @@
             },
             "title": "Events",
             "type": "object"
+          },
+          "push_available": {
+            "title": "Push Available",
+            "type": "boolean"
+          },
+          "vapid_public_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vapid Public Key"
           }
         },
         "required": [
-          "events"
+          "events",
+          "push_available",
+          "vapid_public_key"
         ],
         "title": "NotificationPrefsOut",
         "type": "object"
@@ -6083,6 +6116,62 @@
           "value"
         ],
         "title": "PraxisVoteIn",
+        "type": "object"
+      },
+      "PushKeysIn": {
+        "properties": {
+          "auth": {
+            "maxLength": 512,
+            "minLength": 1,
+            "title": "Auth",
+            "type": "string"
+          },
+          "p256dh": {
+            "maxLength": 512,
+            "minLength": 1,
+            "title": "P256Dh",
+            "type": "string"
+          }
+        },
+        "required": [
+          "p256dh",
+          "auth"
+        ],
+        "title": "PushKeysIn",
+        "type": "object"
+      },
+      "PushSubscriptionIn": {
+        "properties": {
+          "endpoint": {
+            "maxLength": 2048,
+            "minLength": 1,
+            "title": "Endpoint",
+            "type": "string"
+          },
+          "keys": {
+            "$ref": "#/components/schemas/PushKeysIn"
+          }
+        },
+        "required": [
+          "endpoint",
+          "keys"
+        ],
+        "title": "PushSubscriptionIn",
+        "type": "object"
+      },
+      "PushUnsubscribeIn": {
+        "properties": {
+          "endpoint": {
+            "maxLength": 2048,
+            "minLength": 1,
+            "title": "Endpoint",
+            "type": "string"
+          }
+        },
+        "required": [
+          "endpoint"
+        ],
+        "title": "PushUnsubscribeIn",
         "type": "object"
       },
       "RelationshipCreate": {
@@ -14594,6 +14683,119 @@
         "summary": "List Voters",
         "tags": [
           "votes"
+        ]
+      }
+    },
+    "/push/subscriptions": {
+      "delete": {
+        "operationId": "unsubscribe_push_subscriptions_delete",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PushUnsubscribeIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Unsubscribe",
+        "tags": [
+          "push"
+        ]
+      },
+      "post": {
+        "description": "Idempotent on endpoint. A device belongs to whoever subscribed last: a browser\nholds one subscription per origin, so a shared phone must not keep pushing the\nprevious account's events.",
+        "operationId": "subscribe_push_subscriptions_post",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PushSubscriptionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Subscribe",
+        "tags": [
+          "push"
         ]
       }
     },

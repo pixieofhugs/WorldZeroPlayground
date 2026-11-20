@@ -36,6 +36,7 @@ from models.terms_acceptance import TermsAcceptance
 from models.copy_override import CopyOverride
 from models.mod_action import ModAction
 from models.population_dial import PopulationDial
+from models.push_subscription import PushSubscription
 
 __all__ = [
     "Faction",

@@ -34,6 +34,7 @@ from services.era import get_current_era_row, get_or_create_stats
 from services.era_gates import may_create_duel
 from services.praxis import get_praxis
 from services.praxis_duel import get_duel_for_praxis
+from services.push import notify_duel_challenge
 from services.signup_eligibility import (
     count_in_progress_praxes,
     is_active_member_of_task,
@@ -290,6 +291,7 @@ async def issue_duel_challenge(
     )
     session.add(duel)
     await session.flush()
+    await notify_duel_challenge(session, duel.id, challenger_praxis, opponent_character_id)
 
     return challenger_praxis, duel
 

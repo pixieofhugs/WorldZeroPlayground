@@ -39,6 +39,7 @@ from models.praxis import (
 )
 from models.task import Task, TaskStatus
 from models.vote import Vote
+from services.push import notify_collab_invite
 from schemas.praxis import (
     MediaItemOut,
     MediaUploadResultOut,
@@ -1095,6 +1096,7 @@ async def invite_to_praxis(
     session.add(invite)
     await session.flush()
     await session.refresh(invite)
+    await notify_collab_invite(session, invite, await session.get(Character, inviter_id))
     return invite
 
 

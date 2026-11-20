@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from config import settings
 from db import get_db
 from models.account import Account
 from models.praxis import PraxisStatus
@@ -34,6 +35,7 @@ from services.data_export import build_account_export
 from services.data_export import stream as export_stream
 from services.notification_prefs import apply_update, muted_feed_types, resolve_prefs
 from services.praxis import list_praxes
+from services.push import push_available
 from services.praxis_out import build_praxis_cards
 
 router = APIRouter()
@@ -90,10 +92,15 @@ def _prefs_out(raw: object) -> NotificationPrefsOut:
     return NotificationPrefsOut(
         events={
             key: NotificationPrefOut(
-                on_updates=pref.on_updates, by_email=pref.by_email, locked=pref.locked
+                on_updates=pref.on_updates,
+                by_email=pref.by_email,
+                by_push=pref.by_push,
+                locked=pref.locked,
             )
             for key, pref in resolve_prefs(raw).items()
-        }
+        },
+        push_available=push_available(),
+        vapid_public_key=settings.VAPID_PUBLIC_KEY if push_available() else None,
     )
 
 
@@ -123,7 +130,11 @@ async def save_my_notification_prefs(
     account.notification_prefs = apply_update(
         account.notification_prefs,
         {
-            key: {"on_updates": row.on_updates, "by_email": row.by_email}
+            key: {
+                "on_updates": row.on_updates,
+                "by_email": row.by_email,
+                **({} if row.by_push is None else {"by_push": row.by_push}),
+            }
             for key, row in body.events.items()
         },
     )

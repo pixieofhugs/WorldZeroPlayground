@@ -20,6 +20,7 @@ from models.character import Character
 from models.comment import Comment
 from models.praxis import MediaItem, Praxis
 from models.praxis_room import PraxisRoomUpdate
+from models.push_subscription import PushSubscription
 from services.character import soft_delete_character
 from services.media import delete_stored_media
 
@@ -116,6 +117,9 @@ async def delete_account(
 
     await _replace_oauth_identity_with_a_tombstone(account, session)
 
+    await session.execute(
+        delete(PushSubscription).where(PushSubscription.account_id == account.id)
+    )
     account.status = AccountStatus.deleted
     account.email = f"deleted-{account.id}@{DELETED_EMAIL_DOMAIN}"
     await session.flush()

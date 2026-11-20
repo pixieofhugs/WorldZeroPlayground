@@ -23,6 +23,7 @@ from services.era import get_current_era_row, get_or_create_stats
 from services.era_gates import may_comment
 from services.mod_log import log_mod_action
 from services.praxis import account_already_flagged, can_view_praxis
+from services.push import notify_comment
 
 # Unresolved handles stay plain text; render linkifies the resolved set only.
 MENTION_RE = re.compile(r"@([A-Za-z0-9_]+)")
@@ -180,10 +181,12 @@ async def create_comment(
     session.add(comment)
     await session.flush()
 
-    await _reconcile_mentions(
-        comment, await _resolve_mentions(body_text, author, session), session
-    )
+    mentioned = await _resolve_mentions(body_text, author, session)
+    await _reconcile_mentions(comment, mentioned, session)
     await session.flush()
+    await notify_comment(
+        session, author, praxis_id=praxis_id, task_id=task_id, mentioned=mentioned
+    )
     return await get_comment(comment.id, session)
 
 
