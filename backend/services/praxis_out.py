@@ -18,7 +18,13 @@ from models.character import Character
 from models.character_stats import CharacterStats
 from models.duel import Duel, DuelStatus
 from models.meta_task import PraxisMetaTask
-from models.praxis import Praxis, PraxisInvite, PraxisMember, PraxisStatus
+from models.praxis import (
+    UNSCORED_MODERATION_STATUSES,
+    Praxis,
+    PraxisInvite,
+    PraxisMember,
+    PraxisStatus,
+)
 from models.task import Task
 from services.media import media_item_out
 from schemas.praxis import (
@@ -464,6 +470,7 @@ async def crowned_praxis_ids(
         .options(selectinload(Praxis.task))
         .where(
             Praxis.status == PraxisStatus.submitted,
+            Praxis.moderation_status.not_in(UNSCORED_MODERATION_STATUSES),
             Praxis.task_id.in_(task_ids),
         )
     )
