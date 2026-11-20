@@ -220,6 +220,19 @@ async def get_next_era_row(era_row: Era, session: AsyncSession) -> Era | None:
     return result.scalar_one_or_none()
 
 
+#: The duels an era close freezes; ``pending``/``declined`` are left alone.
+DUELS_FROZEN_AT_ERA_CLOSE = (DuelStatus.active, DuelStatus.settled)
+
+
+def tasks_retired_at_era_close():
+    """The ``UPDATE``'s predicate, shared with the admin preflight's count."""
+    # IS DISTINCT FROM: seed_key is NULL on ordinary tasks and ``NULL != 'x'`` is NULL.
+    return (
+        Task.seed_key.is_distinct_from(ONBOARDING_TASK_SEED_KEY),
+        Task.status.notin_([TaskStatus.retired, TaskStatus.deleted]),
+    )
+
+
 async def resolve_duels_at_era_close(
     session: AsyncSession,
     resolved_at: datetime | None = None,
@@ -237,7 +250,7 @@ async def resolve_duels_at_era_close(
     resolved_at = resolved_at or datetime.now(timezone.utc)
 
     duel_result = await session.execute(
-        select(Duel).where(Duel.status.in_([DuelStatus.active, DuelStatus.settled]))
+        select(Duel).where(Duel.status.in_(DUELS_FROZEN_AT_ERA_CLOSE))
     )
     duels = list(duel_result.scalars().all())
     if not duels:
@@ -341,11 +354,9 @@ async def retire_board_at_era_close(session: AsyncSession) -> int:
     2. Retired tasks reappear in browse past ``level_to_see_retired_tasks``,
        and for ``allow_praxis_on_retired_task_factions`` factions.
     """
-    # IS DISTINCT FROM: seed_key is NULL on ordinary tasks and ``NULL != 'x'`` is NULL.
     result = await session.execute(
         update(Task)
-        .where(Task.seed_key.is_distinct_from(ONBOARDING_TASK_SEED_KEY))
-        .where(Task.status.notin_([TaskStatus.retired, TaskStatus.deleted]))
+        .where(*tasks_retired_at_era_close())
         .values(status=TaskStatus.retired)
     )
     return result.rowcount

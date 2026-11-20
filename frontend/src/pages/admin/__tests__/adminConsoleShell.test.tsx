@@ -29,6 +29,7 @@ vi.mock('../consolePages', () => ({
   EraPage: () => 'EraPage',
   CopySheetIndexPage: () => 'CopySheetIndexPage',
 }))
+vi.mock('../../../components/admin/ModStrip', () => ({ default: () => 'COPY EDITOR STRIP' }))
 vi.mock('../FactionCopySheet', () => ({ default: () => 'FactionCopySheet' }))
 vi.mock('../LevelUpCopySheet', () => ({ default: () => 'LevelUpCopySheet' }))
 
@@ -62,6 +63,15 @@ describe('admin console shell', () => {
     at(path)
     expect(await screen.findByText(page)).toBeTruthy()
     expect(screen.getByRole('navigation', { name: 'Admin' })).toBeTruthy()
+  })
+
+  it('copy sheets carry the copy editor even with mod mode off; other pages do not', async () => {
+    at('/admin/level-ups')
+    expect(await screen.findByText('COPY EDITOR STRIP')).toBeTruthy()
+    cleanup()
+    at('/admin/tasks')
+    await screen.findByText('TasksPage')
+    expect(screen.queryByText('COPY EDITOR STRIP')).toBeNull()
   })
 
   it('rail shows groups, counts and tallies, and marks only the current page', async () => {

@@ -426,6 +426,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/eras/{config_key}/preflight": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Admin Preflight Era Roll
+         * @description Admin-only: count what rolling into this era would do. Writes nothing.
+         */
+        get: operations["admin_preflight_era_roll_admin_eras__config_key__preflight_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/messages": {
         parameters: {
             query?: never;
@@ -3207,6 +3227,28 @@ export interface components {
             name: string;
         };
         /**
+         * EraPreflightOut
+         * @description What rolling into ``name`` would do, counted from the live game.
+         */
+        EraPreflightOut: {
+            /** Characters Reset */
+            characters_reset: number;
+            /** Duels Awaiting Answer */
+            duels_awaiting_answer: number;
+            /** Duels Frozen */
+            duels_frozen: number;
+            /** Leaving Factions */
+            leaving_factions: components["schemas"]["LeavingFaction"][];
+            /** Name */
+            name: string;
+            /** Open Reports */
+            open_reports: number;
+            /** Tasks Arriving */
+            tasks_arriving: number;
+            /** Tasks Retired */
+            tasks_retired: number;
+        };
+        /**
          * EraRollIn
          * @description Just the key: resets are the incoming era's flags (ADR-0042).
          */
@@ -3925,6 +3967,16 @@ export interface components {
             accepted: boolean;
             /** Praxis Id */
             praxis_id: number;
+        };
+        /**
+         * LeavingFaction
+         * @description A faction the next era drops from the roster, with who is in it today.
+         */
+        LeavingFaction: {
+            /** Characters */
+            characters: number;
+            /** Slug */
+            slug: string;
         };
         /** LevelProfileOut */
         LevelProfileOut: {
@@ -6026,6 +6078,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EraRollOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_preflight_era_roll_admin_eras__config_key__preflight_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                config_key: string;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EraPreflightOut"];
                 };
             };
             /** @description Validation Error */

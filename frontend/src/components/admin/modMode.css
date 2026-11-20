@@ -28,3 +28,7 @@ html[data-mod-strip] body { padding-top: var(--modstrip-h); }
 .mod-copy .card-meta { color: inherit; }
 .mod-item-col { flex-direction: column; }
 .mod-row { display: contents; }
+
+/* Phone header: anchor the menu to the full-width header, not the narrow button. */
+header .mod-wrap { position: static; }
+header .mod-menu { right: var(--space-sm); top: 100%; }
