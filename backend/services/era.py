@@ -49,12 +49,9 @@ async def lock_era_rollover(session: AsyncSession) -> None:
 async def overlay_population_dials(
     session: AsyncSession, live: EraConfig = CURRENT_ERA
 ) -> None:
-    """Write each dial's chosen side onto the live era, one field at a time (#3656).
+    """Write each dial's side onto the live era, a field at a time (#3656).
 
-    Run after every bind, because a bind restores the full-game fields. A row for
-    a dial the live era doesn't declare is ignored, so sides survive a rollover.
-    Never ``dataclasses.replace``: perk inheritance in ``__post_init__`` is not
-    idempotent (ADR-0091).
+    Never ``dataclasses.replace``: perk inheritance is not idempotent (ADR-0091).
     """
     rows = await session.execute(
         select(PopulationDial.dial_key, PopulationDial.side)

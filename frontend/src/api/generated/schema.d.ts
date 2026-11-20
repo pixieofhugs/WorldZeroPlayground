@@ -563,7 +563,7 @@ export interface paths {
         };
         /**
          * Admin Get Small World
-         * @description Admin-only: every population dial, its side, both values and who last flipped it.
+         * @description Admin-only: each population dial, its side, both values, who flipped it.
          */
         get: operations["admin_get_small_world_admin_small_world_get"];
         /**

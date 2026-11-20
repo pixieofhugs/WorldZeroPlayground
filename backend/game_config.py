@@ -162,11 +162,7 @@ _STRUCTURAL_FACTION_ROLES: dict[str, str] = {
 
 @dataclass(frozen=True)
 class Dial:
-    """One population-dial rule: two values per field, a mod picks the side (#3656).
-
-    ``full`` must equal the era's plain fields, so the plain fields stay the
-    full-game numbers and ``small`` is the only place a loosened value lives.
-    """
+    """Two values per field; a mod picks the side. ``full`` equals the era's plain fields."""
 
     small: Mapping[str, Any]
     full: Mapping[str, Any]
@@ -278,8 +274,6 @@ class EraConfig:
     collab_invite_bypasses_faction: bool = True
     collab_invite_bypasses_task_bank: bool = False
 
-    # Rules that loosen while the game is small, by dial key (#3656). The live
-    # side is a DB row per key (services.population_dial); empty = no dials.
     dials: Mapping[str, Dial] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
@@ -352,10 +346,9 @@ _FIELD_NAMES = frozenset(f.name for f in fields(EraConfig))
 
 
 def check_dials(era: EraConfig) -> None:
-    """Fail at import when a dial's ``full`` side drifts from the era's own field.
+    """Raise when a dial's ``full`` side drifts from the era's field.
 
-    Not in ``__post_init__``: ``dataclasses.replace(era, some_dial_field=...)``
-    is how tests vary a rule, and must keep building.
+    Not in ``__post_init__``: tests vary a rule with ``dataclasses.replace``.
     """
     for key, dial in era.dials.items():
         if set(dial.small) != set(dial.full):
