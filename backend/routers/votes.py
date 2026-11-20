@@ -1,14 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db import get_db
 from dependencies import get_current_character_optional
 from models.character import Character
 from models.praxis import Praxis
-from models.vote import Vote
 from schemas.vote import VoterDetail
 from services.praxis import can_view_praxis
+from services.vote_tally import counted_voters
 
 # Read-only. Vote writes live in routers/praxes.py (404 guard); don't add one here
 # (#637). The tally rides ``PraxisOut``; no ``GET .../votes`` (#1382).
@@ -27,12 +26,6 @@ async def list_voters(
     if praxis is None or not await can_view_praxis(viewer, praxis, session):
         raise HTTPException(status_code=404, detail="Praxis not found.")
 
-    result = await session.execute(
-        select(Vote, Character)
-        .join(Character, Character.id == Vote.voter_character_id)
-        .where(Vote.praxis_id == praxis_id)
-        .order_by(Vote.created_at.desc())
-    )
     return [
         VoterDetail(
             character_id=character.id,
@@ -41,5 +34,5 @@ async def list_voters(
             faction_slug=character.faction_slug,
             value=vote.value,
         )
-        for vote, character in result.all()
+        for vote, character in await counted_voters(praxis_id, session)
     ]
