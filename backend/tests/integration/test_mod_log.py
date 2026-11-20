@@ -187,14 +187,18 @@ async def test_page_filters_by_kind_actor_and_search_and_names_targets(
         headers=auth_headers,
     )
     await client.patch(
-        f"/admin/tasks/{active_task.id}", json={"title": "Renamed"}, headers=auth_headers
+        f"/admin/tasks/{active_task.id}",
+        json={"title": "Renamed"},
+        headers=auth_headers,
     )
 
     async def get(query=""):
-        return (await client.get(f"/admin/mod-log?{query}", headers=auth_headers)).json()
+        response = await client.get(f"/admin/mod-log?{query}", headers=auth_headers)
+        return response.json()
 
     page = await get()
-    assert page["mods"] == [{"account_id": account.id, "name": page["items"][0]["actor_name"]}]
+    actor_name = page["items"][0]["actor_name"]
+    assert page["mods"] == [{"account_id": account.id, "name": actor_name}]
     assert page["counts"] == {"reports": 0, "tasks": 2, "people": 1, "rules": 0}
     assert {i["action"] for i in page["items"]} == {"ban", "task_status", "task_edit"}
     ban = next(i for i in page["items"] if i["action"] == "ban")

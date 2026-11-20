@@ -571,7 +571,11 @@ async def test_the_rollover_writes_one_mod_log_row_naming_the_new_era(
     )
     assert resp.status_code == 200
 
-    items = (await client.get("/admin/mod-log?kind=rules", headers=auth_headers)).json()["items"]
-    assert [(i["action"], i["target_type"], i["target_id"], i["target_name"]) for i in items] == [
+    log = await client.get("/admin/mod-log?kind=rules", headers=auth_headers)
+    got = [
+        (i["action"], i["target_type"], i["target_id"], i["target_name"])
+        for i in log.json()["items"]
+    ]
+    assert got == [
         ("era_roll", "era", resp.json()["era_id"], era_config_for_key("era_2").name)
     ]

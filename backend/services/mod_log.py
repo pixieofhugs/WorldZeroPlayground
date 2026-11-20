@@ -37,7 +37,8 @@ async def log_mod_action(
     await session.flush()
 
 
-#: Console segments over (target_type, action); "rules" gains Small world switches later (#3656).
+#: Console segments over (target_type, action); "rules" gains Small world
+#: switches later (#3656).
 def _kind_filter(kind: str):
     if kind == "reports":
         return or_(
@@ -56,6 +57,7 @@ def _kind_filter(kind: str):
     raise ValueError(kind)
 
 
+ModRow = tuple[ModAction, Optional[str], Optional[str], Optional[str]]
 KINDS = ("reports", "tasks", "people", "rules")
 
 
@@ -120,9 +122,19 @@ async def _target_names(
             out[(kind, row[0])] = (row[1], row[2] if len(row) > 2 else None)
 
     if ids("character"):
-        await fill("character", select(Character.id, Character.display_name).where(Character.id.in_(ids("character"))))
+        await fill(
+            "character",
+            select(Character.id, Character.display_name).where(
+                Character.id.in_(ids("character"))
+            ),
+        )
     if ids("account"):
-        await fill("account", select(Account.id, _first_character_name(Account.id)).where(Account.id.in_(ids("account"))))
+        await fill(
+            "account",
+            select(Account.id, _first_character_name(Account.id)).where(
+                Account.id.in_(ids("account"))
+            ),
+        )
     if ids("task"):
         await fill("task", select(Task.id, Task.title).where(Task.id.in_(ids("task"))))
     if ids("era"):
@@ -153,7 +165,7 @@ async def list_mod_actions(
     kind: Optional[str] = None,
     actor_account_id: Optional[int] = None,
     q: Optional[str] = None,
-) -> tuple[list[tuple[ModAction, Optional[str], Optional[str], Optional[str]]], int, dict[str, int]]:
+) -> tuple[list[ModRow], int, dict[str, int]]:
     """Newest first: (action, actor name, target name, target author), the total, and
     the count per kind over the same actor + search filters (not the kind itself)."""
     filters = []
@@ -167,7 +179,9 @@ async def list_mod_actions(
         filters.append(_search_filter(q))
     counts_row = (
         await session.execute(
-            select(*[func.count().filter(_kind_filter(k)) for k in KINDS]).where(*filters)
+            select(*[func.count().filter(_kind_filter(k)) for k in KINDS]).where(
+                *filters
+            )
         )
     ).one()
     if kind:
@@ -185,7 +199,10 @@ async def list_mod_actions(
         select(func.count()).select_from(ModAction).where(*filters)
     )
     return (
-        [(a, n, *names.get((a.target_type, a.target_id), (None, None))) for a, n in pairs],
+        [
+            (a, n, *names.get((a.target_type, a.target_id), (None, None)))
+            for a, n in pairs
+        ],
         total or 0,
         dict(zip(KINDS, counts_row)),
     )
@@ -194,7 +211,10 @@ async def list_mod_actions(
 async def list_mod_actors(session: AsyncSession) -> list[tuple[int, Optional[str]]]:
     """Every account that has logged an action, for the mod filter."""
     rows = await session.execute(
-        select(ModAction.actor_account_id, _first_character_name(ModAction.actor_account_id))
+        select(
+            ModAction.actor_account_id,
+            _first_character_name(ModAction.actor_account_id),
+        )
         .distinct()
         .order_by(ModAction.actor_account_id)
     )
