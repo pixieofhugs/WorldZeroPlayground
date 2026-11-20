@@ -72,16 +72,16 @@ const Donate = lazy(() => withAppCopy(import('./pages/Donate')))
 const AccountDeleted = lazy(importAccountDeleted)
 const Onboarding = lazy(importOnboarding)
 const ReturningCard = lazy(() => withOnboardingCopy(import('./pages/onboarding/ReturningCard')))
-const CopyEditor = lazy(() => withAppCopy(import('./components/admin/CopyEditor')))
+const ModStrip = lazy(() => withAppCopy(import('./components/admin/ModStrip')))
 
 /** Gate lives outside the lazy component so ordinary visitors never fetch its chunk (load-time.md). */
-function CopyEditorMount() {
+export function ModStripMount() {
   const { user } = useAuth()
   const { adminMode } = useAdminMode()
   if (!user?.is_admin || !adminMode) return null
   return (
     <Suspense fallback={null}>
-      <CopyEditor />
+      <ModStrip />
     </Suspense>
   )
 }
@@ -147,7 +147,7 @@ function AdminRoutes() {
           </Route>
         </Routes>
       </Suspense>
-      <CopyEditorMount />
+      <ModStripMount />
     </ProtectedRoute>
   )
 }
@@ -233,7 +233,7 @@ function PlayerRoutes() {
           <Route path="/donate" element={<Donate />} />
         </Routes>
       </Suspense>
-      <CopyEditorMount />
+      <ModStripMount />
     </Layout>
   )
 }
