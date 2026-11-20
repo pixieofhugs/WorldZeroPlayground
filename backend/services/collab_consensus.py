@@ -48,11 +48,14 @@ async def _apply_seal(praxis: Praxis, session: AsyncSession, era: EraConfig) -> 
     so text typed just before submit is not lost to the debounce.
     """
     await discard_room_document(praxis, session)
+    # Read the era before touching the row: this query autoflushes, and a
+    # half-stamped "submitted" praxis fails ck_praxis_submitted_has_stamps.
+    era_id = (await get_current_era_row(session)).id
     praxis.status = PraxisStatus.submitted
     now = datetime.now(timezone.utc)
     praxis.submitted_at = now
     praxis.submit_proposed_at = None
-    praxis.era_id = (await get_current_era_row(session)).id
+    praxis.era_id = era_id
     for member in praxis.members:
         if not member.has_approved:
             member.approved_at = now

@@ -9,6 +9,7 @@ import {
   CAPTION,
   CompassRose,
   DECO,
+  DISC,
   INK,
   INNER,
   OCHRE,
@@ -239,6 +240,8 @@ export default function EphemeristsScoreStamp({ praxis, showCrown }: ScoreStampP
             flexDirection: "column",
             alignItems: "center",
             lineHeight: 0.82,
+            background: DISC,
+            borderRadius: "50%",
           }}
         >
           <span style={{ fontFamily: DECO, fontSize: "var(--text-title)", color: BAND_INK }}>
