@@ -206,6 +206,7 @@ describe("the drift stops at user media on this page too (#1942)", () => {
     praxis_id: 55,
     type: "image" as const,
     file_path: "proofs/estuary.png",
+    display_path: null,
     display_order: 0,
     created_at: "2026-01-01T00:00:00Z",
   };

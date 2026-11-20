@@ -215,6 +215,7 @@ const SAMPLE_MEDIA: MediaItemOut[] = [
     praxis_id: 501,
     type: 'image',
     file_path: 'media/praxis/501/sapling.jpg',
+    display_path: null,
     display_order: 0,
     created_at: NOW,
   },

@@ -14,7 +14,8 @@ const dark = declarationsIn(ruleBodies(css, '[data-theme="dark"]'))
 const light = declarationsIn(ruleBodies(css, ':root'))
 
 const PLATE_FACING = [
-  '--faction-wow-balloon-idle',
+  ...[1, 2, 3, 4, 5].map((tier) => `--faction-wow-balloon-${tier}-idle`),
+  '--faction-wow-balloon-eye-closed',
   '--faction-wow-balloon-outline',
   '--faction-wow-balloon-string',
 ]

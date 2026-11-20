@@ -4295,6 +4295,19 @@
             "title": "Display Order",
             "type": "integer"
           },
+          "display_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Smaller copy of an image for cards and tiles; null when none was made.",
+            "readOnly": true,
+            "title": "Display Path"
+          },
           "file_path": {
             "title": "File Path",
             "type": "string"
@@ -4317,7 +4330,8 @@
           "type",
           "file_path",
           "display_order",
-          "created_at"
+          "created_at",
+          "display_path"
         ],
         "title": "MediaItemOut",
         "type": "object"
