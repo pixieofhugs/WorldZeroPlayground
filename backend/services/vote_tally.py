@@ -22,7 +22,7 @@ class VoteTally:
 _EMPTY_TALLY = VoteTally(points_from_votes=0, voter_count=0)
 
 
-def _counted_votes(query):
+def counted_votes(query):
     """Join voters, dropping moderated ones; deletion keeps them (ADR-0081)."""
     # Deferred: services.character -> services.era -> this module is a cycle.
     from services.character import MOD_BANNED
@@ -39,7 +39,7 @@ async def counted_voters(
 ) -> list[tuple[Vote, Character]]:
     """The votes ``tally_votes`` counts, newest first, with their voters."""
     result = await session.execute(
-        _counted_votes(select(Vote, Character))
+        counted_votes(select(Vote, Character))
         .where(Vote.praxis_id == praxis_id)
         .order_by(Vote.created_at.desc())
     )
@@ -64,7 +64,7 @@ async def tally_votes(
     if not praxis_ids:
         return {}
 
-    query = _counted_votes(
+    query = counted_votes(
         select(Vote.praxis_id, func.sum(Vote.value), func.count(Vote.id))
     ).where(Vote.praxis_id.in_(praxis_ids)).group_by(Vote.praxis_id)
     if cast_in == "sealed":
