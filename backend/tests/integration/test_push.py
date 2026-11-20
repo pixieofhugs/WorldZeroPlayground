@@ -79,6 +79,10 @@ async def test_subscribe_is_idempotent_and_unsubscribe_removes(
         "http://169.254.169.254/",
         "https://localhost/",
         "https://push.example/abc",
+        "https://evil.test\\@fcm.googleapis.com/",
+        "https://127.0.0.1:8000\\@fcm.googleapis.com/",
+        "https://fcm.googleapis.com@evil.test/",
+        "https://fcm.googleapis.com:8443/x",
         "https://evilfcm.googleapis.com.attacker.test/",
     ],
 )
