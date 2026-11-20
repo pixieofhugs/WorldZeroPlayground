@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.character import Character
 from models.praxis import MediaItem, MediaType, Praxis
+from services.media import restore_media_to_mount
 from services.media_scrub import convert_heic_rows
 
 
@@ -112,3 +113,42 @@ async def test_stale_jpg_is_overwritten_and_bmp_is_renamed(
     with Image.open(os.path.join(folder, "pic.jpg")) as image:
         assert image.format == "JPEG"
     assert sorted(os.listdir(folder)) == ["pic.bmp", "pic.jpg"]
+
+
+@pytest.mark.asyncio
+async def test_quarantined_heic_is_converted_and_restores_without_gps(
+    db_session: AsyncSession,
+    character: Character,
+    praxis_solo: Praxis,
+    tmp_path,
+    monkeypatch,
+):
+    live = tmp_path / "uploads"
+    live.mkdir()
+    monkeypatch.setattr("services.media.settings.MEDIA_ROOT", str(live))
+    directory = os.path.join(str(character.id), str(praxis_solo.id), "abc")
+    held = tmp_path / "uploads-quarantine" / directory
+    held.mkdir(parents=True)
+    exif = Image.Exif()
+    exif.get_ifd(0x8825)[1] = "N"
+    buffer = io.BytesIO()
+    Image.new("RGB", (8, 8), "red").save(buffer, format="HEIF", exif=exif)
+    (held / "IMG_1.heic").write_bytes(buffer.getvalue())
+    item = MediaItem(
+        praxis_id=praxis_solo.id,
+        type=MediaType.image,
+        file_path=os.path.join(directory, "IMG_1.heic"),
+        display_order=0,
+    )
+    db_session.add(item)
+    await db_session.flush()
+
+    report, to_unlink = await convert_heic_rows(db_session, str(live), apply=True)
+    for path in to_unlink:
+        os.unlink(path)
+
+    assert not report.failed and item.file_path.endswith("IMG_1.jpg")
+    assert restore_media_to_mount([item.file_path]) == 1
+    assert not held.exists()
+    with Image.open(live / item.file_path) as image:
+        assert 0x8825 not in image.getexif()

@@ -3,7 +3,8 @@
 Reuses the upload strip functions. ``scrub_media_root`` rewrites files in place
 on disk. HEIC/HEIF/AVIF/BMP are not: #3589 stores them as ``.jpg``, so
 ``convert_heic_rows`` does the same for existing rows (new file, row path
-updated, old file unlinked only after the caller commits). Hotlinks to the old
+updated, old file unlinked only after the caller commits), live or withdrawn into
+quarantine (a restore would bring the GPS back). Hotlinks to the old
 ``.heic`` URL break; the app serves through the row's path.
 """
 
@@ -20,6 +21,7 @@ from models.praxis import MediaItem, MediaType
 from services.media import (
     _OUTPUT_EXTENSIONS,
     _SAFE_EXTENSIONS,
+    QUARANTINE_SUFFIX,
     _strip_av,
     _strip_image,
     resolve_stored_media_path,
@@ -136,6 +138,11 @@ def scrub_media_root(media_root: str, apply: bool) -> ScrubReport:
     return report
 
 
+def _roots(media_root: str) -> list[str]:
+    root = os.path.realpath(media_root)
+    return [root, root + QUARANTINE_SUFFIX]
+
+
 async def convert_heic_rows(
     session: AsyncSession, media_root: str, apply: bool
 ) -> tuple[ScrubReport, list[str]]:
@@ -147,6 +154,7 @@ async def convert_heic_rows(
     report = ScrubReport()
     to_unlink: list[str] = []
     claimed = (await load_known_paths(session, media_root)).claimed_paths
+    roots = _roots(media_root)
     rows = await session.scalars(
         select(MediaItem).where(MediaItem.type == MediaType.image)
     )
@@ -155,14 +163,24 @@ async def convert_heic_rows(
         if extension.lower() not in RENAME_EXTENSIONS:
             continue
         report.scanned += 1
-        old_path = resolve_stored_media_path(item.file_path, media_root)
         new_relative = stem + ".jpg"
-        new_path = resolve_stored_media_path(new_relative, media_root)
         try:
-            if old_path is None or new_path is None or not os.path.isfile(old_path):
+            old_path = next(
+                (
+                    path
+                    for root in roots
+                    if (path := resolve_stored_media_path(item.file_path, root))
+                    and os.path.isfile(path)
+                ),
+                None,
+            )
+            if old_path is None:
                 raise FileNotFoundError(item.file_path)
+            root = roots[0] if old_path.startswith(roots[0] + os.sep) else roots[1]
+            new_path = resolve_stored_media_path(new_relative, root)
+            live_new = resolve_stored_media_path(new_relative, media_root)
             # An unclaimed .jpg is a crashed run's leftover: overwrite it.
-            if new_path in claimed:
+            if new_path is None or live_new in claimed:
                 raise FileExistsError(new_relative)
             with open(old_path, "rb") as handle:
                 converted, _format = _strip_image(handle.read())
@@ -190,15 +208,21 @@ async def _sweep_unclaimed_heic(
     it. Otherwise only the orphan sweep may delete it, so fail loudly.
     """
     claimed = (await load_known_paths(session, media_root)).claimed_paths
-    files, _escaping = scan_media_root(media_root)
+    files = [
+        scanned
+        for root in _roots(media_root)
+        if os.path.isdir(root)
+        for scanned in scan_media_root(root)[0]
+    ]
     for scanned in files:
-        stem, extension = os.path.splitext(scanned.absolute_path)
-        renames = extension.lower() in RENAME_EXTENSIONS
-        if not renames or scanned.absolute_path in claimed:
+        extension = os.path.splitext(scanned.absolute_path)[1]
+        relative = os.path.splitext(scanned.relative_path)[0]
+        live = resolve_stored_media_path(scanned.relative_path, media_root)
+        if extension.lower() not in RENAME_EXTENSIONS or live in claimed:
             continue
         if scanned.absolute_path in to_unlink:
             continue
-        if stem + ".jpg" in claimed:
+        if resolve_stored_media_path(relative + ".jpg", media_root) in claimed:
             if apply:
                 to_unlink.append(scanned.absolute_path)
             report.cleaned.append(f"{scanned.relative_path} (leftover, removed)")
