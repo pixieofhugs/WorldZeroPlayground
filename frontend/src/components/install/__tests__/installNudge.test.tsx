@@ -12,9 +12,17 @@ function setUa(ua: string) {
   vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue(ua)
 }
 
+function media(phone: boolean, standalone = false) {
+  window.matchMedia = vi.fn((q: string) => ({
+    matches: q.includes('standalone') ? standalone : phone,
+    addEventListener: () => {},
+    removeEventListener: () => {},
+  })) as unknown as typeof window.matchMedia
+}
+
 beforeEach(() => {
   localStorage.clear()
-  window.matchMedia = vi.fn().mockReturnValue({ matches: false }) as unknown as typeof window.matchMedia
+  media(true)
 })
 afterEach(() => {
   cleanup()
@@ -39,8 +47,18 @@ describe('InstallNudge', () => {
 
   it('hidden when standalone', () => {
     setUa(IPHONE_UA)
-    window.matchMedia = vi.fn().mockReturnValue({ matches: true }) as unknown as typeof window.matchMedia
+    media(true, true)
     expect(render(<InstallNudge />).container.innerHTML).toBe("")
+  })
+
+  it('desktop: no card when beforeinstallprompt fires', () => {
+    media(false)
+    captureInstallPrompt()
+    const { container } = render(<InstallNudge />)
+    act(() => {
+      window.dispatchEvent(Object.assign(new Event('beforeinstallprompt', { cancelable: true }), { prompt: vi.fn() }))
+    })
+    expect(container.innerHTML).toBe('')
   })
 
   it('Android: appears once the event fires; Install calls prompt()', async () => {

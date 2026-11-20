@@ -8,6 +8,7 @@ import {
   isStandalone,
   subscribeInstallPrompt,
 } from '../../utils/installPrompt'
+import { useFormFactor } from '../../hooks/useFormFactor'
 import InstallIphoneSteps from './InstallIphoneSteps'
 import './installNudge.css'
 
@@ -50,7 +51,8 @@ export default function InstallNudge() {
   const [gone, setGone] = useState(installDismissed)
   const prompt = useSyncExternalStore(subscribeInstallPrompt, heldInstallPrompt, () => null)
   const iphone = isIphoneSafari()
-  if (gone || isStandalone() || (!iphone && !prompt)) return null
+  const phone = useFormFactor() === 'mobile'
+  if (!phone || gone || isStandalone() || (!iphone && !prompt)) return null
 
   const dismiss = () => {
     dismissInstall()

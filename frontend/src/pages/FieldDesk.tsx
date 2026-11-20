@@ -93,11 +93,9 @@ export default function FieldDesk() {
     const Skin = resolveVariant(surfaceMap('mobileFieldDesk'), homeState.character.faction_slug)
     return (
       <>
-        <div style={{ padding: 'var(--space-lg) var(--space-lg) 0' }}>
-          <Suspense fallback={null}>
-            <InstallNudge />
-          </Suspense>
-        </div>
+        <Suspense fallback={null}>
+          <InstallNudge />
+        </Suspense>
         <Skin state={homeState} />
       </>
     )
@@ -105,9 +103,6 @@ export default function FieldDesk() {
 
   return (
     <div className="page">
-      <Suspense fallback={null}>
-        <InstallNudge />
-      </Suspense>
       {/* Inside the gate: a lives count invites making it bigger. */}
       {showRoster && (
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 'var(--space-sm)' }}>
