@@ -291,7 +291,8 @@
         "people": "People",
         "factionCopy": "Faction copy",
         "levelCopy": "Level-up copy",
-        "era": "Roll into a new era…"
+        "era": "Roll into a new era…",
+        "modLog": "Mod log"
       }
     },
     "reports": {
@@ -496,6 +497,66 @@
         "baseline": "Spread evenly, each person would get about {{share}}; the line on each bar marks it.",
         "votesBack": "{{top}} votes back: {{back}} of their {{of}} votes went to {{name}}."
       }
+    },
+    "modlog": {
+      "title": "Mod log",
+      "lede": "Every decision any mod made, newest first. Saved, so nobody handles the same thing twice.",
+      "toolbar": "Filter the log",
+      "searchLabel": "Search the log",
+      "searchPlaceholder": "Search a player, task or reason…",
+      "mod": "Mod: anyone",
+      "segments": {
+        "all": "All",
+        "reports": "Reports",
+        "tasks": "Tasks",
+        "people": "People",
+        "rules": "Rules"
+      },
+      "cols": {
+        "when": "When",
+        "mod": "Mod",
+        "did": "Did",
+        "to": "To",
+        "reason": "Reason the author saw"
+      },
+      "none": "—",
+      "empty": "Nothing logged here yet.",
+      "loadMore": "Load more",
+      "loadError": "Could not load the mod log.",
+      "foot": "Mods see this log; players never do.",
+      "panel": "Log entry",
+      "did": {
+        "ban": "banned",
+        "unban": "unbanned",
+        "suspend": "suspended",
+        "unsuspend": "unsuspended",
+        "praxis_hidden": "removed",
+        "praxis_visible": "kept",
+        "praxis_flagged": "flagged",
+        "praxis_failed": "doesn't meet the task",
+        "comment_hidden": "removed",
+        "comment_visible": "kept",
+        "comment_flagged": "flagged",
+        "comment_failed": "failed",
+        "remove_flagged": "removed all flagged",
+        "task_status": "changed status of",
+        "task_edit": "edited",
+        "task_delete": "deleted",
+        "role_grant": "made admin",
+        "role_revoke": "removed admin",
+        "era_roll": "rolled into"
+      },
+      "to": {
+        "character": "character {{name}}",
+        "account": "{{name}}'s account",
+        "task": "task “{{name}}”",
+        "praxis": "“{{name}}” by {{author}}",
+        "comment": "comment by {{author}}",
+        "era": "{{name}}",
+        "removeFlagged": "flagged praxis by {{name}}",
+        "gone": "{{type}} #{{id}} (gone)"
+      },
+      "panelLine": "{{mod}} {{did}} {{to}}."
     }
   }
 }

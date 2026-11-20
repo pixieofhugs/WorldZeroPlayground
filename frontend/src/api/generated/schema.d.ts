@@ -3982,21 +3982,38 @@ export interface components {
             detail: string | null;
             /** Id */
             id: number;
+            /** Target Author */
+            target_author: string | null;
             /** Target Id */
             target_id: number;
+            /** Target Name */
+            target_name: string | null;
             /** Target Type */
             target_type: string;
         };
         /** ModActionPage */
         ModActionPage: {
+            /** Counts */
+            counts: {
+                [key: string]: number;
+            };
             /** Items */
             items: components["schemas"]["ModActionOut"][];
             /** Limit */
             limit: number;
+            /** Mods */
+            mods: components["schemas"]["ModActorOut"][];
             /** Offset */
             offset: number;
             /** Total */
             total: number;
+        };
+        /** ModActorOut */
+        ModActorOut: {
+            /** Account Id */
+            account_id: number;
+            /** Name */
+            name: string | null;
         };
         /** ModerationAction */
         ModerationAction: {
@@ -5991,6 +6008,9 @@ export interface operations {
             query?: {
                 target_type?: string | null;
                 target_id?: number | null;
+                kind?: ("reports" | "tasks" | "people" | "rules") | null;
+                actor?: number | null;
+                q?: string | null;
                 limit?: number;
                 offset?: number;
             };

@@ -56,6 +56,7 @@ const ReportsPage = consolePage((m) => m.ReportsPage)
 const MessagesPage = consolePage((m) => m.MessagesPage)
 const PraxisPage = consolePage((m) => m.PraxisPage)
 const TasksPage = consolePage((m) => m.TasksPage)
+const ModLogPage = consolePage((m) => m.ModLogPage)
 const PeoplePage = consolePage((m) => m.PeoplePage)
 const EraPage = consolePage((m) => m.EraPage)
 const CopySheetIndexPage = consolePage((m) => m.CopySheetIndexPage)
@@ -72,16 +73,16 @@ const Donate = lazy(() => withAppCopy(import('./pages/Donate')))
 const AccountDeleted = lazy(importAccountDeleted)
 const Onboarding = lazy(importOnboarding)
 const ReturningCard = lazy(() => withOnboardingCopy(import('./pages/onboarding/ReturningCard')))
-const CopyEditor = lazy(() => withAppCopy(import('./components/admin/CopyEditor')))
+const ModStrip = lazy(() => withAppCopy(import('./components/admin/ModStrip')))
 
 /** Gate lives outside the lazy component so ordinary visitors never fetch its chunk (load-time.md). */
-function CopyEditorMount() {
+export function ModStripMount() {
   const { user } = useAuth()
   const { adminMode } = useAdminMode()
   if (!user?.is_admin || !adminMode) return null
   return (
     <Suspense fallback={null}>
-      <CopyEditor />
+      <ModStrip />
     </Suspense>
   )
 }
@@ -138,6 +139,7 @@ function AdminRoutes() {
             <Route path="praxis" element={<PraxisPage />} />
             <Route path="tasks" element={<TasksPage />} />
             <Route path="people" element={<PeoplePage />} />
+            <Route path="mod-log" element={<ModLogPage />} />
             <Route path="era" element={<EraPage />} />
             <Route path="copy" element={<CopySheetIndexPage />} />
             {/* One faction's surfaces on one page, for the copy editor. */}
@@ -147,7 +149,7 @@ function AdminRoutes() {
           </Route>
         </Routes>
       </Suspense>
-      <CopyEditorMount />
+      <ModStripMount />
     </ProtectedRoute>
   )
 }
@@ -233,7 +235,7 @@ function PlayerRoutes() {
           <Route path="/donate" element={<Donate />} />
         </Routes>
       </Suspense>
-      <CopyEditorMount />
+      <ModStripMount />
     </Layout>
   )
 }

@@ -1,6 +1,6 @@
 import hmac
 from datetime import datetime
-from typing import Optional
+from typing import Literal, Optional
 
 from fastapi import APIRouter, Depends, File, Header, HTTPException, Query, UploadFile
 from pydantic import ConfigDict
@@ -37,6 +37,7 @@ from schemas.admin import (
     FlaggedPraxisOut,
     ModActionOut,
     ModActionPage,
+    ModActorOut,
     ModerationAction,
     OverviewStats,
     SuspendAction,
@@ -48,7 +49,7 @@ from schemas.admin import (
 from schemas.task import TaskOut
 from schemas.praxis import PraxisCardOut, PraxisOut
 from schemas.comment import CommentModerationIn, CommentOut
-from services.mod_log import list_mod_actions
+from services.mod_log import list_mod_actions, list_mod_actors
 from services.praxis import PraxisEraScope, list_praxes, moderate_praxis
 from services.praxis_out import build_praxis_cards, build_praxis_out, crowned_praxis_ids
 from services.comment import build_comment_out, list_flagged_comments, moderate_comment
@@ -158,13 +159,16 @@ async def admin_get_account(
 async def admin_mod_log(
     target_type: str | None = None,
     target_id: int | None = None,
+    kind: Literal["reports", "tasks", "people", "rules"] | None = None,
+    actor: int | None = None,
+    q: str | None = Query(None, max_length=100),
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
     _: Account = Depends(require_admin),
     session: AsyncSession = Depends(get_db, scope="function"),
 ) -> ModActionPage:
-    rows, total = await list_mod_actions(
-        session, offset, limit, target_type, target_id
+    rows, total, counts = await list_mod_actions(
+        session, offset, limit, target_type, target_id, kind, actor, q
     )
     return ModActionPage(
         items=[
@@ -177,9 +181,15 @@ async def admin_mod_log(
                 target_id=action.target_id,
                 detail=action.detail,
                 created_at=action.created_at,
+                target_name=target_name,
+                target_author=target_author,
             )
-            for action, name in rows
+            for action, name, target_name, target_author in rows
         ],
+        mods=[
+            ModActorOut(account_id=a, name=n) for a, n in await list_mod_actors(session)
+        ],
+        counts=counts,
         total=total,
         limit=limit,
         offset=offset,
@@ -437,10 +447,10 @@ async def admin_moderate_comment(
 async def admin_patch_task(
     task_id: int,
     data: AdminTaskPatch,
-    _: Account = Depends(require_admin),
+    admin: Account = Depends(require_admin),
     session: AsyncSession = Depends(get_db, scope="function"),
 ):
-    task = await admin_edit_task(task_id, data, session)
+    task = await admin_edit_task(task_id, data, session, admin.id)
     return await build_task_out(task, session)
 
 

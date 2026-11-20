@@ -4463,9 +4463,31 @@
             "title": "Id",
             "type": "integer"
           },
+          "target_author": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Author"
+          },
           "target_id": {
             "title": "Target Id",
             "type": "integer"
+          },
+          "target_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Name"
           },
           "target_type": {
             "title": "Target Type",
@@ -4480,13 +4502,22 @@
           "target_type",
           "target_id",
           "detail",
-          "created_at"
+          "created_at",
+          "target_name",
+          "target_author"
         ],
         "title": "ModActionOut",
         "type": "object"
       },
       "ModActionPage": {
         "properties": {
+          "counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Counts",
+            "type": "object"
+          },
           "items": {
             "items": {
               "$ref": "#/components/schemas/ModActionOut"
@@ -4497,6 +4528,13 @@
           "limit": {
             "title": "Limit",
             "type": "integer"
+          },
+          "mods": {
+            "items": {
+              "$ref": "#/components/schemas/ModActorOut"
+            },
+            "title": "Mods",
+            "type": "array"
           },
           "offset": {
             "title": "Offset",
@@ -4509,11 +4547,38 @@
         },
         "required": [
           "items",
+          "mods",
+          "counts",
           "total",
           "limit",
           "offset"
         ],
         "title": "ModActionPage",
+        "type": "object"
+      },
+      "ModActorOut": {
+        "properties": {
+          "account_id": {
+            "title": "Account Id",
+            "type": "integer"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          }
+        },
+        "required": [
+          "account_id",
+          "name"
+        ],
+        "title": "ModActorOut",
         "type": "object"
       },
       "ModerationAction": {
@@ -8821,6 +8886,61 @@
                 }
               ],
               "title": "Target Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "reports",
+                    "tasks",
+                    "people",
+                    "rules"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Kind"
+            }
+          },
+          {
+            "in": "query",
+            "name": "actor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Actor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
             }
           },
           {

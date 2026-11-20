@@ -555,3 +555,27 @@ async def test_the_roll_refuses_a_reactivation_title_matching_not_one_task(
     assert [row.config_key for row in rows] == [era.config_key]
     tasks = (await db_session.execute(select(Task))).scalars().all()
     assert all(task.status == TaskStatus.active for task in tasks)
+
+
+async def test_the_rollover_writes_one_mod_log_row_naming_the_new_era(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    account: Account,
+    auth_headers: dict,
+    era: Era,
+    character: Character,
+):
+    await make_admin(db_session, account)
+    resp = await client.put(
+        "/admin/eras/live", json={"config_key": "era_2"}, headers=auth_headers
+    )
+    assert resp.status_code == 200
+
+    log = await client.get("/admin/mod-log?kind=rules", headers=auth_headers)
+    got = [
+        (i["action"], i["target_type"], i["target_id"], i["target_name"])
+        for i in log.json()["items"]
+    ]
+    assert got == [
+        ("era_roll", "era", resp.json()["era_id"], era_config_for_key("era_2").name)
+    ]
