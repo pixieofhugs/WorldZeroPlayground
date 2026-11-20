@@ -47,7 +47,7 @@ function WoIcon() {
 export default function InstallNudge() {
   const { t } = useTranslation('home')
   const [gone, setGone] = useState(installDismissed)
-  const prompt = useSyncExternalStore(subscribeInstallPrompt, heldInstallPrompt)
+  const prompt = useSyncExternalStore(subscribeInstallPrompt, heldInstallPrompt, () => null)
   const iphone = isIphoneSafari()
   if (gone || isStandalone() || (!iphone && !prompt)) return null
 
@@ -91,7 +91,7 @@ export default function InstallNudge() {
           {t('install.notNow')}
         </button>
       </div>
-      <p className="m-0 font-body text-[length:var(--text-sm)] leading-[1.5] text-[var(--color-text-tertiary)]">
+      <p className="m-0 font-body text-[length:var(--text-lg)] leading-[1.5] text-[var(--color-text-tertiary)]">
         {t('install.once')}
       </p>
     </section>

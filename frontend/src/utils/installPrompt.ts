@@ -48,7 +48,7 @@ export const heldInstallPrompt = (): InstallPromptEvent | null => held
 
 export function isStandalone(): boolean {
   return (
-    window.matchMedia?.('(display-mode: standalone)').matches === true ||
+    typeof window !== 'undefined' && window.matchMedia?.('(display-mode: standalone)').matches === true ||
     (navigator as Navigator & { standalone?: boolean }).standalone === true
   )
 }

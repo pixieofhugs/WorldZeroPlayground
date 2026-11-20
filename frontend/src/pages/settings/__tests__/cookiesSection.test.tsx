@@ -73,6 +73,7 @@ const KNOWN_WRITERS = [
   'hooks/useSidebarPanelLayout.ts',
   'hooks/useTheme.tsx',
   'pages/factionDetail/sectionDisclosure.tsx',
+  'utils/installPrompt.ts',
   'utils/onboardingResume.ts',
 ]
 
@@ -166,8 +167,8 @@ describe('no writer holds a key the card does not disclose', () => {
 })
 
 describe('the inventory is pinned to the keys the app really writes', () => {
-  it('discloses all thirteen storage entries and the one cookie', () => {
-    expect(names).toHaveLength(14)
+  it('discloses all fourteen storage entries and the one cookie', () => {
+    expect(names).toHaveLength(15)
   })
 
   it.each([
