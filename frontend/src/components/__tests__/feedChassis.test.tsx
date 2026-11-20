@@ -1,9 +1,11 @@
+// @vitest-environment jsdom
 /**
  * The feed chassis and archive (#1194). Static markup proves which controls
  * exist on which card; the timer and swipe are checked at their seams only.
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
+import { render as rtl } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 import "../../i18n";
 import i18n from "../../i18n";
@@ -96,6 +98,15 @@ describe("the archive control: which cards offer one", () => {
       />,
     );
     expect(html).toContain(ARCHIVE_LABEL);
+  });
+
+  it("the router hands the lazy rules_change card its archive control", async () => {
+    const view = rtl(
+      <MemoryRouter>
+        <FeedCardRouter item={item("rules_change", { changes: [] }, null)} />
+      </MemoryRouter>,
+    );
+    expect(await view.findByLabelText(ARCHIVE_LABEL)).toBeTruthy();
   });
 
   it("draws NO archive control on awaiting_submission, and none disabled", () => {
