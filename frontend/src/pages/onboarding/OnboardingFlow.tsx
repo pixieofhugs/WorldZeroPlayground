@@ -137,11 +137,14 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
   const handOff = () => (hasCharacter ? onAccepted() : move((f) => toCharacter(f, hasCharacter)))
 
   // Returning = signed in with a character. Skipping the contract writes no row, so it needs one for the current terms.
-  const player = !!user?.character
-  const contractOnFile = player && !!user?.has_accepted_terms
-  const canSkip = player && !['signin', 'returning', 'declined'].includes(flow.step as string)
+  // Decided once when the session first settles, so a character made in this flow doesn't turn a new player into a returner.
+  const entered = useRef<boolean | null>(null)
+  if (!loading && entered.current === null) entered.current = !!user?.character
+  const player = !!entered.current
+  const contractOnFile = !!user?.character && !!user?.has_accepted_terms
+  const canSkip = player && !['signin', 'returning', 'declined'].includes(flow.step as string) && (flow.step !== 'contract' || contractOnFile)
   const skipAhead = () => {
-    if (flow.step === 'contract' || flow.step === 'character' || flow.step === 'arrival' || contractOnFile) return onAccepted()
+    if (flow.step === 'character' || flow.step === 'arrival' || contractOnFile) return onAccepted()
     move(skip)
   }
   const passedContract = useRef(false)

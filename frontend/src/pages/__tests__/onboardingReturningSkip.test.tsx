@@ -53,15 +53,26 @@ describe('Skip for a returning player', () => {
     expect(onAccepted).toHaveBeenCalled()
   })
 
-  it('still shows the contract, with Skip, when no row is on file', async () => {
+  it('shows the contract with no Skip when no row is on file', async () => {
     const onAccepted = mount(returner(false))
     fireEvent.click(screen.getByTestId('onboarding-start'))
     fireEvent.click(skip()!)
     await screen.findByTestId('onboarding-accept-terms')
     expect(onAccepted).not.toHaveBeenCalled()
-    expect(skip()).not.toBeNull()
-    fireEvent.click(skip()!)
-    expect(onAccepted).toHaveBeenCalled()
+    expect(skip()).toBeNull()
+  })
+
+  it('a character made during the flow does not make a new player a returner', () => {
+    const ctx = (user: CurrentUser) => (
+      <MemoryRouter>
+        <AuthContext.Provider value={{ user, loading: false, refetch: async () => {}, applyUser: () => {}, signOut: async () => {} }}>
+          <OnboardingFlow resumed={false} onAccepted={vi.fn()} />
+        </AuthContext.Provider>
+      </MemoryRouter>
+    )
+    const { rerender } = render(ctx(newcomer))
+    rerender(ctx(returner(true)))
+    expect(skip()).toBeNull()
   })
 
   it('passes the contract at once after sign-in when the row is on file', async () => {
