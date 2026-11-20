@@ -709,7 +709,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
           </div>
           <div
             style={{
-              ...actionColumnSize({ desktop, hasAction, width: size.plate }),
+              ...actionColumnSize({ hasAction, width: size.plate }),
               maxWidth: "100%",
               marginTop: desktop ? "var(--space-sm)" : 0,
             }}

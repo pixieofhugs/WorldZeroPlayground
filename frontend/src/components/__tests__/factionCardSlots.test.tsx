@@ -104,6 +104,7 @@ const IMAGE_MEDIA: MediaItemOut = {
   praxis_id: 1,
   type: "image",
   file_path: "proofs/chlorophyll-leaf.png",
+  display_path: null,
   display_order: 0,
   created_at: "2026-01-01T00:00:00Z",
 };

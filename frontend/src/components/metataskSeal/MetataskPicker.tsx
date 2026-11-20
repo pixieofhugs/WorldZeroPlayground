@@ -11,7 +11,6 @@ import type { TaskOut } from "../../api/tasks";
 import MetataskSeal from "./MetataskSeal";
 import { drawAtRoot } from "../ui/drawAtRoot";
 import { useModal } from "../../hooks/useModal";
-import { useFormFactor } from "../../hooks/useFormFactor";
 import { factionCssVar, factionName } from "../../utils/factions";
 import { ErrorBanner } from "../../pages/editPraxis/archetypes/shared";
 import type { EditPraxisState } from "../../pages/editPraxis/useEditPraxis";
@@ -38,7 +37,6 @@ export default function MetataskPicker({
   | "error"
 >) {
   const { t } = useTranslation("forms");
-  const isMobile = useFormFactor() === "mobile";
   const [query, setQuery] = useState("");
   const [factionFilter, setFactionFilter] = useState<string>(ALL_FILTER);
   const [pending, setPending] = useState<TaskOut | null>(null);
@@ -90,10 +88,8 @@ export default function MetataskPicker({
       aria-label={t("editPraxis.attach.pickerTitle")}
       className="fixed inset-0 z-50 flex items-center justify-center"
       style={{
-        padding: isMobile ? 0 : "var(--space-lg)",
-        background: isMobile
-          ? "var(--color-bg-page)"
-          : "var(--color-overlay-strong)",
+        padding: "var(--sheet-pad, var(--space-lg))",
+        background: "var(--takeover-bg, var(--color-overlay-strong))",
       }}
     >
       <div
@@ -102,16 +98,14 @@ export default function MetataskPicker({
           gap: "var(--space-md)",
           padding: "var(--space-lg)",
           // Over the tab bar, so the sheet holds the safe-area gap itself.
-          paddingBottom: isMobile
-            ? "calc(var(--space-lg) + env(safe-area-inset-bottom))"
-            : "var(--space-lg)",
-          width: isMobile ? "100%" : "min(560px, 100%)",
-          height: isMobile ? "100%" : "auto",
-          maxHeight: isMobile ? "100%" : "85vh",
+          paddingBottom: "var(--takeover-bottom, var(--space-lg))",
+          width: "var(--sheet-full, min(560px, 100%))",
+          height: "var(--takeover-height, auto)",
+          maxHeight: "var(--takeover-height, 85vh)",
           background: "var(--faction-default-card-bg)",
           color: "var(--faction-default-card-text)",
-          border: isMobile ? "none" : "2px solid var(--faction-default-border)",
-          borderRadius: isMobile ? 0 : 14,
+          border: "var(--sheet-border, 2px solid var(--faction-default-border))",
+          borderRadius: "var(--takeover-radius, 14px)",
           position: "relative",
           overflow: "hidden",
         }}

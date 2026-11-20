@@ -33,6 +33,7 @@ function ok(filename: string, id: number): MediaUploadResultOut {
       praxis_id: 7,
       type: 'video',
       file_path: `m/${id}.mp4`,
+      display_path: null,
       display_order: id,
       created_at: '2026-07-30T00:00:00Z',
     } satisfies MediaItemOut,
