@@ -2,11 +2,13 @@
 score (ADR-0028 amendment, #3417); all ties crowned, including all-zero."""
 import pytest
 from httpx import AsyncClient
+from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.character import Character
 from models.era import Era
 from models.faction import Faction
+from models.praxis import UNSCORED_MODERATION_STATUSES, ModerationStatus, Praxis
 from models.task import Task
 from services.praxis_out import crowned_praxis_ids
 from tests.integration.factories import make_duel
@@ -149,3 +151,61 @@ async def test_crown_follows_displayed_score_not_raw_votes(
     assert await crowned_praxis_ids([duel.task_id], db_session) == {
         duel.opponent_praxis_id
     }
+
+
+async def _moderate(db: AsyncSession, praxis_id: int, status: ModerationStatus) -> None:
+    await db.execute(
+        update(Praxis).where(Praxis.id == praxis_id).values(moderation_status=status)
+    )
+    await db.commit()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "status", sorted(UNSCORED_MODERATION_STATUSES, key=lambda s: s.value)
+)
+async def test_unscored_praxis_neither_wears_nor_blocks_crown(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+    status: ModerationStatus,
+):
+    task_id = active_task.id
+    honest = await _create_and_submit_praxis(client, task_id, "Honest", auth_headers)
+    spam = await _create_and_submit_praxis(client, task_id, "Spam", auth_headers2)
+    vote = await client.post(
+        f"/praxes/{spam}/vote", json={"value": 5}, headers=auth_headers
+    )
+    assert vote.status_code == 200
+    assert await crowned_praxis_ids([active_task.id], db_session) == {spam}
+
+    await _moderate(db_session, spam, status)
+
+    # The honest praxis is now the sole entrant (ADR-0028).
+    assert await crowned_praxis_ids([active_task.id], db_session) == {honest}
+
+
+@pytest.mark.asyncio
+async def test_flagged_praxis_still_competes_for_crown(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+):
+    await _create_and_submit_praxis(client, active_task.id, "Honest", auth_headers)
+    flagged = await _create_and_submit_praxis(
+        client, active_task.id, "Flagged", auth_headers2
+    )
+    await client.post(
+        f"/praxes/{flagged}/vote", json={"value": 5}, headers=auth_headers
+    )
+    await _moderate(db_session, flagged, ModerationStatus.flagged)
+
+    assert await crowned_praxis_ids([active_task.id], db_session) == {flagged}
