@@ -7,6 +7,7 @@ import { getMyCharacters, setActiveCharacter } from '../api/me'
 import { listPraxes, type PraxisCardOut } from '../api/praxis'
 import { listTasks, type TaskOut } from '../api/tasks'
 import type { CharacterOut } from '../api/auth'
+import InstallNudge from '../components/install/InstallNudge'
 import CredentialCard from '../components/CredentialCard'
 import AlbescentInvitation from '../components/AlbescentInvitation'
 import PraxisCard from '../components/praxisCard/PraxisCard'
@@ -89,11 +90,19 @@ export default function FieldDesk() {
 
   if (formFactor === 'mobile' && homeState) {
     const Skin = resolveVariant(surfaceMap('mobileFieldDesk'), homeState.character.faction_slug)
-    return <Skin state={homeState} />
+    return (
+      <>
+        <div className="px-[var(--space-lg)] pt-[var(--space-lg)]">
+          <InstallNudge />
+        </div>
+        <Skin state={homeState} />
+      </>
+    )
   }
 
   return (
     <div className="page">
+      <InstallNudge />
       {/* Inside the gate: a lives count invites making it bigger. */}
       {showRoster && (
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 'var(--space-sm)' }}>

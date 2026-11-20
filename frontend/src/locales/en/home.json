@@ -1,6 +1,21 @@
 {
   "loginRequired": "You need to log in to access that page.",
   "loginFailed": "That sign-in didn't go through. Pick a way in and try again.",
+  "install": {
+    "kicker": "HOME SCREEN",
+    "title": "Keep World Zero in your pocket",
+    "bodyAndroid": "Install it like an app: its own icon, the whole screen, no browser bars. Same game, same account, same you.",
+    "bodyIphone": "iPhones don't have an install button, so it takes three taps. It's also the only way an iPhone can get World Zero notifications.",
+    "steps": {
+      "1": "Tap <b>Share</b> in Safari's toolbar",
+      "2": "Scroll down, tap <b>Add to Home Screen</b>",
+      "3": "Tap <b>Add</b>, then open World Zero from its new icon"
+    },
+    "install": "Install",
+    "done": "Done it",
+    "notNow": "Not now",
+    "once": "We only ask once. Not now means not now, forever."
+  },
   "signup": {
     "error": "Could not sign up — make sure you are logged in."
   },
