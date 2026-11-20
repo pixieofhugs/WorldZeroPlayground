@@ -181,6 +181,32 @@ Restoring one: `RESTORE.md`.
 Seven rotating copies of **the database and the media volume** — media is half
 the job, and the half that cannot be rebuilt from this repo.
 
+**Off-box bucket (#3620).** After the pair is written, `backup.sh prod` pushes
+both files to `s3://<bucket>/prod/<YYYY-MM-DD>/`, through the `amazon/aws-cli`
+image on the box's Docker (no new install). Any S3-compatible vendor that is
+not Hetzner works; nothing in the script names one. Keys in
+`/srv/worldzero/prod/offsite.env` (template: `offsite.env.example`, `chmod 600`).
+It is a separate file, in no compose `env_file`, and only `backup.sh` reads it,
+so a compromised app never holds the bucket key:
+
+| Key | Example |
+|---|---|
+| `WZ_OFFSITE_ENDPOINT` | `https://s3.us-west-004.backblazeb2.com` |
+| `WZ_OFFSITE_BUCKET` | bucket name |
+| `WZ_OFFSITE_REGION` | `us-west-004` (R2: `auto`) |
+| `WZ_OFFSITE_KEY_ID`, `WZ_OFFSITE_SECRET` | the bucket-scoped key pair |
+
+Owner, once: create a private bucket; create a key limited to that bucket with
+**write and list, no delete**; set a **lifecycle rule expiring objects after 30
+days** (this is the remote retention, chosen over a prune step so the box's key
+cannot erase history); copy `offsite.env.example` to that path and fill in the five keys; run
+`/srv/worldzero/backup.sh prod` once by hand and see the objects appear.
+
+A failed push (or a missing key) exits non-zero and writes
+`/srv/backups/offsite-failed.txt`. `wz-backup-pull` rsyncs that down and raises
+it as `backup-red`; the next good push deletes the file. Check without a box:
+`deploy/test-backup-push`. Getting data back: `RESTORE.md` "Off-box copies".
+
 A backup on the same disk as the database is not a backup, and "pull them down
 periodically" is an intention rather than a mechanism — it runs when somebody
 remembers. A `systemd --user` timer does it daily and, in the same pass, checks
@@ -199,30 +225,31 @@ systemctl --user enable --now wz-backup-pull.timer
 The installed script is a **copy**. After the one in this directory changes,
 `cp` it again or the timer keeps running the old one.
 
-**A failure opens a GitHub issue** (#3043). The desktop notification only
-reaches the desk the timer runs on, so a run that finds a problem also makes
-sure exactly one open issue labelled `backup-red` exists: it files one, or
-comments on the one already open, never a second. The issue carries each
-problem, the time of the run, the newest prod dump's name and age, the last
-lines of the job's output, and which part of `RESTORE.md` applies. The next
-healthy run comments and closes it — so an open `backup-red` issue means the
-backups are red *right now*. Same shape as `nightly-red` (#2463).
+**A failure opens a GitHub issue** (#3043, #3621). The desktop notification only
+reaches the desk the timer runs on, and GitHub never notifies you of your own
+actions, so the script does not touch issues. After every run, red or green,
+it sends one `repository_dispatch` event (`backup-pull`) carrying the status,
+the problems, the run time, the newest prod dump's name and age, the
+`RESTORE.md` advice and the tail of its output. `.github/workflows/backup-pull.yml`
+acts on it as `github-actions[bot]`: red keeps exactly one open `backup-red`
+issue (files it, or comments on the open one); green comments on and closes
+it. So an open `backup-red` issue means the backups are red *right now*, and
+you are notified as a repo watcher. The payload only ever reaches the workflow
+through `env:`, never interpolated into a script.
 
-It files as whoever `gh` is logged in as on that workstation: the token from
-`gh auth login`, which `gh` keeps in the desktop keyring, with the `repo`
-scope. Nothing is stored in the unit or in this repo. Two things follow:
+**The credential** is the workstation's `gh` login (`gh auth login`, kept in
+the desktop keyring): classic `repo` scope. Sending a dispatch needs nothing
+more than write access to this repo's contents. If you would rather the box
+hold less, make a **fine-grained token on this repo only with Contents:
+read-and-write** (the permission GitHub requires for `POST /dispatches`; it
+grants no issue access) and give it to the unit: `systemctl --user edit
+wz-backup-pull.service`, `EnvironmentFile=` a `chmod 600` file holding
+`GH_TOKEN=`. Either way `gh` must be on the `systemd --user` PATH; check with
+`systemd-run --user --wait --pipe -q gh auth status`.
 
-- `gh` must be on the `systemd --user` PATH and the keyring must be unlocked
-  when the timer fires. Check both the way the timer sees them:
-  `systemd-run --user --wait --pipe -q gh auth status`.
-- If that ever stops holding (a run with nobody logged in at the desktop, say),
-  give the unit a token instead — `systemctl --user edit wz-backup-pull.service`
-  and an `EnvironmentFile=` pointing at a `chmod 600` file holding `GH_TOKEN=`.
-
-If GitHub cannot be reached the script says so (`could not file a GitHub
-issue`) and still exits 1 for the original problem. A healthy pull that cannot
-reach GitHub still exits 0 and sends no desktop alert: it prints one
-`warning:` line to the journal, because the backups themselves are fine.
+If the dispatch fails the script says `could not report to GitHub` and still
+exits 1 for the original problem. A healthy pull that cannot reach GitHub still
+exits 0 and sends no desktop alert: one `warning:` line goes to the journal.
 
 Test it, in this order. The first line stubs everything; the rest are real
 pulls that really write to GitHub:
