@@ -3,68 +3,60 @@ import { useTranslation } from "react-i18next";
 import { getVoteRing } from "../../api/admin";
 import type { VoteRing } from "../../api/admin";
 import { extractError } from "../../utils/errors";
+import "./adminPeople.css";
 
 const pct = (share: number) => `${Math.round(share * 100)}%`;
 
 /** Presentational half, so the test renders it without a fetch. */
-export function VoteRingView({
-  id,
-  ring,
-  onWalk,
-}: {
-  id: number;
-  ring: VoteRing;
-  onWalk: (accountId: number) => void;
-}) {
+export function VoteRingView({ name, ring }: { name: string; ring: VoteRing }) {
   const { t } = useTranslation("admin");
+  const baseline = ring.eligible > 0 ? 1 / ring.eligible : null;
+  const top = ring.recipients[0];
   return (
-    <div className="mt-4" data-testid="vote-ring">
-      <p className="label-heading mb-2">{t("accounts.ring.heading", { id })}</p>
-      {ring.recipients.length === 0 ? (
-        <p className="font-body content-text text-muted">{t("accounts.ring.empty")}</p>
+    <section className="adm-sec" data-testid="vote-ring">
+      <h3 className="adm-h2">{t("console.people.ring.heading")}</h3>
+      {!top ? (
+        <p className="adm-muted">{t("console.people.ring.empty")}</p>
       ) : (
         <>
-          <p className="font-body content-text mb-2">
-            {t("accounts.ring.summary", {
+          <p>
+            {t("console.people.ring.summary", {
               votes: ring.total_votes,
-              share: pct(ring.top3_share),
+              count: ring.recipients.length,
+              eligible: ring.eligible,
             })}
           </p>
-          <ul className="flex flex-col gap-2">
+          <div className="adm-ring">
             {ring.recipients.map((r) => (
-              <li key={r.account_id} className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                <button
-                  type="button"
-                  onClick={() => onWalk(r.account_id)}
-                  className="font-body text-sm font-bold underline bg-transparent border-0 p-0 cursor-pointer"
-                  aria-label={`${t("accounts.ring.walk")}: ${r.display_name}`}
-                >
-                  {r.display_name}
-                </button>
-                <span className="font-body text-xs text-muted">
-                  {t("accounts.ring.recipient", {
-                    votes: r.votes,
-                    stars: r.average_stars.toFixed(1),
-                    share: pct(r.share),
-                  })}
-                </span>
-                {r.reciprocal && (
-                  <span className="font-body text-xs font-bold danger-text">
-                    {t("accounts.ring.reciprocal")}
-                  </span>
-                )}
-              </li>
+              <RingRow key={r.account_id} name={r.display_name} share={r.share} baseline={baseline} warn={r === top && r.votes_back > 0} />
             ))}
-          </ul>
+          </div>
+          <p className="adm-muted">
+            {baseline !== null && t("console.people.ring.baseline", { share: pct(baseline) })}
+            {top.votes_back > 0 &&
+              ` ${t("console.people.ring.votesBack", { top: top.display_name, back: top.votes_back, of: top.votes_back_of, name })}`}
+          </p>
         </>
       )}
-    </div>
+    </section>
   );
 }
 
-export default function VoteRingPanel({ accountId }: { accountId: number }) {
+function RingRow({ name, share, baseline, warn }: { name: string; share: number; baseline: number | null; warn: boolean }) {
+  return (
+    <>
+      <span>{name}</span>
+      <span className="adm-bar-track">
+        <span className={warn ? "adm-bar-fill adm-bar-fill-warn" : "adm-bar-fill"} style={{ width: pct(share) }} />
+        {baseline !== null && <span className="adm-bar-even" style={{ left: pct(baseline) }} />}
+      </span>
+      <span className="adm-num">{pct(share)}</span>
+    </>
+  );
+}
+
+export default function VoteRingPanel({ accountId, name }: { accountId: number; name: string }) {
   const { t } = useTranslation("admin");
-  const [id, setId] = useState(accountId);
   const [ring, setRing] = useState<VoteRing | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -72,15 +64,15 @@ export default function VoteRingPanel({ accountId }: { accountId: number }) {
     setRing(null);
     setError(null);
     let stale = false;
-    getVoteRing(id)
+    getVoteRing(accountId)
       .then((r) => !stale && setRing(r))
-      .catch((err) => !stale && setError(extractError(err, t("accounts.ring.loadError"))));
+      .catch((err) => !stale && setError(extractError(err, t("console.people.ring.loadError"))));
     return () => {
       stale = true;
     };
-  }, [id, t]);
+  }, [accountId, t]);
 
-  if (error) return <p className="font-body content-text danger-text mt-4">{error}</p>;
+  if (error) return <p className="adm-err">{error}</p>;
   if (!ring) return null;
-  return <VoteRingView id={id} ring={ring} onWalk={setId} />;
+  return <VoteRingView name={name} ring={ring} />;
 }

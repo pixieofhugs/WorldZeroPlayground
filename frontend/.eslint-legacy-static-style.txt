@@ -179,7 +179,6 @@ src/pages/Settings.tsx
 src/pages/TaskDetail.tsx
 src/pages/Tasks.tsx
 src/pages/Updates.tsx
-src/pages/admin/AccountsTab.tsx
 src/pages/admin/AdminRosterSection.tsx
 src/pages/characterPaths/PortraitPicker.tsx
 src/pages/characterPaths/archetypes/CovenCreateCharacter.tsx

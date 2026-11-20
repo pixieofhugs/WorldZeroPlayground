@@ -86,6 +86,9 @@ class CharacterSummary(WireModel):
     level: int
     votes_available: int
     created_at: datetime
+    account_status: str
+    # The account's votes this era; alts share the number.
+    votes_cast: int
 
 
 class FlagOut(WireModel):
@@ -283,10 +286,13 @@ class RingRecipient(WireModel):
     votes: int
     average_stars: float
     share: float
-    reciprocal: bool
+    # Votes this recipient cast on the account's praxes, of their votes this era.
+    votes_back: int
+    votes_back_of: int
 
 
 class VoteRingOut(WireModel):
     total_votes: int
-    top3_share: float
+    # People the account could vote for; even spread gives each 1/eligible.
+    eligible: int
     recipients: list[RingRecipient]
