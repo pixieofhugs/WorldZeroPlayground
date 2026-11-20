@@ -11,7 +11,6 @@ src/components/LevelUpPopup.tsx
 src/components/MediaGallery.tsx
 src/components/NavBar.tsx
 src/components/StartHereMark.tsx
-src/components/admin/CopyEditor.tsx
 src/components/avatar/DefaultAvatar.tsx
 src/components/backdrop/UaBackdrop.tsx
 src/components/backdrop/WowBackdrop.tsx
