@@ -1,8 +1,8 @@
 /**
- * The copy editor's panel is the top layer of the app (#3094): it must portal
- * to the root (see `ui/drawAtRoot.ts`) and out-rank every declared z-index.
- * Node-only: paint order is not measurable; the rendered z-index, the source's
- * z-indexes, and the portal (the server renderer throws on one) are.
+ * The mod strip (which holds the copy editor) is the top layer of the app
+ * (#3094): it must portal to the root (see `ui/drawAtRoot.ts`) and out-rank
+ * every declared z-index. Node-only: paint order is not measurable; the
+ * stylesheet's z-indexes and the portal (the server renderer throws on one) are.
  */
 import { readFileSync } from 'node:fs'
 import { renderToStaticMarkup } from 'react-dom/server'
@@ -10,14 +10,15 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import '../../../i18n'
 import { sourceFiles, toRelative } from '../../../test/sourceScan'
-import CopyEditor, { keepEscapeInPanel, panelStyle } from '../CopyEditor'
+import { keepEscapeInPanel } from '../CopyEditor'
+import ModStrip from '../ModStrip'
 
 const formFactorMock = vi.fn(() => 'desktop')
 vi.mock('../../../hooks/useFormFactor', () => ({
   useFormFactor: () => formFactorMock(),
 }))
 
-const EDITOR = 'components/admin/CopyEditor.tsx'
+const EDITOR = 'components/admin/modMode.css'
 
 /** A file with its comments gone, so prose naming a z-index is not a declaration. */
 function uncommented(raw: string, isCss: boolean): string {
@@ -82,10 +83,10 @@ const READ_BY_HAND: Readonly<Record<string, string>> = {
   'pages/praxisDetail/archetypes/UaPraxisDetail.tsx: index': BYLINE_DISC_STACK,
 }
 
-/** The z-index the panel really renders with, read off its own markup. */
+/** The z-index the strip's stylesheet gives `.mod-strip`. */
 function editorLayer(): number {
-  const found = /^<div[^>]*style="[^"]*z-index:(\d+)/.exec(renderToStaticMarkup(<CopyEditor />))
-  return Number(found?.[1])
+  const css = readFileSync(new URL('../modMode.css', import.meta.url), 'utf8')
+  return Number(/\.mod-strip \{[^}]*z-index: (\d+)/.exec(css)?.[1])
 }
 
 afterEach(() => {
@@ -93,7 +94,7 @@ afterEach(() => {
   formFactorMock.mockReturnValue('desktop')
 })
 
-describe('the copy editor panel is the top layer (#3094)', () => {
+describe('the mod strip is the top layer (#3094)', () => {
   // Tripwire: one named file per spelling, so a dead regex cannot pass vacuously.
   it('still sees an overlay in each spelling, so it cannot pass by matching nothing', () => {
     const files = [...LAYERS_BY_FILE.keys()]
@@ -110,13 +111,13 @@ describe('the copy editor panel is the top layer (#3094)', () => {
       editorLayer(),
       `${file} declares z-index ${highest}. The copy editor has to sit above every overlay, ` +
         'or its "edit copy" button lands on that overlay\'s backdrop and dismisses it. ' +
-        'Raise the PANEL z-index in components/admin/CopyEditor.tsx above it.',
+        'Raise `.mod-strip` and `.mod-frame` in components/admin/modMode.css above it.',
     ).toBeGreaterThan(highest)
   })
 
   it('portals to the document root, where that layer means something', () => {
     vi.stubGlobal('document', { body: { nodeType: 1 } })
-    expect(() => renderToStaticMarkup(<CopyEditor />)).toThrow(/[Pp]ortal/)
+    expect(() => renderToStaticMarkup(<ModStrip />)).toThrow(/[Pp]ortal/)
   })
 })
 
@@ -141,7 +142,7 @@ describe('no layer is hidden from the scan (#3136)', () => {
       UNREADABLE.filter((site) => !(site in READ_BY_HAND)),
       'A z-index here is set from something other than a number, so this suite cannot tell ' +
         'whether it is above the copy editor. Work out what it resolves to: if it can reach the ' +
-        'editor\'s layer, raise PANEL in components/admin/CopyEditor.tsx; then add the site to ' +
+        'strip\'s layer, raise `.mod-strip` in components/admin/modMode.css; then add the site to ' +
         'READ_BY_HAND in this file with what it resolves to.',
     ).toEqual([])
   })
@@ -155,50 +156,6 @@ describe('the scan reads past a URL (#3094)', () => {
   it('does not take the `//` in a URL for a comment and lose the rest of the line', () => {
     const line = "const S = { background: 'url(https://example.test/a.png)', zIndex: 2000 } // z-index: 9"
     expect(layersIn(line, false)).toEqual([2000])
-  })
-})
-
-/** At the root the panel also covers the phone tab bar; checks the rendered `bottom`. */
-describe('the panel does not sit on the mobile tab bar (#3094)', () => {
-  const bottom = () =>
-    /^<div[^>]*style="[^"]*(?<=[";])bottom:([^;"]*)/.exec(renderToStaticMarkup(<CopyEditor />))?.[1]
-
-  it('rests above the tab bar on a phone, by the shared clearance token', () => {
-    formFactorMock.mockReturnValue('mobile')
-    expect(bottom()).toBe('calc(var(--space-md) + var(--tab-bar-clearance))')
-  })
-
-  it('keeps its corner on desktop, where there is no bar', () => {
-    expect(bottom()).toBe('var(--space-md)')
-  })
-})
-
-/**
- * At full width the phone panel covered bottom-pinned controls (#3136). Idle is
- * read off markup; editing from `panelStyle`, since this harness cannot click.
- */
-describe('the phone panel hugs its control until a string is open (#3136)', () => {
-  const FULL = 'min(22rem, calc(100vw - var(--space-xl)))'
-  const renderedWidth = () =>
-    /^<div[^>]*style="[^"]*(?<=[";])width:([^;"]*)/.exec(renderToStaticMarkup(<CopyEditor />))?.[1]
-
-  it('is not full width while idle on a phone', () => {
-    formFactorMock.mockReturnValue('mobile')
-    expect(renderedWidth()).toBe('min-content')
-    expect(panelStyle(true, false).width).toBe('min-content')
-  })
-
-  it('takes the full width once a string is open', () => {
-    expect(panelStyle(true, true).width).toBe(FULL)
-  })
-
-  it('never grows past the full width, however long a key it has to list', () => {
-    expect(panelStyle(true, false).maxWidth).toBe(FULL)
-  })
-
-  it('keeps its width on desktop while idle and widens for a long string', () => {
-    expect(renderedWidth()).toBe(FULL)
-    expect(panelStyle(false, true).width).toBe('min(40rem, calc(100vw - var(--space-xl)))')
   })
 })
 

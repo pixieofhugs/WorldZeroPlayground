@@ -2,7 +2,6 @@ import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
-import { useAdminMode } from '../auth/AdminModeContext'
 import { useSidebarPanels } from '../hooks/useSidebarPanels'
 import PendingBadge from './layout/PendingBadge'
 
@@ -20,6 +19,8 @@ interface NavLinkSpec {
 }
 
 // Off the initial payload: it only draws once opened.
+// Admins only: the chunk and its counts never reach a player.
+const ModControl = lazy(() => import('./admin/ModControl'))
 const SignInSheet = lazy(() => import('./SignInOptions').then((m) => ({ default: m.SignInSheet })))
 
 export default function NavBar() {
@@ -41,7 +42,6 @@ export default function NavBar() {
     }
   }, [])
   const { user } = useAuth()
-  const { adminMode, toggleAdminMode } = useAdminMode()
   /**
    * The nav link carries the pending count too (#1457): 768-1023px has no rail
    * to badge, and it matches the phone's bell. Same fetch as the rail (#1344).
@@ -68,8 +68,9 @@ export default function NavBar() {
   return (
     <nav
       ref={navRef}
-      className="sticky top-0"
+      className="sticky"
       style={{
+        top: 'var(--modstrip-h, 0px)',
         zIndex: 10,
         background: 'var(--color-nav-bg)',
         backdropFilter: 'blur(var(--nav-blur))',
@@ -120,39 +121,12 @@ export default function NavBar() {
               </NavLink>
             </li>
           ))}
-          {user?.is_admin && (
-            <li>
-              <NavLink
-                to="/admin"
-                className="nav-link"
-                style={({ isActive }) => ({
-                  color: isActive ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
-                  borderBottom: isActive ? '1.5px solid var(--color-text-primary)' : '1.5px solid transparent',
-                })}
-              >
-                {t('nav.admin')}
-              </NavLink>
-            </li>
-          )}
         </ul>
 
         {user?.is_admin && (
-          <button
-            onClick={toggleAdminMode}
-            title={adminMode ? t('nav.adminMode.disableTitle') : t('nav.adminMode.enableTitle')}
-            className="label-caption"
-            style={{
-              background: 'none',
-              border: adminMode ? '1.5px solid var(--color-text-primary)' : '1.5px solid transparent',
-              cursor: 'pointer',
-              padding: 'var(--space-xs) var(--space-sm)',
-              color: adminMode ? 'var(--color-text-primary)' : 'var(--color-text-tertiary)',
-              transition: 'color 150ms, border-color 150ms',
-              borderRadius: 2,
-            }}
-          >
-            {t('nav.adminMode.badge')}
-          </button>
+          <Suspense fallback={null}>
+            <ModControl />
+          </Suspense>
         )}
 
         {/* Desktop way in to Settings (#2154). Signed in only: it's a `ProtectedRoute`. */}
