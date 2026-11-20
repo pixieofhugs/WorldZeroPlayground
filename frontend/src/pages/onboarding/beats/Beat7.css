@@ -1,5 +1,5 @@
 .b7 .ground{position:absolute;left:2%;right:2%;top:var(--gy);height:2px;border-radius:2px;background-image:var(--faction-default-rainbow);opacity:.7}
-.b7 .fx{position:absolute;top:var(--gy);animation:b7-charge 7.8s cubic-bezier(.5,0,.6,1) var(--ld,0s) infinite both}
+.b7 .fx{position:absolute;left:var(--hx);top:var(--gy);animation:b7-charge 7.8s cubic-bezier(.5,0,.6,1) var(--ld,0s) infinite both}
 @keyframes b7-charge{0%,38.46%,43.38%{left:var(--hx);top:var(--gy);opacity:1}55.69%{left:var(--cx);top:var(--gy);opacity:1}57.54%,82.15%{left:var(--cx);top:var(--gy);opacity:0}82.77%{left:var(--cx);top:var(--gy);opacity:1;animation-timing-function:cubic-bezier(.33,.67,.67,1)}88.92%{top:var(--ay);animation-timing-function:cubic-bezier(.33,0,.67,.33)}95.08%,100.00%{left:var(--hx);top:var(--gy);opacity:1}}
 .b7 .fx > span{display:block;transform:translate(-50%,-100%)}
 .b7 .fling{display:block;transform-origin:50% 60%;animation:b7-fling 7.8s linear var(--ld,0s) infinite both}
@@ -9,7 +9,7 @@
 .b7 .trail{position:absolute;bottom:-2px;left:50%;width:14px;height:14px;margin-left:-7px;border-radius:50%;background:var(--faction-default-card-muted);opacity:0;animation:b7-trail 7.8s ease-out var(--ld,0s) infinite both}
 @keyframes b7-trail{0%,38.46%,44.00%{opacity:0;transform:scale(.3)}45.85%{opacity:.7;transform:scale(.6)}50.77%{opacity:0;transform:translate(var(--tx),-8px) scale(1.7)}51.38%{opacity:0;transform:scale(.3)}52.00%{opacity:.7;transform:scale(.6)}56.31%,100.00%{opacity:0;transform:translate(var(--tx),-8px) scale(1.7)}}
 .b7 .brawl{position:absolute;left:50%;top:var(--gy);width:0;height:0}
-.b7 .clw{position:absolute;left:0;top:-20px;animation:b7-clw 7.8s cubic-bezier(.3,.7,.4,1) infinite both}
+.b7 .clw{position:absolute;left:0;top:-20px;opacity:0;animation:b7-clw 7.8s cubic-bezier(.3,.7,.4,1) infinite both}
 @keyframes b7-clw{0%,38.46%,55.08%{opacity:0;transform:scale(0)}57.54%{opacity:1;transform:scale(1.2)}60.00%,80.31%{opacity:1;transform:none}85.23%,100.00%{opacity:0;transform:scale(1.35)}}
 .b7 .cl{position:absolute;border-radius:50%;background:var(--faction-default-card-muted);animation:b7-boil .22s ease-in-out infinite alternate}
 @keyframes b7-boil{from{transform:none}to{transform:scale(1.13,.88) translate(2px,-2px)}}
@@ -27,8 +27,8 @@
 @keyframes b7-flinch{0%,38.46%,56.31%,65.54%,100.00%{transform:none}58.15%{transform:translateY(-16px) scale(.9,1.14)}61.23%{transform:scale(1.15,.85)}63.08%{transform:translateY(-3px)}}
 .b7 .watch .mpup{animation:b7-follow 7.8s ease-in-out infinite}
 @keyframes b7-follow{9%{transform:translate(2.2px,-1px)}19%{transform:translate(-2.2px,-1px)}29%{transform:translate(2.2px,-1px)}0%,38.46%,43.38%{transform:translate(-2.2px,-1px)}50.77%{transform:translate(2.2px,-1px)}55.69%{transform:translate(0,-2.4px)}63.08%{transform:translate(-2px,-2px)}69.23%{transform:translate(2px,-2px)}75.38%{transform:translate(-1px,-2.4px)}87.69%{transform:translate(0,-2.4px)}95.08%,100.00%{transform:translate(-2.2px,-1px)}}
-.b7 .kern{position:absolute;left:12px;top:2px;width:7px;height:7px;border-radius:40%;background:var(--faction-default-card-text);animation:b7-kern 1.3s cubic-bezier(.3,.7,.4,1) var(--kd,0s) infinite}
-@keyframes b7-kern{0%,40%{transform:none}60%{transform:translate(var(--kx),-22px) rotate(140deg)}80%,100%{transform:translate(calc(var(--kx) * 1.6),-4px) rotate(260deg);opacity:0}}
+.b7 .kern{position:absolute;left:12px;top:2px;width:7px;height:7px;border-radius:40%;background:var(--faction-default-card-text);opacity:0;animation:b7-kern 1.3s cubic-bezier(.3,.7,.4,1) var(--kd,0s) infinite}
+@keyframes b7-kern{0%,40%{opacity:1;transform:none}60%{transform:translate(var(--kx),-22px) rotate(140deg)}80%,100%{transform:translate(calc(var(--kx) * 1.6),-4px) rotate(260deg);opacity:0}}
 .b7 .fx .mth{animation:b7-yell 7.8s linear var(--ld,0s) infinite both}
 @keyframes b7-yell{0%,5%,95%,100%{top:67%;height:13%;border-width:0 0 2px;border-radius:0 0 100% 100%/0 0 180% 180%;background:transparent}8%,37%{top:74%;height:0%;border-width:0 0 2px;border-radius:0;background:transparent}40%,92%{top:62%;height:26%;border-width:2px;border-radius:50%;background:var(--faction-default-on-fill)}}
 .b7 .bpos{position:absolute;transform:translateX(-50%)}

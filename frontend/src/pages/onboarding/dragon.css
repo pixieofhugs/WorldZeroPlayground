@@ -10,7 +10,7 @@
 @keyframes dbrow{0%,22%{transform:none}24%{transform:translateY(-5px)}28%,100%{transform:none}}
 .jaw{transform-origin:66px 46px;animation:jaw 9s ease-in-out 1.2s infinite both}
 @keyframes jaw{0%,42%{transform:none}45%,57%{transform:rotate(-18deg)}60%,64%{transform:none}66%,68%{transform:rotate(-22deg)}69.5%{transform:none}72%{transform:rotate(-7deg)}75%{transform:none}78%{transform:rotate(-7deg)}81%,100%{transform:none}}
-.fire{transform-box:fill-box;transform-origin:100% 50%;animation:fire 9s linear 1.2s infinite both}
+.fire{opacity:0;transform-box:fill-box;transform-origin:100% 50%;animation:fire 9s linear 1.2s infinite both}
 @keyframes fire{0%,44%{opacity:0;transform:scale(0)}46%{opacity:1;transform:scale(1.05,1)}48%{transform:scale(.85,1.2)}50%{transform:scale(1,.85)}52%{transform:scale(.9,1.15)}54%{transform:scale(1,.9)}56%{opacity:1;transform:scale(.95,1.1)}58.5%,100%{opacity:0;transform:scale(0)}}
 .lunge{transform-origin:90px 110px;animation:lunge 9s cubic-bezier(.4,0,.3,1) 1.2s infinite both}
 @keyframes lunge{0%,62%{transform:none}65.5%{transform:translate(7px,0) rotate(4deg)}68%,70%{transform:translate(-40px,2px) rotate(-5deg)}76%,100%{transform:none}}

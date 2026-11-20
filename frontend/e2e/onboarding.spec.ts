@@ -69,6 +69,30 @@ test('a guest walks title to arrival; Back retraces; focus never lands on body',
   expect(errors, errors.join('\n')).toHaveLength(0)
 })
 
+test('motion switch off: key elements rest on their settled frame', async ({ page }) => {
+  test.setTimeout(120_000)
+  await page.addInitScript(() => localStorage.setItem('wz-motion', 'off'))
+  // Each is hidden or at a start pose in its 0% keyframe, so animation:none must not fall back to it.
+  const rest: [WalkStep, string, string, string][] = [
+    [1, '.b1 .bfly', 'opacity', '1'],
+    [1, '.b1 .b1x', 'transform', 'matrix(1, 0, 0, 1, 308, 0)'],
+    [2, '.b2-nm:first-child', 'opacity', '1'],
+    [2, '.b2-a1', 'opacity', '1'],
+    [5, '.b5-arrow path', 'strokeDashoffset', '0px'],
+    [6, '.b6x', 'transform', 'matrix(1, 0, 0, 1, 266, 0)'],
+    [6, '.b6-roll', 'transform', 'matrix(1, 0, 0, 1, 0, -48)'],
+  ]
+  await openTitle(page)
+  await expect(page.locator('.ob-aurora')).toHaveCSS('opacity', /^0\.\d+$/)
+  await expect(page.locator('.ob-snz .eyes')).toHaveCSS('opacity', '1')
+  await page.getByTestId('onboarding-start').click()
+  await passBeats(page, async (step) => {
+    for (const [at, sel, prop, want] of rest) {
+      if (at === step) await expect(page.locator(sel).first(), `${step} ${sel}`).toHaveCSS(prop.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`), want)
+    }
+  })
+})
+
 test.describe('reduced motion', () => {
   test.use({ reducedMotion: 'reduce' })
 

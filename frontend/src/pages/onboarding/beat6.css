@@ -4,12 +4,12 @@
 @container (max-width:347px){.b6w .ob-sheet{padding:16px}.b6{zoom:.8}}
 .b6{position:relative;width:300px;height:196px;margin:0 auto 12px}
 .b6-ldg{position:absolute;box-sizing:border-box;border:2px solid var(--faction-default-on-fill);border-radius:9px 9px 14px 14px / 7px 7px 12px 12px;background:linear-gradient(color-mix(in srgb,var(--faction-default-stop-4) 80%,var(--faction-default-card-bg)) 0 5px,color-mix(in srgb,var(--faction-default-stop-4) 26%,var(--faction-default-card-bg)) 5px)}
-.b6-crd{position:absolute;z-index:1;width:20px;box-sizing:border-box;padding-top:4px;display:flex;justify-content:center;border:2px solid var(--faction-default-on-fill);border-radius:5px;background:var(--c);transform-origin:0 100%;filter:saturate(.12) brightness(.72);animation:b6wob .45s ease-out var(--tw),b6top .56s linear var(--tt) forwards}
+.b6-crd{position:absolute;z-index:1;width:20px;box-sizing:border-box;padding-top:4px;display:flex;justify-content:center;border:2px solid var(--faction-default-on-fill);border-radius:5px;background:var(--c);transform-origin:0 100%;transform:rotate(var(--th));animation:b6top .56s linear var(--tt) both,b6wob .45s ease-out var(--tw)}
 @keyframes b6wob{25%{transform:rotate(var(--w))}55%{transform:rotate(calc(var(--w) * -.35))}80%{transform:rotate(calc(var(--w) * .15))}}
 @keyframes b6top{0%{transform:none;filter:saturate(.12) brightness(.72);animation-timing-function:cubic-bezier(.55,0,.9,.45)}58%{transform:rotate(var(--th));filter:none;animation-timing-function:ease-out}72%{transform:rotate(calc(var(--th) - 7deg));animation-timing-function:ease-in}86%{transform:rotate(var(--th));animation-timing-function:ease-out}93%{transform:rotate(calc(var(--th) - 2deg))}100%{transform:rotate(var(--th));filter:none}}
 .b6x,.b6y,.b6s{display:block;animation-timing-function:linear;animation-fill-mode:both}
-.b6x{position:absolute;left:0;bottom:0;z-index:2;animation-name:b6x,b6brave}
-.b6y{animation-name:b6y}
+.b6x{position:absolute;left:0;bottom:0;z-index:2;transform:translateX(266px);--conf:1;animation-name:b6x,b6brave}
+.b6y{transform:translateY(-128px);animation-name:b6y}
 .b6s{transform-origin:50% 100%;animation-name:b6s}
 .b6s .mpup{animation:b6look linear both}
 .b6bang{position:absolute;left:50%;bottom:calc(100% + 1px);margin-left:-.16em;font:600 22px var(--font-display);color:var(--faction-default-card-text);opacity:0}
@@ -22,8 +22,8 @@
 .b6-lv{display:flex;flex-direction:column;line-height:1}
 .b6-lv .ob-cap{margin-bottom:6px}
 .b6-num{display:block;height:1em;overflow:hidden;font-family:var(--font-display);font-weight:600;font-size:48px;line-height:1}
-@keyframes b6roll{to{transform:translateY(-1em)}}
-.b6-roll{display:flex;flex-direction:column;animation:b6roll .5s cubic-bezier(.5,0,.3,1.6) forwards}
+@keyframes b6roll{from{transform:none}}
+.b6-roll{display:flex;flex-direction:column;transform:translateY(-1em);animation:b6roll .5s cubic-bezier(.5,0,.3,1.6) both}
 .b6-roll>span{height:1em}
 .b6-lvrow .ob-hair{flex:1}
 .ob-ring.b6-ring{width:92px;height:92px}

@@ -1,14 +1,14 @@
-.b1 .wpop{display:block;opacity:0;transform-origin:50% 100%;animation:b1-wpop .75s cubic-bezier(.3,.7,.4,1) calc(var(--sh) + var(--d)) forwards}
+.b1 .wpop{display:block;transform-origin:50% 100%;animation:b1-wpop .75s cubic-bezier(.3,.7,.4,1) calc(var(--sh) + var(--d)) both}
 @keyframes b1-wpop{0%{opacity:0;transform:scale(.3,0)}50%{opacity:1;transform:scale(.92,1.2)}70%{transform:scale(1.08,.9)}86%{transform:scale(.98,1.04)}100%{opacity:1;transform:none}}
-.b1 .rbw{left:calc(var(--ox) - 190px);bottom:calc(var(--ob) + 4px);opacity:.72}.b1 .rbw path{stroke-dasharray:1;stroke-dashoffset:1;animation:b1-rbw 1.7s cubic-bezier(.4,0,.3,1) forwards}
-@keyframes b1-rbw{to{stroke-dashoffset:0}}
-.b1 .wbird{left:-4%;animation:b1-wfly 19s linear infinite both}.b1 .wbird svg{animation:b1-glide 1.7s ease-in-out infinite alternate}
-@keyframes b1-wfly{from{left:-4%}to{left:104%}}
+.b1 .rbw{left:calc(var(--ox) - 190px);bottom:calc(var(--ob) + 4px);opacity:.72}.b1 .rbw path{stroke-dasharray:1;animation:b1-rbw 1.7s cubic-bezier(.4,0,.3,1) both}
+@keyframes b1-rbw{from{stroke-dashoffset:1}}
+.b1 .wbird{left:-4%;opacity:0;animation:b1-wfly 19s linear infinite both}.b1 .wbird svg{animation:b1-glide 1.7s ease-in-out infinite alternate}
+@keyframes b1-wfly{from{left:-4%;opacity:1}to{left:104%;opacity:1}}
 .b1 .wsway{transform-origin:50px 60px;animation:b1-wsway 4.1s ease-in-out infinite alternate}
 @keyframes b1-wsway{from{transform:rotate(-2.2deg)}to{transform:rotate(2.6deg)}}
 .b1 .wswing{position:absolute;left:82px;top:76px;width:12px;height:38px;transform-origin:6px 0;animation:b1-wswing 1.45s ease-in-out infinite alternate}
 @keyframes b1-wswing{from{transform:rotate(-19deg)}to{transform:rotate(21deg)}}
-.b1 .wrise{display:block;opacity:0;animation:b1-wrise 7s cubic-bezier(.2,.6,.3,1) calc(var(--sh) + 1s) forwards}
+.b1 .wrise{display:block;animation:b1-wrise 7s cubic-bezier(.2,.6,.3,1) calc(var(--sh) + 1s) both}
 @keyframes b1-wrise{0%{opacity:0;transform:translateY(190px)}8%{opacity:1}100%{opacity:1;transform:none}}
 .b1 .wbob{transform-origin:50% 100%;animation:b1-wbob 4.7s ease-in-out infinite alternate}
 @keyframes b1-wbob{from{transform:translateY(5px) rotate(-3deg)}to{transform:translateY(-7px) rotate(3deg)}}
@@ -22,8 +22,8 @@
 @keyframes b1-wspin{to{transform:rotate(360deg)}}
 .b1 .wflit{display:block;animation:b1-wflit 5.3s ease-in-out infinite}
 @keyframes b1-wflit{0%,100%{transform:none}20%{transform:translate(24px,-18px) rotate(-10deg)}45%{transform:translate(50px,2px) rotate(6deg)}70%{transform:translate(16px,-30px) rotate(-6deg)}}
-.b1 .wbun{left:-5%;bottom:calc(var(--ob) - 30px);animation:b1-wbun 17s linear calc(var(--sh) + 2.5s) infinite both}
-@keyframes b1-wbun{from{left:-5%}to{left:105%}}
+.b1 .wbun{left:-5%;opacity:0;bottom:calc(var(--ob) - 30px);animation:b1-wbun 17s linear calc(var(--sh) + 2.5s) infinite both}
+@keyframes b1-wbun{from{left:-5%;opacity:1}to{left:105%;opacity:1}}
 .b1 .wbhop{transform-origin:50% 100%;animation:b1-wbhop .62s linear infinite}
 @keyframes b1-wbhop{0%,18%{transform:scale(1.12,.86)}26%{transform:translateY(-3px) scale(.92,1.12);animation-timing-function:cubic-bezier(.33,.67,.67,1)}55%{transform:translateY(-15px) rotate(-6deg);animation-timing-function:cubic-bezier(.33,0,.67,.33)}88%{transform:translateY(0) rotate(4deg)}94%,100%{transform:scale(1.14,.84)}}
 .b1 .wd{position:absolute}
