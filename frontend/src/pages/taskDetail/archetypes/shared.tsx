@@ -3,6 +3,7 @@
  * behaviour without inheriting each other's look. Mirrors editPraxis/archetypes/shared.tsx.
  */
 import type { CSSProperties, ReactNode } from "react";
+import "../taskDetail.css";
 import { useTranslation } from "react-i18next";
 import CommentThread from "../../../components/comments/CommentThread";
 import ScoreStamp, {
@@ -94,23 +95,19 @@ export function TaskDetailComments({
  * The header's action-column geometry for all skins (#1138): with no action the
  * column collapses to the worth readout instead of framing an empty slot
  * (WORLD_ZERO_STYLE §1.4). `width` is the skin's (420–520 is dress, not drift).
- * `collapsedMinWidth` is for absolutely-positioned ornament wider than the content.
  */
 export function actionColumnSize({
   hasAction,
   width,
-  collapsedMinWidth,
 }: {
   hasAction: boolean;
   width: number;
-  collapsedMinWidth?: number;
 }): CSSProperties {
-  // Phone: `--fx-col-*` stack the column full-width (09-component-shared.css).
+  // Phone: `--fx-col-*` stack the column full-width (taskDetail.css).
   if (!hasAction) {
     return {
       flex: "var(--fx-col-flex, 0 0 auto)",
       width: "var(--fx-col-width, auto)",
-      minWidth: collapsedMinWidth && `var(--fx-col-min, ${collapsedMinWidth}px)`,
     };
   }
   return {

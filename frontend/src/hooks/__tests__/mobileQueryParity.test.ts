@@ -8,6 +8,10 @@ const css = readFileSync(
   new URL('../../css/09-component-shared.css', import.meta.url),
   'utf8',
 )
+const detailCss = readFileSync(
+  new URL('../../pages/taskDetail/taskDetail.css', import.meta.url),
+  'utf8',
+)
 
 describe('phone breakpoint', () => {
   it.each(["--profile-pad", "--feed-bar-pad"])(
@@ -20,15 +24,15 @@ describe('phone breakpoint', () => {
   it('the composer size vars use MOBILE_QUERY verbatim', () => {
     expect(css).toContain(`@media ${MOBILE_QUERY} {\n  :root {\n    --composer-max-width`)
     expect(css).toContain(`@media ${MOBILE_QUERY} {\n  :root {\n    --sheet-align`)
-    expect(css).toContain(`@media ${MOBILE_QUERY} {\n  :root {\n    --fx-align`)
+    expect(detailCss).toContain(`@media ${MOBILE_QUERY} {\n  :root {\n    --fx-align`)
   })
 })
 
 // Dialogs and the task-detail column read phone values from the cascade, which
 // the node harness cannot lay out; pin the declarations the components rely on.
-function phoneBlock(first: string): string {
-  const start = css.indexOf(`@media ${MOBILE_QUERY} {\n  :root {\n    ${first}`)
-  return css.slice(start, css.indexOf('\n}\n', start))
+function phoneBlock(first: string, src = css): string {
+  const start = src.indexOf(`@media ${MOBILE_QUERY} {\n  :root {\n    ${first}`)
+  return src.slice(start, src.indexOf('\n}\n', start))
 }
 
 describe('phone vars the components read', () => {
@@ -52,6 +56,6 @@ describe('phone vars the components read', () => {
     '--fx-col-width: 100%',
     '--fx-action-top: 0',
   ])('task-detail block declares %s', (decl) => {
-    expect(phoneBlock('--fx-align')).toContain(decl)
+    expect(phoneBlock('--fx-align', detailCss)).toContain(decl)
   })
 })
