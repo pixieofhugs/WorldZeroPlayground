@@ -11,10 +11,14 @@
  * pairings (`ink` on `paper`, `onFill` on `fill`) are declared facts of
  * `factionRoles.ts`, so they are measured here.
  *
- * The manifest is half ENUMERATED (`ROLE_PAIRS`, walked out of `factionRoleVar`,
- * so a ground override moves the gate on the same commit) and half AUTHORED
- * (archetype primitives whose roles index.css states, and shared-component state
- * inks on faction sheets). The authored half still goes stale when nobody adds rows.
+ * The manifest is ENUMERATED (`ROLE_PAIRS`, walked out of `factionRoleVar`, so a
+ * ground override moves the gate on the same commit) plus a REMAINDER of authored
+ * rows (#2698). The rendered sweep (`e2e/contrast.spec.ts`, a required check on every
+ * PR, #3498) owns every pairing a swept route paints: archetype cards, plates and
+ * the rail. An authored row survives only where the sweep cannot reach the pairing
+ * (composer, roster, task detail, duel and invitation dialogs, the character
+ * pages) or where it measured nothing on the pages it does visit. Delete such a row
+ * when the sweep learns the surface; add none for a surface it already renders.
  *
  * Alpha is composited: un-composited rgba is how #594's 2.78:1 muted ink shipped.
  *
@@ -81,12 +85,6 @@ const CARD_KEYS = [
   "singularity",
   "default",
 ] as const;
-
-/**
- * Factions whose primary is a solid fill that carries text. Includes `default`:
- * the composer's remote-collaborator label prints a name on the na hue.
- */
-const FILL_KEYS = CARD_KEYS;
 
 type Pair = {
   /** Human label — what a failure message has to make actionable. */
@@ -571,18 +569,12 @@ const SEAL_GLASS_VEIL = "rgba(74,222,128,0.05)";
 /** Archetype-private primitives, each a role index.css states in words. */
 const ARCHETYPE_PAIRS: Pair[] = [
   // Everymen — "the paper surface + its text FLIP in dark".
-  { what: "everymen paper", surface: "--everymen-paper", text: "--everymen-paper-text" },
   // `.em-backdrop` ramps paper -> deep stock with a 55% deep vignette (#2133).
-  { what: "everymen deep stock, ink", surface: "--everymen-paper-deep", text: "--everymen-paper-text" },
-  { what: "everymen paper, muted", surface: "--everymen-paper", text: "--everymen-muted" },
   { what: "everymen cream element, ink", surface: "--everymen-cream", text: "--everymen-ink" },
   { what: "everymen gold element, ink", surface: "--everymen-gold", text: "--everymen-ink" },
-  { what: "everymen poster field, cream", surface: "--everymen-field", text: "--everymen-cream" },
 
   // S.N.I.D.E. — the wall is the one SNIDE surface that flips.
-  { what: "snide flyposted wall", surface: "--faction-snide-wall", text: "--faction-snide-wall-text" },
   { what: "snide deep wall", surface: "--faction-snide-wall-deep", text: "--faction-snide-wall-text" },
-  { what: "snide xerox paper, ink", surface: "--faction-snide-paper", text: "--faction-snide-ink" },
 
   // UA (#788, #848): four themed surfaces in a narrow luminance band, so every
   // ink is measured on every surface it may sit on (the kit shipped a 4.38 muted).
@@ -590,15 +582,10 @@ const ARCHETYPE_PAIRS: Pair[] = [
   { what: "ua page ground, prose", surface: "--faction-ua-page", text: "--faction-ua-card-body" },
   { what: "ua page ground, muted", surface: "--faction-ua-page", text: "--faction-ua-card-muted" },
   { what: "ua page ground, accent", surface: "--faction-ua-page", text: "--faction-ua-card-accent" },
-  { what: "ua card, prose", surface: "--faction-ua-card-bg", text: "--faction-ua-card-body" },
-  { what: "ua panel, ink", surface: "--faction-ua-panel", text: "--faction-ua-card-text" },
   { what: "ua panel, prose", surface: "--faction-ua-panel", text: "--faction-ua-card-body" },
   { what: "ua panel, muted", surface: "--faction-ua-panel", text: "--faction-ua-card-muted" },
-  { what: "ua panel, accent", surface: "--faction-ua-panel", text: "--faction-ua-card-accent" },
-  { what: "ua lift, ink", surface: "--faction-ua-lift", text: "--faction-ua-card-text" },
   { what: "ua lift, prose", surface: "--faction-ua-lift", text: "--faction-ua-card-body" },
   { what: "ua lift, muted", surface: "--faction-ua-lift", text: "--faction-ua-card-muted" },
-  { what: "ua lift, accent", surface: "--faction-ua-lift", text: "--faction-ua-card-accent" },
   // The UA colours that do NOT owe 4.5: --faction-ua is fill/large-type hue,
   // --faction-ua-vermil the ensō numeral at display size. --faction-ua-glow
   // (3.12) is ornament only, so it has no pair.
@@ -621,10 +608,6 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // --faction-wow-on-gold is named for the ground it was measured on, never the
   // fill: white on this gold is 2.47:1 (WORLD_ZERO_STYLE §3, #1766).
   { what: "wow chronicle gold element, ink", surface: "--faction-wow-chronicle-gold", text: "--faction-wow-on-gold" },
-  // The kit's "gold / card-bg dk" pair; both themes also gate the light sibling.
-  { what: "wow stamp total, on card", surface: "--faction-wow-card-bg", text: "--faction-wow-stamp-total" },
-  // #896: the kit's #8a6d1f read 4.46 on cream, so index.css walks it down.
-  { what: "wow eyebrow ink, on card", surface: "--faction-wow-card-bg", text: "--faction-wow-accent-deep" },
   // The rank pill (#897): theme-invariant, measured on the lozenge's darkest stop.
   {
     what: "wow avatar rank pill ink",
@@ -638,15 +621,11 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // and the Badges heading stand directly on it; the progression panel and the
   // praxis empty state are `-plate`. A ramp has no single value, so each ink is
   // measured on both stops. Light quiet on `-ground-to` is the thin one.
-  { what: "wow profile ground-from, ink", surface: "--faction-wow-ground-from", text: "--faction-wow-card-text" },
   { what: "wow profile ground-from, quiet", surface: "--faction-wow-ground-from", text: "--faction-wow-ground-quiet" },
-  { what: "wow profile ground-from, accent", surface: "--faction-wow-ground-from", text: "--faction-wow-card-accent" },
   { what: "wow profile ground-to, ink", surface: "--faction-wow-ground-to", text: "--faction-wow-card-text" },
   { what: "wow profile ground-to, quiet", surface: "--faction-wow-ground-to", text: "--faction-wow-ground-quiet" },
   { what: "wow profile ground-to, accent", surface: "--faction-wow-ground-to", text: "--faction-wow-card-accent" },
-  { what: "wow profile plate, ink", surface: "--faction-wow-plate", text: "--faction-wow-card-text" },
   { what: "wow profile plate, quiet", surface: "--faction-wow-plate", text: "--faction-wow-ground-quiet" },
-  { what: "wow profile plate, accent", surface: "--faction-wow-plate", text: "--faction-wow-card-accent" },
   // Header handle/joined line: `headerMuted` on the ramp under the 10% checker.
   ...["--faction-wow-ground-from", "--faction-wow-ground-to"].flatMap((surface) =>
     ["--faction-wow-plum-surface", "--faction-wow-chronicle-gold"].map((token) => ({
@@ -741,12 +720,6 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // Plain-ink figures and brief-ink labels on the same ground.
   { what: "coven plate, subtotal figure", surface: "--faction-coven-slip-plate-foot", text: "--faction-coven-slip-ink" },
   { what: "coven plate, row label", surface: "--faction-coven-slip-plate-foot", text: "--faction-coven-slip-soft" },
-  // The cauldron belly (94% ward paper): its caption is `coven ward panel, brief`.
-  {
-    what: "coven cauldron belly, total figure",
-    surface: "--faction-coven-ward-card",
-    text: "--faction-coven-slip-deep",
-  },
 
   // Coven ward (task detail, #1031): two flat grounds. The page haze's
   // composited worst case is noted beside `--faction-coven-ward-haze` in index.css.
@@ -770,14 +743,11 @@ const ARCHETYPE_PAIRS: Pair[] = [
   { what: "coven hold band foot", surface: "--faction-coven-ward-hold-to", text: "--faction-coven-ward-hold-ink" },
 
   // Everymen bill (#1023): only roles the `--everymen-*` family had no home for.
-  { what: "everymen bill masthead", surface: "--faction-everymen-bill-mast", text: "--faction-everymen-bill-mast-ink" },
-  { what: "everymen bill CTA bar", surface: "--faction-everymen-bill-cta-bg", text: "--faction-everymen-bill-cta-ink" },
   // Walked down off the design's goldDeep (3.11).
   { what: "everymen bill modifier ink", surface: "--everymen-paper", text: "--faction-everymen-bill-mult-ink" },
   // EverymenScoreStamp's struck multiplier ratio (13px).
   { what: "everymen score stamp multiplier ink", surface: "--faction-everymen-card-bg", text: "--faction-everymen-bill-mult-ink" },
   // The bill's level caption.
-  { what: "everymen paper, olive label", surface: "--everymen-paper", text: "--everymen-muted" },
   {
     // Red on paper is 4.49 (so no prose in it); the numeral is 32/24px Bebas, so
     // AA_LARGE. The 8px "POINTS" caption is stamp ornament (§4).
@@ -790,19 +760,6 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // Ephemerists Valley plate (#1023, split #2141): sheet, cornice band, disc and
   // CTA bar. `-brass` frames and is never text. The sheet flips (vellum by day);
   // band and disc are compass blue #12151f in both themes.
-  { what: "ephemerists plate, ink", surface: "--faction-ephemerists-plate-bg", text: "--faction-ephemerists-plate-ink" },
-  { what: "ephemerists plate, brief", surface: "--faction-ephemerists-plate-bg", text: "--faction-ephemerists-plate-muted" },
-  { what: "ephemerists plate, caption", surface: "--faction-ephemerists-plate-bg", text: "--faction-ephemerists-plate-caption" },
-  { what: "ephemerists cornice band, masthead", surface: "--faction-ephemerists-plate-band", text: "--faction-ephemerists-plate-band-ink" },
-  // The task card masthead grounds on `-plate-disc`. Band and disc share a hex
-  // today; two surfaces stay two rows until something asserts the value.
-  { what: "ephemerists card masthead band, wordmark", surface: "--faction-ephemerists-plate-disc", text: "--faction-ephemerists-plate-band-ink" },
-  // The disc's ink budget is the band's (#2141): `-plate-ink`/`-plate-muted`
-  // flip and read 1.00 / 1.82 on the invariant disc — only a both-themes
-  // pairing could see that.
-  { what: "ephemerists medallion disc, points", surface: "--faction-ephemerists-plate-disc", text: "--faction-ephemerists-plate-band-ink" },
-  { what: "ephemerists medallion disc, unit", surface: "--faction-ephemerists-plate-disc", text: "--faction-ephemerists-plate-band-quiet" },
-  { what: "ephemerists plate CTA band", surface: "--faction-ephemerists-plate-cta-bg", text: "--faction-ephemerists-plate-cta-ink" },
   // No profile-header row: `headerStyle` grounds on the BAND, so its pairing is
   // `ephemerists cornice band, quiet ink` below.
   //
@@ -819,7 +776,6 @@ const ARCHETYPE_PAIRS: Pair[] = [
   { what: "ephemerists page ground, quiet ink", surface: "--faction-ephemerists-plate-page", text: "--faction-ephemerists-plate-quiet" },
   { what: "ephemerists page ground, links", surface: "--faction-ephemerists-plate-page", text: "--faction-ephemerists-plate-brass-light" },
   { what: "ephemerists page ground, title", surface: "--faction-ephemerists-plate-page", text: "--faction-ephemerists-plate-ink" },
-  { what: "ephemerists plate, quiet ink", surface: "--faction-ephemerists-plate-bg", text: "--faction-ephemerists-plate-quiet" },
   { what: "ephemerists panel cell, ink", surface: "--faction-ephemerists-plate-inner", text: "--faction-ephemerists-plate-ink" },
   { what: "ephemerists panel cell, caption", surface: "--faction-ephemerists-plate-inner", text: "--faction-ephemerists-plate-caption" },
   { what: "ephemerists panel cell, quiet ink", surface: "--faction-ephemerists-plate-inner", text: "--faction-ephemerists-plate-quiet" },
@@ -830,45 +786,20 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // Singularity terminal (#1023): dark in both themes (§6). The light half is the
   // tighter (lighter chassis), so `-blue` / `-dim` ship walked UP; label rows
   // measure the chrome bar, lighter than the chassis.
-  { what: "singularity terminal chassis, title", surface: "--faction-singularity-term-bg", text: "--faction-singularity-term-bright" },
-  { what: "singularity terminal chassis, brief", surface: "--faction-singularity-term-bg", text: "--faction-singularity-term-dim" },
   { what: "singularity terminal chassis, boot line", surface: "--faction-singularity-term-bg", text: "--faction-singularity-term-blue" },
-  { what: "singularity window bar, process name", surface: "--faction-singularity-term-chrome", text: "--faction-singularity-term-dim" },
   { what: "singularity window bar, ordinal", surface: "--faction-singularity-term-chrome", text: "--faction-singularity-term-blue" },
-  // A RESOLVED ground rather than alpha-over-chassis, so this row can exist.
-  { what: "singularity points well, total", surface: "--faction-singularity-term-readout", text: "--faction-singularity-term-blue-bright" },
-  { what: "singularity points well, unit", surface: "--faction-singularity-term-readout", text: "--faction-singularity-term-blue" },
-  // The directory tile's join button spreads `SINGULARITY_CARD_CTA` — this row.
-  { what: "singularity CTA, prompt", surface: "--faction-singularity-term-cta-bg", text: "--faction-singularity-term-cta-ink" },
 
   // S.N.I.D.E. ransom clipping (#1023): flips, so each row is two grounds. Pink
   // survives as a drawn line and is walked down where it carries a word.
-  { what: "snide clipping, headline", surface: "--faction-snide-note-paper", text: "--faction-snide-note-ink" },
-  { what: "snide clipping, brief", surface: "--faction-snide-note-paper", text: "--faction-snide-note-muted" },
   { what: "snide clipping, points caption", surface: "--faction-snide-note-paper", text: "--faction-snide-note-pink-ink" },
-  { what: "snide clipping bar, ordinal", surface: "--faction-snide-note-bar", text: "--faction-snide-note-bar-ink" },
-  { what: "snide clipping bar, wordmark", surface: "--faction-snide-note-bar", text: "--faction-snide-acid" },
-  // A knockout names its own pair: paper/ink swap under the cascade and would cancel.
-  { what: "snide headline knockout", surface: "--faction-snide-note-knockout-bg", text: "--faction-snide-note-knockout-ink" },
-  // Headline cut 1 and the CTA bar are one pairing; acid does not flip.
-  { what: "snide acid CTA bar", surface: "--faction-snide-note-cta-bg", text: "--faction-snide-note-cta-ink" },
-  // The directory tile's `SNIDE_CARD_CTA` is "clipping bar, wordmark" above.
-  // Modifier chip: paper on pink read 3.10, so it takes the near-black CTA ink.
-  { what: "snide modifier chip", surface: "--faction-snide-pink", text: "--faction-snide-note-cta-ink" },
 
   // UA vellum leaf (#1023): no new tokens; the rows add the parchment gradient's
   // DARKEST stop (`-panel` by day, `-card-bg` by night).
-  { what: "ua leaf darkest stop, title", surface: "--faction-ua-panel", text: "--faction-ua-card-text" },
   { what: "ua leaf darkest stop, brief", surface: "--faction-ua-panel", text: "--faction-ua-card-muted" },
-  // The design's `--faction-ua-glow` (2.93) misses even AA_LARGE; walked onto the accent.
-  { what: "ua leaf darkest stop, score numeral", surface: "--faction-ua-panel", text: "--faction-ua-card-accent" },
-  // The directory tile spreads `UA_CARD_CTA`, so this row covers both.
-  { what: "ua leaf CTA", surface: "--faction-ua-card-chip-bg", text: "--faction-ua-card-chip-ink" },
 
   // WOW quest decree (#1023): all existing families. Its dark plum (#8a5aae,
   // 4.10) is what `--faction-wow-plum-surface` note 1 rejected, so the card
   // takes that token.
-  { what: "wow decree CTA / modifier chip", surface: "--faction-wow-plum-surface", text: "--faction-wow-on-plum" },
   // The ✦ is a dingbat, so it may be 2.00:1 chronicle gold — no row.
   { what: "wow decree plaque, total", surface: "--faction-wow-chronicle-panel", text: "--faction-wow-stamp-total" },
   { what: "wow decree plaque, unit", surface: "--faction-wow-chronicle-panel", text: "--faction-wow-card-accent" },
@@ -1105,8 +1036,6 @@ const ARCHETYPE_PAIRS: Pair[] = [
 
   // Ephemerists feed plate (#1199): the band's declared second tier, and nile
   // on `-plate-bg`, a third stock.
-  { what: "ephemerists cornice band, quiet ink", surface: "--faction-ephemerists-plate-band", text: "--faction-ephemerists-plate-band-quiet" },
-  { what: "ephemerists plate, links", surface: "--faction-ephemerists-plate-bg", text: "--faction-ephemerists-plate-brass-light" },
 
   // Ephemerists edit-character tail plate (#2537): `EphemeristsEditCharacter`
   // mounts `characterPaths/editCharacterSlots`' slots on `-plate-bg`, the case
@@ -1464,26 +1393,11 @@ const SWITCH_LOCK_GLYPH_PAIRS: Pair[] = [
  */
 
 /**
- * #2361 — the desktop rail's WELL. Rail inks are ROLE_PAIRS' `-card-*` on
- * `-card-bg`; `--rail-well` (EDIT pill, progress tracks) is the sheet's own ink
- * at 10% (`layout/Sidebar.tsx::railFaceVars`), which can only tighten the reading.
- *
- * Only the body ink is painted on it. `card-muted` here reads 3.94 (WOW) to
- * 4.31, so the quiet tier may not move onto the well without it thinning.
- *
- * `default` is absent: an unaffiliated/Albescent viewer declares no locals, so
- * their well is still `--color-bg-surface-alt`.
+ * The desktop rail's well (EDIT pill, progress tracks): the sheet's own ink at 10%
+ * (`layout/Sidebar.tsx::railFaceVars`). Its pairs are the rendered sweep's; the alpha
+ * stays for the S.N.I.D.E. rail block below.
  */
 const RAIL_WELL_ALPHA = 0.1;
-
-// `snide` too: its rail is on the wall with `-note-*` inks (#2631), measured in
-// this file's last block.
-const RAIL_PAIRS: Pair[] = FILL_KEYS.filter((key) => key !== "default" && key !== "snide").map((key) => ({
-  what: `${key} rail ink on the rail well`,
-  surface: `--faction-${key}-card-bg`,
-  veil: { token: `--faction-${key}-card-text`, alpha: RAIL_WELL_ALPHA },
-  text: `--faction-${key}-card-text`,
-}));
 
 /**
  * THE METATASK SEAL'S CAPTION on nine bodies (#2648, owner ruling 2026-08-25).
@@ -1626,7 +1540,6 @@ const PAIRS: Pair[] = [
   ...SNIDE_WALL_PAIRS,
   ...ARCHETYPE_PAIRS,
   ...INVITATION_LETTER_PAIRS,
-  ...RAIL_PAIRS,
   ...CALLING_CHIP_PAIRS,
   ...SWITCH_RING_PAIRS,
   ...SWITCH_LOCK_GLYPH_PAIRS,
