@@ -50,7 +50,9 @@ runs:
         ssh "deploy@$SSH_HOST" "
           set -e
           cd /srv/worldzero/$ENVIRONMENT
+          # Prune first: a full disk fails the pull, and a prune after it
+          # never runs. Rollback pulls its tag from the registry (README §9).
+          docker image prune -af
           docker compose pull
           docker compose up -d
-          docker image prune -af --filter until=168h
         "
