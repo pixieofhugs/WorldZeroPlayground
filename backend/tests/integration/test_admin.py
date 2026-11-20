@@ -983,7 +983,9 @@ async def _doer_on_retired_task(
 
 async def _patch_and_compare(client, auth_headers, db_session, doer, task, body):
     before = await _stored(db_session, doer)
-    resp = await client.patch(f"/admin/tasks/{task.id}", json=body, headers=auth_headers)
+    resp = await client.patch(
+        f"/admin/tasks/{task.id}", json=body, headers=auth_headers
+    )
     assert resp.status_code == 200
     after = await _stored(db_session, doer)
     await recalculate_character_stats(doer.id, db_session)
