@@ -10,7 +10,7 @@ import { useTranslation } from 'react-i18next'
  * conic step ring. No tick (#3098): alone it read as a stray pixel. Cards supply
  * words and controls only.
  *
- * The look-around escape lives here so every stop has it by construction.
+ * The look-around escape lives here for every card except `AuthCard`, which draws its own.
  * Colour is all `--faction-default-*` tokens.
  */
 
@@ -57,7 +57,7 @@ const controlBase: CSSProperties = {
 }
 
 /**
- * Exported for `AuthCard`'s `SignInOptions`. Na's card ink, not a rainbow stop
+ * Exported for `AuthCard` and `SignInView`'s `SignInOptions`. Na's card ink, not a rainbow stop
  * (one stop reads as a single-hue accent, and would be a third rainbow).
  */
 export const primaryControl: CSSProperties = {
