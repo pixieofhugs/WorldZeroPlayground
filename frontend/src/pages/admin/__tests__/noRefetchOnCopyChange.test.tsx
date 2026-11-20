@@ -7,20 +7,15 @@ import i18n from '../../../i18n'
 
 const api = vi.hoisted(() => ({
   getEras: vi.fn(async () => []),
-  getOverview: vi.fn(async () => new Promise(() => {})),
   rollIntoEra: vi.fn(),
 }))
 vi.mock('../../../api/admin', () => api)
 
 import EraTab from '../EraTab'
-import OverviewTab from '../OverviewTab'
 
 afterEach(cleanup)
 
-describe.each([
-  ['EraTab', EraTab, api.getEras],
-  ['OverviewTab', OverviewTab, api.getOverview],
-])('%s', (_name, Tab, fetcher) => {
+describe.each([['EraTab', EraTab, api.getEras]])('%s', (_name, Tab, fetcher) => {
   it('fetches once, not again when the copy re-renders', async () => {
     render(<Tab />)
     await waitFor(() => expect(fetcher).toHaveBeenCalledTimes(1))

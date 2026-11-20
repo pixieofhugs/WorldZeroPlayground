@@ -383,5 +383,33 @@
       "tasksCreated_one": "{{count}} task was created.",
       "tasksCreated_other": "{{count}} tasks were created."
     }
+  },
+  "console": {
+    "rail": {
+      "label": "Admin",
+      "back": "← Back to World Zero",
+      "backShort": "← World Zero",
+      "brand": "World Zero",
+      "sub": "Admin",
+      "menu": "Menu",
+      "countLabel": "{{count}} waiting",
+      "groups": {
+        "needs": "Needs you",
+        "run": "Run the game",
+        "words": "Words",
+        "danger": "Danger"
+      },
+      "items": {
+        "reports": "Reports",
+        "messages": "Messages",
+        "proposals": "Task proposals",
+        "praxis": "Praxis",
+        "tasks": "Tasks",
+        "people": "People",
+        "factionCopy": "Faction copy",
+        "levelCopy": "Level-up copy",
+        "era": "Roll into a new era…"
+      }
+    }
   }
 }
