@@ -194,22 +194,25 @@ uses — fine for quick iteration, but it leaves bot accounts behind in the dev 
 
 **CI:** `.github/workflows/e2e.yml` runs the same `run-e2e.sh` nightly and on
 manual `workflow_dispatch`, and uploads the Playwright HTML report as an
-artifact. It is deliberately not on the PR-blocking path.
+artifact. It is deliberately not on the PR-blocking path; the one e2e spec that blocks is
+`contrast` (below).
 
 ## GitHub Actions CI
 
-The PR-blocking suite is `.github/workflows/test.yml`, and it is **three jobs**, all
-three of them required checks on `main`:
+The PR-blocking suite is **four required checks** on `main`: three jobs of
+`.github/workflows/test.yml`, plus `contrast` from `.github/workflows/contrast.yml`:
 
 - `test` — a Postgres service, `alembic upgrade head`, then `pytest --cov --cov-fail-under=96`
 - `frontend` — lint, `tsc --noEmit`, the `/design-sync` typecheck, vitest, `vite build`,
   and the initial-load byte budget
 - `api-schema` — regenerate `backend/openapi.json` and the generated TS types, then
   `git diff --exit-code`
+- `contrast` (`contrast.yml`) — `run-e2e.sh e2e/contrast.spec.ts` on every PR, no paths
+  filter so it always reports
 
-That workflow is the authoritative config (don't mirror its YAML here) — this list names
+`test.yml` is the authoritative config (don't mirror its YAML here) — this list names
 the jobs because agents need to know how many gates exist, not what is inside them. Read
-the workflow for the steps. The coverage floor is 92% and should rise over time.
+the workflow for the steps. The coverage floor is 96% and should rise over time.
 
 Note `npm test` alone is only vitest, i.e. one of `frontend`'s six steps; it is not the
 frontend gate.
