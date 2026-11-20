@@ -321,7 +321,7 @@ describe("the composer's shared seams (#1828)", () => {
   };
 
   /** The band negates the sheet insets; per-width values are pinned in composerSizesCss.test.ts. */
-  const BLEED = "margin:0 calc(-1 * var(--fx-space-2xl--lg)) calc(-1 * var(--fx-space-2xl--xl))";
+  const BLEED = "margin:0 calc(-1 * var(--composer-pad-x)) calc(-1 * var(--composer-pad-bottom))";
 
   it.each(WIDTHS.flatMap((w) => BAND_SLUGS.map((s) => [w, s] as const)))(
     "bleeds %s's submit band to the sheet's edges for %s",

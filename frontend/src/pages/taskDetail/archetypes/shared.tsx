@@ -103,16 +103,16 @@ export function actionColumnSize({
   hasAction: boolean;
   width: number;
 }): CSSProperties {
-  // Phone: `--fx-col-*` stack the column full-width (taskDetail.css).
+  // Phone: `--detail-col-*` stack the column full-width (taskDetail.css).
   if (!hasAction) {
     return {
-      flex: "var(--fx-col-flex, 0 0 auto)",
-      width: "var(--fx-col-width, auto)",
+      flex: "var(--detail-col-flex, 0 0 auto)",
+      width: "var(--detail-col-width, auto)",
     };
   }
   return {
-    flex: `var(--fx-col-flex, 0 0 ${width}px)`,
-    width: `var(--fx-col-width, ${width}px)`,
+    flex: `var(--detail-col-flex, 0 0 ${width}px)`,
+    width: `var(--detail-col-width, ${width}px)`,
   };
 }
 

@@ -24,7 +24,7 @@ describe('phone breakpoint', () => {
   it('the composer size vars use MOBILE_QUERY verbatim', () => {
     expect(css).toContain(`@media ${MOBILE_QUERY} {\n  :root {\n    --composer-max-width`)
     expect(css).toContain(`@media ${MOBILE_QUERY} {\n  :root {\n    --sheet-align`)
-    expect(detailCss).toContain(`@media ${MOBILE_QUERY} {\n  :root {\n    --fx-align`)
+    expect(detailCss).toContain(`@media ${MOBILE_QUERY} {\n  :root {\n    --detail-row-align`)
   })
 })
 
@@ -51,11 +51,11 @@ describe('phone vars the components read', () => {
   })
 
   it.each([
-    '--fx-align: stretch',
-    '--fx-col-flex: 1 1 auto',
-    '--fx-col-width: 100%',
-    '--fx-action-top: 0',
+    '--detail-row-align: stretch',
+    '--detail-col-flex: 1 1 auto',
+    '--detail-col-width: 100%',
+    '--detail-action-top: 0',
   ])('task-detail block declares %s', (decl) => {
-    expect(phoneBlock('--fx-align', detailCss)).toContain(decl)
+    expect(phoneBlock('--detail-row-align', detailCss)).toContain(decl)
   })
 })
