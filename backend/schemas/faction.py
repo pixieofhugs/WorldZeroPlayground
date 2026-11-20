@@ -27,6 +27,8 @@ class FactionStatusOut(WireModel):
     status: FactionMembershipStatus
     # Would the ACTIVE character's move be accepted now (`move_refusal`, #3168)?
     joinable: bool
+    # The `ErrorCode` the refused move carries; None exactly when `joinable`.
+    refusal: str | None
 
 
 class InvitationLetterOut(WireModel):

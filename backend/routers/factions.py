@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from db import get_db
 from dependencies import get_current_character
+from errors import DETAIL_CODE_KEY
 from models.account import Account
 from models.character import Character
 from models.faction import Faction, FactionStatus
@@ -75,14 +76,17 @@ async def get_faction_status(
     facts = await load_move_facts(
         character, era_row.id, session, defections=defections, letters=letters
     )
-    all_factions = [
-        FactionStatusOut(
-            slug=slug,
-            status=status,
-            joinable=move_refusal(slug, facts) is None,
+    all_factions = []
+    for slug, status in status_map.items():
+        refused = move_refusal(slug, facts)
+        all_factions.append(
+            FactionStatusOut(
+                slug=slug,
+                status=status,
+                joinable=refused is None,
+                refusal=None if refused is None else refused.detail[DETAIL_CODE_KEY],
+            )
         )
-        for slug, status in status_map.items()
-    ]
     return FactionPageOut(
         current_faction_slug=character.faction_slug,
         all_factions=all_factions,

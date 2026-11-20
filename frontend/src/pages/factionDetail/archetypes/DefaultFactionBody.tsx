@@ -151,6 +151,11 @@ export default function DefaultFactionBody({
           {t("mobile.gateHint", { faction: name })}
         </p>
       )}
+      {membership.state === "ng_plus" && (
+        <p className="font-body text-muted content-text">
+          {t("albescent.letter.newGamePlus")}
+        </p>
+      )}
       {!phone && joinAction && (
         <div
           style={{
