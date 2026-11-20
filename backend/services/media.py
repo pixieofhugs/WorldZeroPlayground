@@ -497,7 +497,7 @@ async def process_and_save_media(
         with open(absolute_path, "wb") as file_handle:
             file_handle.write(contents)
         if media_type is MediaType.image:
-            # Best-effort: without one the API reports null and the UI uses the original.
+            # Best-effort: no copy means null in the API and the original in the UI.
             try:
                 display = await asyncio.to_thread(make_display_bytes, contents)
                 if display:

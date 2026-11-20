@@ -21,7 +21,9 @@ class MediaItemOut(WireModel):
     @property
     def display_path(self) -> Optional[str]:
         """Smaller copy of an image for cards and tiles; null when none was made."""
-        return existing_display_path(self.file_path) if self.type is MediaType.image else None
+        if self.type is not MediaType.image:
+            return None
+        return existing_display_path(self.file_path)
 
 
 class MediaUploadResultOut(WireModel):

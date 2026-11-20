@@ -42,7 +42,8 @@ async def backfill_display_copies(session: AsyncSession, apply: bool) -> int:
 async def run(env: str, apply: bool) -> int:
     settings = get_settings(env)
     print(f"Environment : {env}")
-    print(f"Database    : {settings.DATABASE_URL.split('@')[-1]}")  # host/db only, no creds
+    database = settings.DATABASE_URL.split("@")[-1]  # host/db only, no creds
+    print(f"Database    : {database}")
     print(f"Mode        : {'APPLY - files WILL be written' if apply else 'dry run'}\n")
 
     engine = create_async_engine(settings.DATABASE_URL, echo=False)
@@ -63,7 +64,9 @@ async def run(env: str, apply: bool) -> int:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Backfill display-size image copies.")
     add_env_argument(parser)
-    parser.add_argument("--apply", action="store_true", help="Write the files; default reports only.")
+    parser.add_argument(
+        "--apply", action="store_true", help="Write the files; default reports only."
+    )
     args = parser.parse_args()
     sys.exit(asyncio.run(run(args.env, args.apply)))
 

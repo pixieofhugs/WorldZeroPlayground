@@ -560,17 +560,18 @@ def _photo_bytes(width: int, height: int) -> bytes:
 
 
 @pytest.mark.asyncio
-async def test_image_upload_writes_display_copy_and_schema_reports_it(tmp_path, monkeypatch):
+async def test_image_upload_writes_display_copy(tmp_path, monkeypatch):
     monkeypatch.setattr(media.settings, "MEDIA_ROOT", str(tmp_path))
     upload = _make_upload("big.jpg", _photo_bytes(3200, 2400), "image/jpeg")
 
-    item = await media.process_and_save_media(upload, praxis_id=1, character_id=2, display_order=0)
+    item = await media.process_and_save_media(upload, 1, 2, 0)
 
     with Image.open(tmp_path / media.display_path_for(item.file_path)) as display:
         assert display.size == (1600, 1200)
     with Image.open(tmp_path / item.file_path) as original:
         assert original.size == (3200, 2400)
-    assert media.existing_display_path(item.file_path) == media.display_path_for(item.file_path)
+    sibling = media.display_path_for(item.file_path)
+    assert media.existing_display_path(item.file_path) == sibling
 
 
 def test_image_without_display_copy_reports_none(tmp_path, monkeypatch):
@@ -579,7 +580,7 @@ def test_image_without_display_copy_reports_none(tmp_path, monkeypatch):
     assert media.existing_display_path("a.jpg") is None
 
 
-def test_display_backfill_is_idempotent_and_dry_run_writes_nothing(tmp_path, monkeypatch):
+def test_display_backfill_is_idempotent_and_dry_run_is_inert(tmp_path, monkeypatch):
     monkeypatch.setattr(media.settings, "MEDIA_ROOT", str(tmp_path))
     (tmp_path / "a.jpg").write_bytes(_photo_bytes(2400, 1800))
 

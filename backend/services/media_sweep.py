@@ -164,7 +164,11 @@ async def load_known_paths(session: AsyncSession, media_root: str) -> KnownPaths
     return KnownPaths(
         avatar_paths=resolved(list(avatar_values)),
         media_item_paths=resolved(
-            [each for value in file_path_values for each in (value, display_path_for(value))]
+            [
+                each
+                for value in file_path_values
+                for each in (value, display_path_for(value))
+            ]
         ),
         avatar_rows=len(avatar_values),
         media_item_rows=len(file_path_values),
