@@ -50,8 +50,16 @@ jobs:
         with:
           python-version: "3.12"
 
+      # A slow apt mirror once took 21 minutes for this 66 MB; it normally takes
+      # under a minute. Cap each try and retry, so a stall costs minutes, not the run.
       - name: Install ffmpeg (media metadata strip, #3589)
-        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg
+        timeout-minutes: 8
+        run: |
+          for try in 1 2 3; do
+            sudo timeout 150 sh -c 'apt-get update && apt-get install -y --no-install-recommends ffmpeg' && exit 0
+            echo "::warning::ffmpeg install try $try stalled or failed; retrying"
+          done
+          exit 1
 
       - name: Install dependencies
         run: pip install -r backend/requirements.txt
