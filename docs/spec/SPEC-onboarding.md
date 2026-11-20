@@ -194,6 +194,11 @@ arc**, which has exactly one destination.
   for their own safety and the legality of real-world actions. What it lacks is a version
   identifier, a statement of what agreeing binds you to, and any mention of the photographs
   the player is about to post publicly.
+- **Deleted-account record (#3451).** The Disclaimer's `p4` says what ADR-0081 keeps after
+  deletion: the provider plus a salted hash of each linked sign-in ID. **The wording is
+  a placeholder** pending the owner's site-wide copy pass. **Open for that pass:** the
+  90-day retention is only enforced when the same identity signs in again, so an unvisited
+  tombstone is kept indefinitely (`account_deletion.py`); p4 states no duration until decided.
 - **Accepted before sign-in.** The contract comes after the intro and before the auth
   card. Pre-auth acceptance was first rejected on what the record would be worth: with no
   identity yet, the server can bind the click only to a browser session and must then trust
@@ -273,7 +278,7 @@ contract, with the held contract click carried through the redirect.
 else, for a person who has a character already. The flow cannot tell a returner before
 sign-in (a scan always re-runs from the top), so the view is reached from the header's Sign in
 on the title and the beats while signed out (#3461; #3514's `toSignIn` goes to step `'signin'`).
-Open for the owner: does it skip the contract?
+*2026-11-19, [#3649](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3649), owner ruling:* a returning player (signed in, has a character) can skip the contract and any step of the tutorial. A Skip control shows for them on every step; a new player gets none past the existing beat Skip. Skipping the contract writes no row, so it is allowed only when `CurrentUser.has_accepted_terms` (a row for the current terms version) is true; otherwise they still see the contract.
 
 *2026-11-18, [#3457](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3457); #3452:* was written when sign-in came before the terms. The order is
 now title, seven beats, contract, sign-in, creation, arrival, and a signed-in person who opens

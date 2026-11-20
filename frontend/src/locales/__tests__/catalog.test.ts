@@ -944,7 +944,7 @@ describe('no call site drops an interpolation (#2827)', () => {
  */
 describe('the Disclaimer is the owner\'s text, character for character (#2789)', () => {
   it('holds three paragraphs and a date, with no retired fourth', () => {
-    expect(Object.keys(common.disclaimer)).toEqual(['title', 'p1', 'p2', 'p3', 'lastUpdated'])
+    expect(Object.keys(common.disclaimer)).toEqual(['title', 'p1', 'p2', 'p3', 'p4', 'lastUpdated'])
   })
 
   it('transcribes the first paragraph exactly', () => {
@@ -975,7 +975,7 @@ describe('the Disclaimer is the owner\'s text, character for character (#2789)',
   })
 
   it('dates the document to the pass that rewrote it', () => {
-    expect(i18n.t('common:disclaimer.lastUpdated')).toBe('Last updated: August 2026')
+    expect(i18n.t('common:disclaimer.lastUpdated')).toBe('Last updated: November 2026')
   })
 })
 

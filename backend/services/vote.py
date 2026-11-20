@@ -86,7 +86,7 @@ async def cast_or_update_vote(
         )
 
     # Level gate on peak level (#3102), after A/B. Not in ``viewer_can_vote``:
-    # the UI reads ``can_vote`` on ``/auth/me``; both call ``may_vote``.
+    # the UI reads ``can_vote`` on ``/auth/me``, which calls ``may_vote``.
     received = await account_has_received_vote(voter.account_id, session)
     is_admin = await account_has_admin_role(voter.account_id, session)
     lock = (

@@ -5,6 +5,7 @@ from sqlalchemy import select
 from models.character import CharacterStatus
 from models.character_stats import CharacterStats
 from services.account_deletion import delete_account
+from services.character_stats import recalculate_character_stats
 from services.vote_tally import tally_votes
 from tests.integration.factories import (
     cast_vote,
@@ -44,14 +45,19 @@ async def test_ban_then_unban_moves_tally_and_stored_score(
 ):
     before = await _votes(db_session, rigged)
     assert before[1] == 2
+    await recalculate_character_stats(character.id, db_session)
+    score_before = await _stored_score(db_session, character)
     url = f"/admin/characters/{character2.id}/ban"
 
-    await client.post(url, json={"banned": True}, headers=auth_headers)
+    ban = await client.post(url, json={"banned": True}, headers=auth_headers)
+    assert ban.status_code == 200
     await db_session.refresh(character2)
     assert await _votes(db_session, rigged) == (before[0] - 5, 1)
     banned_score = await _stored_score(db_session, character)
+    assert banned_score < score_before
 
-    await client.post(url, json={"banned": False}, headers=auth_headers)
+    unban = await client.post(url, json={"banned": False}, headers=auth_headers)
+    assert unban.status_code == 200
     assert await _votes(db_session, rigged) == before
     assert await _stored_score(db_session, character) > banned_score
 
@@ -69,6 +75,18 @@ async def test_suspend_then_unsuspend(
     await client.post(url, json={"suspended": False}, headers=auth_headers)
     assert await _votes(db_session, rigged) == before
     assert await _stored_score(db_session, character) > suspended_score
+
+
+async def test_the_public_roster_hides_moderated_voters(
+    client, db_session, auth_headers, rigged, character2
+):
+    url = f"/admin/characters/{character2.id}/ban"
+    await client.post(url, json={"banned": True}, headers=auth_headers)
+
+    roster = await client.get(f"/praxes/{rigged.id}/voters")
+    assert [voter["character_id"] for voter in roster.json()] != []
+    assert character2.id not in [voter["character_id"] for voter in roster.json()]
+    assert len(roster.json()) == (await _votes(db_session, rigged))[1]
 
 
 async def test_a_departed_voter_still_counts(db_session, rigged, character2):

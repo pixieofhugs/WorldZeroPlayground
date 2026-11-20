@@ -13,6 +13,7 @@ function item(id: number, type: MediaItemOut['type'], file: string): MediaItemOu
     id,
     praxis_id: 1,
     file_path: file,
+    display_path: null,
     type,
     display_order: id,
     created_at: '2026-01-01T00:00:00Z',

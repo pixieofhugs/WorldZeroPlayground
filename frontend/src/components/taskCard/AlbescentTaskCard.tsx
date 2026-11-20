@@ -1,6 +1,5 @@
 import type { CardProps } from "./TaskCard";
 import DefaultTaskCard from "./DefaultTaskCard";
-import { useFormFactor } from "../../hooks/useFormFactor";
 import { useGroundIsBusy } from "../backdrop/BackdropContext";
 
 /**
@@ -16,18 +15,11 @@ import { useGroundIsBusy } from "../backdrop/BackdropContext";
  */
 export default function AlbescentTaskCard(props: CardProps) {
   const groundIsBusy = useGroundIsBusy();
-  const formFactor = useFormFactor();
   return (
     <div
       /* `alb-task` repoints the CTA rule's opacity (unconditional, #2030);
          `alb-prism` is the ground, the one the alternation drops. */
-      className={groundIsBusy ? "alb-task alb-moves" : "alb-task alb-moves alb-prism"}
-      /* Phone fills the column (#2763); desktop shrink-wraps for the edge. */
-      style={{
-        position: "relative",
-        width: formFactor === "mobile" ? "100%" : "fit-content",
-        maxWidth: "100%",
-      }}
+      className={groundIsBusy ? "alb-task alb-moves task-fit-card" : "alb-task alb-moves task-fit-card alb-prism"}
     >
       <DefaultTaskCard {...props} />
       <span aria-hidden="true" className="alb-task-edge" />

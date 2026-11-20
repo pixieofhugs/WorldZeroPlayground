@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
 import { EverymenCog } from "../../../components/factionMarks/everymenCogs";
-import { useFormFactor } from "../../../hooks/useFormFactor";
 import { factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
 import {
@@ -69,7 +68,6 @@ export default function EverymenTaskDetail({
   state: TaskDetailState;
 }) {
   const { t } = useTranslation("tasks");
-  const desktop = useFormFactor() !== "mobile";
   const [showAllPraxis, setShowAllPraxis] = useState(false);
   const {
     task,
@@ -107,7 +105,7 @@ export default function EverymenTaskDetail({
     background: PANEL,
     border: `2px solid ${FRAME}`,
     borderRadius: 2,
-    padding: desktop ? "var(--space-lg)" : "var(--space-md)",
+    padding: "var(--fx-space-lg--md, var(--space-lg))",
     boxSizing: "border-box",
   };
   const dashRule = (marginBottom?: string) => (
@@ -127,11 +125,9 @@ export default function EverymenTaskDetail({
     border: `2px solid ${MAST}`,
     borderRadius: 2,
     ...label,
-    fontSize: desktop ? "var(--text-content)" : "var(--text-xl)",
+    fontSize: "var(--fx-text-content--xl, var(--text-content))",
     letterSpacing: "0.16em",
-    padding: desktop
-      ? "var(--space-md) var(--space-lg)"
-      : "var(--space-sm) var(--space-md)",
+    padding: "var(--fx-space-md-lg--sm-md, var(--space-md) var(--space-lg))",
   };
 
   /** Cog · label · dashed rule running out to an optional gloss. */
@@ -217,7 +213,7 @@ export default function EverymenTaskDetail({
       <h1
         style={{
           fontFamily: BEBAS,
-          fontSize: desktop ? "var(--text-display)" : "var(--text-heading)",
+          fontSize: "var(--fx-text-display--heading, var(--text-display))",
           lineHeight: 0.94,
           letterSpacing: "0.01em",
           textTransform: "uppercase",
@@ -330,7 +326,7 @@ export default function EverymenTaskDetail({
         style={{
           display: "flex",
           alignItems: "flex-end",
-          gap: desktop ? "var(--space-xl)" : "var(--space-lg)",
+          gap: "var(--fx-space-xl--lg, var(--space-xl))",
           flexWrap: "wrap",
         }}
       >
@@ -348,7 +344,7 @@ export default function EverymenTaskDetail({
           <span
             style={{
               fontFamily: BEBAS,
-              fontSize: desktop ? "var(--text-heading)" : "var(--text-title)",
+              fontSize: "var(--fx-text-heading--title, var(--text-heading))",
               lineHeight: 0.86,
               color: INK,
             }}
@@ -379,7 +375,7 @@ export default function EverymenTaskDetail({
           <span
             style={{
               fontFamily: BEBAS,
-              fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
+              fontSize: "var(--fx-text-title--content, var(--text-title))",
               lineHeight: 0.86,
               color: INK,
             }}
@@ -539,7 +535,7 @@ export default function EverymenTaskDetail({
       <div
         style={{
           display: "flex",
-          flexDirection: desktop ? "row" : "column",
+          flexDirection: "var(--fx-row-direction, row)" as "row",
           gap: "var(--space-xs)",
           alignItems: "stretch",
         }}
@@ -547,8 +543,8 @@ export default function EverymenTaskDetail({
         <div
           style={{
             ...plateBox,
-            flex: desktop && hasAction ? "0 0 auto" : "1 1 auto",
-            minWidth: desktop ? 156 : 0,
+            flex: hasAction ? "var(--fx-wage-flex, 0 0 auto)" : "1 1 auto",
+            minWidth: "var(--fx-wage-min, 156px)",
           }}
         >
           {wageBox}
@@ -574,7 +570,7 @@ export default function EverymenTaskDetail({
   // The brief, in full. No clamp.
   const brief = (
     <section
-      style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}
+      style={{ marginBottom: "var(--fx-space-2xl--xl, var(--space-2xl))" }}
     >
       {sectionHead(t("detail.brief.heading"))}
       {task.description && (
@@ -632,7 +628,7 @@ export default function EverymenTaskDetail({
 
   const gallery = (
     <section
-      style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}
+      style={{ marginBottom: "var(--fx-space-2xl--xl, var(--space-2xl))" }}
     >
       {/* Nothing to sort until something is filed (#1704). */}
       {sectionHead(
@@ -697,7 +693,7 @@ export default function EverymenTaskDetail({
           maxWidth: 1200,
           margin: "0 auto",
           borderRadius: 18,
-          padding: desktop ? "var(--space-2xl)" : "var(--space-lg)",
+          padding: "var(--fx-space-2xl--lg, var(--space-2xl))",
           overflow: "hidden",
           boxSizing: "border-box",
         }}
@@ -708,10 +704,10 @@ export default function EverymenTaskDetail({
         <div
           style={{
             display: "flex",
-            flexDirection: desktop ? "row" : "column",
-            alignItems: desktop ? "flex-start" : "stretch",
+            flexDirection: "var(--fx-row-direction, row)" as "row",
+            alignItems: "var(--fx-align, flex-start)",
             gap: "var(--space-xl)",
-            marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)",
+            marginBottom: "var(--fx-space-2xl--xl, var(--space-2xl))",
           }}
         >
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -721,8 +717,8 @@ export default function EverymenTaskDetail({
           </div>
           <div
             style={{
-              ...actionColumnSize({ desktop, hasAction, width: 520 }),
-              marginTop: desktop ? "var(--space-2xl)" : 0,
+              ...actionColumnSize({ hasAction, width: 520 }),
+              marginTop: "var(--fx-action-top, var(--space-2xl))",
             }}
           >
             {actionPlate}

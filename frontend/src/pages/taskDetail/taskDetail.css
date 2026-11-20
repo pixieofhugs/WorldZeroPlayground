@@ -1,0 +1,26 @@
+/* ══ TASK DETAIL (na, Everymen, Singularity, Snide): phone vs desktop values (#3002) ══
+   `--fx-<kind>-<desktop>--<phone>` names the pair it carries. Only the phone is declared
+   (09-component-shared.css owns the pairs it shares); the use site's fallback is the
+   desktop value, so nothing is aliased into :root. ══ */
+@media (max-width: 767px) and (pointer: coarse) {
+  :root {
+    --fx-align: stretch;
+    --fx-shell-pad: var(--space-lg) var(--space-md) var(--space-xl);
+    --fx-space-lg--md: var(--space-md);
+    --fx-space-lg-xl--md: var(--space-md);
+    --fx-btn-pad-wide: var(--space-md) var(--space-lg);
+    --fx-space-md-lg--sm-md: var(--space-sm) var(--space-md);
+    --fx-text-content--xl: var(--text-xl);
+    --fx-text-display--heading: var(--text-heading);
+    --fx-text-title--content: var(--text-content);
+    --fx-text-xl--lg: var(--text-lg);
+    --fx-wage-flex: 1 1 auto;
+    --fx-wage-min: 0;
+    --fx-worth-min-default: 122px;
+    --fx-worth-min-singularity: 118px;
+    --fx-worth-min-snide: 132px;
+    --fx-action-top: 0;
+    --fx-col-flex: 1 1 auto;
+    --fx-col-width: 100%;
+  }
+}
