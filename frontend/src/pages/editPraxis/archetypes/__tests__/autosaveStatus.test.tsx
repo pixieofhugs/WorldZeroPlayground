@@ -26,3 +26,9 @@ it('says why instead of promising a send once the room has ended', () => {
   room.value = { synced: false, ended: true, endReason: 'live' }
   expect(html()).toContain('went live')
 })
+
+it('shows a neutral ended line while the reason is still loading', () => {
+  room.value = { synced: false, ended: true, endReason: undefined }
+  expect(html()).toContain('closed to edits')
+  expect(html()).not.toContain('back online')
+})

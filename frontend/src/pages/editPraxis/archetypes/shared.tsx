@@ -62,11 +62,10 @@ export function AutosaveStatus({ at }: { at: Date | null }) {
   const room = usePraxisRoom();
   const { t } = useTranslation("forms");
   if (!at) return <>{t("editPraxis.composer.statusUnsaved")}</>;
-  if (room?.ended && room.endReason === "live") {
-    return <>{t("editPraxis.composer.statusEndedLive")}</>;
-  }
-  if (room?.ended && room.endReason === "removed") {
-    return <>{t("editPraxis.composer.statusEndedRemoved")}</>;
+  if (room?.ended) {
+    if (room.endReason === "live") return <>{t("editPraxis.composer.statusEndedLive")}</>;
+    if (room.endReason === "removed") return <>{t("editPraxis.composer.statusEndedRemoved")}</>;
+    return <>{t("editPraxis.composer.statusEnded")}</>;
   }
   if (room && !room.synced) return <>{t("editPraxis.composer.statusSavedOnPhone")}</>;
   return <>{t("editPraxis.composer.statusSaved", { ago: formatAutosave(at) })}</>;
