@@ -10,7 +10,7 @@ import { factionBodyVars } from "../../../utils/factionBodyFace"
  * The S.N.I.D.E. score stamp (#842, ADR-0049): the evidence tag, a black well
  * tilted -3deg, acid rule, hard shadow, the total circled in the shared pink pen
  * loop {@link PenCircle} (#2042). Rows and order are `scoreBreakdown`'s
- * (ADR-0047, #2634); each optional row is its own line, so nothing is positioned
+ * (ADR-0053/0076, #2634); each optional row is its own line, so nothing is positioned
  * against a row that may not exist.
  */
 export default function SnideScoreStamp({ praxis, showCrown }: ScoreStampProps) {

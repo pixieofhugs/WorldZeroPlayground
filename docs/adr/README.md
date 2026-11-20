@@ -4,7 +4,7 @@
      script instead. backend/tests/test_adr_index.py fails if this file
      is out of step with docs/adr/. -->
 
-99 records, of which **91 still state a rule**.
+99 records, of which **90 still state a rule**.
 
 | Status | Meaning |
 |---|---|
@@ -12,6 +12,7 @@
 | **Amended** | Still in force, with a named clause replaced by a later record. The body's `## Amendment` says which clause. |
 | **Superseded** | Wholly replaced by a later record. Kept as history — do not build from it. |
 | **Reversed** | No longer in force, and no record replaced it. |
+| **Deferred to Era 2** | Not reversed, but not live in Era 1 either. The body's `## Amendment` says why. |
 
 | # | Title | Status | Superseded / amended by |
 |---|---|---|---|
@@ -48,7 +49,7 @@
 | [0031](0031-backend-emits-keys-frontend-catalog-resolves.md) | Backend emits copy keys; the frontend catalog resolves them | Accepted | — |
 | [0032](0032-react-i18next-copy-catalog.md) | UI copy lives in react-i18next JSON catalogs | Accepted | — |
 | [0033](0033-player-profile-contract-and-badge-registry.md) | Player profile: one faction-agnostic contract; badges are a code registry evaluated on read | Accepted | — |
-| [0034](0034-community-task-promotion-by-vote.md) | Community task promotion by vote (the level-5 unlock) | Accepted | — |
+| [0034](0034-community-task-promotion-by-vote.md) | Community task promotion by vote (the level-5 unlock) | Deferred to Era 2 | — |
 | [0035](0035-mobile-form-factor-tinting-and-real-fields.md) | Mobile is a form-factor axis on the same surface seam, tinted by a theme×treatment cascade, showing only real domain fields | Amended | [ADR-0053](0053-a-praxis-has-one-number-merit-is-retired.md), [ADR-0056](0056-task-cards-collapse-to-one-responsive-component-per-faction.md), [ADR-0058](0058-task-detail-collapses-to-one-responsive-component-per-faction.md), [ADR-0063](0063-praxis-detail-collapses-to-one-responsive-component-per-faction.md), [ADR-0065](0065-the-edit-praxis-composer-is-one-shared-layout-every-faction-dresses.md), [ADR-0067](0067-praxis-cards-collapse-to-one-responsive-component-per-faction.md), [ADR-0069](0069-the-character-profile-and-the-duel-seal-collapse-to-one-responsive-component-per-faction.md), [ADR-0076](0076-a-base-only-score-reads-as-a-bare-total.md), [ADR-0078](0078-faction-detail-collapses-to-one-responsive-component-per-faction.md) |
 | [0036](0036-feed-sources-are-a-registry-counts-derive-from-the-same-query.md) | Feed types are a registry; badge counts derive from the same query | Accepted | — |
 | [0037](0037-flag-reasons-are-a-fixed-shared-vocabulary.md) | Flag reasons are a fixed, shared vocabulary | Accepted | — |
