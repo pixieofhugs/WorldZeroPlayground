@@ -27,7 +27,7 @@ from models.duel import Duel, DuelStatus
 from models.faction import Faction
 from models.flag import Flag
 from models.meta_task import PraxisMetaTask
-from models.praxis import ModerationStatus, Praxis
+from models.praxis import ModerationStatus, Praxis, PraxisMember
 from models.task import Task, TaskStatus
 from models.vote import Vote
 from schemas.admin import (
@@ -46,7 +46,10 @@ from schemas.admin import (
 from seed import factions_leaving_roster, upsert_era_factions
 from services.faction_service import refuse_hidden_faction
 from services.character import MOD_BANNED, record_level_reached
-from services.character_stats import recalculate_for_account_votes
+from services.character_stats import (
+    recalculate_character_stats,
+    recalculate_for_account_votes,
+)
 from services.era_tasks import sync_era_tasks, tasks_to_reactivate
 from services.duel import forfeit_settled_duels_for_character
 from services.mod_log import log_mod_action
@@ -672,6 +675,7 @@ async def admin_edit_task(
             status_code=400,
             detail="Active tasks cannot be edited. Retire the task first.",
         )
+    before = (task.point_value, task.primary_faction_slug, task.level_required)
     if data.primary_faction_slug is not None:
         # Config owns factions (ADR-0042; cross-faction sentinel is a key). Else FK 500.
         if data.primary_faction_slug not in era.factions:
@@ -691,6 +695,19 @@ async def admin_edit_task(
     if data.level_required is not None:
         task.level_required = data.level_required
     await session.flush()
+    if before != (task.point_value, task.primary_faction_slug, task.level_required):
+        # Scoring reads these live; stored stats would split from them.
+        doers = select(Praxis.id).where(Praxis.task_id == task_id).union(
+            select(PraxisMetaTask.praxis_id).where(PraxisMetaTask.task_id == task_id)
+        )
+        member_ids = await session.scalars(
+            select(PraxisMember.character_id)
+            .where(PraxisMember.praxis_id.in_(doers))
+            .distinct()
+        )
+        for character_id in member_ids.all():
+            await recalculate_character_stats(character_id, session, era)
+        await session.flush()
     await log_mod_action(session, actor_id, "task_edit", "task", task_id)
     await session.refresh(task)
     return task
