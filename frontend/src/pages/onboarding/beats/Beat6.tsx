@@ -35,7 +35,7 @@ export default function Beat6(_props: BeatProps) {
             <span
               key={i}
               className="b6-crd"
-              style={{ left: c.left, bottom: c.bottom, height: c.height, ['--c' as string]: S(c.hue), ['--th' as string]: `${c.th}deg`, ['--w' as string]: `${c.w}deg`, ['--tw' as string]: `${c.tw}s`, ['--tt' as string]: `${c.tt}s` }}
+              style={{ left: c.left, bottom: c.bottom, height: c.height, ['--c' as string]: S(c.hue), ['--th' as string]: `${c.th}deg`, ['--w' as string]: `${c.w}deg`, ['--tw' as string]: `${c.w ? c.tw : 3600}s`, ['--tt' as string]: `${c.tt}s` }}
             >
               <svg viewBox="0 0 20 20" width="14" height="14" aria-hidden="true">
                 <path d={c.icon} fill="none" stroke={K} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
