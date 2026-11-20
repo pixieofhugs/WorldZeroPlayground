@@ -109,8 +109,8 @@ export default function SmallWorldTab() {
                         {t('console.smallWorld.turnUp', { when: t(`console.smallWorld.rules.${d.dial_key}.when`) })}
                       </span>
                     </td>
-                    <td className="adm-td">{values(d.small)}</td>
-                    <td className="adm-td">{values(d.full)}</td>
+                    <td className="adm-td" data-label={t('console.smallWorld.cols.small')}>{values(d.small)}</td>
+                    <td className="adm-td" data-label={t('console.smallWorld.cols.full')}>{values(d.full)}</td>
                     <td className="adm-td">
                       <div className="adm-segs" role="radiogroup" aria-label={name}>
                         {SIDES.map((side) => (
@@ -128,7 +128,7 @@ export default function SmallWorldTab() {
                         ))}
                       </div>
                     </td>
-                    <td className="adm-td adm-muted">
+                    <td className="adm-td adm-muted" data-label={t('console.smallWorld.cols.changed')}>
                       {d.updated_at
                         ? t('console.smallWorld.changedBy', { who: d.updated_by ?? '', when: when(d.updated_at) })
                         : t('console.smallWorld.default')}
