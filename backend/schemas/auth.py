@@ -43,6 +43,7 @@ class CurrentUser(WireModel):
     era_name: str = ""
     # The live Era row (0 when unseeded); the frontend cache epoch keys on it.
     era_id: int = 0
+    rules_revision: int = 0
     can_propose_task: bool = False
     can_propose_metatask: bool = False
     can_see_retired_tasks: bool = False

@@ -145,6 +145,7 @@
                   "global_task": "#/components/schemas/GlobalTaskItem",
                   "invitation_letter": "#/components/schemas/InvitationLetterItem",
                   "nudge": "#/components/schemas/NudgeItem",
+                  "rules_change": "#/components/schemas/RulesChangeItem",
                   "vote_changed_on_mine": "#/components/schemas/VoteChangedOnMineItem",
                   "vote_on_mine": "#/components/schemas/VoteOnMineItem"
                 },
@@ -171,6 +172,9 @@
                 },
                 {
                   "$ref": "#/components/schemas/EraAnnouncementItem"
+                },
+                {
+                  "$ref": "#/components/schemas/RulesChangeItem"
                 },
                 {
                   "$ref": "#/components/schemas/CollabInviteItem"
@@ -1943,6 +1947,11 @@
             "title": "Provider",
             "type": "string"
           },
+          "rules_revision": {
+            "default": 0,
+            "title": "Rules Revision",
+            "type": "integer"
+          },
           "second_character_level_required": {
             "default": 0,
             "title": "Second Character Level Required",
@@ -1991,6 +2000,7 @@
           "albescent_level_required",
           "era_name",
           "era_id",
+          "rules_revision",
           "can_propose_task",
           "can_propose_metatask",
           "can_see_retired_tasks",
@@ -3924,11 +3934,16 @@
           "pending_task_admin_review_hours": {
             "title": "Pending Task Admin Review Hours",
             "type": "integer"
+          },
+          "rules_revision": {
+            "title": "Rules Revision",
+            "type": "integer"
           }
         },
         "required": [
           "era_name",
           "era_id",
+          "rules_revision",
           "level_thresholds",
           "duel_level_required",
           "collab_auto_submit_days",
@@ -5251,6 +5266,88 @@
         "title": "PickerStartStatus",
         "type": "string"
       },
+      "PopulationDialOut": {
+        "properties": {
+          "dial_key": {
+            "title": "Dial Key",
+            "type": "string"
+          },
+          "full": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
+            },
+            "title": "Full",
+            "type": "object"
+          },
+          "is_default": {
+            "title": "Is Default",
+            "type": "boolean"
+          },
+          "side": {
+            "enum": [
+              "small",
+              "full"
+            ],
+            "title": "Side",
+            "type": "string"
+          },
+          "small": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
+            },
+            "title": "Small",
+            "type": "object"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          },
+          "updated_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated By"
+          }
+        },
+        "required": [
+          "dial_key",
+          "side",
+          "small",
+          "full",
+          "is_default",
+          "updated_by",
+          "updated_at"
+        ],
+        "title": "PopulationDialOut",
+        "type": "object"
+      },
       "PraxisCardOut": {
         "description": "Lightweight list-view schema.",
         "properties": {
@@ -6217,6 +6314,126 @@
         "title": "RingRecipient",
         "type": "object"
       },
+      "RulesChangeEntry": {
+        "additionalProperties": false,
+        "properties": {
+          "dial_key": {
+            "title": "Dial Key",
+            "type": "string"
+          },
+          "side": {
+            "enum": [
+              "small",
+              "full"
+            ],
+            "title": "Side",
+            "type": "string"
+          }
+        },
+        "required": [
+          "dial_key",
+          "side"
+        ],
+        "title": "RulesChangeEntry",
+        "type": "object"
+      },
+      "RulesChangeItem": {
+        "properties": {
+          "actor_avatar_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Avatar Url"
+          },
+          "actor_display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Display Name"
+          },
+          "actor_faction_slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Faction Slug"
+          },
+          "context_faction_slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Card frame faction: actor's, else task's, else None (faction UI spec §2).\n\n``getattr`` because only some payloads carry a task.",
+            "readOnly": true,
+            "title": "Context Faction Slug"
+          },
+          "item_key": {
+            "title": "Item Key",
+            "type": "string"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/RulesChangePayload"
+          },
+          "timestamp": {
+            "format": "date-time",
+            "title": "Timestamp",
+            "type": "string"
+          },
+          "type": {
+            "const": "rules_change",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "item_key",
+          "timestamp",
+          "actor_display_name",
+          "actor_faction_slug",
+          "actor_avatar_url",
+          "payload",
+          "context_faction_slug"
+        ],
+        "title": "RulesChangeItem",
+        "type": "object"
+      },
+      "RulesChangePayload": {
+        "additionalProperties": false,
+        "description": "A mod flipped population dials (#3656); keys and sides, never numbers.",
+        "properties": {
+          "changes": {
+            "items": {
+              "$ref": "#/components/schemas/RulesChangeEntry"
+            },
+            "title": "Changes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "changes"
+        ],
+        "title": "RulesChangePayload",
+        "type": "object"
+      },
       "SidebarOut": {
         "description": "Everything the rail's three data panels draw, in one response.\n\nOne field per panel, and nothing else. Identity is deliberately absent: the\ncharacter card reads ``user.character`` from ``/auth/me``, which ~20 call\nsites already refetch, and fattening that payload would make every one of\nthem heavier (#1349). This carries only what the panels need.\n\nRequests are a NUMBER, not a list (#1456). The rail listed them until\n#1423; under ADR-0070 the Requests queue on ``/updates`` is the only\nsurface a request can be answered on, so all that is left here is the\nbadge on the collapsed handle, the mobile bell and the mobile FieldDesk —\nthree consumers of one integer. Shipping up to a hundred hydrated feed\nitems on a page-load path to produce it was the whole of the cost.\n\nThe count is the same one ``counts.requests`` reports, so the badge and\nthe queue's card list cannot disagree — see\n:func:`services.activity_feed.get_sidebar_feed`.",
         "properties": {
@@ -6246,6 +6463,7 @@
                   "global_task": "#/components/schemas/GlobalTaskItem",
                   "invitation_letter": "#/components/schemas/InvitationLetterItem",
                   "nudge": "#/components/schemas/NudgeItem",
+                  "rules_change": "#/components/schemas/RulesChangeItem",
                   "vote_changed_on_mine": "#/components/schemas/VoteChangedOnMineItem",
                   "vote_on_mine": "#/components/schemas/VoteOnMineItem"
                 },
@@ -6272,6 +6490,9 @@
                 },
                 {
                   "$ref": "#/components/schemas/EraAnnouncementItem"
+                },
+                {
+                  "$ref": "#/components/schemas/RulesChangeItem"
                 },
                 {
                   "$ref": "#/components/schemas/CollabInviteItem"
@@ -9420,6 +9641,141 @@
           }
         ],
         "summary": "Admin Moderate Praxis",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/small-world": {
+      "get": {
+        "description": "Admin-only: every population dial, its side, both values and who last flipped it.",
+        "operationId": "admin_get_small_world_admin_small_world_get",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PopulationDialOut"
+                  },
+                  "title": "Response Admin Get Small World Admin Small World Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Admin Get Small World",
+        "tags": [
+          "admin"
+        ]
+      },
+      "put": {
+        "description": "Admin-only: set the named dials to a side; unchanged dials write nothing.",
+        "operationId": "admin_set_small_world_admin_small_world_put",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": {
+                  "enum": [
+                    "small",
+                    "full"
+                  ],
+                  "type": "string"
+                },
+                "minProperties": 1,
+                "title": "Data",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PopulationDialOut"
+                  },
+                  "title": "Response Admin Set Small World Admin Small World Put",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Admin Set Small World",
         "tags": [
           "admin"
         ]

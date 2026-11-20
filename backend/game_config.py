@@ -5,9 +5,9 @@ This file owns the *rules*; the latest DB ``Era`` row's ``config_key`` chooses
 which ruleset is live, via ``services.era.rebind_live_era`` (ADR-0091).
 CURRENT_ERA is a stable object identity — see "The live era binding" below.
 """
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, field, fields, replace
 from enum import Enum
-from typing import Literal
+from typing import Any, Literal, Mapping
 
 from faction_slugs import UNAFFILIATED_FACTION_SLUG
 
@@ -161,6 +161,19 @@ _STRUCTURAL_FACTION_ROLES: dict[str, str] = {
 
 
 @dataclass(frozen=True)
+class Dial:
+    """One population-dial rule: two values per field, a mod picks the side (#3656).
+
+    ``full`` must equal the era's plain fields, so the plain fields stay the
+    full-game numbers and ``small`` is the only place a loosened value lives.
+    """
+
+    small: Mapping[str, Any]
+    full: Mapping[str, Any]
+    default: Literal["small", "full"]
+
+
+@dataclass(frozen=True)
 class EraConfig:
     name: str
     config_key: str                  # matched to Era.config_key in DB
@@ -265,6 +278,10 @@ class EraConfig:
     collab_invite_bypasses_faction: bool = True
     collab_invite_bypasses_task_bank: bool = False
 
+    # Rules that loosen while the game is small, by dial key (#3656). The live
+    # side is a DB row per key (services.population_dial); empty = no dials.
+    dials: Mapping[str, Dial] = field(default_factory=dict)
+
     def __post_init__(self) -> None:
         """Enforce ADR-0087's structural clause, then resolve perk inheritance (#1871).
 
@@ -301,6 +318,20 @@ class EraConfig:
                     f"seam #1559 opened and ADR-0087 closed."
                 )
 
+        for key, dial in self.dials.items():
+            if set(dial.small) != set(dial.full):
+                raise ValueError(
+                    f"{self.config_key}: dial {key!r} small and full must cover "
+                    f"the same fields."
+                )
+            for name, value in dial.full.items():
+                if name not in _FIELD_NAMES or getattr(self, name) != value:
+                    raise ValueError(
+                        f"{self.config_key}: dial {key!r} full side says "
+                        f"{name}={value!r}, but the era's own field is "
+                        f"{getattr(self, name, '<not a field>')!r}."
+                    )
+
         inheritors = frozenset(
             slug
             for slug, faction in self.factions.items()
@@ -329,6 +360,9 @@ class EraConfig:
                 field_name,
                 _inherited_perk_slugs(getattr(self, field_name), inheritors),
             )
+
+
+_FIELD_NAMES = frozenset(f.name for f in fields(EraConfig))
 
 
 # Era configs live in backend/eras/ (copy eras/_template.py for a new one),

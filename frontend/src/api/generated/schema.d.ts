@@ -554,6 +554,30 @@ export interface paths {
         patch: operations["admin_moderate_praxis_admin_praxes__praxis_id__moderate_patch"];
         trace?: never;
     };
+    "/admin/small-world": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Admin Get Small World
+         * @description Admin-only: every population dial, its side, both values and who last flipped it.
+         */
+        get: operations["admin_get_small_world_admin_small_world_get"];
+        /**
+         * Admin Set Small World
+         * @description Admin-only: set the named dials to a side; unchanged dials write nothing.
+         */
+        put: operations["admin_set_small_world_admin_small_world_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/tasks/import-csv": {
         parameters: {
             query?: never;
@@ -2181,7 +2205,7 @@ export interface components {
         ActivityFeedResponse: {
             counts: components["schemas"]["FeedCounts"];
             /** Items */
-            items: (components["schemas"]["VoteOnMineItem"] | components["schemas"]["VoteChangedOnMineItem"] | components["schemas"]["FriendCompletionItem"] | components["schemas"]["FoeCompletionItem"] | components["schemas"]["FoeTauntItem"] | components["schemas"]["GlobalTaskItem"] | components["schemas"]["EraAnnouncementItem"] | components["schemas"]["CollabInviteItem"] | components["schemas"]["DuelChallengeItem"] | components["schemas"]["FriendSignupItem"] | components["schemas"]["InvitationLetterItem"] | components["schemas"]["FriendDefectionItem"] | components["schemas"]["CommentMentionItem"] | components["schemas"]["CommentOnMineItem"] | components["schemas"]["CollaboratorSubmittedItem"] | components["schemas"]["AwaitingSubmissionItem"] | components["schemas"]["NudgeItem"])[];
+            items: (components["schemas"]["VoteOnMineItem"] | components["schemas"]["VoteChangedOnMineItem"] | components["schemas"]["FriendCompletionItem"] | components["schemas"]["FoeCompletionItem"] | components["schemas"]["FoeTauntItem"] | components["schemas"]["GlobalTaskItem"] | components["schemas"]["EraAnnouncementItem"] | components["schemas"]["RulesChangeItem"] | components["schemas"]["CollabInviteItem"] | components["schemas"]["DuelChallengeItem"] | components["schemas"]["FriendSignupItem"] | components["schemas"]["InvitationLetterItem"] | components["schemas"]["FriendDefectionItem"] | components["schemas"]["CommentMentionItem"] | components["schemas"]["CommentOnMineItem"] | components["schemas"]["CollaboratorSubmittedItem"] | components["schemas"]["AwaitingSubmissionItem"] | components["schemas"]["NudgeItem"])[];
             /** Next Cursor */
             next_cursor: string | null;
         };
@@ -2935,6 +2959,11 @@ export interface components {
              * @default
              */
             provider: string;
+            /**
+             * Rules Revision
+             * @default 0
+             */
+            rules_revision: number;
             /**
              * Second Character Level Required
              * @default 0
@@ -3756,6 +3785,8 @@ export interface components {
             max_task_signups: number;
             /** Pending Task Admin Review Hours */
             pending_task_admin_review_hours: number;
+            /** Rules Revision */
+            rules_revision: number;
         };
         /** GlobalTaskItem */
         GlobalTaskItem: {
@@ -4315,6 +4346,30 @@ export interface components {
          * @enum {string}
          */
         PickerStartStatus: "authorization_needed" | "ready";
+        /** PopulationDialOut */
+        PopulationDialOut: {
+            /** Dial Key */
+            dial_key: string;
+            /** Full */
+            full: {
+                [key: string]: number | boolean;
+            };
+            /** Is Default */
+            is_default: boolean;
+            /**
+             * Side
+             * @enum {string}
+             */
+            side: "small" | "full";
+            /** Small */
+            small: {
+                [key: string]: number | boolean;
+            };
+            /** Updated At */
+            updated_at: string | null;
+            /** Updated By */
+            updated_by: string | null;
+        };
         /**
          * PraxisCardOut
          * @description Lightweight list-view schema.
@@ -4735,6 +4790,53 @@ export interface components {
             /** Votes Back Of */
             votes_back_of: number;
         };
+        /** RulesChangeEntry */
+        RulesChangeEntry: {
+            /** Dial Key */
+            dial_key: string;
+            /**
+             * Side
+             * @enum {string}
+             */
+            side: "small" | "full";
+        };
+        /** RulesChangeItem */
+        RulesChangeItem: {
+            /** Actor Avatar Url */
+            actor_avatar_url: string | null;
+            /** Actor Display Name */
+            actor_display_name: string | null;
+            /** Actor Faction Slug */
+            actor_faction_slug: string | null;
+            /**
+             * Context Faction Slug
+             * @description Card frame faction: actor's, else task's, else None (faction UI spec §2).
+             *
+             *     ``getattr`` because only some payloads carry a task.
+             */
+            readonly context_faction_slug: string | null;
+            /** Item Key */
+            item_key: string;
+            payload: components["schemas"]["RulesChangePayload"];
+            /**
+             * Timestamp
+             * Format: date-time
+             */
+            timestamp: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "rules_change";
+        };
+        /**
+         * RulesChangePayload
+         * @description A mod flipped population dials (#3656); keys and sides, never numbers.
+         */
+        RulesChangePayload: {
+            /** Changes */
+            changes: components["schemas"]["RulesChangeEntry"][];
+        };
         /**
          * SidebarOut
          * @description Everything the rail's three data panels draw, in one response.
@@ -4759,7 +4861,7 @@ export interface components {
             /** Active Praxes */
             active_praxes: components["schemas"]["PraxisCardOut"][];
             /** Global Activity */
-            global_activity: (components["schemas"]["VoteOnMineItem"] | components["schemas"]["VoteChangedOnMineItem"] | components["schemas"]["FriendCompletionItem"] | components["schemas"]["FoeCompletionItem"] | components["schemas"]["FoeTauntItem"] | components["schemas"]["GlobalTaskItem"] | components["schemas"]["EraAnnouncementItem"] | components["schemas"]["CollabInviteItem"] | components["schemas"]["DuelChallengeItem"] | components["schemas"]["FriendSignupItem"] | components["schemas"]["InvitationLetterItem"] | components["schemas"]["FriendDefectionItem"] | components["schemas"]["CommentMentionItem"] | components["schemas"]["CommentOnMineItem"] | components["schemas"]["CollaboratorSubmittedItem"] | components["schemas"]["AwaitingSubmissionItem"] | components["schemas"]["NudgeItem"])[];
+            global_activity: (components["schemas"]["VoteOnMineItem"] | components["schemas"]["VoteChangedOnMineItem"] | components["schemas"]["FriendCompletionItem"] | components["schemas"]["FoeCompletionItem"] | components["schemas"]["FoeTauntItem"] | components["schemas"]["GlobalTaskItem"] | components["schemas"]["EraAnnouncementItem"] | components["schemas"]["RulesChangeItem"] | components["schemas"]["CollabInviteItem"] | components["schemas"]["DuelChallengeItem"] | components["schemas"]["FriendSignupItem"] | components["schemas"]["InvitationLetterItem"] | components["schemas"]["FriendDefectionItem"] | components["schemas"]["CommentMentionItem"] | components["schemas"]["CommentOnMineItem"] | components["schemas"]["CollaboratorSubmittedItem"] | components["schemas"]["AwaitingSubmissionItem"] | components["schemas"]["NudgeItem"])[];
             /** Global Activity Count */
             global_activity_count: number;
             /** Pending Requests Count */
@@ -6171,6 +6273,74 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PraxisOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_get_small_world_admin_small_world_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PopulationDialOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_set_small_world_admin_small_world_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: "small" | "full";
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PopulationDialOut"][];
                 };
             };
             /** @description Validation Error */

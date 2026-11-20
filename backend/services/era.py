@@ -16,6 +16,7 @@ from models.character import Character
 from models.character_stats import CharacterStats
 from models.duel import Duel, DuelStatus
 from models.era import Era
+from models.population_dial import PopulationDial
 from models.praxis import Praxis
 from models.task import Task, TaskStatus
 # ``seed`` imports no service, so this costs no cycle; the seeder owns the key (#511).
@@ -43,6 +44,22 @@ async def lock_era_rollover(session: AsyncSession) -> None:
     the stale row.
     """
     await session.execute(select(func.pg_advisory_xact_lock(_ERA_ROLLOVER_LOCK_KEY)))
+
+
+async def overlay_population_dials(
+    session: AsyncSession, live: EraConfig = CURRENT_ERA
+) -> None:
+    """Write each dial's chosen side onto the live era, one field at a time (#3656).
+
+    Run after every bind, because a bind restores the full-game fields. A row for
+    a dial the live era doesn't declare is ignored, so sides survive a rollover.
+    Never ``dataclasses.replace``: perk inheritance in ``__post_init__`` is not
+    idempotent (ADR-0091).
+    """
+    sides = dict((await session.execute(select(PopulationDial.dial_key, PopulationDial.side))).all())
+    for key, dial in live.dials.items():
+        for name, value in getattr(dial, sides.get(key, dial.default)).items():
+            object.__setattr__(live, name, value)
 
 
 async def rebind_live_era(session: AsyncSession) -> EraConfig:
@@ -85,7 +102,9 @@ async def rebind_live_era(session: AsyncSession) -> EraConfig:
             era_config.config_key,
             era_row.id,
         )
-    return bind_live_era(era_config)
+    live = bind_live_era(era_config)
+    await overlay_population_dials(session, live)
+    return live
 
 
 async def commit_and_bind_live_era(
@@ -100,7 +119,9 @@ async def commit_and_bind_live_era(
     commit is a no-op.
     """
     await session.commit()
-    return bind_live_era(era)
+    live = bind_live_era(era)
+    await overlay_population_dials(session, live)
+    return live
 
 
 async def get_current_era_row(session: AsyncSession) -> Era:

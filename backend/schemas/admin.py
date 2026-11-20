@@ -63,6 +63,16 @@ class ModActionPage(WireModel):
     offset: int
 
 
+class PopulationDialOut(WireModel):
+    dial_key: str
+    side: Literal["small", "full"]
+    small: dict[str, int | bool]
+    full: dict[str, int | bool]
+    is_default: bool
+    updated_by: str | None
+    updated_at: datetime | None
+
+
 class AccountDetail(WireModel):
     model_config = ConfigDict(from_attributes=True)
 

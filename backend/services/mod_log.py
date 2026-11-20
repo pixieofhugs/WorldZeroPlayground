@@ -37,8 +37,8 @@ async def log_mod_action(
     await session.flush()
 
 
-#: Console segments over (target_type, action); "rules" gains Small world
-#: switches later (#3656).
+#: Console segments over (target_type, action); "rules" holds era rollovers and
+#: the Small world switches (``small_world_on``/``_off``, #3656).
 def _kind_filter(kind: str):
     if kind == "reports":
         return or_(

@@ -190,6 +190,9 @@ ERA_N = EraConfig(
     invitation_point_threshold=50,   # ADR-0022
     invitation_task_threshold=2,
     praxis_post_cooldown_hours=24,  # hours between first-time posts; admins exempt
+    # Optional population dials (#3656): `dials={"key": Dial(small={...}, full={...},
+    # default="small")}`; `full` must equal this era's own field values (checked at
+    # import). See eras/era_1.py. Omit for none.
     # starting_faction_slug / reset_faction_slug: OMIT — pinned to `na` (ADR-0087).
 
     reset_score=True,
