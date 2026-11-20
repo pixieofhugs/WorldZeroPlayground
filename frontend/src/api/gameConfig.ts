@@ -38,6 +38,7 @@ export interface GameConfigOut {
   collab_auto_submit_days: number
   /** Hours a fresh proposal stays admin-only (#1695). */
   pending_task_admin_review_hours: number
+  level_to_see_pending_tasks: number
   max_task_signups: number
   factions: FactionConfigOut[]
   level_profiles: LevelProfile[]

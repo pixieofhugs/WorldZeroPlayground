@@ -144,7 +144,10 @@
       "delete": "delete",
       "save": "save",
       "saving": "saving…",
-      "cancel": "cancel"
+      "cancel": "cancel",
+      "openInAdmin": "Open in admin",
+      "confirmRetire": "retire it",
+      "keep": "keep"
     }
   },
   "praxis": {
@@ -425,6 +428,48 @@
         "factionCopy": "Faction copy",
         "levelCopy": "Level-up copy",
         "era": "Roll into a new era…"
+      }
+    },
+    "list": {
+      "close": "Close"
+    },
+    "tasks": {
+      "title": "Tasks",
+      "lede": "Every task in the live era. Proposals are players' ideas waiting on you.",
+      "importCsv": "Import CSV…",
+      "toolbar": "Filter tasks",
+      "searchLabel": "Search tasks",
+      "searchPlaceholder": "Search title, description or proposer…",
+      "pointsMin": "Min points",
+      "pointsMax": "Max points",
+      "segments": {
+        "proposals": "Proposals",
+        "active": "Active",
+        "retired": "Retired",
+        "deleted": "Deleted"
+      },
+      "cols": {
+        "proposal": "Proposal",
+        "task": "Task",
+        "by": "Proposed by",
+        "level": "Level",
+        "points": "Points",
+        "goesPublic": "Unreviewed, goes public"
+      },
+      "inHours": "in {{hours}}h",
+      "publicNow": "public now",
+      "empty": "No {{segment}} tasks match.",
+      "panel": {
+        "label": "Task",
+        "proposal": "proposal",
+        "warn": "Unreviewed, this goes public to level {{level}}+ players in {{hours}} hours.",
+        "warnPublic": "Unreviewed, and already public to level {{level}}+ players.",
+        "title": "Title",
+        "description": "Description",
+        "level": "Level",
+        "note": "Their note to you",
+        "viewOnSite": "View on site",
+        "hint": "Edits save with either choice. Delete is refused for a task with history: retire it instead."
       }
     }
   }

@@ -378,3 +378,27 @@ async def test_leaving_deleted_restores_the_task(
 
     assert resp.status_code == 200, resp.text
     assert await _status_of(db_session, task.id) is TaskStatus[target]
+
+
+@pytest.mark.asyncio
+async def test_with_history_ids_match_what_delete_refuses(
+    client: AsyncClient,
+    account: Account,
+    character: Character,
+    active_task: Task,
+    praxis_solo: Praxis,
+    auth_headers: dict,
+    db_session: AsyncSession,
+):
+    await make_admin(db_session, account)
+    fresh = await make_task(db_session, character, title=JUNK_TITLE)
+
+    resp = await client.get("/admin/tasks/with-history", headers=auth_headers)
+
+    assert resp.status_code == 200, resp.text
+    ids = resp.json()
+    assert active_task.id in ids and fresh.id not in ids
+    refused = await client.delete(_delete_url(active_task.id), headers=auth_headers)
+    _assert_refused_with(refused, ErrorCode.task_has_history)
+    deleted = await client.delete(_delete_url(fresh.id), headers=auth_headers)
+    assert deleted.status_code == 204
