@@ -21,6 +21,7 @@ from PIL import Image, ImageOps, ImageSequence
 from config import settings
 from errors import ErrorCode, raise_coded
 from models.praxis import MediaItem, MediaType
+from schemas.praxis import MediaItemOut
 
 
 logger = logging.getLogger(__name__)
@@ -107,12 +108,13 @@ def make_display_bytes(contents: bytes) -> bytes | None:
         if getattr(source, "n_frames", 1) > 1:
             return None
         image = ImageOps.exif_transpose(source)
+        icc = source.info.get("icc_profile")
     image.thumbnail((DISPLAY_MAX_SIDE, DISPLAY_MAX_SIDE), Image.LANCZOS)
     if image.mode not in ("RGB", "RGBA", "L"):
         image = image.convert("RGBA" if "transparency" in image.info else "RGB")
     image.info = {}
     buffer = io.BytesIO()
-    image.save(buffer, format="WEBP", quality=DISPLAY_QUALITY)
+    image.save(buffer, format="WEBP", quality=DISPLAY_QUALITY, icc_profile=icc)
     return buffer.getvalue() if buffer.tell() < len(contents) else None
 
 
@@ -121,6 +123,13 @@ def existing_display_path(file_path: str) -> str | None:
     sibling = display_path_for(file_path)
     absolute = resolve_stored_media_path(sibling)
     return sibling if absolute and os.path.isfile(absolute) else None
+
+
+def media_item_out(item: MediaItem) -> MediaItemOut:
+    out = MediaItemOut.model_validate(item)
+    if item.type is MediaType.image:
+        out.display_path = existing_display_path(item.file_path)
+    return out
 
 
 def write_missing_display_copy(file_path: str, apply: bool) -> bool:
@@ -153,7 +162,7 @@ def _strip_av(contents: bytes, extension: str) -> bytes:
         subprocess.run(
             ["ffmpeg", "-nostdin", "-v", "error", "-i", source,
              "-map", "0:V?", "-map", "0:a?", "-sn", "-dn",
-             "-map_metadata", "-1", "-map_chapters", "-1",
+             "-map_metadata", "-1", "-map_chapters", "-1", "-fflags", "+bitexact",
              "-c", "copy", target],
             check=True, capture_output=True, timeout=FFMPEG_TIMEOUT_SECONDS,
         )
