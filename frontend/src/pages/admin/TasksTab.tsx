@@ -99,7 +99,7 @@ export default function TasksTab() {
     { key: 'title', header: proposals ? t('console.tasks.cols.proposal') : t('console.tasks.cols.task'), cell: (r) => (
         <>
           {r.title}
-          {r.task_type === 'metatask' && <span className="adm-tag adm-tag-wait">{t('console.tasks.metatask')}</span>}
+          {r.task_type === 'metatask' && <span className="adm-tag adm-tag-wait ml-2">{t('console.tasks.metatask')}</span>}
         </>
       ),
     },
