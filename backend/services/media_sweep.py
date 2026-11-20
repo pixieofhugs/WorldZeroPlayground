@@ -21,7 +21,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.character import Character
 from models.praxis import MediaItem
-from services.media import resolve_stored_media_path
+from services.media import display_path_for, resolve_stored_media_path
 
 
 # Pointed at /etc, nothing is claimed and the sweep would offer to delete it all.
@@ -163,7 +163,13 @@ async def load_known_paths(session: AsyncSession, media_root: str) -> KnownPaths
 
     return KnownPaths(
         avatar_paths=resolved(list(avatar_values)),
-        media_item_paths=resolved(list(file_path_values)),
+        media_item_paths=resolved(
+            [
+                each
+                for value in file_path_values
+                for each in (value, display_path_for(value))
+            ]
+        ),
         avatar_rows=len(avatar_values),
         media_item_rows=len(file_path_values),
     )

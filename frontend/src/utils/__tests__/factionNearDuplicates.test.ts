@@ -144,11 +144,9 @@ const BASELINE: Record<string, { deltaE: number; tokens: [string, string] }> = {
   "dark | wow | #221a0c ~ #241c0b": { deltaE: 2.07, tokens: ["--faction-wow-duel-lists-bg", "--faction-wow-avatar-field"] },
   "dark | wow | #241c0b ~ #2a2210": { deltaE: 3.33, tokens: ["--faction-wow-avatar-field", "--faction-wow-chronicle-panel"] },
   "dark | wow | #2a1d02 ~ #2a2210": { deltaE: 4.6, tokens: ["--faction-wow-avatar-pill-text", "--faction-wow-chronicle-panel"] },
-  "dark | wow | #3a2a0c ~ #3a2f16": { deltaE: 4.72, tokens: ["--faction-wow-balloon-eye-ring", "--faction-wow-balloon-idle"] },
   "dark | wow | #e3b84a ~ #e7b94e": { deltaE: 1.79, tokens: ["--faction-wow-stamp-total", "--faction-wow-balloon-5"] },
   "dark | wow | #e9cb7e ~ #f5d583": { deltaE: 4.33, tokens: ["--faction-wow-avatar-ring-lit", "--faction-wow-avatar-pill-from"] },
   "light | wow | #241c0b ~ #2b2412": { deltaE: 4.15, tokens: ["--faction-wow-balloon-eye", "--faction-wow-card-text"] },
-  "light | wow | #ede4c8 ~ #f3e7c4": { deltaE: 3.93, tokens: ["--faction-wow-balloon-idle", "--faction-wow-chronicle-panel"] },
   "light | wow | #f1e3b8 ~ #f3e7c4": { deltaE: 4.48, tokens: ["--faction-wow-ground-to", "--faction-wow-chronicle-panel"] },
 };
 

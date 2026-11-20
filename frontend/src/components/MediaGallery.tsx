@@ -41,8 +41,10 @@ export default function MediaGallery({ media, layout = 'column' }: Props) {
               style={{ display: 'block' }}
             >
               <img
-                src={src}
+                src={item.display_path ? mediaUrl(item.display_path) : src}
                 alt=""
+                loading="lazy"
+                decoding="async"
                 style={{
                   display: 'block',
                   width: '100%',
