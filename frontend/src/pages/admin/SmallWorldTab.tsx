@@ -87,7 +87,7 @@ export default function SmallWorldTab() {
         </p>
       )}
       {dials && (
-        <div className="adm-card adm-split-main">
+        <div className="adm-card">
           <table className="adm-tbl">
             <thead>
               <tr>
