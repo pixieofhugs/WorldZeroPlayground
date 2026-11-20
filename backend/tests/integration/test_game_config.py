@@ -20,6 +20,7 @@ async def test_get_game_config_returns_current_era(client: AsyncClient):
     assert data["era_name"] == CURRENT_ERA.name
     assert data["level_thresholds"] == list(CURRENT_ERA.level_thresholds)
     assert data["max_task_signups"] == CURRENT_ERA.max_task_signups
+    assert data["level_to_see_pending_tasks"] == CURRENT_ERA.level_to_see_pending_tasks
 
     # ADR-0012: duration only; the start is on PraxisOut.
     assert data["collab_auto_submit_days"] == CURRENT_ERA.collab_auto_submit_days

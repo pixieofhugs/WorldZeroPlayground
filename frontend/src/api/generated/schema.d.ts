@@ -3726,6 +3726,8 @@ export interface components {
             level_profiles: components["schemas"]["LevelProfileOut"][];
             /** Level Thresholds */
             level_thresholds: number[];
+            /** Level To See Pending Tasks */
+            level_to_see_pending_tasks: number;
             /** Max Task Signups */
             max_task_signups: number;
             /** Pending Task Admin Review Hours */

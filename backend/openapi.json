@@ -3903,6 +3903,10 @@
             "title": "Level Thresholds",
             "type": "array"
           },
+          "level_to_see_pending_tasks": {
+            "title": "Level To See Pending Tasks",
+            "type": "integer"
+          },
           "max_task_signups": {
             "title": "Max Task Signups",
             "type": "integer"
@@ -3919,6 +3923,7 @@
           "duel_level_required",
           "collab_auto_submit_days",
           "pending_task_admin_review_hours",
+          "level_to_see_pending_tasks",
           "max_task_signups",
           "factions",
           "level_profiles"
