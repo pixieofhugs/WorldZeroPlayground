@@ -20,6 +20,7 @@ from models.faction import Faction
 from models.task import Task, TaskStatus, TaskType
 from schemas.task import TaskCreate
 from services.faction_service import hidden_faction_slugs
+from services.mod_log import log_mod_action
 
 # CSV columns, as written by the spreadsheet the game's tasks are drafted in.
 COLUMN_TITLE = "Name"
@@ -272,8 +273,9 @@ async def import_tasks_from_csv(
     if errors:
         raise TaskImportError(errors)
 
+    created: list[Task] = []
     for parsed in to_create:
-        session.add(
+        created.append(
             Task(
                 title=parsed.task.title,
                 description=parsed.task.description or "",
@@ -285,7 +287,14 @@ async def import_tasks_from_csv(
                 status=TaskStatus.active,
             )
         )
+    session.add_all(created)
     await session.flush()
+    if created:
+        # One row per import, aimed at its first task; the detail says how many.
+        await log_mod_action(
+            session, admin.id, "task_import", "task", created[0].id,
+            f"{len(created)} tasks",
+        )
 
     return ImportOutcome(
         created_titles=[parsed.task.title for parsed in to_create],

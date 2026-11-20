@@ -20,11 +20,10 @@ from models.task import TaskStatus
 from schemas.admin import (
     AdminGrantIn,
     AdminRow,
-    AccountDetail,
-    AccountPage,
     AdminTaskPatch,
     BanAction,
     BanActionOut,
+    RemoveFlaggedIn,
     RemoveFlaggedOut,
     CharacterStatsPatch,
     CharacterStatsOut,
@@ -56,8 +55,6 @@ from services.praxis_out import build_praxis_cards, build_praxis_out, crowned_pr
 from services.comment import build_comment_out, list_flagged_comments, moderate_comment
 from services.task import build_task_out, in_progress_counts_for_tasks
 from services.admin_service import (
-    ACCOUNT_PAGE_DEFAULT,
-    ACCOUNT_PAGE_MAX,
     admin_edit_task,
     apply_ban,
     archive_message,
@@ -72,8 +69,6 @@ from services.admin_service import (
     flags_for_comments,
     flags_for_praxes,
     game_overview,
-    get_account_detail,
-    list_accounts,
     list_characters,
     list_contact_messages,
     list_pending_tasks_with_proposer,
@@ -130,31 +125,11 @@ async def admin_list_messages(
 @router.patch("/messages/{message_id}/archive", response_model=ContactMessageOut)
 async def admin_archive_message(
     message_id: int,
-    _: Account = Depends(require_admin),
+    admin: Account = Depends(require_admin),
     session: AsyncSession = Depends(get_db, scope="function"),
 ) -> ContactMessageOut:
-    message = await archive_message(message_id, session)
+    message = await archive_message(message_id, session, actor_id=admin.id)
     return ContactMessageOut.model_validate(message)
-
-
-@router.get("/accounts", response_model=AccountPage)
-async def admin_list_accounts(
-    search: str | None = None,
-    limit: int = Query(ACCOUNT_PAGE_DEFAULT, ge=1, le=ACCOUNT_PAGE_MAX),
-    offset: int = Query(0, ge=0),
-    _: Account = Depends(require_admin),
-    session: AsyncSession = Depends(get_db, scope="function"),
-) -> AccountPage:
-    return await list_accounts(session, search=search, limit=limit, offset=offset)
-
-
-@router.get("/accounts/{account_id}", response_model=AccountDetail)
-async def admin_get_account(
-    account_id: int,
-    _: Account = Depends(require_admin),
-    session: AsyncSession = Depends(get_db, scope="function"),
-) -> AccountDetail:
-    return await get_account_detail(account_id, session)
 
 
 @router.get("/mod-log", response_model=ModActionPage)
@@ -256,10 +231,10 @@ async def admin_list_characters(
 async def admin_patch_character_stats(
     character_id: int,
     patch: CharacterStatsPatch,
-    _: Account = Depends(require_admin),
+    admin: Account = Depends(require_admin),
     session: AsyncSession = Depends(get_db, scope="function"),
 ) -> CharacterStatsOut:
-    stats = await set_character_stats(character_id, patch, session)
+    stats = await set_character_stats(character_id, patch, session, actor_id=admin.id)
     return CharacterStatsOut(
         id=stats.id,
         character_id=stats.character_id,
@@ -475,7 +450,10 @@ async def list_task_ids_with_history(
     _: Account = Depends(require_admin),
     session: AsyncSession = Depends(get_db, scope="function"),
 ):
-    """Admin-only: ids of tasks Delete would refuse (#3667)."""
+    """Admin-only: ids of tasks with history, which Delete refuses (#3667).
+
+    Seed-owned tasks are refused too, but separately (``seed_key``); not listed.
+    """
     return await task_ids_with_history(session)
 
 
@@ -551,6 +529,7 @@ async def ban_character(
 )
 async def remove_flagged_praxes(
     character_id: int,
+    data: RemoveFlaggedIn | None = None,
     admin: Account = Depends(require_admin),
     session: AsyncSession = Depends(get_db, scope="function"),
 ) -> RemoveFlaggedOut:
@@ -560,7 +539,7 @@ async def remove_flagged_praxes(
         )
     return RemoveFlaggedOut(
         removed=await remove_flagged_praxes_by_author(
-            character_id, session, actor_id=admin.id
+            character_id, session, actor_id=admin.id, note=data.note if data else None
         )
     )
 
