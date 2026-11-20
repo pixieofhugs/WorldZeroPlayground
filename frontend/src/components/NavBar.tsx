@@ -70,7 +70,7 @@ export default function NavBar() {
       ref={navRef}
       className="sticky"
       style={{
-        top: 'var(--modstrip-h, 0px)',
+        top: 'var(--modstrip-h)',
         zIndex: 10,
         background: 'var(--color-nav-bg)',
         backdropFilter: 'blur(var(--nav-blur))',

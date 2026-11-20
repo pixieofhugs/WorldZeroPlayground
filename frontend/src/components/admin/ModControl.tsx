@@ -84,11 +84,11 @@ export default function ModControl() {
             <span className="mod-switch" aria-hidden="true" />
           </button>
           <hr className="mod-rule" />
-          <Link to="/admin" role="menuitem" className="mod-item" onClick={() => setOpen(false)} style={{ flexDirection: 'column' }}>
+          <Link to="/admin" role="menuitem" className="mod-item mod-item-col" onClick={() => setOpen(false)}>
             <span className="mod-item-title">{t('nav.mod.open')}</span>
             <span className="mod-counts">
               {rows.map(([key, label, n]) => (
-                <span key={key} style={{ display: 'contents' }}>
+                <span key={key} className="mod-row">
                   <span>{label}</span>
                   <b>{n ?? '–'}</b>
                 </span>
