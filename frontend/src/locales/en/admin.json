@@ -49,48 +49,6 @@
       "cancel": "cancel, keep them"
     }
   },
-  "accounts": {
-    "loadError": "Couldn't load accounts.",
-    "detailError": "Could not load account detail.",
-    "suspendError": "Could not update account.",
-    "banError": "Could not update character.",
-    "searchPlaceholder": "Search by email, username or character name…",
-    "suspendConfirm": {
-      "heading": "Suspend this account?",
-      "lead": "{{email}} will be suspended, with every character on it. You can unsuspend it later.",
-      "submit": "confirm — suspend account"
-    },
-    "banConfirm": {
-      "heading": "Ban {{name}}?",
-      "lead": "{{name}} (@{{username}}) will be banned. You can unban them later.",
-      "submit": "confirm — ban character"
-    },
-    "prev": "← previous",
-    "next": "next →",
-    "pageRange": "{{from}}–{{to}} of {{total}}",
-    "empty": "No accounts found.",
-    "idLabel": "ID #{{id}}",
-    "suspend": "suspend",
-    "unsuspend": "unsuspend",
-    "charactersHeading": "Characters ({{count}})",
-    "noCharacters": "No characters.",
-    "ban": "ban",
-    "unban": "unban",
-    "ring": {
-      "heading": "Vote ring: account #{{id}}",
-      "loadError": "Could not load the vote ring.",
-      "empty": "No votes cast this era.",
-      "summary": "{{votes}} votes. Top 3 recipients got {{share}}.",
-      "recipient": "{{votes}} votes · {{stars}}★ avg · {{share}}",
-      "reciprocal": "votes back",
-      "walk": "view ring"
-    },
-    "status": {
-      "active": "active",
-      "suspended": "suspended",
-      "banned": "banned"
-    }
-  },
   "tasks": {
     "loadError": "Couldn't load tasks.",
     "statusError": "Could not update task status.",
@@ -479,6 +437,65 @@
         "note": "Their note to you",
         "viewOnSite": "View on site",
         "hint": "Edits save with either choice. Delete is refused for a task with history: retire it instead."
+      }
+    },
+    "people": {
+      "title": "People",
+      "lede": "Characters and the accounts behind them.",
+      "admins": "Admins ({{count}})…",
+      "toolbar": "Filter people",
+      "searchLabel": "Search people",
+      "searchPlaceholder": "Search character, username or email…",
+      "segments": {
+        "all": "All",
+        "suspended": "Suspended",
+        "banned": "Banned"
+      },
+      "cols": {
+        "character": "Character",
+        "account": "Account",
+        "joined": "Joined",
+        "votes": "Votes cast",
+        "status": "Status"
+      },
+      "lvl": "lvl {{level}}",
+      "status": {
+        "active": "active",
+        "suspended": "suspended",
+        "banned": "banned"
+      },
+      "empty": "No people match.",
+      "loadError": "Couldn't load people.",
+      "banError": "Could not update character.",
+      "suspendError": "Could not update account.",
+      "panel": {
+        "meta": "@{{username}} · {{faction}} · lvl {{level}} · account #{{account}}",
+        "profile": "Profile",
+        "praxis": "Praxis",
+        "reports": "Reports",
+        "act": "Act on this person",
+        "ban": "Ban character…",
+        "unban": "Unban character",
+        "suspend": "Suspend account…",
+        "unsuspend": "Unsuspend account"
+      },
+      "banConfirm": {
+        "heading": "Ban {{name}}?",
+        "lead": "{{name}} (@{{username}}) will be banned. You can unban them later.",
+        "submit": "confirm — ban character"
+      },
+      "suspendConfirm": {
+        "heading": "Suspend account #{{account}}?",
+        "lead": "Account #{{account}} will be suspended, with every character on it, {{name}} included. You can unsuspend it later.",
+        "submit": "confirm — suspend account"
+      },
+      "ring": {
+        "heading": "Who they voted for · this era",
+        "loadError": "Could not load the vote ring.",
+        "empty": "No votes cast this era.",
+        "summary": "{{votes}} votes went to {{count}} of the {{eligible}} people they could vote for.",
+        "baseline": "Spread evenly, each person would get about {{share}}; the line on each bar marks it.",
+        "votesBack": "{{top}} votes back: {{back}} of their {{of}} votes went to {{name}}."
       }
     },
     "modlog": {

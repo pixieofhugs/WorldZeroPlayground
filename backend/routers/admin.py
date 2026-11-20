@@ -241,10 +241,11 @@ async def admin_revoke_admin(
 async def admin_list_characters(
     faction: str | None = None,
     status: CharacterStatus | None = None,
+    search: str | None = None,
     _: Account = Depends(require_admin),
     session: AsyncSession = Depends(get_db, scope="function"),
 ) -> list[CharacterSummary]:
-    return await list_characters(session, faction=faction, status=status)
+    return await list_characters(session, faction=faction, status=status, search=search)
 
 
 

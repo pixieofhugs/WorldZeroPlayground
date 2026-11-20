@@ -918,6 +918,10 @@
             "title": "Account Id",
             "type": "integer"
           },
+          "account_status": {
+            "title": "Account Status",
+            "type": "string"
+          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
@@ -954,6 +958,10 @@
           "votes_available": {
             "title": "Votes Available",
             "type": "integer"
+          },
+          "votes_cast": {
+            "title": "Votes Cast",
+            "type": "integer"
           }
         },
         "required": [
@@ -966,7 +974,9 @@
           "score",
           "level",
           "votes_available",
-          "created_at"
+          "created_at",
+          "account_status",
+          "votes_cast"
         ],
         "title": "CharacterSummary",
         "type": "object"
@@ -6178,16 +6188,20 @@
             "title": "Display Name",
             "type": "string"
           },
-          "reciprocal": {
-            "title": "Reciprocal",
-            "type": "boolean"
-          },
           "share": {
             "title": "Share",
             "type": "number"
           },
           "votes": {
             "title": "Votes",
+            "type": "integer"
+          },
+          "votes_back": {
+            "title": "Votes Back",
+            "type": "integer"
+          },
+          "votes_back_of": {
+            "title": "Votes Back Of",
             "type": "integer"
           }
         },
@@ -6197,7 +6211,8 @@
           "votes",
           "average_stars",
           "share",
-          "reciprocal"
+          "votes_back",
+          "votes_back_of"
         ],
         "title": "RingRecipient",
         "type": "object"
@@ -7083,16 +7098,16 @@
       },
       "VoteRingOut": {
         "properties": {
+          "eligible": {
+            "title": "Eligible",
+            "type": "integer"
+          },
           "recipients": {
             "items": {
               "$ref": "#/components/schemas/RingRecipient"
             },
             "title": "Recipients",
             "type": "array"
-          },
-          "top3_share": {
-            "title": "Top3 Share",
-            "type": "number"
           },
           "total_votes": {
             "title": "Total Votes",
@@ -7101,7 +7116,7 @@
         },
         "required": [
           "total_votes",
-          "top3_share",
+          "eligible",
           "recipients"
         ],
         "title": "VoteRingOut",
@@ -8126,6 +8141,22 @@
                 }
               ],
               "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Search"
             }
           },
           {

@@ -87,15 +87,15 @@ beforeEach(() => {
 describe('the copyRegistry postProcessor', () => {
   it('records the namespace when the key carries it', () => {
     setCopyRecording(true)
-    const rendered = i18n.t('admin:accounts.empty')
-    expect(copyTargetsForText(rendered)).toEqual([{ ns: 'admin', key: 'accounts.empty' }])
+    const rendered = i18n.t('admin:console.people.empty')
+    expect(copyTargetsForText(rendered)).toEqual([{ ns: 'admin', key: 'console.people.empty' }])
   })
 
   it('records the namespace when it arrives in options, as useTranslation passes it', () => {
     setCopyRecording(true)
-    const rendered = i18n.t('accounts.searchPlaceholder', { ns: 'admin' })
+    const rendered = i18n.t('console.people.searchPlaceholder', { ns: 'admin' })
     expect(copyTargetsForText(rendered)).toEqual([
-      { ns: 'admin', key: 'accounts.searchPlaceholder' },
+      { ns: 'admin', key: 'console.people.searchPlaceholder' },
     ])
   })
 
@@ -107,9 +107,9 @@ describe('the copyRegistry postProcessor', () => {
 
   it('indexes the INTERPOLATED text, so filled-in copy resolves too', () => {
     setCopyRecording(true)
-    const rendered = i18n.t('admin:accounts.idLabel', { id: 41 })
+    const rendered = i18n.t('admin:console.people.lvl', { level: 41 })
     expect(rendered).toContain('41')
-    expect(copyTargetsForText(rendered)).toEqual([{ ns: 'admin', key: 'accounts.idLabel' }])
+    expect(copyTargetsForText(rendered)).toEqual([{ ns: 'admin', key: 'console.people.lvl' }])
   })
 
   it('records nothing while disarmed, so a normal visit pays no index', () => {
@@ -187,7 +187,7 @@ describe('resolving a click to a key', () => {
 
   it('gives up rather than matching a distant ancestor', () => {
     setCopyRecording(true)
-    const rendered = i18n.t('admin:accounts.banError')
+    const rendered = i18n.t('admin:console.people.banError')
     let node = stub(rendered)
     for (let i = 0; i <= COPY_ANCESTOR_LIMIT; i += 1) node = stub('...', node)
     expect(copyMatchForElement(node)?.targets ?? []).toEqual([])
@@ -201,7 +201,7 @@ describe('resolving a click to a key', () => {
 
 describe('saving an override', () => {
   it('PUTs ns, key and value, and the new wording renders', async () => {
-    const override = { ns: 'admin', key: 'accounts.suspendError', value: 'no dice' }
+    const override = { ns: 'admin', key: 'console.people.suspendError', value: 'no dice' }
     wire.replyWith(json(override))
 
     await putCopyOverride(override)
@@ -212,7 +212,7 @@ describe('saving an override', () => {
     await expect(request.json()).resolves.toEqual(override)
 
     i18n.addResource('en', override.ns, override.key, override.value)
-    expect(i18n.t('admin:accounts.suspendError')).toBe('no dice')
+    expect(i18n.t('admin:console.people.suspendError')).toBe('no dice')
   })
 
   it('refuses a replacement that drops a placeholder, and names it', () => {
@@ -225,17 +225,17 @@ describe('saving an override', () => {
 
 describe('reverting to the shipped wording', () => {
   it('reads the catalog as SHIPPED, not the store an override has already edited', () => {
-    const shipped = shippedValue('admin', 'accounts.detailError')
-    expect(shipped).toBe('Could not load account detail.')
+    const shipped = shippedValue('admin', 'console.people.ring.loadError')
+    expect(shipped).toBe('Could not load the vote ring.')
 
-    i18n.addResource('en', 'admin', 'accounts.detailError', 'overridden wording')
-    expect(i18n.t('admin:accounts.detailError')).toBe('overridden wording')
+    i18n.addResource('en', 'admin', 'console.people.ring.loadError', 'overridden wording')
+    expect(i18n.t('admin:console.people.ring.loadError')).toBe('overridden wording')
 
     // Fails if `init` gets `resources` by reference: ResourceStore mutates it.
-    expect(shippedValue('admin', 'accounts.detailError')).toBe(shipped)
+    expect(shippedValue('admin', 'console.people.ring.loadError')).toBe(shipped)
 
-    i18n.addResource('en', 'admin', 'accounts.detailError', shipped)
-    expect(i18n.t('admin:accounts.detailError')).toBe('Could not load account detail.')
+    i18n.addResource('en', 'admin', 'console.people.ring.loadError', shipped)
+    expect(i18n.t('admin:console.people.ring.loadError')).toBe('Could not load the vote ring.')
   })
 
   it('keeps the exported catalog free of every override applied so far', () => {
@@ -294,7 +294,7 @@ describe('plural forms (#3165)', () => {
 
   it('offers each form of the bare key the click yields, and nothing for a simple key', () => {
     expect(pluralForms(bare).map((form) => form.key)).toEqual([key('one'), key('other')])
-    expect(pluralForms({ ns: 'admin', key: 'accounts.suspendError' })).toEqual([])
+    expect(pluralForms({ ns: 'admin', key: 'console.people.suspendError' })).toEqual([])
   })
 
   it('saves each form at its own key and reverts one without touching the other', async () => {

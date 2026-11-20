@@ -2465,6 +2465,8 @@ export interface components {
         CharacterSummary: {
             /** Account Id */
             account_id: number;
+            /** Account Status */
+            account_status: string;
             /**
              * Created At
              * Format: date-time
@@ -2486,6 +2488,8 @@ export interface components {
             username: string;
             /** Votes Available */
             votes_available: number;
+            /** Votes Cast */
+            votes_cast: number;
         };
         /**
          * CharacterUpdate
@@ -4722,12 +4726,14 @@ export interface components {
             average_stars: number;
             /** Display Name */
             display_name: string;
-            /** Reciprocal */
-            reciprocal: boolean;
             /** Share */
             share: number;
             /** Votes */
             votes: number;
+            /** Votes Back */
+            votes_back: number;
+            /** Votes Back Of */
+            votes_back_of: number;
         };
         /**
          * SidebarOut
@@ -5136,10 +5142,10 @@ export interface components {
         };
         /** VoteRingOut */
         VoteRingOut: {
+            /** Eligible */
+            eligible: number;
             /** Recipients */
             recipients: components["schemas"]["RingRecipient"][];
-            /** Top3 Share */
-            top3_share: number;
             /** Total Votes */
             total_votes: number;
         };
@@ -5629,6 +5635,7 @@ export interface operations {
             query?: {
                 faction?: string | null;
                 status?: components["schemas"]["CharacterStatus"] | null;
+                search?: string | null;
             };
             header?: never;
             path?: never;

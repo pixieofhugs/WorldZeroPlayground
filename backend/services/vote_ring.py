@@ -4,13 +4,11 @@ from collections import defaultdict
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from models.character import Character
+from models.character import Character, CharacterStatus
 from models.praxis import PraxisMember
 from models.vote import Vote
 from schemas.admin import RingRecipient, VoteRingOut
 from services.era import get_current_era_row
-
-_TOP_N = 3
 
 
 async def get_vote_ring(account_id: int, session: AsyncSession) -> VoteRingOut:
@@ -46,27 +44,50 @@ async def get_vote_ring(account_id: int, session: AsyncSession) -> VoteRingOut:
         if (vote_id, value) not in votes_by[recipient_id]:
             votes_by[recipient_id].append((vote_id, value))
 
-    returned: set[int] = set()
-    if votes_by:
-        returned = set(
-            await session.scalars(
-                select(Vote.voter_account_id)
-                .join(PraxisMember, PraxisMember.praxis_id == Vote.praxis_id)
-                .join(Character, Character.id == PraxisMember.character_id)
-                .where(
-                    Vote.voter_account_id.in_(votes_by),
-                    Character.account_id == account_id,
-                    in_era,
-                )
-                .distinct()
+    # Account-level, like the vote itself (ADR-0041): never your own account's
+    # characters. Banned and departed lives can't be voted for.
+    eligible = (
+        await session.scalar(
+            select(func.count(func.distinct(Character.account_id))).where(
+                Character.account_id != account_id,
+                Character.status != CharacterStatus.banned,
             )
+        )
+        or 0
+    )
+
+    back: dict[int, int] = {}
+    back_of: dict[int, int] = {}
+    if votes_by:
+        back = dict(
+            (
+                await session.execute(
+                    select(Vote.voter_account_id, func.count(func.distinct(Vote.id)))
+                    .join(PraxisMember, PraxisMember.praxis_id == Vote.praxis_id)
+                    .join(Character, Character.id == PraxisMember.character_id)
+                    .where(
+                        Vote.voter_account_id.in_(votes_by),
+                        Character.account_id == account_id,
+                        in_era,
+                    )
+                    .group_by(Vote.voter_account_id)
+                )
+            ).all()
+        )
+        back_of = dict(
+            (
+                await session.execute(
+                    select(Vote.voter_account_id, func.count(Vote.id))
+                    .where(Vote.voter_account_id.in_(votes_by), in_era)
+                    .group_by(Vote.voter_account_id)
+                )
+            ).all()
         )
 
     ranked = sorted(votes_by, key=lambda r: (-len(votes_by[r]), r))
-    top_vote_ids = {v for r in ranked[:_TOP_N] for v, _ in votes_by[r]}
     return VoteRingOut(
         total_votes=total_votes,
-        top3_share=len(top_vote_ids) / total_votes if total_votes else 0.0,
+        eligible=eligible,
         recipients=[
             RingRecipient(
                 account_id=r,
@@ -74,7 +95,8 @@ async def get_vote_ring(account_id: int, session: AsyncSession) -> VoteRingOut:
                 votes=len(votes_by[r]),
                 average_stars=sum(val for _, val in votes_by[r]) / len(votes_by[r]),
                 share=len(votes_by[r]) / total_votes,
-                reciprocal=r in returned,
+                votes_back=back.get(r, 0),
+                votes_back_of=back_of.get(r, 0),
             )
             for r in ranked
         ],
