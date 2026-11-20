@@ -17,3 +17,8 @@
   .adm-sw .adm-td { border-top: 0; }
   .adm-sw tr { padding: var(--space-xs) 0; border-top: 1px solid var(--color-border); }
 }
+
+.adm-sw .adm-card {
+  flex: none;
+  overflow-x: auto;
+}
