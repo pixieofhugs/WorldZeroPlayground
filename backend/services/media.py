@@ -101,12 +101,12 @@ def display_path_for(file_path: str) -> str:
 def make_display_bytes(contents: bytes) -> bytes | None:
     """WebP display copy, or ``None`` when it would not help (animated, or not smaller).
 
-    ``contents`` is already stripped and upright, so this keeps no metadata.
+    Upright via EXIF (backfill reads pre-scrub originals); the copy keeps no metadata.
     """
     with Image.open(io.BytesIO(contents)) as source:
         if getattr(source, "n_frames", 1) > 1:
             return None
-        image = source.copy()
+        image = ImageOps.exif_transpose(source)
     image.thumbnail((DISPLAY_MAX_SIDE, DISPLAY_MAX_SIDE), Image.LANCZOS)
     if image.mode not in ("RGB", "RGBA", "L"):
         image = image.convert("RGBA" if "transparency" in image.info else "RGB")

@@ -589,3 +589,14 @@ def test_display_backfill_is_idempotent_and_dry_run_is_inert(tmp_path, monkeypat
     assert media.write_missing_display_copy("a.jpg", apply=True) is True
     assert (tmp_path / "a.display.webp").exists()
     assert media.write_missing_display_copy("a.jpg", apply=True) is False
+
+
+def test_display_copy_is_upright_for_exif_orientation():
+    exif = Image.Exif()
+    exif[0x0112] = 6
+    raw = io.BytesIO()
+    noise = Image.effect_noise((3000, 2000), 100).convert("RGB")
+    noise.save(raw, format="JPEG", exif=exif)
+    display = media.make_display_bytes(raw.getvalue())
+    assert display is not None
+    assert Image.open(io.BytesIO(display)).size == (1067, 1600)
