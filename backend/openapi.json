@@ -1333,6 +1333,18 @@
       },
       "CommentModerationIn": {
         "properties": {
+          "admin_note": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Admin Note"
+          },
           "status": {
             "enum": [
               "visible",
@@ -1431,6 +1443,17 @@
       },
       "CommentOut": {
         "properties": {
+          "admin_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Admin Note"
+          },
           "author": {
             "$ref": "#/components/schemas/CommentAuthor"
           },
@@ -1496,7 +1519,8 @@
           "created_at",
           "updated_at",
           "author",
-          "mentions"
+          "mentions",
+          "admin_note"
         ],
         "title": "CommentOut",
         "type": "object"
@@ -2917,6 +2941,17 @@
       "FlaggedCommentOut": {
         "description": "CommentOut plus its flag rows.",
         "properties": {
+          "admin_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Admin Note"
+          },
           "author": {
             "$ref": "#/components/schemas/CommentAuthor"
           },
@@ -2991,6 +3026,7 @@
           "updated_at",
           "author",
           "mentions",
+          "admin_note",
           "flags"
         ],
         "title": "FlaggedCommentOut",
@@ -15341,6 +15377,22 @@
               "title": "Task Id",
               "type": "integer"
             }
+          },
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
           }
         ],
         "responses": {
@@ -15369,6 +15421,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "List Task Comments",
         "tags": [
           "comments"
