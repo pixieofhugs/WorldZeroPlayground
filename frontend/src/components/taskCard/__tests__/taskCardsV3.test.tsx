@@ -211,7 +211,7 @@ describe('albescent draws the same rule, fainter (#2030)', () => {
     const unaffiliated = render(SKINS.find((s) => s.slug === 'na')!)
     expect(albescent.html).toContain(unaffiliated.html)
     // `alb-moves` animates the spectra; `alb-prism` is the droppable ground.
-    expect(albescent.html).toContain('class="alb-task alb-moves alb-prism"')
+    expect(albescent.html).toContain('class="alb-task alb-moves task-fit-card alb-prism"')
     expect(unaffiliated.html).toContain('opacity:var(--faction-default-cta-rule-opacity, 0.6)')
   })
 })

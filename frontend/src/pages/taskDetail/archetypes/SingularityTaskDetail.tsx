@@ -4,7 +4,6 @@ import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
 import SingularityLamps from "../../../components/factionMarks/SingularityLamps";
 import SingularityProcessLight from "../../../components/factionMarks/SingularityProcessLight";
-import { useFormFactor } from "../../../hooks/useFormFactor";
 import { factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
 import {
@@ -104,7 +103,6 @@ export default function SingularityTaskDetail({
   state: TaskDetailState;
 }) {
   const { t } = useTranslation("tasks");
-  const desktop = useFormFactor() !== "mobile";
   // Expands in place; deliberately no link out to `/praxis?task_id=N`.
   const [showAllPraxis, setShowAllPraxis] = useState(false);
   const {
@@ -138,7 +136,7 @@ export default function SingularityTaskDetail({
     background: BG,
     border: `1px solid ${BORDER}`,
     borderRadius: 5,
-    padding: desktop ? "var(--space-lg)" : "var(--space-md)",
+    padding: "var(--fx-space-lg--md, var(--space-lg))",
     boxSizing: "border-box",
   };
   const panelBox: CSSProperties = {
@@ -154,15 +152,13 @@ export default function SingularityTaskDetail({
     textAlign: "center",
     textDecoration: "none",
     fontFamily: MONO,
-    fontSize: desktop ? "var(--text-xl)" : "var(--text-lg)",
+    fontSize: "var(--fx-text-xl--lg, var(--text-xl))",
     letterSpacing: "0.06em",
     color: CTA_INK,
     background: CTA_BG,
     border: `1.5px solid ${BRIGHT}`,
     borderRadius: 5,
-    padding: desktop
-      ? "var(--space-md) var(--space-lg)"
-      : "var(--space-sm) var(--space-md)",
+    padding: "var(--fx-space-md-lg--sm-md, var(--space-md) var(--space-lg))",
     boxShadow: "var(--faction-singularity-term-cta-glow)",
   };
   /** Punctuation, not copy — hidden from the a11y tree. */
@@ -186,7 +182,7 @@ export default function SingularityTaskDetail({
       <span
         style={{
           fontFamily: MONO,
-          fontSize: desktop ? "var(--text-xl)" : "var(--text-lg)",
+          fontSize: "var(--fx-text-xl--lg, var(--text-xl))",
           color: BLUE_BRIGHT,
         }}
       >
@@ -251,7 +247,7 @@ export default function SingularityTaskDetail({
       <h1
         style={{
           fontFamily: MONO,
-          fontSize: desktop ? "var(--text-heading)" : "var(--text-title)",
+          fontSize: "var(--fx-text-heading--title, var(--text-heading))",
           lineHeight: 1.2,
           color: BRIGHT,
           margin: "0 0 var(--space-lg)",
@@ -357,7 +353,7 @@ export default function SingularityTaskDetail({
         style={{
           display: "flex",
           alignItems: "flex-end",
-          gap: desktop ? "var(--space-xl)" : "var(--space-lg)",
+          gap: "var(--fx-space-xl--lg, var(--space-xl))",
           flexWrap: "wrap",
         }}
       >
@@ -368,7 +364,7 @@ export default function SingularityTaskDetail({
           <span
             style={{
               fontFamily: MONO,
-              fontSize: desktop ? "var(--text-heading)" : "var(--text-title)",
+              fontSize: "var(--fx-text-heading--title, var(--text-heading))",
               lineHeight: 0.85,
               color: BRIGHT,
             }}
@@ -387,7 +383,7 @@ export default function SingularityTaskDetail({
           <span
             style={{
               fontFamily: MONO,
-              fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
+              fontSize: "var(--fx-text-title--content, var(--text-title))",
               lineHeight: 0.85,
               color: BRIGHT,
             }}
@@ -541,7 +537,7 @@ export default function SingularityTaskDetail({
         style={{
           ...innerBox,
           flex: hasAction ? "0 0 auto" : "1 1 auto",
-          minWidth: desktop ? 160 : 118,
+          minWidth: "var(--fx-worth-min-singularity, 160px)",
           display: "flex",
           flexDirection: "column",
           justifyContent: "center",
@@ -568,10 +564,10 @@ export default function SingularityTaskDetail({
 
   // The brief, in full. No clamp.
   const brief = (
-    <section style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}>
+    <section style={{ marginBottom: "var(--fx-space-2xl--xl, var(--space-2xl))" }}>
       {sectionHead(t("detail.brief.heading"))}
       {task.description && (
-        <div style={{ ...panelBox, padding: desktop ? "var(--space-xl)" : "var(--space-lg)" }}>
+        <div style={{ ...panelBox, padding: "var(--fx-space-xl--lg, var(--space-xl))" }}>
           <p
             className="content-text"
             style={{
@@ -590,7 +586,7 @@ export default function SingularityTaskDetail({
   );
 
   const gallery = (
-    <section style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}>
+    <section style={{ marginBottom: "var(--fx-space-2xl--xl, var(--space-2xl))" }}>
       <div
         style={{
           display: "flex",
@@ -603,7 +599,7 @@ export default function SingularityTaskDetail({
         <span
           style={{
             fontFamily: MONO,
-            fontSize: desktop ? "var(--text-xl)" : "var(--text-lg)",
+            fontSize: "var(--fx-text-xl--lg, var(--text-xl))",
             color: BLUE_BRIGHT,
           }}
         >
@@ -748,18 +744,16 @@ export default function SingularityTaskDetail({
           style={{
             position: "relative",
             zIndex: 2,
-            padding: desktop
-              ? "var(--space-2xl) var(--space-2xl) var(--space-3xl)"
-              : "var(--space-lg) var(--space-md) var(--space-xl)",
+            padding: "var(--fx-shell-pad, var(--space-2xl) var(--space-2xl) var(--space-3xl))",
           }}
         >
           <div
             style={{
               display: "flex",
-              flexDirection: desktop ? "row" : "column",
-              alignItems: desktop ? "flex-start" : "stretch",
-              gap: desktop ? "var(--space-2xl)" : "var(--space-xl)",
-              marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)",
+              flexDirection: "var(--fx-row-direction, row)" as "row",
+              alignItems: "var(--fx-align, flex-start)",
+              gap: "var(--fx-space-2xl--xl, var(--space-2xl))",
+              marginBottom: "var(--fx-space-2xl--xl, var(--space-2xl))",
             }}
           >
             <div style={{ flex: 1, minWidth: 0 }}>
@@ -769,8 +763,8 @@ export default function SingularityTaskDetail({
             </div>
             <div
               style={{
-                ...actionColumnSize({ desktop, hasAction, width: 440 }),
-                marginTop: desktop ? "var(--space-sm)" : 0,
+                ...actionColumnSize({ hasAction, width: 440 }),
+                marginTop: "var(--fx-action-top, var(--space-sm))",
               }}
             >
               {actionPanel}

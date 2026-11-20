@@ -3,7 +3,7 @@
 Async gather-and-assemble over the pure arithmetic in ``services.scoring``.
 """
 from dataclasses import dataclass
-from typing import Optional
+from typing import Mapping, Optional
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -59,6 +59,25 @@ async def compute_contributions(
     ``praxes``: the caller-gathered submitted, non-hidden praxes this character
     authored (solo/duel) or is a collab member of. Bulk queries, no N+1.
     """
+    return await compute_owner_contributions(
+        praxes,
+        {p.id: character for p in praxes},
+        {character.id: character_level},
+        era,
+        session,
+    )
+
+
+async def compute_owner_contributions(
+    praxes: list[Praxis],
+    owner_by_praxis: Mapping[int, Character],
+    level_by_character: Mapping[int, int],
+    era: EraConfig,
+    session: AsyncSession,
+) -> dict[int, Contribution]:
+    """``compute_contributions`` for many characters at once: same queries
+    whatever the author count. Praxes absent from ``owner_by_praxis`` are skipped."""
+    praxes = [p for p in praxes if p.id in owner_by_praxis]
     if not praxes:
         return {}
 
@@ -121,7 +140,12 @@ async def compute_contributions(
     # seal set):
     # the level gate can zero the points while the seal stays, which is legitimate.
     meta_points = await get_meta_task_points_bulk(
-        praxis_ids, character_level=character_level, session=session
+        praxis_ids,
+        character_level={
+            pid: level_by_character.get(owner.id, 0)
+            for pid, owner in owner_by_praxis.items()
+        },
+        session=session,
     )
 
     # Habit bonus as stamped at seal (#1617), never derived: the two callers hold
@@ -129,17 +153,26 @@ async def compute_contributions(
     # character's rows only. A query, not ``praxis.members``: in-session praxes
     # have unloaded collections (lazy load raises ``MissingGreenlet``).
     habit_result = await session.execute(
-        select(PraxisMember.praxis_id, PraxisMember.habit_bonus_points).where(
+        select(
+            PraxisMember.praxis_id,
+            PraxisMember.character_id,
+            PraxisMember.habit_bonus_points,
+        ).where(
             PraxisMember.praxis_id.in_(praxis_ids),
-            PraxisMember.character_id == character.id,
+            PraxisMember.character_id.in_({o.id for o in owner_by_praxis.values()}),
         )
     )
-    habit_bonus_by_praxis: dict[int, int] = dict(habit_result.all())
+    habit_bonus_by_praxis: dict[int, int] = {
+        pid: bonus
+        for pid, member_id, bonus in habit_result.all()
+        if owner_by_praxis[pid].id == member_id
+    }
 
     contributions: dict[int, Contribution] = {}
-    character_faction = character.faction_slug or UNAFFILIATED_FACTION_SLUG
 
     for praxis in praxes:
+        character = owner_by_praxis[praxis.id]
+        character_faction = character.faction_slug or UNAFFILIATED_FACTION_SLUG
         task = tasks_by_id.get(praxis.task_id)
         if task is None:
             continue

@@ -1133,12 +1133,14 @@
   --faction-wow-balloon-3: #be7370;
   --faction-wow-balloon-4: #d69a48;
   --faction-wow-balloon-5: #e7b94e;
-  /* An UNREACHED balloon is drawn, not outlined-and-hollow: the design fills it
-     with a dead parchment #EDE4C8 so the whole bunch is present and only the
-     colour climbs (#860 ask 3). #821 made it transparent, which read as four
-     missing balloons. It is the PLATE's own parchment a shade down — see the
-     dark half, where that is the whole argument. */
-  --faction-wow-balloon-idle: #ede4c8;
+  /* An UNREACHED balloon sleeps in its own tier colour: a wash of the tier into
+     the plate, so the ramp shows before anyone votes (#3454). */
+  --faction-wow-balloon-1-idle: color-mix(in srgb, var(--faction-wow-plum-surface) 38%, var(--faction-wow-balloon-plate-to));
+  --faction-wow-balloon-2-idle: color-mix(in srgb, var(--faction-wow-balloon-2) 38%, var(--faction-wow-balloon-plate-to));
+  --faction-wow-balloon-3-idle: color-mix(in srgb, var(--faction-wow-balloon-3) 38%, var(--faction-wow-balloon-plate-to));
+  --faction-wow-balloon-4-idle: color-mix(in srgb, var(--faction-wow-balloon-4) 38%, var(--faction-wow-balloon-plate-to));
+  --faction-wow-balloon-5-idle: color-mix(in srgb, var(--faction-wow-balloon-5) 38%, var(--faction-wow-balloon-plate-to));
+  --faction-wow-balloon-eye-closed: rgba(60, 44, 6, 0.65);
   /* Every balloon carries the same outline — the googly-cartoon line, not a
      state signal (#860 ask 3). Dark ink here, parchment in the dark cascade,
      for the same reason the string flips: it is drawn against the plate. */

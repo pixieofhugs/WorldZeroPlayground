@@ -42,6 +42,7 @@ const PHOTO: MediaItemOut = {
   praxis_id: 55,
   type: "image",
   file_path: "proofs/estuary.png",
+  display_path: null,
   display_order: 0,
   created_at: "2026-01-01T00:00:00Z",
 };

@@ -41,3 +41,5 @@ frontend/index.d.ts
 
 # A failed `tsc -b` leaves these behind, and one was committed once.
 *.tsbuildinfo
+
+deploy/offsite.env

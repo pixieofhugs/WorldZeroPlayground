@@ -1,6 +1,8 @@
 from datetime import datetime
 from typing import List, Optional
+from pydantic import computed_field
 from schemas.base import WireModel
+from services.media import existing_display_path
 from schemas.task import TaskOut
 from models.praxis import PraxisType, PraxisStatus, PraxisInviteStatus, MediaType, ModerationStatus
 
@@ -14,6 +16,14 @@ class MediaItemOut(WireModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+    @computed_field
+    @property
+    def display_path(self) -> Optional[str]:
+        """Smaller copy of an image for cards and tiles; null when none was made."""
+        if self.type is not MediaType.image:
+            return None
+        return existing_display_path(self.file_path)
 
 
 class MediaUploadResultOut(WireModel):

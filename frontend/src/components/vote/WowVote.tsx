@@ -8,8 +8,8 @@ import { VOTE_REFRAMES } from './voteReframes'
 /**
  * Warriors of Whimsy vote UI (#840): googly balloons, ported from the vendored
  * prototype (ADR-0049, ADR-0050). Rainbow sweep, a 19→36px size ramp, rank-5
- * confetti. Unreached balloons are dead parchment, not transparent (#860), or
- * they read as missing.
+ * confetti. Unreached balloons sleep: a wash of their own tier colour with closed eyes
+ * (#3454), not transparent (#860), or they read as missing.
  *
  * Each button is a 44px hit box with the balloon bottom-centred; inflating the
  * SVG would flatten the ramp. Motion is reduced-motion-gated CSS classes only.
@@ -22,6 +22,15 @@ const BALLOON_FILLS = [
   'var(--faction-wow-balloon-3)',
   'var(--faction-wow-balloon-4)',
   'var(--faction-wow-balloon-5)',
+]
+
+/** The same five tiers asleep. */
+const BALLOON_IDLE_FILLS = [
+  'var(--faction-wow-balloon-1-idle)',
+  'var(--faction-wow-balloon-2-idle)',
+  'var(--faction-wow-balloon-3-idle)',
+  'var(--faction-wow-balloon-4-idle)',
+  'var(--faction-wow-balloon-5-idle)',
 ]
 
 const BALLOON_WIDTHS = [19, 23, 27, 31, 36]
@@ -38,7 +47,7 @@ const CONFETTI = [
 
 const TIERS = VOTE_REFRAMES['wow'].tiers
 
-function Balloon({ fill, width, height }: { fill: string; width: number; height: number }) {
+function Balloon({ fill, width, height, asleep }: { fill: string; width: number; height: number; asleep: boolean }) {
   return (
     <svg viewBox="0 0 34 52" width={width} height={height} aria-hidden style={{ overflow: 'visible' }}>
       <ellipse
@@ -64,17 +73,29 @@ function Balloon({ fill, width, height }: { fill: string; width: number; height:
         strokeWidth={1.2}
       />
       <ellipse cx={10} cy={9.5} rx={2.4} ry={3.3} fill="rgba(255,255,255,0.5)" />
-      <circle cx={12} cy={15.5} r={4} fill="var(--faction-wow-balloon-eye-white)" stroke="var(--faction-wow-balloon-eye-ring)" strokeWidth={1} />
-      <circle className="wow-balloon-eye" cx={12} cy={16.5} r={1.8} fill="var(--faction-wow-balloon-eye)" />
-      <circle cx={22} cy={15.5} r={4} fill="var(--faction-wow-balloon-eye-white)" stroke="var(--faction-wow-balloon-eye-ring)" strokeWidth={1} />
-      <circle className="wow-balloon-eye" cx={22} cy={16.5} r={1.8} fill="var(--faction-wow-balloon-eye)" />
-      <path
-        d="M13.5,23.5 q3.5,3.5 7,0"
-        fill="none"
-        stroke="var(--faction-wow-balloon-outline)"
-        strokeWidth={1.4}
-        strokeLinecap="round"
-      />
+      {asleep ? (
+        <path
+          d="M9,15.5 q3,2.6 6,0 M19,15.5 q3,2.6 6,0"
+          fill="none"
+          stroke="var(--faction-wow-balloon-eye-closed)"
+          strokeWidth={1.4}
+          strokeLinecap="round"
+        />
+      ) : (
+        <>
+        <circle cx={12} cy={15.5} r={4} fill="var(--faction-wow-balloon-eye-white)" stroke="var(--faction-wow-balloon-eye-ring)" strokeWidth={1} />
+        <circle className="wow-balloon-eye" cx={12} cy={16.5} r={1.8} fill="var(--faction-wow-balloon-eye)" />
+        <circle cx={22} cy={15.5} r={4} fill="var(--faction-wow-balloon-eye-white)" stroke="var(--faction-wow-balloon-eye-ring)" strokeWidth={1} />
+        <circle className="wow-balloon-eye" cx={22} cy={16.5} r={1.8} fill="var(--faction-wow-balloon-eye)" />
+        <path
+          d="M13.5,23.5 q3.5,3.5 7,0"
+          fill="none"
+          stroke="var(--faction-wow-balloon-outline)"
+          strokeWidth={1.4}
+          strokeLinecap="round"
+        />
+        </>
+      )}
     </svg>
   )
 }
@@ -141,7 +162,7 @@ export default function WowVote({ praxisId, currentValue }: VoteUIProps) {
               style={balloonStyle}
             >
               <span
-                className={reached && !cheering ? 'wow-balloon-float' : undefined}
+                className={reached ? (cheering ? undefined : 'wow-balloon-float') : 'wow-balloon-snooze'}
                 style={{
                   position: 'relative',
                   display: 'flex',
@@ -149,7 +170,8 @@ export default function WowVote({ praxisId, currentValue }: VoteUIProps) {
                 }}
               >
                 <Balloon
-                  fill={reached ? BALLOON_FILLS[index] : 'var(--faction-wow-balloon-idle)'}
+                  fill={reached ? BALLOON_FILLS[index] : BALLOON_IDLE_FILLS[index]}
+                  asleep={!reached}
                   width={BALLOON_WIDTHS[index]}
                   height={BALLOON_HEIGHTS[index]}
                 />

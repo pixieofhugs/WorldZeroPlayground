@@ -194,6 +194,11 @@ arc**, which has exactly one destination.
   for their own safety and the legality of real-world actions. What it lacks is a version
   identifier, a statement of what agreeing binds you to, and any mention of the photographs
   the player is about to post publicly.
+- **Deleted-account record (#3451).** The Disclaimer's `p4` says what ADR-0081 keeps after
+  deletion: the provider plus a salted hash of each linked sign-in ID. **The wording is
+  a placeholder** pending the owner's site-wide copy pass. **Open for that pass:** the
+  90-day retention is only enforced when the same identity signs in again, so an unvisited
+  tombstone is kept indefinitely (`account_deletion.py`); p4 states no duration until decided.
 - **Accepted before sign-in.** The contract comes after the intro and before the auth
   card. Pre-auth acceptance was first rejected on what the record would be worth: with no
   identity yet, the server can bind the click only to a browser session and must then trust

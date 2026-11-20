@@ -123,7 +123,7 @@ export const stickPraxis = makePraxis({
   body_text: 'Found him under an oak in the park. Gave him a crown and my second-best sunglasses. He is coming home with me.',
   created_by_display_name: 'Agent Teacup',
   created_by_avatar_url: drawings.agentTeacup,
-  media_items: [{ id: 9001, praxis_id: 501, type: 'image', file_path: drawings.coolStick, display_order: 0, created_at: NOW }],
+  media_items: [{ id: 9001, praxis_id: 501, type: 'image', file_path: drawings.coolStick, display_path: null, display_order: 0, created_at: NOW }],
   points_from_votes: 12,
   score: 17,
 })
@@ -141,7 +141,7 @@ export const dragonPraxis = makePraxis({
   created_by_id: 9,
   created_by_display_name: 'Wizard Wobblewand',
   created_by_avatar_url: drawings.nightGardener,
-  media_items: [{ id: 9002, praxis_id: 502, type: 'image', file_path: drawings.laundryDragon, display_order: 0, created_at: NOW }],
+  media_items: [{ id: 9002, praxis_id: 502, type: 'image', file_path: drawings.laundryDragon, display_path: null, display_order: 0, created_at: NOW }],
   score: dragonTask.point_value,
   viewer_can_vote: true,
 })

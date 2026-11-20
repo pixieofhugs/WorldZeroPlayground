@@ -64,6 +64,7 @@ from services.media import (
     restore_media_to_mount,
     withdraw_media_from_mount,
 )
+from services.mod_log import log_mod_action
 from services.praxis_duel import (
     discard_dissolved_duels_for_praxis,
     get_duel_for_praxis,
@@ -1334,6 +1335,9 @@ async def moderate_praxis(
     admin_note: Optional[str],
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
+    *,
+    actor_id: int,
+    log: bool = True,
 ) -> Praxis:
     """Admin moderation: update moderation_status and admin_note.
 
@@ -1350,6 +1354,10 @@ async def moderate_praxis(
         raise HTTPException(status_code=422, detail=f"Invalid moderation status: {new_status}")
 
     praxis.moderation_status = mod_enum
+    if log:
+        await log_mod_action(
+            session, actor_id, f"praxis_{mod_enum.value}", "praxis", praxis_id
+        )
 
     if mod_enum == ModerationStatus.flagged:
         praxis.flagged_at = datetime.now(timezone.utc)
