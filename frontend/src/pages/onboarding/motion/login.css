@@ -14,7 +14,7 @@
 .ob-auth-nav .ob-ghost:first-child{margin-left:-14px}
 .ob-auth-nav .ob-ghost:last-child{margin-right:-14px;display:inline-flex;align-items:center;text-decoration:none}
 .ob-welcome{flex-direction:column;gap:24px;text-align:center}
-.ob-welcome h1{margin:0;font-size:clamp(40px,7cqi,84px);white-space:nowrap}
+.ob-welcome h1{margin:0;font-size:clamp(40px,calc(7cqi + 5.6px),84px);white-space:nowrap}
 .ob-welcome-box{width:min(100%,460px);padding:22px;display:flex;flex-direction:column;gap:var(--space-md);animation-delay:1.4s}
 .ob-restart{animation-delay:1.8s}
 .ob-restart::before{content:"↺ "}

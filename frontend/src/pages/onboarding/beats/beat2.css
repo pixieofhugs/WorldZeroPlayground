@@ -1,5 +1,5 @@
 /* Beat 2: the wisp flicks each hat off, its hair springs up, the next hat squashes it flat. Ported from src.html's "beat 2: hats". */
-.b2-row{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:clamp(20px,5cqi,44px)}
+.b2-row{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:clamp(20px,calc(5cqi + 4px),44px)}
 .b2-pic{position:relative;width:160px;height:160px}
 .b2-ring{box-sizing:border-box;width:160px;height:160px;border-radius:50%;padding:4px;background-image:var(--faction-default-rainbow-conic);-webkit-mask:conic-gradient(#000 var(--sweep),transparent 0);mask:conic-gradient(#000 var(--sweep),transparent 0);animation:ob-sweep 1.4s cubic-bezier(.5,0,.2,1) forwards,ob-thump 1.7s ease-out forwards}
 .b2-pic .ob-disc{border-radius:50%}
