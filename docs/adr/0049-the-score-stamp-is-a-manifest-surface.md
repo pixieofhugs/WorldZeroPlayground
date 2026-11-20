@@ -3,8 +3,8 @@
 **Status:** Amended by ADR-0053, ADR-0076
 **Date:** 2026-07-20
 
-**Narrows:** **ADR-0047** (its row-selection rules survive intact; only the
-"one presentation" implication is withdrawn)
+**Narrows:** **ADR-0047** (only the "one presentation" implication is withdrawn;
+its row rules are now owned by ADR-0053/0076, see Amendment)
 **Relates to:** ADR-0039 (`Default*` fall-through), ADR-0050 (WOW/Coven identity),
 `docs/agents/design-fidelity.md`
 
@@ -93,7 +93,7 @@ one import site and do not care which mechanism is underneath.
 - Nine small presentation files instead of one shared one, with no deduplication
   between them. Accepted deliberately; it is the same trade the faction card
   archetypes already make.
-- ADR-0047 is **not** superseded. Its conditional-row rules are the shared half
+- ~~ADR-0047 is **not** superseded.~~ *[2026-11-19, #3556: ADR-0047 is superseded; its row rules are owned by ADR-0053/0076.]* The conditional-row rules are the shared half
   of this decision and one `scoreBreakdown` test keeps all nine honest.
 - `PraxisScoreStrip` (the invented mobile `BASE ∣ MULT ∣ VOTES ∣ TOT` strip) is
   no longer the mobile presentation by default; a faction's stamp is
@@ -103,4 +103,4 @@ one import site and do not care which mechanism is underneath.
 
 ## Amendment (2026-11-19, #3426)
 
-"ADR-0047's row rules: mult hidden at `x1.0` or collab, ... votes always" is out of date. `scoreBreakdown.ts` has no collab case (`mult` is null only at x1.0), and `votes` is null at 0 or less so a base-only score reads as a bare total (ADR-0076). ADR-0053 made the total one computed number. Which record owns the row rules (0047 or 0053/0076) is an open owner call; this amendment does not decide it.
+"ADR-0047's row rules: mult hidden at `x1.0` or collab, ... votes always" is out of date. `scoreBreakdown.ts` has no collab case (`mult` is null only at x1.0), and `votes` is null at 0 or less so a base-only score reads as a bare total (ADR-0076). ADR-0053 made the total one computed number. Ruled in #3556: ADR-0053 and ADR-0076 own the row rules; ADR-0047 stays Superseded.

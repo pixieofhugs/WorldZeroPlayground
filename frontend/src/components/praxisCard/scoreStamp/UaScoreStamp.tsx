@@ -12,7 +12,7 @@ import type { ScoreStampProps } from "./ScoreStamp";
  * The UA score stamp (#857, ADR-0049): a quiet ruled score box (engraved `base`,
  * Cormorant figure, multiplier chip on the same row, italic working beneath) over
  * the ensō carrying the total. Warm on purpose, see `UaPraxisCard`; colours are
- * `--faction-ua-card-*` only. Rows and order are `scoreBreakdown`'s (ADR-0047,
+ * `--faction-ua-card-*` only. Rows and order are `scoreBreakdown`'s (ADR-0053,
  * ADR-0076, #2634). Raw numbers are ornament (§4a).
  */
 

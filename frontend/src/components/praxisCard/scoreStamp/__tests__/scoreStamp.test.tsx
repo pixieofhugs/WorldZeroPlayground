@@ -1,5 +1,5 @@
 /**
- * Score stamp (ADR-0047, ADR-0049, ADR-0076): `scoreBreakdown`'s shared row
+ * Score stamp (ADR-0049, ADR-0053, ADR-0076): `scoreBreakdown`'s shared row
  * rules (#839), and per-faction dispatch with `Default*` fall-through.
  */
 import { describe, it, expect, beforeEach } from 'vitest'
@@ -345,7 +345,7 @@ const EPHEMERISTS_LABEL = { base: 'base', points: 'points', votes: 'votes' } as 
 const COVEN_ARCH = '92px 92px 20px 20px / 108px 108px 20px 20px'
 
 /** Each state must still print the total and the stamp's own device. */
-describe('#841 stamps across the conditional states (ADR-0047)', () => {
+describe('#841 stamps across the conditional states (ADR-0053/0076)', () => {
   for (const { name, fields, showsBase, showsVotes } of STATES) {
     it(`Everymen prints the tally and the roundel — ${name}`, () => {
       const html = text(renderToStaticMarkup(<EverymenScoreStamp praxis={praxis({ ...fields })} />))
@@ -501,9 +501,9 @@ describe('#841 stamps across the conditional states (ADR-0047)', () => {
 
 /**
  * The same states on the #842 stamps, whose total marks are typographic and
- * whose notation is their own (ADR-0047 fixes rows, not notation).
+ * whose notation is their own (ADR-0053/0076 fix rows, not notation).
  */
-describe('#842 stamps across the conditional states (ADR-0047)', () => {
+describe('#842 stamps across the conditional states (ADR-0053/0076)', () => {
   for (const { name, fields, showsBase, showsVotes } of STATES) {
     it(`S.N.I.D.E. prints the working and the total in pts — ${name}`, () => {
       const markup = renderToStaticMarkup(<SnideScoreStamp praxis={praxis({ ...fields })} />)
@@ -625,7 +625,7 @@ describe('the rebuilt unaffiliated stamp keeps the real model (#1091)', () => {
   })
 
   it('drops the votes tally at zero — the total says it (ADR-0076)', () => {
-    // ADR-0076 overturns ADR-0047 for this row only.
+    // ADR-0076 owns this row.
     const unvoted = text(
       renderToStaticMarkup(
         <DefaultScoreStamp praxis={praxis({ points_from_votes: 0, score: 12 })} />,
