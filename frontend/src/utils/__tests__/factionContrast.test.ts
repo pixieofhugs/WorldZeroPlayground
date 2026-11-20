@@ -1700,12 +1700,7 @@ const ROLE_READ = String.raw`(?:var\(\s*--[\w-]+\s*,\s*)?`;
 /** Closes {@link ROLE_READ}. Separate because the token sits between them. */
 const ROLE_READ_END = String.raw`\)?`;
 
-/**
- * Sleeping balloons (#3454). `parseColor` rightly refuses a two-colour mix, so
- * the tier wash is rebuilt here from the declared percentage. The body sits on
- * the plate by its outline (a non-text 3:1 would fail by design: it is a wash);
- * what must hold is the closed-eye arc, a graphical object, on its own wash.
- */
+// parseColor refuses two-colour mixes, so the wash is rebuilt from the declared percentage.
 describe("WOW sleeping balloons (#3454)", () => {
   for (const theme of BOTH_THEMES) {
     for (const tier of [1, 2, 3, 4, 5]) {
