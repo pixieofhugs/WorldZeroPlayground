@@ -1700,6 +1700,22 @@ const ROLE_READ = String.raw`(?:var\(\s*--[\w-]+\s*,\s*)?`;
 /** Closes {@link ROLE_READ}. Separate because the token sits between them. */
 const ROLE_READ_END = String.raw`\)?`;
 
+// parseColor refuses two-colour mixes, so the wash is rebuilt from the declared percentage.
+describe("WOW sleeping balloons (#3454)", () => {
+  for (const theme of BOTH_THEMES) {
+    for (const tier of [1, 2, 3, 4, 5]) {
+      it(`${theme} tier ${tier}: closed eyes clear 3:1 on the wash`, () => {
+        const raw = resolveColor(`--faction-wow-balloon-${tier}-idle`, theme).raw;
+        const mix = /^color-mix\(in srgb, (#\w+) ([\d.]+)%, (#\w+)\)$/.exec(raw ?? "");
+        expect(mix, `${raw} is not a two-colour srgb mix`).not.toBeNull();
+        const body = compositeOver({ ...parseColor(mix![1])!, a: Number(mix![2]) / 100 }, parseColor(mix![3])!);
+        const eye = resolveColor("--faction-wow-balloon-eye-closed", theme).color!;
+        expect(contrastRatio(eye, body)).toBeGreaterThanOrEqual(AA_LARGE);
+      });
+    }
+  }
+});
+
 describe("faction token contrast (WCAG AA)", () => {
   for (const theme of BOTH_THEMES) {
     describe(theme, () => {

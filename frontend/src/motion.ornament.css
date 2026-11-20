@@ -160,6 +160,7 @@
 @keyframes wow-bounce { 0%, 100% { transform: translateY(0); } 30% { transform: translateY(-9px); } 55% { transform: translateY(0); } 72% { transform: translateY(-4px); } }
 @keyframes wow-group-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
 @keyframes wow-eye-wiggle { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(1.5px, -1px); } 50% { transform: translate(-1px, 1.5px); } 75% { transform: translate(1px, 1px); } }
+@keyframes wow-snooze { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.04, 0.97); } }
 @keyframes wow-sweep { 0% { left: -55%; } 100% { left: 120%; } }
 @keyframes wow-confetti {
   0% { transform: translateY(-4px) rotate(0deg); opacity: 0; }
@@ -168,6 +169,7 @@
 }
 @media (prefers-reduced-motion: no-preference) {
   .wow-balloon-float { animation: wow-bounce 2.2s ease-in-out infinite; animation-delay: var(--tw-delay, 0s); }
+  .wow-balloon-snooze { transform-origin: 50% 100%; animation: wow-snooze 3s ease-in-out infinite; animation-delay: var(--tw-delay, 0s); }
   .wow-balloon-cheer { animation: wow-group-bounce 1.05s ease-in-out infinite; }
   /* --wow-eye-delay staggers pupils; defaults to 0s. */
   .wow-balloon-eye { transform-box: fill-box; transform-origin: center; animation: wow-eye-wiggle 1.4s ease-in-out infinite; animation-delay: var(--wow-eye-delay, 0s); }
