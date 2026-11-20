@@ -943,8 +943,8 @@ export function BodyTextarea({
   const hostRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   const editableSlot = useRef(new Compartment()).current;
-  // Unseeded = "not yet"; locked = moderated (ADR-0079). Rule in `roomSeal.ts`.
-  const writable = composerWritable(seeded, controlsLocked);
+  // Unseeded = "not yet"; locked = moderated (ADR-0079); ended = kicked or sealed. Rule in `roomSeal.ts`.
+  const writable = composerWritable(seeded, controlsLocked, room?.ended);
   const setBodyRef = useRef(setBody);
   setBodyRef.current = setBody;
   // Live-proposal guard (#1811), a ref so flipping it never touches the editor.

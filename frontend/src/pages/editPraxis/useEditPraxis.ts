@@ -16,6 +16,7 @@
  */
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { roomEndReason } from "./roomSeal";
 import {
   changePraxisType,
   deletePraxis,
@@ -626,6 +627,17 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     [praxis, duel, askConfirm],
   );
 
+  // The room closed on us (kick or seal): refetch so the page catches up and
+  // the composer can say which. A failed refetch reads as removed.
+  const characterId = user?.character?.id;
+  const resolveRoomEnd = useCallback(async () => {
+    const id = parseInt(idParam ?? "", 10);
+    const refetched = await getPraxis(id).catch(() => null);
+    const reason = roomEndReason(refetched, characterId);
+    if (reason === "live" && refetched) setPraxis(refetched);
+    return reason;
+  }, [idParam, characterId]);
+
   const isPublished = praxis?.status === "submitted";
 
   // Published = server doc destroyed (#1745); drop the local copy or `pullBack`
@@ -755,6 +767,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
 
     autosaveAt,
     setAutosaveAt,
+    resolveRoomEnd,
 
     autoSubmitDays,
     proposalConfirmArmed,

@@ -29,7 +29,8 @@ import {
   publishPresence,
   samePresence,
 } from "./roomPresence";
-import { shouldReconnectRoom } from "./roomReconnect";
+import { closeEndsRoom, shouldReconnectRoom } from "./roomReconnect";
+import type { RoomEndReason } from "./roomSeal";
 import { roomStoreName, trackRoomState, trackRoomStore } from "./roomStore";
 import { API_BASE_URL } from "../../api/baseUrl";
 
@@ -84,6 +85,10 @@ export interface PraxisRoom {
    * read-only.
    */
   unreachable: boolean;
+  /** Server closed with 1008 (kick, seal). Unlike `unreachable`, never a server that was down at load. */
+  ended: boolean;
+  /** Null while the refetch is in flight. */
+  endReason: RoomEndReason | null;
   /** The server's document is in step with ours; false while offline or reconnecting. */
   synced: boolean;
 }
@@ -99,6 +104,7 @@ export function usePraxisRoom(): PraxisRoom | null {
 export function PraxisRoomProvider({
   praxisId,
   onUpdate,
+  onEnded,
   children,
 }: {
   praxisId: number | null;
@@ -108,6 +114,8 @@ export function PraxisRoomProvider({
    * provider.
    */
   onUpdate?: (at: Date) => void;
+  /** The close carries no reason; resolve it with a refetch. */
+  onEnded?: () => Promise<RoomEndReason>;
   children: ReactNode;
 }) {
   // Kept apart from `seeded`/`present`: `BodyTextarea` keys its editor on
@@ -120,6 +128,8 @@ export function PraxisRoomProvider({
   const [seeded, setSeeded] = useState(false);
   const [unreachable, setUnreachable] = useState(false);
   const [synced, setSynced] = useState(false);
+  const [ended, setEnded] = useState(false);
+  const [endReason, setEndReason] = useState<RoomEndReason | null>(null);
   const [present, setPresent] = useState<readonly number[]>([]);
   // Narrowed fields: `/auth/me` mints a fresh object per refetch (#1390).
   const character = useAuth().user?.character ?? null;
@@ -129,6 +139,8 @@ export function PraxisRoomProvider({
   // Ref so an inline callback doesn't rebuild the socket each render.
   const onUpdateRef = useRef(onUpdate);
   onUpdateRef.current = onUpdate;
+  const onEndedRef = useRef(onEnded);
+  onEndedRef.current = onEnded;
 
   useEffect(() => {
     if (praxisId == null) {
@@ -136,6 +148,8 @@ export function PraxisRoomProvider({
       setSeeded(false);
       setUnreachable(false);
       setSynced(false);
+      setEnded(false);
+      setEndReason(null);
       setPresent([]);
       return;
     }
@@ -150,6 +164,7 @@ export function PraxisRoomProvider({
     const untrackStore = trackRoomStore(praxisId, offline);
     // Per-effect, not a ref: a new `praxisId`'s socket has opened nothing. Latches.
     let hasOpened = false;
+    let cancelled = false;
     const provider = new WebsocketProvider(
       roomServerUrl(),
       String(praxisId),
@@ -170,7 +185,14 @@ export function PraxisRoomProvider({
     };
     provider.on("status", onStatus);
     // Emitted exactly when `shouldReconnect` says no.
-    const onClosed = () => setUnreachable(true);
+    const onClosed = ({ code }: { code: number }) => {
+      setUnreachable(true);
+      if (!closeEndsRoom(code)) return;
+      setEnded(true);
+      void onEndedRef.current?.().then((reason) => {
+        if (!cancelled) setEndReason(reason);
+      });
+    };
     provider.on("closed", onClosed);
     const awareness = provider.awareness;
     setTypes({ body, meta, awareness });
@@ -209,6 +231,7 @@ export function PraxisRoomProvider({
     );
 
     return () => {
+      cancelled = true;
       doc.off("update", onDocUpdate);
       untrackState();
       provider.off("sync", onSync);
@@ -226,6 +249,8 @@ export function PraxisRoomProvider({
       setSeeded(false);
       setUnreachable(false);
       setSynced(false);
+      setEnded(false);
+      setEndReason(null);
       setPresent([]);
     };
   }, [praxisId]);
@@ -243,8 +268,8 @@ export function PraxisRoomProvider({
   }, [types, characterId, characterName, characterFaction]);
 
   const room = useMemo<PraxisRoom | null>(
-    () => (types === null ? null : { ...types, seeded, unreachable, synced, present }),
-    [types, seeded, unreachable, synced, present],
+    () => (types === null ? null : { ...types, seeded, unreachable, ended, endReason, synced, present }),
+    [types, seeded, unreachable, ended, endReason, synced, present],
   );
 
   return (

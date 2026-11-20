@@ -13,6 +13,7 @@ import type { ConfirmRequest } from "../../components/confirm/composerConfirms";
 import type { TaskOut } from "../../api/tasks";
 import type { CharacterOut } from "../../api/characters";
 import type { EditPraxisPhase } from "./editPraxisPhase";
+import type { RoomEndReason } from "./roomSeal";
 import type { CrewNudgeResult } from "./useComposerRoster";
 
 export interface EditPraxisState {
@@ -165,6 +166,8 @@ export interface EditPraxisState {
   autosaveAt: Date | null;
   /** The `PraxisRoomProvider`'s `onUpdate`; nothing else calls it. */
   setAutosaveAt: (value: Date | null) => void;
+  /** The `PraxisRoomProvider`'s `onEnded`: refetch, catch the page up, say why. */
+  resolveRoomEnd: () => Promise<RoomEndReason>;
 
   /**
    * ADR-0012 window length in days (`collab_auto_submit_days`), null until

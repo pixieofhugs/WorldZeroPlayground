@@ -14,6 +14,11 @@ export const WS_POLICY_VIOLATION = 1008;
  */
 export const PRE_OPEN_RETRY_LIMIT = 4;
 
+/** Only a policy close means the room ended; 1006 is a drop or a refusal. */
+export function closeEndsRoom(code: number): boolean {
+  return code === WS_POLICY_VIOLATION;
+}
+
 /**
  * @param code    browser close code; 1006 for a pre-upgrade refusal.
  * @param attempts `provider.wsUnsuccessfulReconnects` (first failure arrives as
@@ -26,7 +31,7 @@ export function shouldReconnectRoom(
   hasOpened: boolean,
 ): boolean {
   // Kicked post-accept; retrying changes nothing.
-  if (code === WS_POLICY_VIOLATION) return false;
+  if (closeEndsRoom(code)) return false;
   // A refusal always fails before the first open (nothing queued to merge); a
   // drop happens after one, with queued edits that must sync — unbounded.
   return hasOpened || attempts < PRE_OPEN_RETRY_LIMIT;
