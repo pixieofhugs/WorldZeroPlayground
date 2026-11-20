@@ -1,5 +1,5 @@
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
-import { useEffect, useState, type CSSProperties } from 'react'
+import { lazy, Suspense, useEffect, useState, type CSSProperties } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
@@ -7,7 +7,6 @@ import { getMyCharacters, setActiveCharacter } from '../api/me'
 import { listPraxes, type PraxisCardOut } from '../api/praxis'
 import { listTasks, type TaskOut } from '../api/tasks'
 import type { CharacterOut } from '../api/auth'
-import InstallNudge from '../components/install/InstallNudge'
 import CredentialCard from '../components/CredentialCard'
 import AlbescentInvitation from '../components/AlbescentInvitation'
 import PraxisCard from '../components/praxisCard/PraxisCard'
@@ -22,6 +21,8 @@ import { useTaskSignup } from '../hooks/useTaskSignup'
 import { useSidebarPanels } from '../hooks/useSidebarPanels'
 import { rosterOffersAChoice } from '../hooks/useRosterChoice'
 import { useFieldDeskHome } from './fieldDesk/useFieldDeskHome'
+
+const InstallNudge = lazy(() => import('../components/install/InstallNudge'))
 
 /**
  * FieldDesk — the authenticated home at `/` (#274). On a phone with a carried
@@ -92,8 +93,10 @@ export default function FieldDesk() {
     const Skin = resolveVariant(surfaceMap('mobileFieldDesk'), homeState.character.faction_slug)
     return (
       <>
-        <div className="px-[var(--space-lg)] pt-[var(--space-lg)]">
-          <InstallNudge />
+        <div style={{ padding: 'var(--space-lg) var(--space-lg) 0' }}>
+          <Suspense fallback={null}>
+            <InstallNudge />
+          </Suspense>
         </div>
         <Skin state={homeState} />
       </>
@@ -102,7 +105,9 @@ export default function FieldDesk() {
 
   return (
     <div className="page">
-      <InstallNudge />
+      <Suspense fallback={null}>
+        <InstallNudge />
+      </Suspense>
       {/* Inside the gate: a lives count invites making it bigger. */}
       {showRoster && (
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 'var(--space-sm)' }}>

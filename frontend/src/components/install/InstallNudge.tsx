@@ -9,11 +9,12 @@ import {
   subscribeInstallPrompt,
 } from '../../utils/installPrompt'
 import InstallIphoneSteps from './InstallIphoneSteps'
+import './installNudge.css'
 
 // Copied from public/favicon.svg (which cannot reach CSS vars); the tile takes the page ink so it flips with the theme.
 function WoIcon() {
   return (
-    <svg aria-hidden="true" width="56" height="56" viewBox="0 0 64 64" className="shrink-0">
+    <svg aria-hidden="true" width="56" height="56" viewBox="0 0 64 64" className="install-nudge-icon">
       <defs>
         <linearGradient id="wzInstallRainbow" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stopColor="#c1272d" />
@@ -63,35 +64,35 @@ export default function InstallNudge() {
   return (
     <section
       aria-labelledby="install-nudge-title"
-      className="flex flex-col gap-[var(--space-lg)] p-[var(--space-xl)] mb-[var(--space-lg)] rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg-surface)]"
+      className="install-nudge"
     >
-      <div className="flex items-center gap-3.5">
+      <div className="install-nudge-head">
         <WoIcon />
-        <div className="flex flex-col gap-0.5">
-          <span className="text-[length:var(--text-lg)] tracking-[0.14em] text-[var(--color-text-secondary)] font-[family-name:var(--font-accent)]">
+        <div className="install-nudge-titles">
+          <span className="install-nudge-kicker">
             {t('install.kicker')}
           </span>
           <h2
             id="install-nudge-title"
-            className="m-0 text-[length:var(--text-title)] leading-[1.2] font-semibold font-[family-name:var(--font-display)]"
+            className="install-nudge-title"
           >
             {t('install.title')}
           </h2>
         </div>
       </div>
-      <p className="m-0 font-body text-[length:var(--text-content)] leading-[1.55] text-[var(--color-text-secondary)]">
+      <p className="install-nudge-body">
         {t(iphone ? 'install.bodyIphone' : 'install.bodyAndroid')}
       </p>
       {iphone && <InstallIphoneSteps />}
-      <div className="flex flex-wrap gap-2.5">
-        <button type="button" className="btn-primary min-h-[44px] border-0 grow" onClick={iphone ? dismiss : install}>
+      <div className="install-nudge-actions">
+        <button type="button" className="btn-primary" onClick={iphone ? dismiss : install}>
           {t(iphone ? 'install.done' : 'install.install')}
         </button>
-        <button type="button" className="btn-outline min-h-[44px]" onClick={dismiss}>
+        <button type="button" className="btn-outline" onClick={dismiss}>
           {t('install.notNow')}
         </button>
       </div>
-      <p className="m-0 font-body text-[length:var(--text-lg)] leading-[1.5] text-[var(--color-text-tertiary)]">
+      <p className="install-nudge-once">
         {t('install.once')}
       </p>
     </section>

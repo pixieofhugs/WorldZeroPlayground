@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
+import './installNudge.css'
 
 const ICON = {
   width: 26,
@@ -11,7 +12,7 @@ const ICON = {
   strokeLinecap: 'round' as const,
   strokeLinejoin: 'round' as const,
   'aria-hidden': true,
-  className: 'shrink-0',
+  className: 'install-nudge-icon',
 }
 
 const ICONS: ReactNode[] = [
@@ -34,20 +35,17 @@ const ICONS: ReactNode[] = [
 export default function InstallIphoneSteps() {
   const { t } = useTranslation('home')
   return (
-    <ol className="m-0 p-0 list-none flex flex-col gap-[var(--space-sm)]">
+    <ol className="install-steps">
       {ICONS.map((icon, i) => (
         <li
           key={i}
-          className="flex items-center gap-[var(--space-md)] px-[var(--space-md)] py-[var(--space-sm)] rounded-[var(--radius-md)] bg-[var(--color-bg-surface-alt)]"
+          className="install-step"
         >
-          <span
-            aria-hidden
-            className="w-[18px] text-[length:var(--text-title)] text-[var(--color-accent-primary)] font-[family-name:var(--font-accent)]"
-          >
+          <span aria-hidden className="install-step-num">
             {i + 1}
           </span>
           {icon}
-          <span className="font-body text-[length:var(--text-content)] leading-[1.4]">
+          <span className="install-step-text">
             <Trans t={t} i18nKey={`install.steps.${i + 1}` as 'install.steps.1'} components={{ b: <strong /> }} />
           </span>
         </li>
