@@ -194,7 +194,7 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
     padding: 'var(--space-lg)',
   }
 
-  const sectionGap = desktop ? 'var(--space-2xl)' : 'var(--space-xl)'
+  const sectionGap = 'var(--praxis-section-gap, var(--space-2xl))'
 
   // Navigation and moderation banners are the shared layer's (#2102, #2718);
   // this kit passes no banner ink, so they keep the neutral `--color-*` tokens.
@@ -233,7 +233,7 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
           praxis={praxis}
           linkStyle={{
             fontFamily: READING,
-            fontSize: desktop ? 'var(--text-title)' : 'var(--text-content)',
+            fontSize: 'var(--praxis-lead-size, var(--text-title))',
             color: INK,
             textDecoration: 'none',
           }}
@@ -472,7 +472,7 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
           background: SLIP_SHEET,
           border: `2px solid ${BORDER}`,
           borderRadius: 18,
-          padding: desktop ? 'var(--space-2xl)' : 'var(--space-lg)',
+          padding: 'var(--praxis-pad, var(--space-2xl))',
           boxSizing: 'border-box',
         },
         sheetBody: (body) => <div style={{ position: 'relative', zIndex: 1 }}>{body}</div>,

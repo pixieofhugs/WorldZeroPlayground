@@ -140,16 +140,16 @@ export function useComposerSizes(): ComposerSizes {
   return {
     maxWidth: "var(--composer-max-width)",
     padding: "var(--composer-padding)",
-    padX: "var(--fx-space-2xl--lg)",
-    padBottom: "var(--fx-space-2xl--xl)",
-    gap: "var(--fx-space-xl--lg)",
-    titleSize: "var(--fx-text-heading--title)",
+    padX: "var(--composer-pad-x)",
+    padBottom: "var(--composer-pad-bottom)",
+    gap: "var(--composer-gap)",
+    titleSize: "var(--composer-title-size)",
     headHeight: "var(--composer-head-height)",
     headingHeight: "var(--composer-heading-height)",
     sheetPadding: "var(--composer-sheet-padding)",
     barPadding: "var(--composer-bar-padding)",
     pageInset: "var(--composer-page-inset)",
-    rowDirection: "var(--fx-row-direction)" as "row",
+    rowDirection: "var(--composer-row-direction)" as "row",
     isMobile: useFormFactor() === "mobile",
   };
 }
