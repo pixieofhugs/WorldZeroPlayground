@@ -2586,6 +2586,58 @@
         "title": "EraOption",
         "type": "object"
       },
+      "EraPreflightOut": {
+        "description": "What rolling into ``name`` would do, counted from the live game.",
+        "properties": {
+          "characters_reset": {
+            "title": "Characters Reset",
+            "type": "integer"
+          },
+          "duels_awaiting_answer": {
+            "title": "Duels Awaiting Answer",
+            "type": "integer"
+          },
+          "duels_frozen": {
+            "title": "Duels Frozen",
+            "type": "integer"
+          },
+          "leaving_factions": {
+            "items": {
+              "$ref": "#/components/schemas/LeavingFaction"
+            },
+            "title": "Leaving Factions",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "open_reports": {
+            "title": "Open Reports",
+            "type": "integer"
+          },
+          "tasks_arriving": {
+            "title": "Tasks Arriving",
+            "type": "integer"
+          },
+          "tasks_retired": {
+            "title": "Tasks Retired",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "name",
+          "characters_reset",
+          "duels_frozen",
+          "tasks_retired",
+          "tasks_arriving",
+          "leaving_factions",
+          "duels_awaiting_answer",
+          "open_reports"
+        ],
+        "title": "EraPreflightOut",
+        "type": "object"
+      },
       "EraRollIn": {
         "description": "Just the key: resets are the incoming era's flags (ADR-0042).",
         "properties": {
@@ -4244,6 +4296,25 @@
           "accepted"
         ],
         "title": "InviteResponseOut",
+        "type": "object"
+      },
+      "LeavingFaction": {
+        "description": "A faction the next era drops from the roster, with who is in it today.",
+        "properties": {
+          "characters": {
+            "title": "Characters",
+            "type": "integer"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          }
+        },
+        "required": [
+          "slug",
+          "characters"
+        ],
+        "title": "LeavingFaction",
         "type": "object"
       },
       "LevelProfileOut": {
@@ -8716,6 +8787,70 @@
           }
         ],
         "summary": "Admin Roll Into Era",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/eras/{config_key}/preflight": {
+      "get": {
+        "description": "Admin-only: count what rolling into this era would do. Writes nothing.",
+        "operationId": "admin_preflight_era_roll_admin_eras__config_key__preflight_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "config_key",
+            "required": true,
+            "schema": {
+              "title": "Config Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EraPreflightOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Admin Preflight Era Roll",
         "tags": [
           "admin"
         ]

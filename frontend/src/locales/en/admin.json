@@ -235,38 +235,6 @@
     "intro": "The popup a player sees on reaching each level, all of them on one page: the rank and everything it unlocks. Turn on admin mode, press “edit copy” and click any wording to change it.",
     "level": "Level {{level}}"
   },
-  "era": {
-    "heading": "Roll the game into a new era",
-    "blurb": "An era is the ruleset the game runs on. Rolling ends the live one and opens the next, and everything below happens the moment you confirm it.",
-    "loadError": "Couldn't load eras.",
-    "rollError": "Could not roll the era over.",
-    "selectLabel": "Era to roll into",
-    "liveOption": "{{name}} — live now",
-    "noTarget": "Every era in the register is already live. There is nothing to roll into.",
-    "begin": "roll into a new era",
-    "confirm": {
-      "heading": "Read this before you confirm",
-      "lead": "Rolling into {{name}} will:",
-      "effects": {
-        "characters": "reset every character's score, level, vote budget and faction, by the incoming era's rules",
-        "duels": "freeze every unresolved duel into a permanent result",
-        "board": "retire the whole board"
-      },
-      "noUndo": "There is no undo. Nothing brings back the era you are leaving.",
-      "submit": "confirm — roll into {{name}}",
-      "working": "rolling over, don't leave this page…",
-      "cancel": "cancel, change nothing"
-    },
-    "done": {
-      "heading": "{{name}} is live.",
-      "charactersReset_one": "{{count}} character was reset.",
-      "charactersReset_other": "{{count}} characters were reset.",
-      "tasksReactivated_one": "{{count}} task was reactivated.",
-      "tasksReactivated_other": "{{count}} tasks were reactivated.",
-      "tasksCreated_one": "{{count}} task was created.",
-      "tasksCreated_other": "{{count}} tasks were created."
-    }
-  },
   "console": {
     "rail": {
       "label": "Admin",
@@ -557,6 +525,62 @@
         "gone": "{{type}} #{{id}} (gone)"
       },
       "panelLine": "{{mod}} {{did}} {{to}}."
+    },
+    "era": {
+      "title": "Roll into a new era",
+      "lede": "This can't be undone. Everything below is counted from the live game before you confirm.",
+      "loadError": "Couldn't load eras.",
+      "preflightError": "Couldn't count what this roll would do.",
+      "rollError": "Could not roll the era over.",
+      "noTarget": "Every era in the register is already live. There is nothing to roll into.",
+      "next": "Next era",
+      "happens": "What happens",
+      "effects": {
+        "characters_one": "{{count}} character is reset by {{name}}'s rules: score, level, vote budget and faction.",
+        "characters_other": "{{count}} characters are reset by {{name}}'s rules: score, level, vote budget and faction.",
+        "duels_one": "{{count}} duel in progress or open for votes freezes into a permanent result.",
+        "duels_other": "{{count}} duels in progress or open for votes freeze into permanent results.",
+        "tasks_one": "{{count}} task retires. The onboarding task stays.",
+        "tasks_other": "{{count}} tasks retire. The onboarding task stays.",
+        "factions_one": "{{count}} faction leaves the roster: {{names}}.",
+        "factions_other": "{{count}} factions leave the roster: {{names}}.",
+        "noFactions": "No faction leaves the roster.",
+        "factionPeople": "{{name}} ({{count}})"
+      },
+      "check": "Check before you roll",
+      "clear": "Nothing to check.",
+      "warn": {
+        "noTasks": {
+          "lead": "{{name}} has no tasks.",
+          "body": "Players would open a board with only the onboarding task.",
+          "link": "Stage tasks first"
+        },
+        "duels": {
+          "lead_one": "{{count}} duel challenge is still waiting for an answer.",
+          "body_one": "Accepting it after the roll opens a praxis on a retired task (#3659).",
+          "lead_other": "{{count}} duel challenges are still waiting for an answer.",
+          "body_other": "Accepting one after the roll opens a praxis on a retired task (#3659)."
+        },
+        "reports": {
+          "lead_one": "{{count}} report is still open.",
+          "link_one": "Review it",
+          "lead_other": "{{count}} reports are still open.",
+          "link_other": "Review them"
+        }
+      },
+      "submit": "Roll into {{name}}",
+      "working": "Rolling over, don't leave this page…",
+      "cancel": "Cancel",
+      "done": {
+        "heading": "{{name}} is live.",
+        "charactersReset_one": "{{count}} character was reset.",
+        "charactersReset_other": "{{count}} characters were reset.",
+        "tasksReactivated_one": "{{count}} task was reactivated.",
+        "tasksReactivated_other": "{{count}} tasks were reactivated.",
+        "tasksCreated_one": "{{count}} task was created.",
+        "tasksCreated_other": "{{count}} tasks were created."
+      },
+      "type": "Type <1>{{name}}</1> to confirm"
     }
   }
 }
