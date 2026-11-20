@@ -8,7 +8,13 @@ NOTE = "Off-topic for this praxis."
 
 @pytest.mark.asyncio
 async def test_removal_note_reaches_only_the_author_and_the_mod_log(
-    client, account, character2, praxis_solo, auth_headers, auth_headers2, db_session
+    client,
+    account,
+    character2,
+    praxis_solo,
+    auth_headers,
+    auth_headers2,
+    db_session,
 ):
     await make_admin(db_session, account)
     url = f"/praxes/{praxis_solo.id}/comments"
