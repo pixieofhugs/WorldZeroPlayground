@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { useCommentGate } from '../../hooks/useCommentGate'
 import type { ReactNode } from 'react'
 import type { ActivityFeedItem } from '../../api/activityFeed'
@@ -10,10 +11,12 @@ import FeedRowContent from './FeedRowContent'
 import { normalizeFeedItem } from './normalizeFeedItem'
 import { feedKicker, isStillWaiting } from './feedItemLabels'
 import FeedCardEraAnnouncement from './FeedCardEraAnnouncement'
-import FeedCardRulesChange from './FeedCardRulesChange'
 import FeedCardCollabInvite from './FeedCardCollabInvite'
 import FeedCardDuelChallenge from './FeedCardDuelChallenge'
 import FeedCardInvitationLetter from './FeedCardInvitationLetter'
+
+// Own chunk + CSS: rare card, off the initial-load budget.
+const FeedCardRulesChange = lazy(() => import('./FeedCardRulesChange'))
 
 /**
  * The chassis seam, assembled (#1194; see {@link FeedFrameProps}):
@@ -78,7 +81,9 @@ export default function FeedCardRouter({ item, archivedView = false, onArchiveCh
         isEraAnnouncement ? (
           <FeedCardEraAnnouncement item={item} archive={archive} />
         ) : isRulesChange ? (
-          <FeedCardRulesChange item={item} archive={archive} />
+          <Suspense fallback={null}>
+            <FeedCardRulesChange item={item} archive={archive} />
+          </Suspense>
         ) : (
           <FactionFeedFrame
             slug={row ? row.slug : item.context_faction_slug}

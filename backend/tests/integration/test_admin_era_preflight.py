@@ -1,6 +1,8 @@
 """``GET /admin/eras/{key}/preflight``: counts what the roll does, writes nothing."""
 import dataclasses
+from datetime import datetime, timezone
 
+import pytest
 from httpx import AsyncClient
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 import game_config
 import services.admin_service as admin_service
 from faction_slugs import real_faction_slugs
-from game_config import era_config_for_key
+from game_config import TaskDef, era_config_for_key
 from models.account import Account
 from models.character import CharacterStatus
 from models.comment import Comment
@@ -60,6 +62,10 @@ async def test_counts_each_thing_the_roll_touches(
     await make_character(
         db_session, era, username="banned", status=CharacterStatus.banned
     )
+    departed = await make_character(
+        db_session, era, username="left", status=CharacterStatus.banned
+    )
+    departed.departed_at = datetime.now(timezone.utc)
     await make_duel(db_session, era, label="a", status=DuelStatus.active)
     await make_duel(db_session, era, label="b", status=DuelStatus.settled)
     await make_duel(db_session, era, label="c", status=DuelStatus.pending)
@@ -81,13 +87,10 @@ async def test_counts_each_thing_the_roll_touches(
 
     body = await _preflight(client, auth_headers)
 
-    live_characters = await db_session.scalar(
-        select(func.count()).select_from(admin_service.Character).where(
-            admin_service.Character.status != CharacterStatus.banned
-        )
-    )
     assert body["name"] == next_era.name
-    assert body["characters_reset"] >= live_characters
+    assert body["characters_reset"] == len(
+        await admin_service.list_characters_to_reset(db_session)
+    )
     assert body["duels_frozen"] == 2
     assert body["duels_awaiting_answer"] == 1
     retirable = await db_session.scalar(
@@ -139,3 +142,44 @@ async def test_unknown_era_is_422_and_non_admin_is_refused(
     await make_admin(db_session, account)
     resp = await client.get("/admin/eras/nope/preflight", headers=auth_headers)
     assert resp.status_code == 422
+
+
+def _era_with(monkeypatch, *, tasks=(), reactivate=()):
+    listed = dataclasses.replace(
+        era_config_for_key(NEXT), tasks=tasks, reactivate_tasks=reactivate
+    )
+    monkeypatch.setattr(admin_service, "era_config_for_key", lambda key: listed)
+
+
+async def test_a_reactivated_task_is_counted_once(
+    client, db_session, account: Account, auth_headers, era, some_faction, monkeypatch
+):
+    await make_admin(db_session, account)
+    author = await make_character(db_session, era, username="auth", account=account)
+    await make_task(db_session, author, title="Alpha", status=TaskStatus.retired)
+    await db_session.commit()
+    alpha = TaskDef(
+        title="Alpha", description="d",
+        faction_slug=real_faction_slugs(game_config.CURRENT_ERA)[0],
+        level_required=1, point_value=5,
+    )
+    _era_with(monkeypatch, tasks=(alpha,), reactivate=("Alpha",))
+
+    assert (await _preflight(client, auth_headers))["tasks_arriving"] == 1
+
+
+@pytest.mark.parametrize("twins", [0, 2])
+async def test_an_ambiguous_reactivation_title_is_409(
+    client, db_session, account: Account, auth_headers, era, some_faction,
+    monkeypatch, twins
+):
+    await make_admin(db_session, account)
+    author = await make_character(db_session, era, username="auth", account=account)
+    for _ in range(twins):
+        await make_task(db_session, author, title="Alpha")
+    await db_session.commit()
+    _era_with(monkeypatch, reactivate=("Alpha",))
+
+    resp = await client.get(f"/admin/eras/{NEXT}/preflight", headers=auth_headers)
+    assert resp.status_code == 409
+    assert resp.json()["detail"]["code"] == "ERA_REACTIVATE_AMBIGUOUS"

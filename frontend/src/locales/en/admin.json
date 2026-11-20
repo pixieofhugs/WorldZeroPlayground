@@ -179,16 +179,32 @@
     "scopeFaction": "Belongs to one faction — only that faction's screens change.",
     "scopeShared": "Shared wording — changing it changes every faction."
   },
+  "nav": {
+    "mod": {
+      "label": "Mod",
+      "buttonWithCount_one": "Mod, {{count}} waiting",
+      "buttonWithCount_other": "Mod, {{count}} waiting",
+      "edit": "Edit on the page",
+      "editHint": "Reword copy and change a task's status, right where it is.",
+      "open": "Open admin",
+      "reports": "Reports",
+      "messages": "Messages",
+      "proposals": "Task proposals",
+      "stripText": "Mod mode: you're editing the page",
+      "turnOff": "Turn off",
+      "copyStripText": "Copy editor"
+    }
+  },
   "copySheet": {
     "button": "Open the {{name}} copy sheet",
     "title": "{{name}} copy sheet",
-    "intro": "Every place this faction speaks in its own words, beyond its name and description, on one page with sample data. Turn on admin mode, press “edit copy” and click any wording to change it. Clicks do nothing else here until you arm the editor.",
+    "intro": "Every place this faction speaks in its own words, beyond its name and description, on one page with sample data. Press “edit copy” and click any wording to change it.",
     "popups": "Letters and marks",
     "pickerHint": "Pick a faction to edit the wording only it uses."
   },
   "levelUpSheet": {
     "title": "Level-up copy sheet",
-    "intro": "The popup a player sees on reaching each level, all of them on one page: the rank and everything it unlocks. Turn on admin mode, press “edit copy” and click any wording to change it.",
+    "intro": "The popup a player sees on reaching each level, all of them on one page: the rank and everything it unlocks. Press “edit copy” and click any wording to change it.",
     "level": "Level {{level}}"
   },
   "console": {
@@ -288,6 +304,8 @@
         "newest": "Newest praxis",
         "modLog": "Mod log"
       },
+      "onlyCharacter": "Showing only reports about character #{{id}}.",
+      "clearCharacter": "Show all",
       "recent": {
         "heading": "Recent decisions",
         "all": "Full mod log →",
@@ -317,6 +335,7 @@
           "comment_flagged": "flagged",
           "task_status": "changed status of",
           "task_delete": "deleted",
+          "stats_edit": "edited the stats of",
           "role_grant": "granted a role to",
           "role_revoke": "revoked a role from"
         }
@@ -486,14 +505,15 @@
         "praxis_visible": "kept",
         "praxis_flagged": "flagged",
         "praxis_failed": "doesn't meet the task",
-        "comment_hidden": "removed",
+        "comment_hidden": "held",
+        "comment_deleted": "removed",
         "comment_visible": "kept",
         "comment_flagged": "flagged",
-        "comment_failed": "failed",
         "remove_flagged": "removed all flagged",
         "task_status": "changed status of",
         "task_edit": "edited",
         "task_delete": "deleted",
+        "stats_edit": "edited the stats of",
         "role_grant": "made admin",
         "role_revoke": "removed admin",
         "era_roll": "rolled into"

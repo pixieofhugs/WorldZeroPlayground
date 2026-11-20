@@ -5,7 +5,7 @@ import Layout from './components/Layout'
 import ProtectedRoute from './auth/ProtectedRoute'
 import { useAuth, hadSessionLastVisit } from './auth/AuthContext'
 import { useAdminMode } from './auth/AdminModeContext'
-import { loadAppCopy, loadOnboardingCopy } from './i18n'
+import { loadAppCopy, loadOnboardingCopy, withAppCopy } from './i18n'
 import { onboardingHandoffPending } from './utils/onboardingResume'
 import LoginNotice from './components/LoginNotice'
 import { importAccountDeleted } from './pages/accountDeletedLoader'
@@ -18,8 +18,6 @@ import { importAccountDeleted } from './pages/accountDeletedLoader'
  * loader (#1483; `auth/__tests__/appProtectedRoutesWarm.test.tsx` renders
  * App over a path table). `import()` is memoised, so warming is idempotent.
  */
-/** Admin, forms and feed copy ride with the routes that read them, not the entry chunk (#3557). */
-const withAppCopy = <T,>(page: Promise<T>) => Promise.all([page, loadAppCopy()]).then(([m]) => m)
 const importFieldDesk = () => withAppCopy(import('./pages/FieldDesk'))
 const importEditPraxis = () => withAppCopy(import('./pages/EditPraxis'))
 const importEditCharacter = () => withAppCopy(import('./pages/EditCharacter'))

@@ -9,7 +9,7 @@ import factionsCatalog from "../../../locales/en/factions.json";
 import errorsCatalog from "../../../locales/en/errors.json";
 
 const wire = vi.hoisted(() => {
-  const roll: { status: number; body: unknown; calls: number } = { status: 200, body: null, calls: 0 };
+  const roll: { status: number; body: unknown; calls: number; preflightFails: boolean } = { status: 200, body: null, calls: 0, preflightFails: false };
   const preflight = {
     name: "Era Two", characters_reset: 3, duels_frozen: 2, tasks_retired: 5, tasks_arriving: 0,
     leaving_factions: [{ slug: "coven", characters: 4 }], duels_awaiting_answer: 2, open_reports: 1,
@@ -19,6 +19,8 @@ const wire = vi.hoisted(() => {
     { config_key: "era_2", is_live: false, name: "Era Two" },
   ];
   globalThis.fetch = (async (input: Request) => {
+    if (roll.preflightFails && input.url.endsWith("/preflight"))
+      return new Response(JSON.stringify({ detail: { code: "ERA_ROLL_NEEDS_CHARACTER", message: "raw" } }), { status: 409, headers: { "content-type": "application/json" } });
     const isRoll = input.method === "PUT";
     if (isRoll) roll.calls += 1;
     const body = isRoll ? roll.body : input.url.endsWith("/preflight") ? preflight : eras;
@@ -58,6 +60,20 @@ describe("EraTab preflight", () => {
     expect(screen.getByText("2 duel challenges are still waiting for an answer.")).toBeTruthy();
     expect(screen.getByText("Stage tasks first").getAttribute("href")).toBe("/admin/tasks");
     expect(screen.getByText("Review it").getAttribute("href")).toBe("/admin/reports");
+  });
+});
+
+describe("EraTab preflight failure", () => {
+  it("shows its own error and keeps the era select usable", async () => {
+    wire.roll.preflightFails = true;
+    i18n.addResourceBundle("en", "admin", adminCatalog, true, true);
+    try {
+    render(<MemoryRouter><EraTab /></MemoryRouter>);
+    expect(await screen.findByText(errorsCatalog.codes.ERA_ROLL_NEEDS_CHARACTER)).toBeTruthy();
+    expect((screen.getByLabelText(adminCatalog.console.era.next) as HTMLSelectElement).disabled).toBe(false);
+    } finally {
+      wire.roll.preflightFails = false;
+    }
   });
 });
 

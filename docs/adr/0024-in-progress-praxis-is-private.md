@@ -89,3 +89,10 @@ lets it through and **forfeits** the side, as ADR-0011 §Forfeit specifies: it s
 `forfeited_by_character_id` (the first forfeit sticks), the other side wins, and
 every member and the winner are recalculated. The 422 now applies only to a praxis
 that is already `in_progress`.
+
+## Amendment (#3670): a member may open their own hidden praxis
+
+The `hidden` exception widens from admins to the praxis's own members, at the detail
+door only, so the author can read `admin_note`, the reason it was removed. Media stays
+withdrawn, and the list/feed predicate still excludes hidden rows for everyone
+(owner ruling on #3687).
