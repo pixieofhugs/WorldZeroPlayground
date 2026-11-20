@@ -28,6 +28,7 @@ import type { JoinTarget } from "../../components/JoinControl";
  *   - "eligible" → invited / can return / holds an open letter — show Join
  *   - "gate"     → not invited yet — show the soft "keep doing tasks" gate
  *   - "burned"   → left this faction this era, no rejoin (#1305)
+ *   - "ng_plus"  → unlocked, but this life is at the ceiling: New Game+ only
  * Join confirms (ADR-0019). "gate" and "burned" stay distinct: "keep doing
  * tasks" (#454) is a lie for the burn.
  */
@@ -36,7 +37,8 @@ export type MembershipState =
   | "member"
   | "eligible"
   | "gate"
-  | "burned";
+  | "burned"
+  | "ng_plus";
 
 /**
  * Resolve {@link MembershipState} from the raw status map entry
@@ -50,6 +52,7 @@ export function resolveMembershipState(
   hasCharacter: boolean,
   rawStatus: string | null,
   hasInvite: boolean,
+  refusal: string | null = null,
 ): MembershipState {
   if (!hasCharacter) return "none";
   if (rawStatus === "member") return "member";
@@ -58,6 +61,7 @@ export function resolveMembershipState(
   if (rawStatus === "defected") return "burned";
   if (rawStatus === "invited" || rawStatus === "can_return" || hasInvite)
     return "eligible";
+  if (refusal === "FACTION_ALBESCENT_NEW_GAME_PLUS_ONLY") return "ng_plus";
   return "gate";
 }
 
@@ -100,6 +104,7 @@ export function useFactionDetail(
 
   const [rawStatus, setRawStatus] = useState<string | null>(null);
   const [hasInvite, setHasInvite] = useState(false);
+  const [refusal, setRefusal] = useState<string | null>(null);
   const [joining, setJoining] = useState(false);
   const [joinError, setJoinError] = useState<string | null>(null);
 
@@ -153,6 +158,7 @@ export function useFactionDetail(
     if (!slug || !characterId) {
       setRawStatus(null);
       setHasInvite(false);
+      setRefusal(null);
       return;
     }
     let cancelled = false;
@@ -160,15 +166,16 @@ export function useFactionDetail(
     getFactionStatus()
       .then((page) => {
         if (cancelled) return;
-        setRawStatus(
-          page.all_factions.find((f) => f.slug === slug)?.status ?? "not_invited",
-        );
+        const row = page.all_factions.find((f) => f.slug === slug);
+        setRawStatus(row?.status ?? "not_invited");
+        setRefusal(row?.refusal ?? null);
         setHasInvite(page.invitations.some((inv) => inv.faction_slug === slug));
       })
       .catch(() => {
         if (!cancelled) {
           setRawStatus(null);
           setHasInvite(false);
+          setRefusal(null);
         }
       });
     return () => {
@@ -180,6 +187,7 @@ export function useFactionDetail(
     Boolean(characterId),
     rawStatus,
     hasInvite,
+    refusal,
   );
 
   const join = useCallback(async () => {
