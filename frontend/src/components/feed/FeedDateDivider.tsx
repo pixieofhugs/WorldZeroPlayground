@@ -7,7 +7,7 @@ export function getDateLabel(iso: string): string {
   const date = new Date(iso)
   const now = new Date()
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-  const yesterday = new Date(today.getTime() - 86400000)
+  const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1)
   const itemDate = new Date(date.getFullYear(), date.getMonth(), date.getDate())
 
   if (itemDate.getTime() === today.getTime()) return i18n.t('feed:dateDivider.today')
