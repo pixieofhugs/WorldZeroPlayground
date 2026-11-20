@@ -162,7 +162,7 @@ _STRUCTURAL_FACTION_ROLES: dict[str, str] = {
 
 @dataclass(frozen=True)
 class Dial:
-    """Two values per field; a mod picks the side. ``full`` equals the era's plain fields."""
+    """Two values per field; a mod picks the side. ``full`` is the era's own field."""
 
     small: Mapping[str, Any]
     full: Mapping[str, Any]
