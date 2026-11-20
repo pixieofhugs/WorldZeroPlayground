@@ -16,7 +16,7 @@ import type { ScoreStampProps } from "./ScoreStamp";
  *
  * The design's arithmetic is NOT built (its mult is vote-derived and votes a
  * count). The model is `base × faction_mult × duel_mult + meta + votes + habit`
- * (ADR-0014/0047/0053, #2633); every number and every row-selection rule comes
+ * (ADR-0014/0053/0076, #2633); every number and every row-selection rule comes
  * from `scoreBreakdown()` (ADR-0053). Nothing is derived by subtraction here.
  *
  * Size-agnostic: one width in every mount, stacked in one column (the design's

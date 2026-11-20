@@ -9,7 +9,7 @@ import { factionBodyVars } from "../../../utils/factionBodyFace"
 /**
  * The Everymen score stamp (#841, ADR-0049): a crooked rubber TALLY stamp with
  * one fill-in row per term, then the {@link PointsRoundel} with the total, struck
- * separately. Rows and order are `scoreBreakdown`'s (ADR-0047/0076, #2634); with
+ * separately. Rows and order are `scoreBreakdown`'s (ADR-0053/0076, #2634); with
  * no rows the tally is not struck. Both marks print through
  * `.everymen-stamp-print`, which multiplies into the paper in light only (§8).
  */

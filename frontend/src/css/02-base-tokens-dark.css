@@ -436,14 +436,14 @@
   --faction-wow-balloon-plate-to: var(--faction-wow-card-bg);
   /* plate-border inherits the theme-invariant --faction-wow-chronicle-gold */
 
-  /* THE IDLE BALLOON IS THE PLATE (#1946). In light the idle fill is a shade
-     off the plate, so an untouched bunch is five outlines and only the ramp
-     carries rank. In dark the plate flips, so the idle fill must too
-     (lifting, a shade off the dark plate) — a literal cream made the
-     UNREACHED state the loudest thing. The ramp is invariant.
-     So the outline inverts to parchment (an ink line on #3A2F16 vanishes,
-     #860), at light's alpha, matching the string. */
-  --faction-wow-balloon-idle: #3a2f16;
+  /* Sleeping balloons: half the tier into the dark plate (#3454). Outline
+     inverts to parchment (an ink line on dark vanishes, #860). */
+  --faction-wow-balloon-1-idle: color-mix(in srgb, var(--faction-wow-plum-surface) 50%, var(--faction-wow-balloon-plate-to));
+  --faction-wow-balloon-2-idle: color-mix(in srgb, var(--faction-wow-balloon-2) 50%, var(--faction-wow-balloon-plate-to));
+  --faction-wow-balloon-3-idle: color-mix(in srgb, var(--faction-wow-balloon-3) 50%, var(--faction-wow-balloon-plate-to));
+  --faction-wow-balloon-4-idle: color-mix(in srgb, var(--faction-wow-balloon-4) 50%, var(--faction-wow-balloon-plate-to));
+  --faction-wow-balloon-5-idle: color-mix(in srgb, var(--faction-wow-balloon-5) 50%, var(--faction-wow-balloon-plate-to));
+  --faction-wow-balloon-eye-closed: rgba(243, 231, 196, 0.8);
   --faction-wow-balloon-outline: rgba(243, 231, 196, 0.42);
   --faction-wow-balloon-string: rgba(243, 231, 196, 0.45);
   /* Crest metal is invariant; only the disc it's mounted on flips. */
