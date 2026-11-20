@@ -289,7 +289,7 @@ async def test_hide_then_restore_round_trips_through_the_list(
     assert praxis.id in _ids(await client.get(PUBLIC_LIST, headers=auth_headers))
 
 
-# --- Detail door (#3257, #3670): admin and the author read a hidden praxis, nobody else ---
+# --- Detail door (#3257, #3670): admin and author read a hidden praxis ---
 
 
 @pytest.mark.asyncio
@@ -378,8 +378,11 @@ async def test_removal_reason_reaches_the_author_and_admin_only(
     )
     assert removed.status_code == 200
 
-    assert (await client.get(url, headers=auth_headers2)).json()["admin_note"] == "Stock photo."
-    assert (await client.get(url, headers=auth_headers)).json()["admin_note"] == "Stock photo."
+    async def note(headers: dict | None = None) -> str:
+        return (await client.get(url, headers=headers)).json()["admin_note"]
+
+    assert await note(auth_headers2) == "Stock photo."
+    assert await note(auth_headers) == "Stock photo."
 
     # A failed praxis stays public; its reason must not.
     await client.patch(
@@ -387,6 +390,6 @@ async def test_removal_reason_reaches_the_author_and_admin_only(
         json={"status": "failed", "admin_note": "Not met."},
         headers=auth_headers,
     )
-    assert (await client.get(url, headers=auth_headers3)).json()["admin_note"] == ""
-    assert (await client.get(url)).json()["admin_note"] == ""
-    assert (await client.get(url, headers=auth_headers2)).json()["admin_note"] == "Not met."
+    assert await note(auth_headers3) == ""
+    assert await note() == ""
+    assert await note(auth_headers2) == "Not met."
