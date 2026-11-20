@@ -720,6 +720,13 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // Plain-ink figures and brief-ink labels on the same ground.
   { what: "coven plate, subtotal figure", surface: "--faction-coven-slip-plate-foot", text: "--faction-coven-slip-ink" },
   { what: "coven plate, row label", surface: "--faction-coven-slip-plate-foot", text: "--faction-coven-slip-soft" },
+  // The cauldron belly (94% ward paper): its caption is `coven ward panel, brief`.
+  // SVG <text> on an SVG fill, which the rendered sweep cannot see.
+  {
+    what: "coven cauldron belly, total figure",
+    surface: "--faction-coven-ward-card",
+    text: "--faction-coven-slip-deep",
+  },
 
   // Coven ward (task detail, #1031): two flat grounds. The page haze's
   // composited worst case is noted beside `--faction-coven-ward-haze` in index.css.
@@ -761,7 +768,7 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // CTA bar. `-brass` frames and is never text. The sheet flips (vellum by day);
   // band and disc are compass blue #12151f in both themes.
   // No profile-header row: `headerStyle` grounds on the BAND, so its pairing is
-  // `ephemerists cornice band, quiet ink` below.
+  // `ephemerists cornice band, quiet ink`, which the rendered sweep measures.
   //
   // Logged-out vote gate (#1627): `EphemeristsVote` returns the gate before its
   // own plate, so `-card-accent` lands on `-plate-bg` (was 3.75 in dark).
@@ -792,6 +799,11 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // S.N.I.D.E. ransom clipping (#1023): flips, so each row is two grounds. Pink
   // survives as a drawn line and is walked down where it carries a word.
   { what: "snide clipping, points caption", surface: "--faction-snide-note-paper", text: "--faction-snide-note-pink-ink" },
+  // Headline cut 1 and the CTA bar are one pairing; acid does not flip. Task detail only.
+  { what: "snide acid CTA bar", surface: "--faction-snide-note-cta-bg", text: "--faction-snide-note-cta-ink" },
+  // Paper on pink read 3.10, so the chip takes the near-black CTA ink. Era 1 modifiers are 1.0,
+  // so the chip never renders and the sweep has never measured it.
+  { what: "snide modifier chip", surface: "--faction-snide-pink", text: "--faction-snide-note-cta-ink" },
 
   // UA vellum leaf (#1023): no new tokens; the rows add the parchment gradient's
   // DARKEST stop (`-panel` by day, `-card-bg` by night).
@@ -1180,7 +1192,7 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // `resolveFeedRowInk` defaults `actor` to the raw hue at 18px/700, which owes
   // 4.5. Snide, coven and ephemerists repoint to inks already measured on their
   // ground (`snide slip, mention ink`, `coven ward panel, accent ink`,
-  // `ephemerists plate, links`). Everymen mints `--everymen-paper-accent` (no red
+  // the sweep's ephemerists plate links). Everymen mints `--everymen-paper-accent` (no red
   // rung survives paper in both themes).
   { what: "everymen paper, actor name", surface: "--everymen-paper", text: "--everymen-paper-accent" },
 
