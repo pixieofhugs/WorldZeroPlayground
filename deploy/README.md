@@ -185,8 +185,9 @@ the job, and the half that cannot be rebuilt from this repo.
 both files to `s3://<bucket>/prod/<YYYY-MM-DD>/`, through the `amazon/aws-cli`
 image on the box's Docker (no new install). Any S3-compatible vendor that is
 not Hetzner works; nothing in the script names one. Keys in
-`/srv/worldzero/prod/.env` (shown in `env.example`; the backend container also
-sees them through `env_file`):
+`/srv/worldzero/prod/offsite.env` (template: `offsite.env.example`, `chmod 600`).
+It is a separate file, in no compose `env_file`, and only `backup.sh` reads it,
+so a compromised app never holds the bucket key:
 
 | Key | Example |
 |---|---|
@@ -198,7 +199,7 @@ sees them through `env_file`):
 Owner, once: create a private bucket; create a key limited to that bucket with
 **write and list, no delete**; set a **lifecycle rule expiring objects after 30
 days** (this is the remote retention, chosen over a prune step so the box's key
-cannot erase history); add the five keys to the prod `.env`; run
+cannot erase history); copy `offsite.env.example` to that path and fill in the five keys; run
 `/srv/worldzero/backup.sh prod` once by hand and see the objects appear.
 
 A failed push (or a missing key) exits non-zero and writes

@@ -59,12 +59,12 @@ AWS_IMAGE=${WZ_OFFSITE_AWS_IMAGE:-amazon/aws-cli:2.17.0}
 
 offsite_push() {
   local k v day f
-  if [ -f .env ]; then # only our keys: .env is not shell-safe to source
-    while IFS='=' read -r k v; do export "$k=$v"; done < <(grep -E '^WZ_OFFSITE_[A-Z_]+=' .env || true)
-  fi
+  # Its own file, in no compose env_file, so the app never holds the key.
+  [ -f offsite.env ] || { echo "$STACK_DIR/offsite.env is missing" >&2; return 1; }
+  while IFS='=' read -r k v; do export "$k=$v"; done < <(grep -E '^WZ_OFFSITE_[A-Z_]+=' offsite.env || true)
   for k in ENDPOINT BUCKET REGION KEY_ID SECRET; do
     v=WZ_OFFSITE_$k
-    [ -n "${!v:-}" ] || { echo "$v is not set in $STACK_DIR/.env" >&2; return 1; }
+    [ -n "${!v:-}" ] || { echo "$v is not set in $STACK_DIR/offsite.env" >&2; return 1; }
   done
   export AWS_ACCESS_KEY_ID=$WZ_OFFSITE_KEY_ID AWS_SECRET_ACCESS_KEY=$WZ_OFFSITE_SECRET \
          AWS_DEFAULT_REGION=$WZ_OFFSITE_REGION

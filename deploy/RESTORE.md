@@ -227,7 +227,7 @@ pair to an off-Hetzner S3 bucket (README §8, #3620), which covers losing both.
 ### From the bucket, on a fresh box
 
 After `bootstrap.sh` (Docker is all this needs). Use the bucket's read key and
-the `WZ_OFFSITE_*` values from your records (they were in the lost `.env`):
+the `WZ_OFFSITE_*` values from your records (they were in the lost `offsite.env`):
 
 ```bash
 export AWS_ACCESS_KEY_ID=<key id> AWS_SECRET_ACCESS_KEY=<secret> AWS_DEFAULT_REGION=<region>

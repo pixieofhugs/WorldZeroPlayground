@@ -30,8 +30,8 @@ run() {
   rc=$?
 }
 good_env() {
-  printf 'SECRET_KEY=a$b#c\nWZ_OFFSITE_%s\n' ENDPOINT=https://s3.example.invalid BUCKET=wz-bk \
-    REGION=eu-1 KEY_ID=kid SECRET=sec >"$tmp/root/prod/.env"
+  printf 'WZ_OFFSITE_%s\n' ENDPOINT=https://s3.example.invalid BUCKET=wz-bk \
+    REGION=eu-1 KEY_ID=kid SECRET=sec >"$tmp/root/prod/offsite.env"
 }
 
 good_env
@@ -52,15 +52,15 @@ rm "$tmp/upload-fail"
 run
 check "recovers: marker cleared"            test ! -e "$tmp/dest/offsite-failed.txt"
 
-sed -i '/WZ_OFFSITE_SECRET/d' "$tmp/root/prod/.env"
+sed -i '/WZ_OFFSITE_SECRET/d' "$tmp/root/prod/offsite.env"
 run
 check "missing config: exits non-zero"      test "$rc" != 0
 check "missing config: names the key"       grep -q 'WZ_OFFSITE_SECRET is not set' "$tmp/dest/offsite-failed.txt"
 check "missing config: nothing uploaded"    test ! -e "$tmp/uploads"
 
-rm "$tmp/root/prod/.env"
+rm "$tmp/root/prod/offsite.env"
 run
-check "no .env at all: still non-zero"      test "$rc" != 0
+check "no offsite.env at all: still non-zero"      test "$rc" != 0
 
 if ((fails)); then echo "$fails check(s) failed"; exit 1; fi
 echo "all checks passed"
