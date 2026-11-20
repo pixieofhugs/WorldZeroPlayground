@@ -14,6 +14,7 @@ from datetime import datetime, timedelta, timezone
 from functools import partial
 from typing import Awaitable, Callable, Optional
 
+import requests
 from pywebpush import WebPushException, webpush
 from sqlalchemy import delete, event, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -71,7 +72,11 @@ class Target:
 
 
 def _send_one(target: Target, body: str) -> None:
+    # Zero redirects allowed: a push service never redirects, an attacker's would.
+    session = requests.Session()
+    session.max_redirects = 0
     webpush(
+        requests_session=session,
         subscription_info={
             "endpoint": target.endpoint,
             "keys": {"p256dh": target.p256dh, "auth": target.auth},

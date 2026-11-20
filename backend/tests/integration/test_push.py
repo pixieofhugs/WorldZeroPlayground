@@ -21,7 +21,7 @@ from services.notification_prefs import apply_update
 from tests.integration.factories import make_solo_praxis, make_task
 
 SUBSCRIPTION = {
-    "endpoint": "https://push.example/abc",
+    "endpoint": "https://fcm.googleapis.com/fcm/send/abc",
     "keys": {"p256dh": "k", "auth": "a"},
 }
 
@@ -72,6 +72,28 @@ async def test_subscribe_is_idempotent_and_unsubscribe_removes(
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "endpoint",
+    [
+        "http://fcm.googleapis.com/fcm/send/abc",
+        "http://169.254.169.254/",
+        "https://localhost/",
+        "https://push.example/abc",
+        "https://evilfcm.googleapis.com.attacker.test/",
+    ],
+)
+async def test_subscribe_rejects_endpoints_off_the_allowlist(
+    client: AsyncClient, auth_headers: dict, endpoint: str
+):
+    resp = await client.post(
+        "/push/subscriptions",
+        json={**SUBSCRIPTION, "endpoint": endpoint},
+        headers=auth_headers,
+    )
+    assert resp.status_code == 422
+
+
+@pytest.mark.asyncio
 async def test_another_account_cannot_unsubscribe_my_device(
     client: AsyncClient,
     auth_headers: dict,
@@ -99,7 +121,7 @@ async def _subscribe(db_session: AsyncSession, account: Account) -> None:
     db_session.add(
         PushSubscription(
             account_id=account.id,
-            endpoint="https://push.example/abc",
+            endpoint="https://fcm.googleapis.com/fcm/send/abc",
             p256dh="k",
             auth="a",
         )
@@ -193,3 +215,10 @@ async def test_a_gone_device_is_forgotten_and_a_failing_one_is_kept(
     await push.deliver(batch, factory)
     db_session.expire_all()
     assert (await db_session.scalars(select(PushSubscription))).all() == []
+
+
+def test_sender_refuses_redirects(monkeypatch):
+    seen = {}
+    monkeypatch.setattr(push, "webpush", lambda **kw: seen.update(kw))
+    push._send_one(push.Target(1, "https://fcm.googleapis.com/x", "k", "a"), "{}")
+    assert seen["requests_session"].max_redirects == 0
