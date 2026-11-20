@@ -241,11 +241,18 @@ export type ModActionOut = components['schemas']['ModActionOut']
 
 export const MOD_LOG_PAGE_SIZE = 20
 
+export interface ModLogFilters {
+  kind?: 'reports' | 'tasks' | 'people' | 'rules'
+  actor?: number
+  q?: string
+}
+
 export async function getModLog(
   offset = 0,
+  filters: ModLogFilters = {},
 ): Promise<components['schemas']['ModActionPage']> {
   const { data } = await apiGet('/admin/mod-log', {
-    params: { query: { offset, limit: MOD_LOG_PAGE_SIZE } },
+    params: { query: { offset, limit: MOD_LOG_PAGE_SIZE, ...filters } },
   })
   return data
 }

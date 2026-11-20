@@ -37,6 +37,7 @@ from schemas.admin import (
     FlaggedPraxisOut,
     ModActionOut,
     ModActionPage,
+    ModActorOut,
     ModerationAction,
     OverviewStats,
     SuspendAction,
@@ -48,7 +49,7 @@ from schemas.admin import (
 from schemas.task import TaskOut
 from schemas.praxis import PraxisCardOut, PraxisOut
 from schemas.comment import CommentModerationIn, CommentOut
-from services.mod_log import list_mod_actions
+from services.mod_log import list_mod_actions, list_mod_actors
 from services.praxis import PraxisEraScope, list_praxes, moderate_praxis
 from services.praxis_out import build_praxis_cards, build_praxis_out, crowned_praxis_ids
 from services.comment import build_comment_out, list_flagged_comments, moderate_comment
@@ -183,6 +184,9 @@ async def admin_mod_log(
                 target_author=target_author,
             )
             for action, name, target_name, target_author in rows
+        ],
+        mods=[
+            ModActorOut(account_id=a, name=n) for a, n in await list_mod_actors(session)
         ],
         counts=counts,
         total=total,

@@ -194,6 +194,7 @@ async def test_page_filters_by_kind_actor_and_search_and_names_targets(
         return (await client.get(f"/admin/mod-log?{query}", headers=auth_headers)).json()
 
     page = await get()
+    assert page["mods"] == [{"account_id": account.id, "name": page["items"][0]["actor_name"]}]
     assert page["counts"] == {"reports": 0, "tasks": 2, "people": 1, "rules": 0}
     assert {i["action"] for i in page["items"]} == {"ban", "task_status", "task_edit"}
     ban = next(i for i in page["items"] if i["action"] == "ban")

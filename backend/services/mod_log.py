@@ -189,3 +189,13 @@ async def list_mod_actions(
         total or 0,
         dict(zip(KINDS, counts_row)),
     )
+
+
+async def list_mod_actors(session: AsyncSession) -> list[tuple[int, Optional[str]]]:
+    """Every account that has logged an action, for the mod filter."""
+    rows = await session.execute(
+        select(ModAction.actor_account_id, _first_character_name(ModAction.actor_account_id))
+        .distinct()
+        .order_by(ModAction.actor_account_id)
+    )
+    return [(a, n) for a, n in rows.all()]
