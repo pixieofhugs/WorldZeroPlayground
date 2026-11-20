@@ -32,6 +32,7 @@
 .rp-help { margin: 0; }
 .rp-short { display: none; }
 .rp-reason-form { display: flex; flex-direction: column; gap: var(--space-sm); }
+.rp-reason-form:not([data-deciding]) .rp-field { display: none; }
 .rp-field { display: flex; flex-direction: column; gap: var(--space-xs); font-size: var(--text-lg); font-weight: 600; color: var(--color-text-secondary); }
 .rp-input { font: inherit; font-size: var(--text-xl); color: var(--color-text-primary); background: var(--color-bg-page); border: 1px solid var(--color-border-strong); border-radius: var(--radius-md); min-height: 44px; box-sizing: border-box; padding: 0 var(--space-sm); width: 100%; }
 .rp-author { display: flex; flex-direction: column; gap: var(--space-sm); }
@@ -44,10 +45,11 @@
   .rp-photo { flex-basis: 100%; }
   .rp-photo img { max-height: 200px; }
   .rp-card { padding: var(--space-md); }
-  .rp-split { flex-direction: column; }
-  .rp-side { max-width: none; align-self: stretch; }
+  .rp-split { flex-direction: column; align-items: stretch; }
+  .rp-main, .rp-side { flex: none; max-width: none; }
   .rp-decide { position: sticky; bottom: 0; z-index: 1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); padding: var(--space-sm) 0; background: var(--color-bg-surface); border-top: 1px solid var(--color-border); }
   .rp-decide .rp-btn { padding: 0 var(--space-xs); }
+  .rp-reason-form:not([data-deciding]) .rp-field { display: flex; }
   .rp-long { display: none; }
   .rp-short { display: inline; }
   .rp-help { display: none; }

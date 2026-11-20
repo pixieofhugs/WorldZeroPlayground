@@ -143,25 +143,24 @@ function PraxisReport({
         </button>
       </div>
       <p className="rp-muted rp-help">{t('console.reports.decision.help')}</p>
-      {deciding && (
-        <form
-          className="rp-reason-form"
-          onSubmit={(event) => {
-            event.preventDefault()
-            void act(deciding, reason.trim()).then(cancel, () => {})
-          }}
-        >
-          <label className="rp-field">
-            {t('console.reports.decision.reasonLabel')}
-            <input
-              className="rp-input"
-              autoFocus
-              required
-              placeholder={t('console.reports.decision.reasonHint')}
-              value={reason}
-              onChange={(event) => setReason(event.target.value)}
-            />
-          </label>
+      <form
+        className="rp-reason-form"
+        data-deciding={deciding ?? undefined}
+        onSubmit={(event) => {
+          event.preventDefault()
+          if (deciding) void act(deciding, reason.trim()).then(cancel, () => {})
+        }}
+      >
+        <label className="rp-field">
+          {t('console.reports.decision.reasonLabel')}
+          <input
+            className="rp-input"
+            placeholder={t('console.reports.decision.reasonHint')}
+            value={reason}
+            onChange={(event) => setReason(event.target.value)}
+          />
+        </label>
+        {deciding && (
           <div className="rp-btns">
             <button type="submit" className="rp-btn rp-btn-dng" disabled={!reason.trim()}>
               {t(deciding === 'hidden' ? 'console.reports.decision.submitRemove' : 'console.reports.decision.submitFail')}
@@ -170,8 +169,8 @@ function PraxisReport({
               {t('console.reports.decision.cancel')}
             </button>
           </div>
-        </form>
-      )}
+        )}
+      </form>
 
       <hr className="rp-rule" />
       <AuthorRow

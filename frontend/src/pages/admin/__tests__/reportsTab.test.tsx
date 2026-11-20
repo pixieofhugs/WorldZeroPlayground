@@ -61,6 +61,7 @@ describe('Reports', () => {
     mount([flagged])
     const card = await screen.findByRole('region', { name: 'Walked a new street' })
     expect(within(card).getByText('Stock photo.', { exact: false })).toBeTruthy()
+    expect(within(card).getByLabelText('Reason the author sees')).toBeTruthy() // present before any tap (phone shows it)
     fireEvent.click(within(card).getByRole('button', { name: 'Remove' }))
     const submit = screen.getByRole('button', { name: 'Remove with this reason' }) as HTMLButtonElement
     expect(submit.disabled).toBe(true)

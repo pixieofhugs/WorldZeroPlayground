@@ -77,4 +77,13 @@ describe('admin console shell', () => {
     expect(current.map((a) => a.textContent)).toEqual(['Tasks10'])
     expect(within(rail).getByRole('link', { name: '← Back to World Zero' }).getAttribute('href')).toBe('/')
   })
+
+  it('phone top bar titles the current page with its count, no second brand', async () => {
+    at('/admin/reports')
+    const bar = (await screen.findByRole('banner')) as HTMLElement
+    expect(await within(bar).findByLabelText('3 waiting')).toBeTruthy()
+    expect(within(bar).getByText('Reports')).toBeTruthy()
+    expect(within(bar).queryByText('World Zero')).toBeNull()
+    expect(within(bar).getByRole('link', { name: '← World Zero' })).toBeTruthy()
+  })
 })
