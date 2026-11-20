@@ -5,20 +5,24 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from errors import ErrorCode
-from faction_slugs import CROSS_FACTION_SLUG
+from faction_slugs import CROSS_FACTION_SLUG, real_faction_slugs
+from game_config import CURRENT_ERA
 from models.account import Account, AccountStatus
 from models.character import Character, CharacterStatus
 from models.character_stats import CharacterStats
 from models.contact import ContactMessage
 from models.era import Era
+from models.meta_task import PraxisMetaTask
 from models.praxis import Praxis
-from models.task import Task, TaskStatus
+from models.task import Task, TaskStatus, TaskType
 from schemas.task import MAX_TASK_NOTES
+from services.character_stats import recalculate_character_stats
 from tests.integration.factories import (
     DEFAULT_FACTION_SLUG,
     make_account,
     make_admin,
     make_character,
+    make_solo_praxis,
     make_task,
 )
 
@@ -948,3 +952,119 @@ async def test_remove_flagged_hides_only_the_authors_flagged_posts(
         "/admin/characters/999999/praxes/remove-flagged", headers=auth_headers
     )
     assert missing.status_code == 404
+
+
+async def _stored(db_session, character) -> tuple[int, int, int]:
+    stats = await db_session.scalar(
+        select(CharacterStats).where(CharacterStats.character_id == character.id)
+    )
+    await db_session.refresh(stats)
+    await db_session.refresh(character)
+    return stats.score, stats.level, character.all_time_score
+
+
+async def _doer_on_retired_task(
+    db_session, era, creator, *, task_kw=None, meta=None
+):
+    """A doer with a settled score on a retired task (``meta`` attached when given)."""
+    doer = await make_character(db_session, era, username="doer")
+    task = await make_task(
+        db_session, creator, status=TaskStatus.retired, **(task_kw or {})
+    )
+    praxis = await make_solo_praxis(
+        db_session, meta[0] if meta else task, doer
+    )
+    if meta:
+        db_session.add(PraxisMetaTask(praxis_id=praxis.id, task_id=task.id))
+    await recalculate_character_stats(doer.id, db_session)
+    await db_session.commit()
+    return doer, task
+
+
+async def _patch_and_compare(client, auth_headers, db_session, doer, task, body):
+    before = await _stored(db_session, doer)
+    resp = await client.patch(
+        f"/admin/tasks/{task.id}", json=body, headers=auth_headers
+    )
+    assert resp.status_code == 200
+    after = await _stored(db_session, doer)
+    await recalculate_character_stats(doer.id, db_session)
+    assert after == await _stored(db_session, doer)
+    return before, after
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("new_points", [50, 1])
+async def test_admin_edit_task_points_rescores_doers(
+    client, account, character, era, auth_headers, db_session, new_points
+):
+    await make_admin(db_session, account)
+    doer, task = await _doer_on_retired_task(
+        db_session, era, character, task_kw={"point_value": 10}
+    )
+    before, after = await _patch_and_compare(
+        client, auth_headers, db_session, doer, task, {"point_value": new_points}
+    )
+    assert before[0] > 0
+    assert (after[0] > before[0]) == (new_points > 10)
+    assert after[0] != before[0]
+    assert after[2] - before[2] == after[0] - before[0]
+
+
+@pytest.mark.asyncio
+async def test_admin_edit_task_faction_rescores_doers(
+    client, account, character, era, auth_headers, db_session, monkeypatch
+):
+    await make_admin(db_session, account)
+    other = real_faction_slugs(CURRENT_ERA)[1]
+    # Every Era 1 faction multiplies by 1.0, so make the other-task case differ.
+    monkeypatch.setattr(
+        "services.praxis_scoring.compute_faction_multiplier",
+        lambda mine, task_faction, *a, **k: 1.0 if task_faction == mine else 3.0,
+    )
+    doer, task = await _doer_on_retired_task(db_session, era, character)
+    before, after = await _patch_and_compare(
+        client, auth_headers, db_session, doer, task, {"primary_faction_slug": other}
+    )
+    assert after[0] != before[0]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("field,value", [("point_value", 50), ("level_required", 99)])
+async def test_admin_edit_metatask_rescores_applied_praxis_authors(
+    client, account, character, era, auth_headers, db_session, field, value
+):
+    await make_admin(db_session, account)
+    parent = await make_task(db_session, character)
+    doer, meta = await _doer_on_retired_task(
+        db_session,
+        era,
+        character,
+        task_kw={"task_type": TaskType.metatask, "point_value": 10},
+        meta=(parent,),
+    )
+    before, after = await _patch_and_compare(
+        client, auth_headers, db_session, doer, meta, {field: value}
+    )
+    assert after[0] != before[0]
+
+
+@pytest.mark.asyncio
+async def test_admin_edit_task_text_only_does_not_rescore(
+    client, account, character, era, auth_headers, db_session, monkeypatch
+):
+    await make_admin(db_session, account)
+    doer, task = await _doer_on_retired_task(db_session, era, character)
+    calls = []
+
+    async def spy(*a, **k):
+        calls.append(a)
+
+    monkeypatch.setattr("services.admin_service.recalculate_character_stats", spy)
+    resp = await client.patch(
+        f"/admin/tasks/{task.id}",
+        json={"title": "New", "description": "New", "point_value": task.point_value},
+        headers=auth_headers,
+    )
+    assert resp.status_code == 200
+    assert calls == []
