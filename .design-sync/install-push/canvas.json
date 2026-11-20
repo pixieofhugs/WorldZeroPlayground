@@ -1,0 +1,23 @@
+{
+  "v": 3,
+  "createdOnFiles": {"v": 1, "at": "2026-11-19T23:40:00Z"},
+  "title": "Install and push cards",
+  "launch": {"view": "canvas"},
+  "pages": [],
+  "boards": {
+    "Main.dc.html": {"x": 0, "y": 0, "w": 860, "h": 560, "title": "Install nudge · Android (#3677)"},
+    "InstallIphone.dc.html": {"x": 940, "y": 0, "w": 860, "h": 700, "title": "Install nudge · iPhone (#3677)"},
+    "PushAsk.dc.html": {"x": 0, "y": 1040, "w": 860, "h": 820, "title": "Push ask after the first praxis (#3678)"},
+    "SettingsPush.dc.html": {"x": 940, "y": 1040, "w": 860, "h": 1500, "title": "Settings · third Push column (#3678)"},
+    "PushStates.dc.html": {"x": 1880, "y": 1040, "w": 860, "h": 760, "title": "Push can't turn on (#3678)"},
+    "LockScreen.dc.html": {"x": 2820, "y": 1040, "w": 860, "h": 600, "title": "What a push says (#3678)"}
+  },
+  "order": ["Main.dc.html", "InstallIphone.dc.html", "PushAsk.dc.html", "SettingsPush.dc.html", "PushStates.dc.html", "LockScreen.dc.html"],
+  "notes": {
+    "t1": {"x": 0, "y": -300, "text": "#3677 · Put World Zero on your home screen", "kind": "title1", "maxW": 1800},
+    "t2": {"x": 0, "y": 740, "text": "#3678 · Push notifications", "kind": "title1", "maxW": 3680}
+  },
+  "designSystems": [
+    {"title": "World Zero Frontend Kit", "namespace": "wz", "artifact": "https://claude.ai/artifact/T7kJn4EtGDDZF8QXEoCYAu", "version": "1795156722-8383", "copiedAt": "2026-11-19T23:40:00Z"}
+  ]
+}
