@@ -1,0 +1,2 @@
+/* The When column is the row's button: keep a timestamp on one line. */
+.adm-modlog .adm-open { white-space: nowrap; }

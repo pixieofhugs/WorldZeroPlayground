@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { getModLog, type ModActionOut, type ModLogFilters } from '../../api/admin'
 import { extractError } from '../../utils/errors'
+import './adminModLog.css'
 import { ListTable, ListToolbar, SelectChip, SidePanel, type Column } from './AdminList'
 
 type Kind = NonNullable<ModLogFilters['kind']>
@@ -83,7 +84,7 @@ export default function ModLogTab() {
   const selected = rows.find((r) => r.id === selectedId) ?? null
 
   return (
-    <>
+    <div className="adm-modlog">
       <header className="adm-head">
         <div>
           <h1 className="adm-h1">{t('console.modlog.title')}</h1>
@@ -139,6 +140,6 @@ export default function ModLogTab() {
         )}
       </div>
       <p className="adm-muted">{t('console.modlog.foot')}</p>
-    </>
+    </div>
   )
 }
