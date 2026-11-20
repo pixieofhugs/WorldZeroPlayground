@@ -1,9 +1,13 @@
+import { lazy, Suspense } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../auth/AuthContext'
 import { useSidebarPanels } from '../../hooks/useSidebarPanels'
 import { REQUESTS_QUEUE_LINK } from '../../pages/updates/requestsQueueAnchor'
 import PendingBadge from './PendingBadge'
+
+// Admins only: the chunk and its counts never reach a player.
+const ModControl = lazy(() => import('../admin/ModControl'))
 
 /**
  * Mobile chrome, top: sticky wordmark bar with bell + Settings (#495/#520).
@@ -21,8 +25,9 @@ export default function MobileHeader() {
 
   return (
     <header
-      className="sticky top-0 flex items-center justify-between px-4 h-12"
+      className="sticky flex items-center justify-between px-4 h-12"
       style={{
+        top: 'var(--modstrip-h)',
         zIndex: 10,
         background: 'var(--color-nav-bg)',
         backdropFilter: 'blur(var(--nav-blur))',
@@ -34,6 +39,11 @@ export default function MobileHeader() {
       </Link>
       {user && (
         <div className="flex items-center gap-3">
+          {user.is_admin && (
+            <Suspense fallback={null}>
+              <ModControl />
+            </Suspense>
+          )}
           {/* Bell → the Requests queue (#572). Not a generic notification bell
               (#2083): it counts obligations only, which the home feed excludes
               (ADR-0070), so it is named after the queue and links its anchor. */}
