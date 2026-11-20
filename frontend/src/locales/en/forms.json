@@ -265,6 +265,8 @@
       "statusDraft": "Draft",
       "statusSaved": "Saved {{ago}}",
       "statusSavedOnPhone": "Saved on this phone, sends when you're back online",
+      "statusEndedLive": "This went live. Anything typed after it closed didn't make it in.",
+      "statusEndedRemoved": "You've been removed from this collab, so this can't be edited.",
       "statusUnsaved": "Not saved yet",
       "statusSubmitted": "Submitted",
       "taskLabel": "The task",

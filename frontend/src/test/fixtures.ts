@@ -378,6 +378,7 @@ export const anEditPraxisState = (
 
   autosaveAt: null,
   setAutosaveAt: noop,
+  resolveRoomEnd: async () => "removed",
 
   autoSubmitDays: null,
 
