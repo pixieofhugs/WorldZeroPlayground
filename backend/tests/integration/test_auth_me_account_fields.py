@@ -48,9 +48,6 @@ async def test_auth_me_answers_empty_provider_when_no_oauth_row_exists(
 EMAIL_CARRIERS = {
     #2155: authenticated, the CALLER'S OWN address (like `account_id`).
     "CurrentUser",
-    # Admin-guarded.
-    "AccountSummary",
-    "AccountDetail",
     # A REQUEST body: the sender's own address.
     "ContactMessageIn",
     # Admin-only read-back of what a sender typed.
