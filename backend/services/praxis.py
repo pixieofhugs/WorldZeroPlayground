@@ -1356,7 +1356,8 @@ async def moderate_praxis(
     praxis.moderation_status = mod_enum
     if log:
         await log_mod_action(
-            session, actor_id, f"praxis_{mod_enum.value}", "praxis", praxis_id
+            session, actor_id, f"praxis_{mod_enum.value}", "praxis", praxis_id,
+            admin_note if mod_enum == ModerationStatus.failed else None,
         )
 
     if mod_enum == ModerationStatus.flagged:

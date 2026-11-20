@@ -45,10 +45,13 @@ class ModActionOut(WireModel):
     target_id: int
     detail: str | None
     created_at: datetime
+    target_name: str | None
+    target_author: str | None
 
 
 class ModActionPage(WireModel):
     items: list[ModActionOut]
+    counts: dict[str, int]
     total: int
     limit: int
     offset: int
