@@ -49,6 +49,7 @@ class FlagIn(WireModel):
 class CommentModerationIn(WireModel):
     # Comment vocabulary (ADR-0006): `deleted` is a terminal tombstone; no `failed`.
     status: Literal["visible", "hidden", "deleted"]
+    admin_note: Optional[str] = Field(None, max_length=1000)
 
 
 class CommentOut(WireModel):
@@ -61,3 +62,5 @@ class CommentOut(WireModel):
     updated_at: datetime
     author: CommentAuthor
     mentions: list[CommentMentionOut] = []
+    #: Set only when the viewer is the comment's author and it was removed.
+    admin_note: Optional[str] = None
