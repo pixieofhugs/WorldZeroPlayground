@@ -16,6 +16,7 @@ function ephComment(over: Partial<CommentOut>): CommentOut {
     id: 1,
     praxis_id: 501,
     task_id: null,
+    admin_note: null,
     body_text: '',
     is_edited: false,
     created_at: '2026-06-28T09:12:00Z',

@@ -123,6 +123,7 @@ table character_stats
   constraint uq_character_stats_character_id_era_id UNIQUE (character_id, era_id)
 
 table comment
+  column admin_note text
   column body_text text NOT NULL
   column created_at timestamp with time zone NOT NULL DEFAULT now()
   column created_by_id bigint NOT NULL
