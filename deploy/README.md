@@ -330,6 +330,17 @@ Run it on dev first, the same way.
 Each stack runs **one** uvicorn process (`backend/start.sh` passes no
 `--workers`). That's deliberate: see the praxis room under §11.
 
+## 10b. Backfilling display copies
+
+New photos get a `<name>.display.webp` beside the original (1600 px, q80) and the
+feed uses it (#3626). Photos uploaded before that have none and are served full
+size until this runs. It is idempotent and writes only new files:
+
+    docker compose exec -T backend python scripts/backfill_display_copies.py --env prod          # dry run
+    docker compose exec -T backend python scripts/backfill_display_copies.py --env prod --apply
+
+Run it beside the metadata-scrub script. Ran on: dev ____ / prod ____ (owner fills in).
+
 ## 11. Deliberately not built
 
 - **Zero-downtime deploys.** `up -d` recreates the backend container, so the API

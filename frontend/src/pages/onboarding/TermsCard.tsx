@@ -118,6 +118,7 @@ export default function TermsCard({
           <p style={prose}>{tCommon('disclaimer.p1')}</p>
           <p style={prose}>{tCommon('disclaimer.p2')}</p>
           <p style={prose}>{tCommon('disclaimer.p3')}</p>
+          <p style={prose}>{tCommon('disclaimer.p4')}</p>
           <p style={lastUpdated}>{tCommon('disclaimer.lastUpdated')}</p>
         </div>
 
