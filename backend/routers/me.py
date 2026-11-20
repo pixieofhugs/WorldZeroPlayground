@@ -1,12 +1,11 @@
 """Account-scoped "my lives" endpoints (ADR-0019); /characters is the public roster."""
 from dataclasses import asdict
-from typing import Callable
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db import get_db, get_session_factory
+from db import get_db
 from models.account import Account
 from models.praxis import PraxisStatus
 from schemas.activity_feed import ACTIVITY_FEED_ITEM_ADAPTER
@@ -177,7 +176,6 @@ async def export_my_data(
 async def my_sidebar(
     account: Account = Depends(get_current_account),
     session: AsyncSession = Depends(get_db, scope="function"),
-    session_factory: Callable = Depends(get_session_factory),
 ) -> SidebarOut:
     """The desktop rail's three panels in one request (#1344).
 
@@ -200,7 +198,6 @@ async def my_sidebar(
     ) = await get_sidebar_feed(
         character_id=character.id,
         session=session,
-        session_factory=session_factory,
         # Same switches as the feed (#1047); the request count ignores them.
         muted=muted_feed_types(account.notification_prefs),
     )

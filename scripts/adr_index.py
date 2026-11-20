@@ -11,8 +11,8 @@ Header contract: every `docs/adr/NNNN-*.md` opens with exactly
     **Status:** <status>
     **Date:** YYYY-MM-DD
 
-where `<status>` is `Accepted`, `Reversed`, `Superseded by ADR-NNNN` or
-`Amended by ADR-NNNN` (the last two take a comma-separated list). Which clause
+where `<status>` is `Accepted`, `Reversed`, `Deferred to Era 2`,
+`Superseded by ADR-NNNN` or `Amended by ADR-NNNN` (the last two take a comma-separated list). Which clause
 moved goes in the body under `## Amendment`, never the status value.
 
 A `**Amends:**` / `**Supersedes...**` header line names its targets (every
@@ -44,6 +44,7 @@ _STATUS = re.compile(
     r"\A(?:"
     r"Accepted"
     r"|Reversed"
+    r"|Deferred to Era 2"
     r"|(?P<verb>Superseded|Amended) by (?P<refs>ADR-\d{4}(?:, ADR-\d{4})*)"
     r")\Z"
 )
@@ -54,7 +55,7 @@ _TITLE_PREFIX = re.compile(r"\AADR-\d{4}\s*[—:-]\s*")
 #: Shared with the test.
 NUMBERED_GLOB = "[0-9][0-9][0-9][0-9]-*.md"
 
-STATUS_VOCABULARY = ("Accepted", "Reversed", "Superseded by", "Amended by")
+STATUS_VOCABULARY = ("Accepted", "Reversed", "Deferred to Era 2", "Superseded by", "Amended by")
 
 
 class AdrFormatError(ValueError):
@@ -168,6 +169,8 @@ def render(adrs: list[Adr]) -> str:
         "| **Superseded** | Wholly replaced by a later record. Kept as history — "
         "do not build from it. |",
         "| **Reversed** | No longer in force, and no record replaced it. |",
+        "| **Deferred to Era 2** | Not reversed, but not live in Era 1 either. "
+        "The body's `## Amendment` says why. |",
         "",
         "| # | Title | Status | Superseded / amended by |",
         "|---|---|---|---|",

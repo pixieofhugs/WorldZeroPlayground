@@ -106,6 +106,30 @@ async def test_create_character_lost_race_on_username_is_409(
 
 
 @pytest.mark.asyncio
+async def test_derived_username_retries_when_the_probe_loses_a_race(
+    client: AsyncClient,
+    character: Character,
+    account2: Account,
+    some_faction: Faction,
+    auth_headers2: dict,
+    monkeypatch,
+):
+    from services.character import _derive_unique_username as real
+
+    picks = iter([character.username])
+
+    async def stale_then_real(display_name, session):
+        return next(picks, None) or await real(display_name, session)
+
+    monkeypatch.setattr("services.character._derive_unique_username", stale_then_real)
+    resp = await client.post(
+        "/characters", json={"display_name": "Other"}, headers=auth_headers2
+    )
+    assert resp.status_code == 201
+    assert resp.json()["username"].lower() != character.username.lower()
+
+
+@pytest.mark.asyncio
 async def test_create_character_unauthenticated(client: AsyncClient):
     resp = await client.post(
         "/characters",

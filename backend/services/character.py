@@ -369,6 +369,9 @@ async def list_era_invitations_for_character(
     return sorted(row[0] for row in result.all())
 
 
+_DERIVE_ATTEMPTS = 5
+
+
 async def _derive_unique_username(display_name: str, session: AsyncSession) -> str:
     """Lowercase + strip non-alphanumerics + slice; ``wanderer`` fallback; auto-suffix
     (``wren``, ``wren2``, …) until globally unique."""
@@ -523,26 +526,37 @@ async def create_character(
         )
     ):
         raise_coded(409, ErrorCode.username_taken, "That username is already taken.")
-    username = explicit_username or await _derive_unique_username(display_name, session)
-
-    character = Character(
-        account_id=account_id,
-        username=username,
-        display_name=display_name,
-        bio=data.bio or "",
-        tagline=data.tagline or "",
-        avatar_url=data.avatar_url or "",
-        location=data.location or "",
-        faction_slug=starting_faction_slug,
-    )
-    try:
-        session.add(character)
-        await session.flush()
-    except IntegrityError as exc:
-        if "uq_character_username_lower" not in str(exc.orig):
-            raise
-        await session.rollback()
-        raise_coded(409, ErrorCode.username_taken, "That username is already taken.")
+    # A derived handle can lose the probe-then-insert race; re-derive in a savepoint.
+    attempts = 1 if explicit_username else _DERIVE_ATTEMPTS
+    for attempt in range(attempts):
+        username = explicit_username or await _derive_unique_username(
+            display_name, session
+        )
+        character = Character(
+            account_id=account_id,
+            username=username,
+            display_name=display_name,
+            bio=data.bio or "",
+            tagline=data.tagline or "",
+            avatar_url=data.avatar_url or "",
+            location=data.location or "",
+            faction_slug=starting_faction_slug,
+        )
+        savepoint = await session.begin_nested()
+        try:
+            session.add(character)
+            await session.flush()
+            await savepoint.commit()
+            break
+        except IntegrityError as exc:
+            await savepoint.rollback()
+            if "uq_character_username_lower" not in str(exc.orig):
+                raise
+            if attempt == attempts - 1:
+                await session.rollback()
+                raise_coded(
+                    409, ErrorCode.username_taken, "That username is already taken."
+                )
 
     stats = await get_or_create_stats(
         session,

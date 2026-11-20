@@ -37,12 +37,12 @@ Superseded by [ADR-0053](0053-a-praxis-has-one-number-merit-is-retired.md) (2026
 votes-row clause separately superseded by
 [ADR-0076](0076-a-base-only-score-reads-as-a-bare-total.md) (2026-08-15). Accepted 2026-07-19.
 
-**2026-08-24 (#2536), unresolved:** this record declares itself superseded, but
-[ADR-0049](0049-the-score-stamp-is-a-manifest-surface.md) states that "ADR-0047 is **not**
-superseded" and treats its conditional row-selection rules as the shared half every skin
-still uses, and ADR-0076 supersedes one further clause of it a month later. The status above
-follows this record's own declaration. If the row-selection rules are in fact still live,
-this wants re-cutting as an amendment rather than a supersession.
+**2026-11-19 (#3556):** the row-selection rules this record states are owned by
+[ADR-0053](0053-a-praxis-has-one-number-merit-is-retired.md) and
+[ADR-0076](0076-a-base-only-score-reads-as-a-bare-total.md); the code follows them, so read
+those, not this. The supersession above stands, and
+[ADR-0049](0049-the-score-stamp-is-a-manifest-surface.md)'s "not superseded" line is amended
+to match.
 
 ## Context
 
