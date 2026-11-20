@@ -7,7 +7,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.account import Account, AccountStatus
 from models.character import Character
-from models.era import Era
 from models.praxis import Praxis
 from models.vote import Vote
 
@@ -21,6 +20,30 @@ class VoteTally:
 
 
 _EMPTY_TALLY = VoteTally(points_from_votes=0, voter_count=0)
+
+
+def _counted_votes(query):
+    """Join voters, dropping moderated ones; deletion keeps them (ADR-0081)."""
+    # Deferred: services.character -> services.era -> this module is a cycle.
+    from services.character import MOD_BANNED
+
+    return (
+        query.join(Character, Character.id == Vote.voter_character_id)
+        .join(Account, Account.id == Vote.voter_account_id)
+        .where(Account.status != AccountStatus.suspended, ~MOD_BANNED)
+    )
+
+
+async def counted_voters(
+    praxis_id: int, session: AsyncSession
+) -> list[tuple[Vote, Character]]:
+    """The votes ``tally_votes`` counts, newest first, with their voters."""
+    result = await session.execute(
+        _counted_votes(select(Vote, Character))
+        .where(Vote.praxis_id == praxis_id)
+        .order_by(Vote.created_at.desc())
+    )
+    return [(vote, character) for vote, character in result.all()]
 
 
 async def tally_votes(
@@ -41,33 +64,13 @@ async def tally_votes(
     if not praxis_ids:
         return {}
 
-    # Deferred: services.character -> services.era -> this module is a cycle.
-    from services.character import MOD_BANNED
-
-    query = (
+    query = _counted_votes(
         select(Vote.praxis_id, func.sum(Vote.value), func.count(Vote.id))
-        .join(Character, Character.id == Vote.voter_character_id)
-        .join(Account, Account.id == Vote.voter_account_id)
-        .where(
-            Vote.praxis_id.in_(praxis_ids),
-            # Moderation hides votes, reversibly; deletion keeps them (ADR-0081).
-            Account.status != AccountStatus.suspended,
-            ~MOD_BANNED,
-        )
-        .group_by(Vote.praxis_id)
-    )
+    ).where(Vote.praxis_id.in_(praxis_ids)).group_by(Vote.praxis_id)
     if cast_in == "sealed":
-        # Same rule as ``get_era_row_for_praxis``; an unsealed praxis counts all.
-        sealing_era = (
-            select(Era.id)
-            .where(Era.started_at <= Praxis.submitted_at)
-            .order_by(Era.id.desc())
-            .limit(1)
-            .correlate(Praxis)
-            .scalar_subquery()
-        )
+        # era_id is stamped at seal; an unsealed praxis counts all.
         query = query.join(Praxis, Praxis.id == Vote.praxis_id).where(
-            or_(Praxis.submitted_at.is_(None), Vote.era_id == sealing_era)
+            or_(Praxis.era_id.is_(None), Vote.era_id == Praxis.era_id)
         )
     elif cast_in is not None:
         query = query.where(Vote.era_id == cast_in)

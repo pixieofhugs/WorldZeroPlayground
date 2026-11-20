@@ -21,6 +21,7 @@ BACKEND_ROOT = Path(__file__).resolve().parent.parent
 if str(BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(BACKEND_ROOT))
 
+from fastapi import HTTPException  # noqa: E402
 from sqlalchemy import select  # noqa: E402
 from sqlalchemy.ext.asyncio import (  # noqa: E402
     AsyncSession,
@@ -29,9 +30,11 @@ from sqlalchemy.ext.asyncio import (  # noqa: E402
 )
 
 from dependencies import account_has_admin_role  # noqa: E402
+from errors import detail_message  # noqa: E402
 from game_config import EraConfig, era_config_for_key  # noqa: E402
 from models.character import Character  # noqa: E402
 from models.era import Era  # noqa: E402
+from models.task import TaskStatus  # noqa: E402
 from script_utils import add_env_argument, get_settings  # noqa: E402
 from services.admin_service import list_characters_to_reset  # noqa: E402
 from services.era import (  # noqa: E402
@@ -40,6 +43,7 @@ from services.era import (  # noqa: E402
     get_current_era_row_safe,
     lock_era_rollover,
 )
+from services.era_tasks import sync_era_tasks, tasks_to_reactivate  # noqa: E402
 
 
 def print_plan(
@@ -104,6 +108,13 @@ async def reset_era(session: AsyncSession, username: str, confirmed: bool) -> in
         )
         return 1
 
+    # Before any write, like the admin roll: a bad title refuses the whole roll.
+    try:
+        to_reactivate = await tasks_to_reactivate(session, opening)
+    except HTTPException as exc:
+        print(f"ERROR: {detail_message(exc.detail)}")
+        return 1
+
     characters = await list_characters_to_reset(session)
     print_plan(current_era_row, opening, len(characters))
 
@@ -119,6 +130,9 @@ async def reset_era(session: AsyncSession, username: str, confirmed: bool) -> in
     session.add(new_era_row)
     await session.flush()
     await apply_era_reset(characters, new_era_row, session, era=opening)
+    for task in to_reactivate:
+        task.status = TaskStatus.active
+    await sync_era_tasks(session, opening, operator.id)
     await commit_and_bind_live_era(session, opening)
     print(f"\nEra {new_era_row.id} is open; {len(characters)} character(s) reset.")
     return 0

@@ -278,7 +278,7 @@ contract, with the held contract click carried through the redirect.
 else, for a person who has a character already. The flow cannot tell a returner before
 sign-in (a scan always re-runs from the top), so the view is reached from the header's Sign in
 on the title and the beats while signed out (#3461; #3514's `toSignIn` goes to step `'signin'`).
-Open for the owner: does it skip the contract?
+*2026-11-19, [#3649](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3649), owner ruling:* a returning player (signed in, has a character) can skip the contract and any step of the tutorial. A Skip control shows for them on every step; a new player gets none past the existing beat Skip. Skipping the contract writes no row, so it is allowed only when `CurrentUser.has_accepted_terms` (a row for the current terms version) is true; otherwise they still see the contract.
 
 *2026-11-18, [#3457](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3457); #3452:* was written when sign-in came before the terms. The order is
 now title, seven beats, contract, sign-in, creation, arrival, and a signed-in person who opens

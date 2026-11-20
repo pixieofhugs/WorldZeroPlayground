@@ -460,6 +460,23 @@ export interface paths {
         patch: operations["admin_archive_message_admin_messages__message_id__archive_patch"];
         trace?: never;
     };
+    "/admin/mod-log": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Admin Mod Log */
+        get: operations["admin_mod_log_admin_mod_log_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/overview": {
         parameters: {
             query?: never;
@@ -3922,6 +3939,39 @@ export interface components {
             /** Task Id */
             task_id: number;
         };
+        /** ModActionOut */
+        ModActionOut: {
+            /** Action */
+            action: string;
+            /** Actor Account Id */
+            actor_account_id: number;
+            /** Actor Name */
+            actor_name: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Detail */
+            detail: string | null;
+            /** Id */
+            id: number;
+            /** Target Id */
+            target_id: number;
+            /** Target Type */
+            target_type: string;
+        };
+        /** ModActionPage */
+        ModActionPage: {
+            /** Items */
+            items: components["schemas"]["ModActionOut"][];
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Total */
+            total: number;
+        };
         /** ModerationAction */
         ModerationAction: {
             /** Admin Note */
@@ -5894,6 +5944,42 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["routers__admin__ContactMessageOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_mod_log_admin_mod_log_get: {
+        parameters: {
+            query?: {
+                target_type?: string | null;
+                target_id?: number | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModActionPage"];
                 };
             };
             /** @description Validation Error */
