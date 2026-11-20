@@ -47,43 +47,23 @@ export default function FeedCardRulesChange({ item, archive }: Props) {
   const changes: Change[] = item.payload.changes ?? []
 
   return (
-    <div
-      className="sidebar-card"
-      style={{
-        background: 'var(--badge-admin-bg)',
-        color: 'var(--badge-admin-text)',
-        padding: 'var(--space-lg) var(--space-xl)',
-        position: 'relative',
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', marginBottom: 'var(--space-md)' }}>
+    <div className="sidebar-card rules-change-card">
+      <div className="rules-change-head">
         <span className="label-heading">{i18n.t('feed:rulesChange.kicker')}</span>
-        <span className="label-caption" style={{ color: 'var(--rank-silver)' }}>
+        <span className="label-caption rules-change-label">
           {i18n.t('feed:rulesChange.label')}
         </span>
-        <span style={{ marginLeft: 'auto' }}>
+        <span className="rules-change-badge">
           <FeedBadge type="admin" label={i18n.t('feed:badge.admin')} />
         </span>
         {archive}
       </div>
 
-      <h2
-        className="font-display italic"
-        style={{ fontSize: 'var(--text-content)', color: 'var(--badge-admin-text)', marginBottom: 'var(--space-sm)', lineHeight: 1.3 }}
-      >
+      <h2 className="font-display italic rules-change-headline">
         {i18n.t('feed:rulesChange.headline')}
       </h2>
 
-      <ul
-        className="font-body"
-        style={{
-          fontSize: 'var(--text-content)',
-          lineHeight: 1.5,
-          margin: 0,
-          paddingLeft: 'var(--space-lg)',
-          marginBottom: 'var(--space-md)',
-        }}
-      >
+      <ul className="font-body rules-change-list">
         {changes.map((change) => (
           <li key={change.dial_key}>
             {hasOwnKey(DIAL_LINE_KEY, change.dial_key) &&
@@ -92,12 +72,7 @@ export default function FeedCardRulesChange({ item, archive }: Props) {
         ))}
       </ul>
 
-      <p
-        className="font-body"
-        style={{ fontSize: 'var(--text-base)', color: 'color-mix(in srgb, var(--badge-admin-text) 75%, transparent)' }}
-      >
-        {i18n.t('feed:rulesChange.footnote')}
-      </p>
+      <p className="font-body rules-change-footnote">{i18n.t('feed:rulesChange.footnote')}</p>
     </div>
   )
 }

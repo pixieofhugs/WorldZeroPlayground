@@ -18,7 +18,7 @@ import { surfaceMap } from '../../factions'
 import type { ActivityFeedItem } from '../../api/activityFeed'
 
 /** `era_announcement` is exempt by TYPE (epic decision 6), not by slug. */
-const CHASSIS_TYPES = FEED_TYPES.filter((type) => type !== 'era_announcement')
+const CHASSIS_TYPES = FEED_TYPES.filter((type) => type !== 'era_announcement' && type !== 'rules_change')
 
 /** Other factions' slugs on purpose: only the actor's slug skins the card (SPEC-faction-ui-profile.md §2). */
 const FAT_PAYLOAD = {

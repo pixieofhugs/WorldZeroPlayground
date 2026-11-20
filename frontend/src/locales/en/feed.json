@@ -164,7 +164,7 @@
         "full": "One first post a day, again."
       },
       "vote_requires_received_vote": {
-        "small": "Anyone who has reached level 1 may rate praxes, even before being rated.",
+        "small": "Anyone at level 1 may rate any praxis, even before being rated.",
         "full": "You must have been rated by someone else before you may rate."
       },
       "comment_level": {
