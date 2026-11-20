@@ -173,7 +173,7 @@ export default function TaskCard({
               textDecoration: 'none',
             }}
           >
-            {t('tasks.actions.openInAdmin')}
+            {t('tasks.actions.openInAdmin')} {'\u2197\uFE0E'}
           </Link>
           <TaskStatusControl status={shown.status} variant="strip" onChange={(next) => void handleStatusChange(next)} />
         </div>

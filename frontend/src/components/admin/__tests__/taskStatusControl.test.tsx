@@ -48,7 +48,7 @@ describe('TaskCard in mod mode', () => {
         <TaskCard task={aTask({ id: 7 })} basePoints={18} />
       </MemoryRouter>,
     )
-    expect(screen.getByRole('link', { name: 'Open in admin ↗' }).getAttribute('href')).toBe('/admin/tasks?task=7')
+    expect(screen.getByRole('link', { name: /Open in admin/ }).getAttribute('href')).toBe('/admin/tasks?task=7')
     fireEvent.click(screen.getByRole('button', { name: 'retire' }))
     fireEvent.click(screen.getByRole('button', { name: 'retire it' }))
     await waitFor(() => expect(updateTaskStatus).toHaveBeenCalledWith(7, 'retired'))

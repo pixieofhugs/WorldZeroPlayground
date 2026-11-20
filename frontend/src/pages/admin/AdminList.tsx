@@ -116,7 +116,7 @@ export function ListTable<T>({
       <thead>
         <tr>
           {columns.map((c) => (
-            <th key={c.key} scope="col" className={`adm-th${c.numeric ? ' adm-num' : ''}`}>
+            <th key={c.key} scope="col" className={c.numeric ? 'adm-th adm-num' : 'adm-th'}>
               {c.header}
             </th>
           ))}
@@ -126,7 +126,7 @@ export function ListTable<T>({
         {rows.map((row) => (
           <tr key={rowKey(row)} className={rowKey(row) === selectedKey ? 'adm-tr-on' : undefined}>
             {columns.map((c, i) => (
-              <td key={c.key} className={`adm-td${c.numeric ? ' adm-num' : ''}`}>
+              <td key={c.key} className={c.numeric ? 'adm-td adm-num' : 'adm-td'}>
                 {i === 0 ? (
                   <button type="button" className="adm-open" onClick={() => onOpen(row)}>
                     {c.cell(row)}

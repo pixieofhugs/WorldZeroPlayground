@@ -145,7 +145,7 @@
       "save": "save",
       "saving": "saving…",
       "cancel": "cancel",
-      "openInAdmin": "Open in admin ↗",
+      "openInAdmin": "Open in admin",
       "confirmRetire": "retire it",
       "keep": "keep"
     }
@@ -468,7 +468,7 @@
         "description": "Description",
         "level": "Level",
         "note": "Their note to you",
-        "viewOnSite": "View on site ↗",
+        "viewOnSite": "View on site",
         "hint": "Edits save with either choice. Delete is refused for a task with history: retire it instead."
       }
     }

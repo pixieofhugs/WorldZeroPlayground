@@ -60,7 +60,7 @@ export default function TasksTab() {
   // A deep link, or a status change in the panel, brings the list to the task.
   useEffect(() => {
     if (selected) setSegment(segmentOf(selected.status))
-  }, [selected?.id, selected?.status]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selected?.id, selected?.status])
   const open = (id: number | null) => setParams(id ? { task: String(id) } : {}, { replace: true })
 
   const reviewHours = config?.pending_task_admin_review_hours
@@ -103,7 +103,7 @@ export default function TasksTab() {
               // Last quarter of the window reads as urgent.
               const urgent = hours <= (reviewHours ?? 0) / 4
               return (
-                <span className={`adm-tag ${urgent ? 'adm-tag-bad' : 'adm-tag-wait'}`}>
+                <span className={urgent ? 'adm-tag adm-tag-bad' : 'adm-tag adm-tag-wait'}>
                   {hours > 0 ? t('console.tasks.inHours', { hours }) : t('console.tasks.publicNow')}
                 </span>
               )

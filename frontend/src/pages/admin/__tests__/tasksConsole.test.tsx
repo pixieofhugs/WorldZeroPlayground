@@ -79,7 +79,7 @@ describe('the task panel', () => {
     const panel = screen.getByRole('complementary', { name: 'Task' })
     expect(within(panel).getByText('Unreviewed, this goes public to level 4+ players in 31 hours.')).toBeTruthy()
     expect((within(panel).getByLabelText('Their note to you') as HTMLTextAreaElement).value).toBe('Birds are everywhere.')
-    expect(within(panel).getByRole('link', { name: 'View on site ↗' }).getAttribute('href')).toBe('/tasks/3')
+    expect(within(panel).getByRole('link', { name: /View on site/ }).getAttribute('href')).toBe('/tasks/3')
   })
 
   it('saves edits with Activate: patch, then status', async () => {

@@ -9,6 +9,9 @@ import TaskDeleteConfirm from './TaskDeleteConfirm'
 import { requestTaskDelete } from './taskDelete'
 import type { AdminTaskRow } from './adminTaskRows'
 
+// Text presentation selector: bare U+2197 renders as an emoji on iOS (#1702).
+const ARROW = ' \u2197\uFE0E'
+const TAG = { wait: 'adm-tag adm-tag-wait', ok: 'adm-tag adm-tag-ok', bad: 'adm-tag adm-tag-bad' }
 const RESTORE_STATUSES = ['pending', 'active', 'retired'] as const
 
 /** A proposal's panel warning: the window and the level come from `/game-config`, never literals. */
@@ -89,13 +92,14 @@ export default function TaskPanel({ task, factions, proposal, onChanged, onDelet
     <SidePanel
       label={t('console.tasks.panel.label')}
       badge={
-        <span className={`adm-tag adm-tag-${tone}`}>
+        <span className={TAG[tone]}>
           {pending ? t('console.tasks.panel.proposal') : t(`tasks.status.${task.status}`)}
         </span>
       }
       actions={
         <Link to={`/tasks/${task.id}`} className="adm-btn">
           {t('console.tasks.panel.viewOnSite')}
+          {ARROW}
         </Link>
       }
       onClose={onClose}
