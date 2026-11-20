@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 
-import { characterRedirectTarget, needsCharacterRedirect } from '../characterOnboardingGate'
+import { characterRedirectTarget } from '../characterOnboardingGate'
 
 /**
  * #2849: a signed-in, character-less account had no route that didn't bounce
@@ -11,18 +11,18 @@ import { characterRedirectTarget, needsCharacterRedirect } from '../characterOnb
  * two correct-looking changes (the redirect, and moving sign-out into
  * Settings) meeting with nothing between them.
  */
-describe('needsCharacterRedirect', () => {
+describe('characterRedirectTarget with acceptance on file', () => {
   it('does not bounce a character-less account away from /settings', () => {
-    expect(needsCharacterRedirect(false, true, false, '/settings')).toBe(false)
+    expect(characterRedirectTarget(false, true, false, true, '/settings')).toBeNull()
   })
 
   it('does not bounce a character-less account away from /characters/create', () => {
-    expect(needsCharacterRedirect(false, true, false, '/characters/create')).toBe(false)
+    expect(characterRedirectTarget(false, true, false, true, '/characters/create')).toBeNull()
   })
 
   it('still bounces a character-less account away from every other route', () => {
     for (const pathname of ['/tasks', '/praxis', '/leaderboard', '/factions', '/updates']) {
-      expect(needsCharacterRedirect(false, true, false, pathname)).toBe(true)
+      expect(characterRedirectTarget(false, true, false, true, pathname)).not.toBeNull()
     }
   })
 
@@ -32,21 +32,21 @@ describe('needsCharacterRedirect', () => {
   })
 
   it('does not bounce a character-less account away from /start', () => {
-    expect(needsCharacterRedirect(false, true, false, '/start')).toBe(false)
-    expect(needsCharacterRedirect(false, true, false, '/start/again')).toBe(false)
+    expect(characterRedirectTarget(false, true, false, true, '/start')).toBeNull()
+    expect(characterRedirectTarget(false, true, false, true, '/start/again')).toBeNull()
   })
 
   it('never bounces a character-less account while still loading', () => {
-    expect(needsCharacterRedirect(true, true, false, '/tasks')).toBe(false)
+    expect(characterRedirectTarget(true, true, false, true, '/tasks')).toBeNull()
   })
 
   it('never bounces a signed-out visitor', () => {
-    expect(needsCharacterRedirect(false, false, false, '/tasks')).toBe(false)
+    expect(characterRedirectTarget(false, false, false, true, '/tasks')).toBeNull()
   })
 
   it('never bounces an account that already has a character', () => {
-    expect(needsCharacterRedirect(false, true, true, '/tasks')).toBe(false)
-    expect(needsCharacterRedirect(false, true, true, '/settings')).toBe(false)
+    expect(characterRedirectTarget(false, true, true, true, '/tasks')).toBeNull()
+    expect(characterRedirectTarget(false, true, true, true, '/settings')).toBeNull()
   })
 })
 

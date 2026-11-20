@@ -1,7 +1,7 @@
 @keyframes flash{0%{opacity:.9}100%{opacity:0}}
 .flash{position:fixed;inset:0;background:var(--faction-default-card-text);opacity:0;pointer-events:none;z-index:40;animation:flash .6s ease-out .1s}
 @keyframes swing{0%{opacity:0;transform:translateY(-140px) rotate(14deg)}40%{opacity:1;transform:translateY(0) rotate(-9deg)}58%{transform:rotate(6deg)}72%{transform:rotate(-3.5deg)}86%{transform:rotate(1.5deg)}100%{opacity:1;transform:rotate(-1deg)}}
-.swing{opacity:0;transform-origin:50% -40px;animation:swing 1.6s cubic-bezier(.3,.6,.4,1) .45s forwards}
+.swing{transform-origin:50% -40px;animation:swing 1.6s cubic-bezier(.3,.6,.4,1) .45s both}
 .crit{position:absolute;bottom:calc(100% - 3px);z-index:2}
 .b4h,.b4x,.b4y,.b4s{display:block}
 .b4x{animation-name:b4x}.b4y{animation-name:b4y}.b4s{transform-origin:50% 100%;animation-name:b4s}

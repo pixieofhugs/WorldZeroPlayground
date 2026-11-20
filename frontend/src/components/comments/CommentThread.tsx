@@ -258,8 +258,16 @@ function CommentRow({
   onWithdrawn: (id: number) => void
 }) {
   const Variant = resolveVariant(surfaceMap('comment'), comment.author.faction_slug)
+  const { t } = useTranslation('praxis')
   return (
-    <Variant mode="row" comment={comment} onEdited={onEdited} onWithdrawn={onWithdrawn} />
+    <>
+      <Variant mode="row" comment={comment} onEdited={onEdited} onWithdrawn={onWithdrawn} />
+      {comment.admin_note && (
+        <p className="card-meta" role="note">
+          {t('comments.removedNote', { note: comment.admin_note })}
+        </p>
+      )}
+    </>
   )
 }
 

@@ -196,7 +196,7 @@ export default function DefaultPraxisDetail({
           praxis={praxis}
           linkClassName="font-display italic"
           linkStyle={{
-            fontSize: desktop ? 'var(--text-title)' : 'var(--text-content)',
+            fontSize: 'var(--praxis-lead-size, var(--text-title))',
             color: 'var(--na-praxis-detail-ink)',
             textDecoration: 'none',
           }}
@@ -215,7 +215,7 @@ export default function DefaultPraxisDetail({
       className="font-display italic"
       style={{
         fontWeight: 700,
-        fontSize: desktop ? 'var(--text-display)' : 'var(--text-heading)',
+        fontSize: 'var(--praxis-hero-size, var(--text-display))',
         lineHeight: 1.08,
         margin: '0 0 var(--space-md)',
         color: 'var(--na-praxis-detail-ink)',
@@ -406,7 +406,7 @@ export default function DefaultPraxisDetail({
           color: 'var(--na-praxis-detail-ink)',
           border: '1px solid var(--faction-default-border)',
           borderRadius: 18,
-          padding: desktop ? 'var(--space-2xl)' : 'var(--space-lg)',
+          padding: 'var(--praxis-pad, var(--space-2xl))',
           boxSizing: 'border-box',
           overflow: 'hidden',
         },
