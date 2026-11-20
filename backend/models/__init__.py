@@ -81,4 +81,5 @@ __all__ = [
     "CopyOverride",
     "ModAction",
     "PopulationDial",
+    "PushSubscription",
 ]

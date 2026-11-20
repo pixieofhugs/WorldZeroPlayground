@@ -10,9 +10,9 @@ import asyncio
 import json
 import logging
 from dataclasses import dataclass
-from functools import partial
 from datetime import datetime, timedelta, timezone
-from typing import Any, Awaitable, Callable, Optional
+from functools import partial
+from typing import Awaitable, Callable, Optional
 
 from pywebpush import WebPushException, webpush
 from sqlalchemy import delete, event, func, select
@@ -55,7 +55,11 @@ _in_flight: set[asyncio.Task] = set()
 
 
 def push_available() -> bool:
-    return bool(settings.VAPID_PUBLIC_KEY and settings.VAPID_PRIVATE_KEY and settings.VAPID_CONTACT)
+    return bool(
+        settings.VAPID_PUBLIC_KEY
+        and settings.VAPID_PRIVATE_KEY
+        and settings.VAPID_CONTACT
+    )
 
 
 @dataclass(frozen=True)
@@ -68,7 +72,10 @@ class Target:
 
 def _send_one(target: Target, body: str) -> None:
     webpush(
-        subscription_info={"endpoint": target.endpoint, "keys": {"p256dh": target.p256dh, "auth": target.auth}},
+        subscription_info={
+            "endpoint": target.endpoint,
+            "keys": {"p256dh": target.p256dh, "auth": target.auth},
+        },
         data=body,
         vapid_private_key=settings.VAPID_PRIVATE_KEY,
         # A fresh dict each call: pywebpush writes the audience into it.
@@ -81,7 +88,7 @@ async def deliver(
     batch: list[tuple[dict, list[Target]]],
     session_factory: Callable[[], AsyncSession] = AsyncSessionLocal,
 ) -> None:
-    """Send each payload to each device; forget devices the push service says are gone."""
+    """Send each payload to each device; drop devices the push service reports gone."""
     gone: list[int] = []
     for payload, targets in batch:
         body = json.dumps(payload)
@@ -93,12 +100,16 @@ async def deliver(
                 if status in GONE_STATUSES:
                     gone.append(target.id)
                 else:
-                    logger.warning("push to subscription %s failed: %s", target.id, error)
+                    logger.warning(
+                        "push to subscription %s failed: %s", target.id, error
+                    )
             except Exception:
                 logger.exception("push to subscription %s crashed", target.id)
     if gone:
         async with session_factory() as session:
-            await session.execute(delete(PushSubscription).where(PushSubscription.id.in_(gone)))
+            await session.execute(
+                delete(PushSubscription).where(PushSubscription.id.in_(gone))
+            )
             await session.commit()
 
 
@@ -127,7 +138,7 @@ async def notify(
     task_title: Optional[str] = None,
     count: Optional[int] = None,
 ) -> None:
-    """Queue one push to a character's account, if push is on, wanted and has a device."""
+    """Queue a push for a character's account if it is on, wanted and has a device."""
     if not push_available():
         return
     recipient = await session.get(Character, recipient_id)
@@ -142,7 +153,9 @@ async def notify(
         return
     subscriptions = (
         await session.scalars(
-            select(PushSubscription).where(PushSubscription.account_id == recipient.account_id)
+            select(PushSubscription).where(
+                PushSubscription.account_id == recipient.account_id
+            )
         )
     ).all()
     if not subscriptions:
@@ -175,7 +188,9 @@ async def _praxis_owner_ids(session: AsyncSession, praxis: Praxis) -> set[int]:
 async def notify_vote(session: AsyncSession, praxis: Praxis, voter: Character) -> None:
     since = datetime.now(timezone.utc) - RATING_COLLAPSE_WINDOW
     recent = await session.scalar(
-        select(func.count()).select_from(Vote).where(Vote.praxis_id == praxis.id, Vote.updated_at >= since)
+        select(func.count())
+        .select_from(Vote)
+        .where(Vote.praxis_id == praxis.id, Vote.updated_at >= since)
     )
     title = await _task_title(session, praxis.task_id)
     for recipient_id in await _praxis_owner_ids(session, praxis):
@@ -210,12 +225,19 @@ async def notify_comment(
             recipients.setdefault(owner_id, FEED_ITEM_TYPE_COMMENT_ON_MINE)
     for recipient_id, kind in recipients.items():
         await notify(
-            session, kind=kind, recipient_id=recipient_id, tag=f"{kind}:{target}",
-            url=url, actor=author, task_title=title,
+            session,
+            kind=kind,
+            recipient_id=recipient_id,
+            tag=f"{kind}:{target}",
+            url=url,
+            actor=author,
+            task_title=title,
         )
 
 
-async def notify_collab_invite(session: AsyncSession, invite: PraxisInvite, inviter: Character) -> None:
+async def notify_collab_invite(
+    session: AsyncSession, invite: PraxisInvite, inviter: Character
+) -> None:
     praxis = await session.get(Praxis, invite.praxis_id)
     await notify(
         session,
@@ -228,7 +250,9 @@ async def notify_collab_invite(session: AsyncSession, invite: PraxisInvite, invi
     )
 
 
-async def notify_duel_challenge(session: AsyncSession, duel_id: int, challenger_praxis: Praxis, opponent_id: int) -> None:
+async def notify_duel_challenge(
+    session: AsyncSession, duel_id: int, challenger_praxis: Praxis, opponent_id: int
+) -> None:
     challenger = await session.get(Character, challenger_praxis.created_by_id)
     await notify(
         session,
@@ -261,13 +285,15 @@ async def notify_level_up(session: AsyncSession, character: Character) -> None:
     )
 
 
-async def notify_broadcast(session: AsyncSession, *, kind: str, tag: str, url: str) -> None:
+async def notify_broadcast(
+    session: AsyncSession, *, kind: str, tag: str, url: str
+) -> None:
     """For the ambient rows (era announcement, rules change, global task): every
     character with a device. ponytail: no call site yet; those rows default off."""
     owners = await session.scalars(
-        select(func.min(Character.id)).where(
-            Character.account_id.in_(select(PushSubscription.account_id))
-        ).group_by(Character.account_id)
+        select(func.min(Character.id))
+        .where(Character.account_id.in_(select(PushSubscription.account_id)))
+        .group_by(Character.account_id)
     )
     for recipient_id in owners.all():
         await notify(session, kind=kind, recipient_id=recipient_id, tag=tag, url=url)
@@ -282,7 +308,13 @@ SENDERS: dict[str, Callable[..., Awaitable[None]]] = {
     FEED_ITEM_TYPE_DUEL_CHALLENGE: notify_duel_challenge,
     FEED_ITEM_TYPE_INVITATION_LETTER: notify_invitation_letter,
     LEVEL_UP: notify_level_up,
-    FEED_ITEM_TYPE_ERA_ANNOUNCEMENT: partial(notify_broadcast, kind=FEED_ITEM_TYPE_ERA_ANNOUNCEMENT),
-    FEED_ITEM_TYPE_RULES_CHANGE: partial(notify_broadcast, kind=FEED_ITEM_TYPE_RULES_CHANGE),
-    FEED_ITEM_TYPE_GLOBAL_TASK: partial(notify_broadcast, kind=FEED_ITEM_TYPE_GLOBAL_TASK),
+    FEED_ITEM_TYPE_ERA_ANNOUNCEMENT: partial(
+        notify_broadcast, kind=FEED_ITEM_TYPE_ERA_ANNOUNCEMENT
+    ),
+    FEED_ITEM_TYPE_RULES_CHANGE: partial(
+        notify_broadcast, kind=FEED_ITEM_TYPE_RULES_CHANGE
+    ),
+    FEED_ITEM_TYPE_GLOBAL_TASK: partial(
+        notify_broadcast, kind=FEED_ITEM_TYPE_GLOBAL_TASK
+    ),
 }

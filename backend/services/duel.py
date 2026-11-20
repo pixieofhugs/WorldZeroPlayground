@@ -291,7 +291,9 @@ async def issue_duel_challenge(
     )
     session.add(duel)
     await session.flush()
-    await notify_duel_challenge(session, duel.id, challenger_praxis, opponent_character_id)
+    await notify_duel_challenge(
+        session, duel.id, challenger_praxis, opponent_character_id
+    )
 
     return challenger_praxis, duel
 

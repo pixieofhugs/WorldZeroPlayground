@@ -39,7 +39,6 @@ from models.praxis import (
 )
 from models.task import Task, TaskStatus
 from models.vote import Vote
-from services.push import notify_collab_invite
 from schemas.praxis import (
     MediaItemOut,
     MediaUploadResultOut,
@@ -77,6 +76,7 @@ from services.praxis_visibility import (
     praxis_membership_condition,
     praxis_visibility_condition,
 )
+from services.push import notify_collab_invite
 from services.signup_eligibility import (
     # Re-exported for existing callers; defined in signup_eligibility.
     SIGNUP_REASON_MULTI_MEMBERSHIP,  # noqa: F401 - re-export, see comment above
@@ -1096,7 +1096,8 @@ async def invite_to_praxis(
     session.add(invite)
     await session.flush()
     await session.refresh(invite)
-    await notify_collab_invite(session, invite, await session.get(Character, inviter_id))
+    inviter = await session.get(Character, inviter_id)
+    await notify_collab_invite(session, invite, inviter)
     return invite
 
 

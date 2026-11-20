@@ -139,8 +139,9 @@ def test_push_defaults_copy_the_email_defaults():
 
 
 def test_a_save_without_by_push_keeps_the_stored_push_value():
-    first = apply_update({}, {LEVEL_UP: {"on_updates": False, "by_email": False, "by_push": True}})
-    second = apply_update(first, {LEVEL_UP: {"on_updates": False, "by_email": False}})
+    row = {"on_updates": False, "by_email": False}
+    first = apply_update({}, {LEVEL_UP: {**row, "by_push": True}})
+    second = apply_update(first, {LEVEL_UP: row})
     assert resolve_prefs(second)[LEVEL_UP].by_push is True
 
 

@@ -20,7 +20,10 @@ from services import push
 from services.notification_prefs import apply_update
 from tests.integration.factories import make_solo_praxis, make_task
 
-SUBSCRIPTION = {"endpoint": "https://push.example/abc", "keys": {"p256dh": "k", "auth": "a"}}
+SUBSCRIPTION = {
+    "endpoint": "https://push.example/abc",
+    "keys": {"p256dh": "k", "auth": "a"},
+}
 
 
 @pytest.fixture
@@ -31,7 +34,9 @@ def keys_on(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_prefs_say_push_is_unavailable_without_keys(client: AsyncClient, auth_headers: dict):
+async def test_prefs_say_push_is_unavailable_without_keys(
+    client: AsyncClient, auth_headers: dict
+):
     body = (await client.get("/me/notification-prefs", headers=auth_headers)).json()
     assert body["push_available"] is False
     assert body["vapid_public_key"] is None
@@ -50,12 +55,17 @@ async def test_subscribe_is_idempotent_and_unsubscribe_removes(
     client: AsyncClient, auth_headers: dict, db_session: AsyncSession
 ):
     for _ in range(2):
-        resp = await client.post("/push/subscriptions", json=SUBSCRIPTION, headers=auth_headers)
+        resp = await client.post(
+            "/push/subscriptions", json=SUBSCRIPTION, headers=auth_headers
+        )
         assert resp.status_code == 204
     assert len((await db_session.scalars(select(PushSubscription))).all()) == 1
 
     resp = await client.request(
-        "DELETE", "/push/subscriptions", json={"endpoint": SUBSCRIPTION["endpoint"]}, headers=auth_headers
+        "DELETE",
+        "/push/subscriptions",
+        json={"endpoint": SUBSCRIPTION["endpoint"]},
+        headers=auth_headers,
     )
     assert resp.status_code == 204
     assert (await db_session.scalars(select(PushSubscription))).all() == []
@@ -63,23 +73,36 @@ async def test_subscribe_is_idempotent_and_unsubscribe_removes(
 
 @pytest.mark.asyncio
 async def test_another_account_cannot_unsubscribe_my_device(
-    client: AsyncClient, auth_headers: dict, auth_headers2: dict, db_session: AsyncSession
+    client: AsyncClient,
+    auth_headers: dict,
+    auth_headers2: dict,
+    db_session: AsyncSession,
 ):
     await client.post("/push/subscriptions", json=SUBSCRIPTION, headers=auth_headers)
     await client.request(
-        "DELETE", "/push/subscriptions", json={"endpoint": SUBSCRIPTION["endpoint"]}, headers=auth_headers2
+        "DELETE",
+        "/push/subscriptions",
+        json={"endpoint": SUBSCRIPTION["endpoint"]},
+        headers=auth_headers2,
     )
     assert len((await db_session.scalars(select(PushSubscription))).all()) == 1
 
 
 @pytest.mark.asyncio
 async def test_subscribe_needs_auth(client: AsyncClient):
-    assert (await client.post("/push/subscriptions", json=SUBSCRIPTION)).status_code in (401, 403)
+    assert (
+        await client.post("/push/subscriptions", json=SUBSCRIPTION)
+    ).status_code in (401, 403)
 
 
 async def _subscribe(db_session: AsyncSession, account: Account) -> None:
     db_session.add(
-        PushSubscription(account_id=account.id, endpoint="https://push.example/abc", p256dh="k", auth="a")
+        PushSubscription(
+            account_id=account.id,
+            endpoint="https://push.example/abc",
+            p256dh="k",
+            auth="a",
+        )
     )
     await db_session.flush()
 
@@ -90,7 +113,11 @@ def _queued(db_session: AsyncSession) -> list:
 
 @pytest.mark.asyncio
 async def test_a_rating_queues_a_keys_only_payload(
-    db_session: AsyncSession, account: Account, character: Character, character2: Character, keys_on
+    db_session: AsyncSession,
+    account: Account,
+    character: Character,
+    character2: Character,
+    keys_on,
 ):
     await _subscribe(db_session, account)
     account.notification_prefs = {"vote_on_mine": {"by_push": True}}

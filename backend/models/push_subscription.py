@@ -1,4 +1,7 @@
-"""A device's push subscription, per ACCOUNT (ADR-0041). ``endpoint`` is secret-ish: never in a response."""
+"""A device's push subscription, per ACCOUNT (ADR-0041).
+
+``endpoint`` is secret-ish: never in a response.
+"""
 
 from sqlalchemy import BigInteger, ForeignKey, Identity, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
@@ -18,4 +21,6 @@ class PushSubscription(CreatedAtMixin, Base):
     p256dh: Mapped[str] = mapped_column(String, nullable=False)
     auth: Mapped[str] = mapped_column(String, nullable=False)
 
-    __table_args__ = (UniqueConstraint("endpoint", name="uq_push_subscription_endpoint"),)
+    __table_args__ = (
+        UniqueConstraint("endpoint", name="uq_push_subscription_endpoint"),
+    )
