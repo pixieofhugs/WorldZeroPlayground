@@ -49,7 +49,7 @@ describe(RULE, () => {
   })
 })
 
-const LEGACY_CEILING = 281
+const LEGACY_CEILING = 280
 
 describe('the legacy list stays honest', () => {
   it('never grows: lower LEGACY_CEILING when you delist a file', () => {
