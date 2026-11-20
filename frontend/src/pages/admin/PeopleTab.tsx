@@ -5,7 +5,7 @@ import { getAdminCharacters, getAdmins, type AdminCharacterSummary } from '../..
 import { useAuth } from '../../auth/AuthContext'
 import { useDebouncedValue } from '../../hooks/useDebouncedValue'
 import { extractError } from '../../utils/errors'
-import { formatTimestamp } from '../../utils/dates'
+import { formatDate } from '../../utils/dates'
 import { factionFill } from '../../utils/factions'
 import AdminRosterSection from './AdminRosterSection'
 import { ListTable, ListToolbar, type Column } from './AdminList'
@@ -74,7 +74,7 @@ export default function PeopleTab() {
       ),
     },
     { key: 'account', header: t('console.people.cols.account'), cell: (p) => <span className="adm-muted">#{p.account_id}</span> },
-    { key: 'joined', header: t('console.people.cols.joined'), cell: (p) => <span className="adm-muted">{formatTimestamp(p.created_at)}</span> },
+    { key: 'joined', header: t('console.people.cols.joined'), cell: (p) => <span className="adm-muted">{formatDate(p.created_at)}</span> },
     { key: 'votes', header: t('console.people.cols.votes'), numeric: true, cell: (p) => p.votes_cast },
     {
       key: 'status',
