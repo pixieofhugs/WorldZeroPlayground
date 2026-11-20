@@ -1,6 +1,6 @@
 /**
- * Copy edit mode: reword any string live, without a deploy. `App.tsx` mounts it
- * only for an admin in admin mode.
+ * Copy edit mode: reword any string live, without a deploy. `ModStrip` mounts it
+ * (only for an admin in mod mode) and gives it a row to live in.
  *
  * While armed, `utils/copyRegistry.ts` records each rendered string's `ns:key`;
  * arming emits `languageChanged` so the page already on screen re-records.
@@ -17,7 +17,6 @@ import { deleteCopyOverride, putCopyOverride } from '../../api/copy'
 import { extractError } from '../../utils/errors'
 import { useFormFactor } from '../../hooks/useFormFactor'
 import i18n, { lazyShipped, resources } from '../../i18n'
-import { drawAtRoot } from '../ui/drawAtRoot'
 import { candidatesShownIn } from './copyProbe'
 import { isFactionScopedKey } from '../../utils/copyScope'
 import {
@@ -81,36 +80,6 @@ export async function revertCopy(target: CopyTarget): Promise<void> {
   i18n.addResource('en', target.ns, target.key, shippedValue(target.ns, target.key))
 }
 
-const PANEL: CSSProperties = {
-  position: 'fixed',
-  bottom: 'var(--space-md)',
-  left: 'var(--space-md)',
-  // Above every overlay (#3094), so a popup's wording is editable while it is
-  // open. `copyEditorStacking.test.tsx` enforces it.
-  zIndex: 1100,
-  width: 'min(22rem, calc(100vw - var(--space-xl)))',
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 'var(--space-xs)',
-  padding: 'var(--space-sm)',
-  background: 'var(--color-bg-page)',
-  border: '1.5px solid var(--color-border)',
-  borderRadius: 4,
-  boxShadow: '0 2px 12px var(--color-cast-shadow-soft)',
-}
-
-/**
- * The panel's box. On a phone it rests above `MobileTabBar` (#1566), and until
- * a string is open it hugs its control so bottom-pinned controls stay tappable
- * (#3136). `min-content` so the armed hint wraps instead of widening the panel.
- * Exported for `copyEditorStacking.test.tsx`.
- */
-export function panelStyle(isMobile: boolean, editing: boolean): CSSProperties {
-  if (!isMobile) return editing ? { ...PANEL, width: EDITING_WIDTH } : PANEL
-  const phone = { ...PANEL, bottom: 'calc(var(--space-md) + var(--tab-bar-clearance))' }
-  return editing ? phone : { ...phone, width: 'min-content', maxWidth: PANEL.width }
-}
-
 /**
  * While a string is open, Escape stays in the panel so it does not close the
  * popup being edited (#3094, #3245). Popups listen bubble-phase on
@@ -124,9 +93,6 @@ export function keepEscapeInPanel(
 ): void {
   if (event.key === 'Escape' && stringOpen) event.stopPropagation()
 }
-
-/** Room for a multi-paragraph description on desktop, so spellcheck marks can be seen. */
-const EDITING_WIDTH = 'min(40rem, calc(100vw - var(--space-xl)))'
 
 /** Narrower than this and a box over the spot is a sliver; the panel's textarea is kinder. */
 const MIN_SPOT_WIDTH = 40
@@ -173,16 +139,16 @@ const ROW: CSSProperties = {
 
 const BUTTON: CSSProperties = {
   background: 'none',
-  border: '1.5px solid var(--color-border-strong)',
+  border: '1px solid currentColor',
   borderRadius: 2,
   cursor: 'pointer',
-  padding: 'var(--space-xs) var(--space-sm)',
-  color: 'var(--color-text-primary)',
+  padding: '0 var(--space-sm)',
+  minHeight: 44,
+  color: 'inherit',
 }
 
 export default function CopyEditor() {
   const { t } = useTranslation('admin')
-  const panel = useRef<HTMLDivElement>(null)
   const isMobile = useFormFactor() === 'mobile'
   const [armed, setArmed] = useState(false)
   const [target, setTarget] = useState<CopyTarget | null>(null)
@@ -199,7 +165,14 @@ export default function CopyEditor() {
     if (target) return
     setSpot(null)
     lastSpot.current?.focus({ preventScroll: true })
+    lastSpot.current = null
   }, [target])
+  const box = useRef<HTMLTextAreaElement>(null)
+  const placed = spotRect !== null
+  // Not `autoFocus`: the box mounts before `useSpotRect` has measured, and autoFocus only fires on mount.
+  useEffect(() => {
+    if (placed && target) box.current?.focus()
+  }, [placed, target])
 
   /**
    * `t` in a ref, load-bearing: react-i18next hands back a new `t` on every store
@@ -246,7 +219,8 @@ export default function CopyEditor() {
 
     const onClick = (event: MouseEvent) => {
       const node = event.target as Element | null
-      if (node && panel.current?.contains(node)) return
+      // The strip around the editor and the MOD menu both stay live while armed.
+      if (node?.closest('[data-modal-free]')) return
       event.preventDefault()
       event.stopPropagation()
       if (unsaved.current) {
@@ -322,33 +296,22 @@ export default function CopyEditor() {
     }
   }
 
-  // Drawn at the root (#3094): under `Layout` it would sit in `ShellContent`'s
-  // stacking context, below every overlay. See `drawAtRoot`.
-  return drawAtRoot(
-    <div
-      ref={panel}
-      style={panelStyle(isMobile, target !== null)}
-      className="font-body"
-      onKeyDown={(event) => keepEscapeInPanel(event, target !== null)}
-    >
+  return (
+    <div className="mod-copy font-body" data-modal-free onKeyDown={(event) => keepEscapeInPanel(event, target !== null)}>
       <button
         type="button"
         onClick={armed ? disarm : () => setArmed(true)}
         className="label-caption"
         style={{
           ...BUTTON,
-          // This label sizes the idle phone panel (`panelStyle`).
           whiteSpace: 'nowrap',
-          borderColor: armed ? 'var(--color-accent-primary)' : 'var(--color-border-strong)',
         }}
       >
         {armed ? t('copyEdit.disarm') : t('copyEdit.arm')}
       </button>
 
       {armed && (
-        <p className="card-meta" style={{ color: 'var(--color-accent-primary)' }}>
-          {t('copyEdit.armedHint')}
-        </p>
+        <p className="card-meta">{t('copyEdit.armedHint')}</p>
       )}
 
       {notice && (
@@ -382,8 +345,9 @@ export default function CopyEditor() {
           <textarea
             className="font-body"
             value={draft}
-            rows={spotRect ? 1 : 4}
-            autoFocus={spotRect !== null}
+            ref={box}
+            // Firefox lacks field-sizing: one row per line, or a multi-paragraph template is a one-line box.
+            rows={spotRect ? draft.split('\n').length : 4}
             spellCheck
             onChange={(event) => setDraft(event.target.value)}
             aria-label={t('copyEdit.textareaLabel')}
@@ -437,6 +401,6 @@ export default function CopyEditor() {
           </div>
         </>
       )}
-    </div>,
+    </div>
   )
 }

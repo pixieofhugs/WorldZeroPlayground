@@ -52,10 +52,11 @@ const Settings = lazy(importSettings)
 const Admin = lazy(importAdmin)
 const consolePage = (pick: (m: typeof import('./pages/admin/consolePages')) => ComponentType) =>
   lazy(() => withAppCopy(import('./pages/admin/consolePages')).then((m) => ({ default: pick(m) })))
-const ModerationPage = consolePage((m) => m.ModerationPage)
-const ModLogPage = consolePage((m) => m.ModLogPage)
+const ReportsPage = consolePage((m) => m.ReportsPage)
+const MessagesPage = consolePage((m) => m.MessagesPage)
 const PraxisPage = consolePage((m) => m.PraxisPage)
 const TasksPage = consolePage((m) => m.TasksPage)
+const ModLogPage = consolePage((m) => m.ModLogPage)
 const PeoplePage = consolePage((m) => m.PeoplePage)
 const EraPage = consolePage((m) => m.EraPage)
 const CopySheetIndexPage = consolePage((m) => m.CopySheetIndexPage)
@@ -72,16 +73,16 @@ const Donate = lazy(() => withAppCopy(import('./pages/Donate')))
 const AccountDeleted = lazy(importAccountDeleted)
 const Onboarding = lazy(importOnboarding)
 const ReturningCard = lazy(() => withOnboardingCopy(import('./pages/onboarding/ReturningCard')))
-const CopyEditor = lazy(() => withAppCopy(import('./components/admin/CopyEditor')))
+const ModStrip = lazy(() => withAppCopy(import('./components/admin/ModStrip')))
 
 /** Gate lives outside the lazy component so ordinary visitors never fetch its chunk (load-time.md). */
-function CopyEditorMount() {
+export function ModStripMount() {
   const { user } = useAuth()
   const { adminMode } = useAdminMode()
   if (!user?.is_admin || !adminMode) return null
   return (
     <Suspense fallback={null}>
-      <CopyEditor />
+      <ModStrip />
     </Suspense>
   )
 }
@@ -132,8 +133,8 @@ function AdminRoutes() {
         <Routes>
           <Route element={<Admin />}>
             <Route index element={<Navigate to="reports" replace />} />
-            <Route path="reports" element={<ModerationPage />} />
-            <Route path="messages" element={<ModerationPage />} />
+            <Route path="reports" element={<ReportsPage />} />
+            <Route path="messages" element={<MessagesPage />} />
             <Route path="proposals" element={<TasksPage />} />
             <Route path="praxis" element={<PraxisPage />} />
             <Route path="tasks" element={<TasksPage />} />
@@ -148,7 +149,7 @@ function AdminRoutes() {
           </Route>
         </Routes>
       </Suspense>
-      <CopyEditorMount />
+      <ModStripMount />
     </ProtectedRoute>
   )
 }
@@ -234,7 +235,7 @@ function PlayerRoutes() {
           <Route path="/donate" element={<Donate />} />
         </Routes>
       </Suspense>
-      <CopyEditorMount />
+      <ModStripMount />
     </Layout>
   )
 }

@@ -227,101 +227,7 @@
   },
   "moderation": {
     "loadError": "Couldn't load moderation data.",
-    "actionError": "Moderation action failed.",
     "archiveError": "Could not archive message.",
-    "reportedByOne": "reported by {{name}}",
-    "reportedByMany": "reported by {{count}} members",
-    "typeLabel": {
-      "praxis": "Praxis",
-      "comment": "Comment"
-    },
-    "stats": {
-      "openReports": "Open reports",
-      "activeAccounts": "Active accounts"
-    },
-    "queue": {
-      "heading": "Review queue",
-      "empty": {
-        "title": "Queue clear",
-        "body": "Nothing flagged right now. Check back later."
-      },
-      "filter": {
-        "all": "All",
-        "praxes": "Praxis",
-        "comments": "Comments"
-      },
-      "byline": "by {{author}}",
-      "author": {
-        "banned": "banned",
-        "suspended": "suspended",
-        "ban": "ban character",
-        "unban": "unban character",
-        "suspend": "suspend account",
-        "unsuspend": "unsuspend account",
-        "viewAccount": "view account →",
-        "viewRing": "vote ring →",
-        "removeAll": "remove all {{count}} flagged by this author",
-        "removeAllConfirm": {
-          "heading": "Remove {{count}} flagged posts by {{name}}?",
-          "lead": "Every post by {{name}} (@{{username}}) with an open flag is removed. Their unflagged posts are untouched.",
-          "submit": "confirm — remove {{count}} posts"
-        },
-        "banConfirm": {
-          "heading": "Ban {{name}}?",
-          "lead": "{{name}} (@{{username}}) will be banned. You can unban them later.",
-          "submit": "confirm — ban character"
-        },
-        "suspendConfirm": {
-          "heading": "Suspend this account?",
-          "lead": "The account behind {{name}} (@{{username}}) will be suspended, with every character on it. You can unsuspend it later.",
-          "submit": "confirm — suspend account"
-        }
-      },
-      "flags_one": "{{count}} flag",
-      "flags_other": "{{count}} flags",
-      "viewPraxis": "View praxis →",
-      "viewThread": "View thread →",
-      "failNotePlaceholder": "Reason for failure (visible to player)…",
-      "actions": {
-        "keep": "keep",
-        "remove": "remove",
-        "fail": "fail",
-        "confirmFail": "confirm fail",
-        "cancel": "cancel"
-      }
-    },
-    "actionLog": {
-      "heading": "Moderation log",
-      "entry": "{{actor}}: {{action}} ({{target}} #{{id}})",
-      "unknownActor": "A moderator",
-      "more": "Show older",
-      "targets": {
-        "character": "character",
-        "account": "account",
-        "praxis": "praxis",
-        "comment": "comment",
-        "task": "task"
-      },
-      "actions": {
-        "ban": "banned",
-        "unban": "unbanned",
-        "suspend": "suspended",
-        "unsuspend": "unsuspended",
-        "remove_flagged": "removed flagged posts",
-        "praxis_visible": "kept",
-        "praxis_hidden": "removed",
-        "praxis_failed": "failed",
-        "praxis_flagged": "flagged",
-        "comment_visible": "kept",
-        "comment_hidden": "held",
-        "comment_deleted": "removed",
-        "comment_flagged": "flagged",
-        "task_status": "changed status of",
-        "task_delete": "deleted",
-        "role_grant": "granted a role to",
-        "role_revoke": "revoked a role from"
-      }
-    },
     "messages": {
       "heading": "Messages",
       "showArchived": "show archived",
@@ -397,6 +303,108 @@
         "levelCopy": "Level-up copy",
         "era": "Roll into a new era…",
         "modLog": "Mod log"
+      }
+    },
+    "reports": {
+      "title": "Reports",
+      "lede": "Flagged praxis and comments. Each decision tells the author why.",
+      "loadError": "Couldn't load reports.",
+      "actionError": "That didn't go through.",
+      "filter": {
+        "label": "Report type",
+        "all": "All",
+        "praxis": "Praxis",
+        "comments": "Comments"
+      },
+      "typeLabel": {
+        "praxis": "praxis",
+        "comment": "comment"
+      },
+      "meta": "{{type}} · by {{author}} · on “{{task}}” · {{age}}",
+      "metaComment": "comment · by {{author}} · {{age}}",
+      "flagCount_one": "{{count}} flag from {{people}}",
+      "flagCount_other": "{{count}} flags from {{people}}",
+      "peopleOne": "1 person",
+      "peopleMany": "{{count}} people",
+      "photoAlt": "The praxis photo, as players see it",
+      "viewThread": "View thread →",
+      "decision": {
+        "label": "Decision",
+        "keep": "Keep it",
+        "remove": "Remove",
+        "removeShort": "Remove",
+        "fail": "Doesn't meet the task",
+        "failShort": "Not met",
+        "help": "Remove hides it from everyone. Doesn't meet the task leaves it up but it scores nothing. Keep clears the flags and tells nobody.",
+        "reasonLabel": "Reason the author sees",
+        "reasonHint": "One line, for Remove or Doesn't meet the task",
+        "submitRemove": "Remove with this reason",
+        "submitFail": "Mark not met with this reason",
+        "cancel": "Cancel"
+      },
+      "author": {
+        "banned": "banned",
+        "suspended": "suspended",
+        "ban": "Ban character…",
+        "unban": "Unban character",
+        "suspend": "Suspend account…",
+        "unsuspend": "Unsuspend account",
+        "removeAll": "Remove all their flagged ({{count}})",
+        "removeAllConfirm": {
+          "heading": "Remove {{count}} flagged posts by {{name}}?",
+          "lead": "Every post by {{name}} (@{{username}}) with an open flag is removed. Their unflagged posts are untouched.",
+          "submit": "confirm — remove {{count}} posts"
+        },
+        "banConfirm": {
+          "heading": "Ban {{name}}?",
+          "lead": "{{name}} (@{{username}}) will be banned. You can unban them later.",
+          "submit": "confirm — ban character"
+        },
+        "suspendConfirm": {
+          "heading": "Suspend this account?",
+          "lead": "The account behind {{name}} (@{{username}}) will be suspended, with every character on it. You can unsuspend it later.",
+          "submit": "confirm — suspend account"
+        },
+        "openPeople": "Open in People",
+        "label": "Author, {{name}}:"
+      },
+      "empty": {
+        "title": "Nothing needs you.",
+        "last": "No open reports. The last decision: {{entry}} · {{age}}.",
+        "none": "No open reports.",
+        "newest": "Newest praxis"
+      },
+      "recent": {
+        "heading": "Recent decisions",
+        "none": "Nothing decided yet.",
+        "entry": "{{actor}}: {{action}} ({{target}} #{{id}})",
+        "unknownActor": "A moderator",
+        "targets": {
+          "character": "character",
+          "account": "account",
+          "praxis": "praxis",
+          "comment": "comment",
+          "task": "task"
+        },
+        "actions": {
+          "ban": "banned",
+          "unban": "unbanned",
+          "suspend": "suspended",
+          "unsuspend": "unsuspended",
+          "remove_flagged": "removed flagged posts",
+          "praxis_visible": "kept",
+          "praxis_hidden": "removed",
+          "praxis_failed": "failed",
+          "praxis_flagged": "flagged",
+          "comment_visible": "kept",
+          "comment_hidden": "held",
+          "comment_deleted": "removed",
+          "comment_flagged": "flagged",
+          "task_status": "changed status of",
+          "task_delete": "deleted",
+          "role_grant": "granted a role to",
+          "role_revoke": "revoked a role from"
+        }
       }
     },
     "list": {

@@ -32,7 +32,7 @@
 .b3-card{max-width:100%;position:relative;z-index:1;animation-delay:.1s}
 .b3-card.b3-second{animation-delay:.45s}
 .b3-col{position:relative}
-@media (max-width:859px){.b3-col{display:none}}
+@container ob-flow (max-width:885px){.b3-col{display:none}}
 @media (prefers-reduced-motion: reduce){
 .onboarding-arc :is(.dhead,.dclaw,.chef,.mallow,.stk,.shd,.dog){animation:none!important;opacity:1;transform:none}
 .onboarding-arc :is(.fire,.pbang,.sbang,.dq){display:none}

@@ -12,6 +12,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased, selectinload
 
+from dependencies import account_has_admin_role
 from game_config import CURRENT_ERA, EraConfig
 from models.character import Character
 from models.character_stats import CharacterStats
@@ -168,6 +169,14 @@ async def build_praxis_out(
     if metatask_tasks:
         applied_metatasks = [TaskOut.model_validate(t) for t in metatask_tasks]
 
+    # The moderator's reason is for the author and moderators only (#3670).
+    admin_note = ""
+    if praxis.admin_note and viewer is not None:
+        if effective_viewer_id in member_ids or await account_has_admin_role(
+            viewer.account_id, session
+        ):
+            admin_note = praxis.admin_note
+
     return PraxisOut(
         id=praxis.id,
         task_id=praxis.task_id,
@@ -180,7 +189,7 @@ async def build_praxis_out(
         title=praxis.title,
         body_text=praxis.body_text,
         moderation_status=praxis.moderation_status,
-        admin_note=praxis.admin_note,
+        admin_note=admin_note,
         flagged_at=praxis.flagged_at,
         submitted_at=praxis.submitted_at,
         submit_proposed_at=praxis.submit_proposed_at,

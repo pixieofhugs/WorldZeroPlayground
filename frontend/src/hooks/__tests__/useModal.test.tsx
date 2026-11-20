@@ -130,4 +130,70 @@ describe('useModal', () => {
     expect(onClose).not.toHaveBeenCalled()
     expect(document.activeElement).toBe(screen.getByText('editor'))
   })
+
+  it('Tab inside a data-modal-free region (the CopyEditor) is left alone', () => {
+    render(
+      <>
+        <Modal />
+        <div data-modal-free>
+          <button>editor</button>
+        </div>
+      </>,
+    )
+    screen.getByText('editor').focus()
+    expect(fireEvent.keyDown(document.activeElement!, { key: 'Tab' })).toBe(true)
+    expect(document.activeElement).toBe(screen.getByText('editor'))
+  })
+
+  describe('an opener that unmounts as the modal mounts', () => {
+    function FromMenu() {
+      const [open, setOpen] = useState(false)
+      return (
+        <>
+          {open ? (
+            <Modal onClose={() => setOpen(false)} />
+          ) : (
+            <button onClick={() => setOpen(true)}>menu item</button>
+          )}
+        </>
+      )
+    }
+
+    it('does not inherit an unrelated earlier close', async () => {
+      render(
+        <>
+          <Host />
+          <FromMenu />
+        </>,
+      )
+      const opener = screen.getByText('opener')
+      opener.focus()
+      fireEvent.click(opener)
+      fireEvent.keyDown(document, { key: 'Escape' })
+      expect(document.activeElement).toBe(opener)
+      await Promise.resolve()
+
+      screen.getByText('menu item').focus()
+      fireEvent.click(screen.getByText('menu item'))
+      fireEvent.keyDown(document, { key: 'Escape' })
+      expect(document.activeElement).not.toBe(opener)
+    })
+
+    it('falls back to the enclosing open modal', () => {
+      function Outer() {
+        const [inner, setInner] = useState(false)
+        const ref = useModal()
+        return (
+          <div ref={ref} role="dialog" aria-label="outer">
+            {inner ? <Modal onClose={() => setInner(false)} /> : <button onClick={() => setInner(true)}>go</button>}
+          </div>
+        )
+      }
+      render(<Outer />)
+      screen.getByText('go').focus()
+      fireEvent.click(screen.getByText('go'))
+      fireEvent.keyDown(document, { key: 'Escape' })
+      expect(document.activeElement).toBe(screen.getByRole('dialog', { name: 'outer' }))
+    })
+  })
 })

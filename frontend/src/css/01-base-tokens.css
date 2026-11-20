@@ -1484,6 +1484,7 @@
      Geometry, not on the --space-* ramp. `SiteFooter` still caps at
      `max-w-5xl` on purpose (#1562 ruled only on the nav). */
   --navbar-h: 56px; /* one-row NavBar; NavBar.tsx overwrites it with the measured height (#3296) */
+  --modstrip-h: 0px; /* the mod strip's height while it is up; ModStrip.tsx sets it (#3666) */
   --shell-max-width: 1392px;
 
   /* ── Mobile bottom-chrome clearance (#1566) ── `MobileTabBar` is fixed and

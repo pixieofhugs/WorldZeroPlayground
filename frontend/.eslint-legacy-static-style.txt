@@ -11,7 +11,6 @@ src/components/LevelUpPopup.tsx
 src/components/MediaGallery.tsx
 src/components/NavBar.tsx
 src/components/StartHereMark.tsx
-src/components/admin/CopyEditor.tsx
 src/components/avatar/DefaultAvatar.tsx
 src/components/backdrop/UaBackdrop.tsx
 src/components/backdrop/WowBackdrop.tsx
@@ -182,7 +181,6 @@ src/pages/Tasks.tsx
 src/pages/Updates.tsx
 src/pages/admin/AccountsTab.tsx
 src/pages/admin/AdminRosterSection.tsx
-src/pages/admin/ModerationTab.tsx
 src/pages/characterPaths/PortraitPicker.tsx
 src/pages/characterPaths/archetypes/CovenCreateCharacter.tsx
 src/pages/characterPaths/archetypes/CovenEditCharacter.tsx

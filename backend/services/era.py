@@ -199,25 +199,6 @@ async def get_next_era_row(era_row: Era, session: AsyncSession) -> Era | None:
     return result.scalar_one_or_none()
 
 
-async def get_era_row_for_praxis(praxis: Praxis, session: AsyncSession) -> Era:
-    """The latest era that started at or before the praxis's seal (#1362).
-
-    Unsealed (or sealed before any era) → current era. Where a praxis's base
-    points live; its votes credit the era they are cast in (ADR-0099).
-    """
-    if praxis.submitted_at is not None:
-        result = await session.execute(
-            select(Era)
-            .where(Era.started_at <= praxis.submitted_at)
-            .order_by(Era.id.desc())
-            .limit(1)
-        )
-        era_row = result.scalar_one_or_none()
-        if era_row is not None:
-            return era_row
-    return await get_current_era_row(session)
-
-
 #: The duels an era close freezes; ``pending``/``declined`` are left alone.
 DUELS_FROZEN_AT_ERA_CLOSE = (DuelStatus.active, DuelStatus.settled)
 
@@ -373,7 +354,40 @@ async def apply_era_reset(
     """
     # Duels first: against the closing era's tallies, before new stats exist (#823).
     closing_era_id = await get_closing_era_id(new_era_row, session)
-    await resolve_duels_at_era_close(session, closing_era_id=closing_era_id)
+    duels = await resolve_duels_at_era_close(session, closing_era_id=closing_era_id)
+    closing_era_row = (
+        await session.get(Era, closing_era_id) if closing_era_id is not None else None
+    )
+    if closing_era_row is not None and duels:
+        # Active duels froze as no-contests; their provisional winner multiplier
+        # must not stay banked in the closing era. Deferred: import cycle.
+        from services.character_stats import recalculate_character_stats
+
+        # The closing era's rules, not the opening era's: its score is frozen history.
+        closing_era = era_config_for_key(closing_era_row.config_key)
+        if closing_era is None:
+            raise RuntimeError(
+                f"Era {closing_era_row.id} names unregistered config_key "
+                f"{closing_era_row.config_key!r}; cannot re-score its duels"
+            )
+
+        challenger_ids = (
+            await session.execute(
+                select(Praxis.created_by_id).where(
+                    Praxis.id.in_([duel.challenger_praxis_id for duel in duels])
+                )
+            )
+        ).scalars()
+        participants = {d.opponent_character_id for d in duels} | set(challenger_ids)
+        for character_id in participants:
+            await recalculate_character_stats(
+                character_id,
+                session,
+                closing_era,
+                era_row=closing_era_row,
+                emit_taunts=False,
+                rescore_closed=True,
+            )
 
     await retire_board_at_era_close(session)
 
