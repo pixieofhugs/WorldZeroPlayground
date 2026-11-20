@@ -289,11 +289,11 @@ async def test_hide_then_restore_round_trips_through_the_list(
     assert praxis.id in _ids(await client.get(PUBLIC_LIST, headers=auth_headers))
 
 
-# --- Detail door (#3257): admin read-through for hidden, nobody else ---
+# --- Detail door (#3257, #3670): admin and the author read a hidden praxis, nobody else ---
 
 
 @pytest.mark.asyncio
-async def test_admin_opens_a_hidden_praxis_everyone_else_gets_404(
+async def test_admin_and_author_open_a_hidden_praxis_everyone_else_gets_404(
     client: AsyncClient,
     account: Account,
     character: Character,
@@ -301,6 +301,8 @@ async def test_admin_opens_a_hidden_praxis_everyone_else_gets_404(
     active_task: Task,
     auth_headers: dict,
     auth_headers2: dict,
+    character3: Character,
+    auth_headers3: dict,
     db_session: AsyncSession,
 ):
     hidden = await make_solo_praxis(
@@ -315,8 +317,8 @@ async def test_admin_opens_a_hidden_praxis_everyone_else_gets_404(
     admin = await client.get(url, headers=auth_headers)
     assert admin.status_code == 200
     assert admin.json()["moderation_status"] == "hidden"
-    # Not even the author, nor an anonymous viewer.
-    assert (await client.get(url, headers=auth_headers2)).status_code == 404
+    assert (await client.get(url, headers=auth_headers2)).status_code == 200
+    assert (await client.get(url, headers=auth_headers3)).status_code == 404
     assert (await client.get(url)).status_code == 404
     assert hidden.id not in _ids(await client.get(PUBLIC_LIST, headers=auth_headers))
 
@@ -352,3 +354,39 @@ async def test_admin_cannot_flag_a_hidden_praxis(
     assert resp.status_code == 404
     await db_session.refresh(hidden)
     assert hidden.moderation_status == ModerationStatus.hidden
+
+
+@pytest.mark.asyncio
+async def test_removal_reason_reaches_the_author_and_admin_only(
+    client: AsyncClient,
+    account: Account,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+    character3: Character,
+    auth_headers3: dict,
+    db_session: AsyncSession,
+):
+    praxis = await make_solo_praxis(db_session, active_task, character2)
+    await make_admin(db_session, account)
+    url = f"/praxes/{praxis.id}"
+    removed = await client.patch(
+        f"/admin/praxes/{praxis.id}/moderate",
+        json={"status": "hidden", "admin_note": "Stock photo."},
+        headers=auth_headers,
+    )
+    assert removed.status_code == 200
+
+    assert (await client.get(url, headers=auth_headers2)).json()["admin_note"] == "Stock photo."
+    assert (await client.get(url, headers=auth_headers)).json()["admin_note"] == "Stock photo."
+
+    # A failed praxis stays public; its reason must not.
+    await client.patch(
+        f"/admin/praxes/{praxis.id}/moderate",
+        json={"status": "failed", "admin_note": "Not met."},
+        headers=auth_headers,
+    )
+    assert (await client.get(url, headers=auth_headers3)).json()["admin_note"] == ""
+    assert (await client.get(url)).json()["admin_note"] == ""
+    assert (await client.get(url, headers=auth_headers2)).json()["admin_note"] == "Not met."
