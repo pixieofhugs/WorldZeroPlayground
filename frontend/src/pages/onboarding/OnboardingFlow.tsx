@@ -265,7 +265,7 @@ export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boole
           {(beat || canSkip) && (
             <button
               type="button"
-              className="ob-ghost ob-cap ob-fwd2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--faction-default-card-text)]"
+              className="ob-ghost ob-cap ob-fwd2"
               onClick={beat && !player ? () => move(skip) : skipAhead}
               data-testid="onboarding-skip"
             >

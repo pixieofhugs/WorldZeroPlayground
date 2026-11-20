@@ -14,7 +14,8 @@ html:has(.ob-root){overflow-x:hidden}
 @media (max-width:859px){.ob-brand.ob-brand-hide{display:none}}
 
 .ob-ghost{min-height:44px;padding:0 14px;border:0;background:transparent;cursor:pointer;color:var(--faction-default-card-muted)}
-.ob-ghost:hover,.ob-ghost:focus-visible{color:var(--faction-default-card-text);outline:none}
+.ob-ghost:hover,.ob-ghost:focus-visible{color:var(--faction-default-card-text)}
+.ob-ghost:focus-visible{outline:2px solid var(--faction-default-card-text);outline-offset:2px}
 .ob-ghost.ob-next{color:var(--faction-default-card-text)}
 @keyframes ob-bkj{0%,100%{transform:none}35%{transform:translateX(-7px) scale(1.06,.94)}70%{transform:translateX(2px)}}
 .ob-bk:hover,.ob-bk:focus-visible{animation:ob-bkj .4s ease-in-out}
