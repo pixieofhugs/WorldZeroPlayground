@@ -1,0 +1,52 @@
+name: Backup pull
+
+# deploy/wz-backup-pull sends a `backup-pull` dispatch after every run. The
+# issue is written here, as github-actions[bot], so the owner is notified.
+on:
+  repository_dispatch:
+    types: [backup-pull]
+
+permissions:
+  issues: write
+
+concurrency: backup-pull
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      STATUS: ${{ github.event.client_payload.status }}
+      RUN: ${{ github.event.client_payload.run }}
+      NEWEST: ${{ github.event.client_payload.newest }}
+      PROBLEMS: ${{ github.event.client_payload.problems }}
+      ADVICE: ${{ github.event.client_payload.advice }}
+      TAIL: ${{ github.event.client_payload.tail }}
+    steps:
+      - name: File, comment on or close backup-red
+        run: |
+          set -euo pipefail
+          open=$(gh issue list --label backup-red --state open --limit 1 \
+                   --json number --jq '.[0].number // empty')
+          case "$STATUS" in
+            red)
+              {
+                printf '**Run:** %s\n**Newest prod dump:** %s\n\n**Problems**\n' "$RUN" "$NEWEST"
+                printf '%s\n' "$PROBLEMS" | sed 's/^/- /'
+                printf '\n**Where to act from** — [`deploy/RESTORE.md`](https://github.com/%s/blob/main/deploy/RESTORE.md)\n' "$GH_REPO"
+                printf '%s\n' "$ADVICE" | sed 's/^/- /'
+                printf '\n**Last lines of the job'"'"'s output**\n```\n%s\n```\n\n' "$TAIL"
+                printf 'Filed by `deploy/wz-backup-pull`. The next healthy pull closes this.\n'
+              } > body.md
+              if [ -n "$open" ]; then
+                gh issue comment "$open" --body-file body.md
+              else
+                gh issue create --label backup-red --label needs-triage \
+                  --title "World Zero backups are failing" --body-file body.md
+              fi ;;
+            green)
+              [ -z "$open" ] || gh issue close "$open" \
+                --comment "The pull is healthy again as of $RUN. Newest prod dump: $NEWEST." ;;
+            *) echo "unknown status '$STATUS'" >&2; exit 1 ;;
+          esac

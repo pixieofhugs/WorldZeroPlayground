@@ -320,7 +320,8 @@ async def test_failing_a_closed_era_praxis_leaves_that_era_frozen(
     before_current = (await _stats(db_session, character, current_era)).score
 
     await moderate_praxis(
-        old.id, ModerationStatus.failed.value, "Not actually done", db_session
+        old.id, ModerationStatus.failed.value, "Not actually done", db_session,
+        actor_id=character.account_id,
     )
     await db_session.commit()
 

@@ -36,6 +36,24 @@ class AccountPage(WireModel):
     offset: int
 
 
+class ModActionOut(WireModel):
+    id: int
+    actor_account_id: int
+    actor_name: str | None
+    action: str
+    target_type: str
+    target_id: int
+    detail: str | None
+    created_at: datetime
+
+
+class ModActionPage(WireModel):
+    items: list[ModActionOut]
+    total: int
+    limit: int
+    offset: int
+
+
 class AccountDetail(WireModel):
     model_config = ConfigDict(from_attributes=True)
 
