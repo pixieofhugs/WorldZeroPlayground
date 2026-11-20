@@ -13,6 +13,7 @@ import {
   filterAdminTaskRows,
   hoursUntilPublic,
   mergeAdminTaskRows,
+  reconcileLevelFilter,
   type AdminTaskRow,
 } from './adminTaskRows'
 import { markTaskRowDeleted } from './taskDelete'
@@ -53,6 +54,12 @@ export default function TasksTab() {
       .finally(() => setLoading(false))
   }, [t])
   useEffect(refresh, [refresh])
+
+  // An edit or refresh can remove the picked level from the options; clear it rather than filter to nothing behind a blank select.
+  useEffect(
+    () => setLevel((l) => String(reconcileLevelFilter(l === '' ? undefined : Number(l), distinctLevels(tasks)) ?? '')),
+    [tasks],
+  )
 
   // The rail's Proposals and Tasks are one component instance; follow the route.
   useEffect(() => setSegment(pathname.endsWith('/proposals') ? 'proposals' : 'active'), [pathname])

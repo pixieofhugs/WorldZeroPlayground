@@ -5,7 +5,6 @@ import {
   filterAdminTaskRows,
   distinctLevels,
   reconcileLevelFilter,
-  hasActiveTaskFilters,
 } from "../adminTaskRows";
 import type { TaskOut } from "../../../api/tasks";
 import type { PendingTaskOut } from "../../../api/admin";
@@ -199,20 +198,5 @@ describe("reconcileLevelFilter (#3060 review — the select/filter desync bug)",
 
   it("passes an unset filter through unchanged", () => {
     expect(reconcileLevelFilter(undefined, [0, 3, 6])).toBeUndefined();
-  });
-});
-
-describe("hasActiveTaskFilters", () => {
-  it("is false when nothing is set", () => {
-    expect(hasActiveTaskFilters({})).toBe(false);
-    expect(hasActiveTaskFilters({ search: "   " })).toBe(false);
-  });
-
-  it("is true when any one criterion is set", () => {
-    expect(hasActiveTaskFilters({ search: "map" })).toBe(true);
-    expect(hasActiveTaskFilters({ factions: ["everymen"] })).toBe(true);
-    expect(hasActiveTaskFilters({ level: 0 })).toBe(true);
-    expect(hasActiveTaskFilters({ minPoints: 0 })).toBe(true);
-    expect(hasActiveTaskFilters({ maxPoints: 0 })).toBe(true);
   });
 });

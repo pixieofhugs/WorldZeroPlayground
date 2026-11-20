@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { extractError } from "../../utils/errors";
 import AdminConfirm from "./AdminConfirm";
@@ -9,6 +10,9 @@ interface ModerateConfirmProps {
   confirmLabel: string;
   errorFallback: string;
   run: () => Promise<void>;
+  /** Extra fields (a reason); `confirmDisabled` holds the button until they are filled. */
+  children?: ReactNode;
+  confirmDisabled?: boolean;
   onCancel: () => void;
 }
 
@@ -19,6 +23,8 @@ export default function ModerateConfirm({
   confirmLabel,
   errorFallback,
   run,
+  children,
+  confirmDisabled,
   onCancel,
 }: ModerateConfirmProps) {
   const { t } = useTranslation("admin");
@@ -44,9 +50,12 @@ export default function ModerateConfirm({
       busyLabel={t("moderateConfirm.working")}
       cancelLabel={t("moderateConfirm.cancel")}
       busy={busy}
+      confirmDisabled={confirmDisabled}
       error={error}
       onConfirm={() => void confirm()}
       onCancel={onCancel}
-    />
+    >
+      {children}
+    </AdminConfirm>
   );
 }

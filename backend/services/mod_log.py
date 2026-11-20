@@ -49,7 +49,7 @@ def _kind_filter(kind: str):
         return ModAction.target_type == "task"
     if kind == "people":
         return and_(
-            ModAction.target_type.in_(("character", "account")),
+            ModAction.target_type.in_(("character", "account", "message")),
             ModAction.action != "remove_flagged",
         )
     if kind == "rules":

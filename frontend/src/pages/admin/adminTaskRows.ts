@@ -110,19 +110,6 @@ export function reconcileLevelFilter(
     : undefined;
 }
 
-/** The status chip never counts here (#3060): it alone doesn't raise "clear filters". */
-export function hasActiveTaskFilters(
-  criteria: AdminTaskFilterCriteria,
-): boolean {
-  return (
-    Boolean(criteria.search?.trim()) ||
-    Boolean(criteria.factions?.length) ||
-    criteria.level !== undefined ||
-    criteria.minPoints !== undefined ||
-    criteria.maxPoints !== undefined
-  );
-}
-
 /** Whole hours until a proposal goes public (`era.pending_task_admin_review_hours`); 0 once it has. */
 export function hoursUntilPublic(createdAt: string, reviewHours: number, now: number): number {
   const elapsedHours = (now - Date.parse(createdAt)) / 3_600_000;

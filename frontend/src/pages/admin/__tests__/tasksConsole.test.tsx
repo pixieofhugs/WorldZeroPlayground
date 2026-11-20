@@ -22,6 +22,7 @@ vi.mock('../../../api/admin', () => api)
 vi.mock('../../../hooks/useGameConfig', () => ({
   useGameConfig: () => ({
     pending_task_admin_review_hours: 36,
+    level_thresholds: [0, 10, 20, 30],
     level_to_see_pending_tasks: 4,
     factions: [{ slug: 'na' }, { slug: 'coven' }],
   }),

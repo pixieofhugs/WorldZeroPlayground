@@ -121,40 +121,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/admin/accounts": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Admin List Accounts */
-        get: operations["admin_list_accounts_admin_accounts_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/accounts/{account_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Admin Get Account */
-        get: operations["admin_get_account_admin_accounts__account_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/admin/accounts/{account_id}/suspend": {
         parameters: {
             query?: never;
@@ -625,7 +591,9 @@ export interface paths {
         };
         /**
          * List Task Ids With History
-         * @description Admin-only: ids of tasks Delete would refuse (#3667).
+         * @description Admin-only: ids of tasks with history, which Delete refuses (#3667).
+         *
+         *     Seed-owned tasks are refused too, but separately (``seed_key``); not listed.
          */
         get: operations["list_task_ids_with_history_admin_tasks_with_history_get"];
         put?: never;
@@ -2143,52 +2111,6 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        /** AccountDetail */
-        AccountDetail: {
-            /** Characters */
-            characters: components["schemas"]["CharacterBrief"][];
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /** Email */
-            email: string;
-            /** Id */
-            id: number;
-            /** Status */
-            status: string;
-        };
-        /** AccountPage */
-        AccountPage: {
-            /** Items */
-            items: components["schemas"]["AccountSummary"][];
-            /** Limit */
-            limit: number;
-            /** Offset */
-            offset: number;
-            /** Total */
-            total: number;
-        };
-        /** AccountSummary */
-        AccountSummary: {
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /** Email */
-            email: string;
-            /** Id */
-            id: number;
-            /**
-             * Matched Characters
-             * @default []
-             */
-            matched_characters: components["schemas"]["CharacterBrief"][];
-            /** Status */
-            status: string;
-        };
         /** ActiveCharacterIn */
         ActiveCharacterIn: {
             /** Character Id */
@@ -2359,19 +2281,6 @@ export interface components {
             display_order: number;
             /** File */
             file: string;
-        };
-        /** CharacterBrief */
-        CharacterBrief: {
-            /** Display Name */
-            display_name: string;
-            /** Faction Slug */
-            faction_slug: string;
-            /** Id */
-            id: number;
-            /** Status */
-            status: string;
-            /** Username */
-            username: string;
         };
         /** CharacterCreate */
         CharacterCreate: {
@@ -4748,6 +4657,11 @@ export interface components {
          * @enum {string}
          */
         RelationshipTypeEnum: "friend" | "foe";
+        /** RemoveFlaggedIn */
+        RemoveFlaggedIn: {
+            /** Note */
+            note?: string | null;
+        };
         /** RemoveFlaggedOut */
         RemoveFlaggedOut: {
             /** Removed */
@@ -5447,74 +5361,6 @@ export interface operations {
             };
         };
     };
-    admin_list_accounts_admin_accounts_get: {
-        parameters: {
-            query?: {
-                search?: string | null;
-                limit?: number;
-                offset?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AccountPage"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    admin_get_account_admin_accounts__account_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                account_id: number;
-            };
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AccountDetail"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     admin_suspend_account_admin_accounts__account_id__suspend_post: {
         parameters: {
             query?: never;
@@ -5765,7 +5611,11 @@ export interface operations {
                 access_token?: string | null;
             };
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["RemoveFlaggedIn"] | null;
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {

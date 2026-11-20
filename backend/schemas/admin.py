@@ -8,34 +8,6 @@ from schemas.comment import CommentOut
 from schemas.praxis import PraxisOut
 
 
-class CharacterBrief(WireModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    username: str
-    display_name: str
-    faction_slug: str
-    status: str
-
-
-class AccountSummary(WireModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    email: str
-    status: str
-    created_at: datetime
-    # Only the characters a search hit; empty when there is no search.
-    matched_characters: list[CharacterBrief] = []
-
-
-class AccountPage(WireModel):
-    items: list[AccountSummary]
-    total: int
-    limit: int
-    offset: int
-
-
 class ModActionOut(WireModel):
     id: int
     actor_account_id: int
@@ -61,16 +33,6 @@ class ModActionPage(WireModel):
     total: int
     limit: int
     offset: int
-
-
-class AccountDetail(WireModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    email: str
-    status: str
-    created_at: datetime
-    characters: list[CharacterBrief]
 
 
 class CharacterSummary(WireModel):
@@ -198,6 +160,10 @@ class SuspendActionOut(WireModel):
 
     account_id: int
     status: str
+
+
+class RemoveFlaggedIn(WireModel):
+    note: str | None = None
 
 
 class RemoveFlaggedOut(WireModel):

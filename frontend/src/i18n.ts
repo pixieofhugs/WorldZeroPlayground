@@ -55,6 +55,9 @@ export async function loadAppCopy(): Promise<void> {
   registerNamespace('forms', forms.default)
 }
 
+/** Admin, forms and feed copy ride with the routes that read them, not the entry chunk (#3557). */
+export const withAppCopy = <T,>(page: Promise<T>) => Promise.all([page, loadAppCopy()]).then(([m]) => m)
+
 export async function loadOnboardingCopy(): Promise<void> {
   registerNamespace('onboarding', (await import('./locales/en/onboarding.json')).default)
 }

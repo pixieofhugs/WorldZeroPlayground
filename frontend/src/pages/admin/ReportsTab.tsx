@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import {
   banCharacter,
   getFlaggedComments,
@@ -79,16 +79,21 @@ function PraxisReport({
 }: {
   praxis: FlaggedPraxisOut
   act: (status: 'visible' | 'hidden' | 'failed', note?: string) => Promise<void>
-  moderateAuthor: (praxis: FlaggedPraxisOut, kind: AuthorAction, on: boolean) => Promise<void>
+  moderateAuthor: (praxis: FlaggedPraxisOut, kind: AuthorAction, on: boolean, note?: string) => Promise<void>
   onViewAccount: (search: string) => void
 }) {
   const { t } = useTranslation('admin')
   const [deciding, setDeciding] = useState<'hidden' | 'failed' | null>(null)
   const [reason, setReason] = useState('')
   const [confirming, setConfirming] = useState<AuthorAction | null>(null)
+  const reasonRef = useRef<HTMLInputElement>(null)
   const when = itemTime({ kind: 'praxis', praxis })
 
-  const toggle = (status: 'hidden' | 'failed') => setDeciding(deciding === status ? null : status)
+  const toggle = (status: 'hidden' | 'failed') => {
+    const arming = deciding !== status
+    setDeciding(arming ? status : null)
+    if (arming) reasonRef.current?.focus()
+  }
   const cancel = () => {
     setDeciding(null)
     setReason('')
@@ -155,6 +160,7 @@ function PraxisReport({
         <label className="rp-field">
           {t('console.reports.decision.reasonLabel')}
           <input
+            ref={reasonRef}
             className="rp-input"
             placeholder={t('console.reports.decision.reasonHint')}
             value={reason}
@@ -280,14 +286,21 @@ export default function ReportsTab({ onViewAccount }: { onViewAccount: (search: 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
+  const [params, setParams] = useSearchParams()
+  const character = Number(params.get('character')) || null
 
   const refresh = () => {
     setError(null)
-    Promise.all([getFlaggedPraxes(), getFlaggedComments(), getModLog()])
+    // The log is garnish: its failure must not hide the queue.
+    Promise.all([
+      getFlaggedPraxes(),
+      getFlaggedComments(),
+      getModLog(0, { kind: 'reports' }).then((log) => log.items, () => []),
+    ])
       .then(([flaggedPraxes, flaggedComments, log]) => {
         setPraxes(flaggedPraxes)
         setComments(flaggedComments)
-        setRecent(log.items)
+        setRecent(log)
         if (flaggedPraxes.length + flaggedComments.length === 0) {
           void listAdminPraxes({ limit: 1, status: 'submitted' })
             .then((rows) => setNewestPraxisId(rows[0]?.id ?? null))
@@ -312,9 +325,9 @@ export default function ReportsTab({ onViewAccount }: { onViewAccount: (search: 
     }
   }
 
-  const moderateAuthor = (praxis: FlaggedPraxisOut, kind: AuthorAction, on: boolean) =>
+  const moderateAuthor = (praxis: FlaggedPraxisOut, kind: AuthorAction, on: boolean, note?: string) =>
     run(() => {
-      if (kind === 'removeAll') return removeFlaggedPraxes(praxis.created_by_id)
+      if (kind === 'removeAll') return removeFlaggedPraxes(praxis.created_by_id, note)
       return kind === 'ban' ? banCharacter(praxis.created_by_id, on) : suspendAccount(praxis.author_account_id, on)
     })
 
@@ -322,8 +335,8 @@ export default function ReportsTab({ onViewAccount }: { onViewAccount: (search: 
   if (error) return <p className="font-body danger-text">{error}</p>
 
   const items: Item[] = [
-    ...praxes.map((praxis): Item => ({ kind: 'praxis', praxis })),
-    ...comments.map((comment): Item => ({ kind: 'comment', comment })),
+    ...praxes.filter((p) => !character || p.created_by_id === character).map((praxis): Item => ({ kind: 'praxis', praxis })),
+    ...comments.filter((c) => !character || c.author.id === character).map((comment): Item => ({ kind: 'comment', comment })),
   ].sort((a, b) => itemTime(b).localeCompare(itemTime(a)))
   const shown = filter === 'all' ? items : items.filter((item) => item.kind === filter)
   const tabs: [Filter, string, number][] = [
@@ -380,6 +393,14 @@ export default function ReportsTab({ onViewAccount }: { onViewAccount: (search: 
           ))}
         </div>
       </header>
+      {character && (
+        <p className="rp-muted">
+          {t('console.reports.onlyCharacter', { id: character })}{' '}
+          <button type="button" className="rp-btn" onClick={() => setParams({}, { replace: true })}>
+            {t('console.reports.clearCharacter')}
+          </button>
+        </p>
+      )}
       {actionError && <p role="alert" className="rp-error">{actionError}</p>}
       <div className="rp-split">
         <div className="rp-main">{body}</div>
