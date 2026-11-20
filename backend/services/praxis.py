@@ -40,7 +40,6 @@ from models.praxis import (
 from models.task import Task, TaskStatus
 from models.vote import Vote
 from schemas.praxis import (
-    MediaItemOut,
     MediaUploadResultOut,
 )
 from services import collab_consensus
@@ -59,6 +58,7 @@ from services.era_gates import may_create_collab_praxis
 from services.faction_service import faction_permits
 from services.level_jump import consume_level_jump
 from services.media import (
+    media_item_out,
     process_and_save_media,
     resolve_stored_media_path,
     restore_media_to_mount,
@@ -779,7 +779,7 @@ async def add_media_batch(
         results.append(
             MediaUploadResultOut(
                 filename=filename,
-                media_item=MediaItemOut.model_validate(media_item),
+                media_item=media_item_out(media_item),
             )
         )
         display_order += 1

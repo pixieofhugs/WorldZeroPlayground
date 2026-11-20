@@ -1,12 +1,11 @@
-import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import SignInOptions from '../../components/SignInOptions'
 import { primaryControl } from './OnboardingCard'
+import { useTitleTyping } from './useTitleTyping'
 import Wisp from './Wisp'
 import './motion/shared.css'
 import './motion/login.css'
 
-const CHAR_MS = 84
 const START_MS = 500
 
 /** A plain sign-in: no `onChoose`, so no onboarding resume is marked. */
@@ -14,18 +13,7 @@ export default function SignInView({ onRestart }: { onRestart: () => void }) {
   const { t } = useTranslation('onboarding')
   const title = t('signin.title')
   const instant = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
-  const [n, setN] = useState(instant ? title.length : 0)
-  useEffect(() => {
-    if (instant) return
-    let id: ReturnType<typeof setInterval>
-    const start = setTimeout(() => {
-      id = setInterval(() => setN((c) => Math.min(title.length, c + 1)), CHAR_MS)
-    }, START_MS)
-    return () => {
-      clearTimeout(start)
-      clearInterval(id)
-    }
-  }, [title, instant])
+  const shown = useTitleTyping(title, instant, START_MS)
 
   return (
     <section className="ob-welcome">
@@ -34,7 +22,7 @@ export default function SignInView({ onRestart }: { onRestart: () => void }) {
       </span>
       <h1 className="ob-lora" aria-label={title}>
         <span aria-hidden="true">
-          {title.slice(0, n)}
+          {shown}
           <span className="ob-caret" />
         </span>
       </h1>

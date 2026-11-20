@@ -20,8 +20,8 @@ from models.duel import Duel, DuelStatus
 from models.meta_task import PraxisMetaTask
 from models.praxis import Praxis, PraxisInvite, PraxisMember, PraxisStatus
 from models.task import Task
+from services.media import media_item_out
 from schemas.praxis import (
-    MediaItemOut,
     PraxisCardOut,
     PraxisInviteOut,
     PraxisMemberOut,
@@ -106,7 +106,7 @@ async def build_praxis_out(
     include_invites = effective_viewer_id in member_ids if effective_viewer_id else False
     invites = [_build_invite_out(i) for i in praxis.invites] if include_invites else []
 
-    media_items = [MediaItemOut.model_validate(item) for item in praxis.media_items]
+    media_items = [media_item_out(item) for item in praxis.media_items]
 
     # Author-scoped total (ADR-0053), same resolver as the card so they agree.
     tally_map = await tally_votes([praxis.id], session)
@@ -595,7 +595,7 @@ async def build_praxis_card_out(
         body_text=praxis.body_text,
         created_by_faction_slug=praxis.created_by.faction_slug if praxis.created_by else None,
         members=[_build_member_out(m) for m in praxis.members],
-        media_items=[MediaItemOut.model_validate(item) for item in praxis.media_items],
+        media_items=[media_item_out(item) for item in praxis.media_items],
         viewer_vote=viewer_vote_info.value if viewer_vote_info else None,
         voted_by_name=viewer_vote_info.voted_by_name if viewer_vote_info else None,
         viewer_can_vote=can_vote,
