@@ -1,4 +1,5 @@
 """The population dial: overlay, admin API, mod log, feed and cache stamp (#3656)."""
+
 from datetime import datetime, timedelta, timezone
 
 import pytest
@@ -31,7 +32,9 @@ def live():
 
 
 @pytest.mark.asyncio
-async def test_no_rows_means_the_declared_small_default_and_era_1_is_untouched(db_session):
+async def test_no_rows_means_the_declared_small_default_and_era_1_is_untouched(
+    db_session,
+):
     await overlay_population_dials(db_session)
     assert live() == SMALL
     assert {name: getattr(ERA_1, name) for name in SMALL} == FULL
@@ -113,10 +116,14 @@ async def test_put_is_admin_only_and_rejects_unknown_keys(
         "/admin/small-world", json={"duel_level": "full"}, headers=auth_headers
     )
     assert denied.status_code == 403
-    assert (await client.get("/admin/small-world", headers=auth_headers)).status_code == 403
+    assert (
+        await client.get("/admin/small-world", headers=auth_headers)
+    ).status_code == 403
 
     await make_admin(db_session, account)
-    bad = await client.put("/admin/small-world", json={"nope": "full"}, headers=auth_headers)
+    bad = await client.put(
+        "/admin/small-world", json={"nope": "full"}, headers=auth_headers
+    )
     assert bad.status_code == 422
     assert bad.json()["detail"]["code"] == ErrorCode.population_dial_unknown.value
     huge = await client.put(
@@ -126,15 +133,21 @@ async def test_put_is_admin_only_and_rejects_unknown_keys(
 
 
 @pytest.mark.asyncio
-async def test_an_unchanged_dial_writes_nothing(client, db_session, account, auth_headers):
+async def test_an_unchanged_dial_writes_nothing(
+    client, db_session, account, auth_headers
+):
     await make_admin(db_session, account)
-    await client.put("/admin/small-world", json={"duel_level": "small"}, headers=auth_headers)
+    await client.put(
+        "/admin/small-world", json={"duel_level": "small"}, headers=auth_headers
+    )
     assert (await db_session.execute(select(PopulationDial))).first() is None
     assert (await db_session.execute(select(ModAction))).first() is None
 
 
 @pytest.mark.asyncio
-async def test_each_rule_loosens_in_its_service_on_small_and_tightens_on_full(db_session):
+async def test_each_rule_loosens_in_its_service_on_small_and_tightens_on_full(
+    db_session,
+):
     now = datetime.now(timezone.utc)
 
     class Poster:

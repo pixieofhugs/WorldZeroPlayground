@@ -73,7 +73,7 @@ async def list_dials(
 
 
 async def rules_revision(session: AsyncSession) -> int:
-    """Microseconds of the latest flip, 0 before any: the client cache stamp (ADR-0072)."""
+    """Microseconds of the latest flip (0 before any): the client cache stamp."""
     latest = (
         await session.execute(select(func.max(PopulationDial.updated_at)))
     ).scalar()

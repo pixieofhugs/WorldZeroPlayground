@@ -79,4 +79,5 @@ __all__ = [
     "TermsAcceptance",
     "CopyOverride",
     "ModAction",
+    "PopulationDial",
 ]

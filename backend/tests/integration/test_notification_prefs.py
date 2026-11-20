@@ -20,14 +20,14 @@ from services.notification_prefs import LEVEL_UP
 async def test_a_fresh_account_reads_every_default(
     client: AsyncClient, account: Account, auth_headers: dict
 ):
-    """``notification_prefs = '{}'`` answers all nine rows — no backfill."""
+    """``notification_prefs = '{}'`` answers all ten rows — no backfill."""
     assert account.notification_prefs == {}
 
     resp = await client.get("/me/notification-prefs", headers=auth_headers)
     assert resp.status_code == 200
     events = resp.json()["events"]
 
-    assert len(events) == 9
+    assert len(events) == 10
     assert events["duel_challenge"] == {
         "on_updates": True,
         "by_email": True,
@@ -207,6 +207,7 @@ async def test_muting_never_reaches_the_bell(client: AsyncClient, auth_headers: 
                     "comment_on_mine",
                     "comment_mention",
                     "era_announcement",
+                    "rules_change",
                     "global_task",
                     LEVEL_UP,
                 )

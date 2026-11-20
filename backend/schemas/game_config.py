@@ -33,7 +33,7 @@ class GameConfigOut(WireModel):
     era_name: str
     # The live Era row; moves on every rollover, even one keeping the name.
     era_id: int
-    # Latest dial flip (0 before any); with era_id it is the client cache stamp (ADR-0072).
+    # Latest dial flip (0 before any); with era_id, the client cache stamp (ADR-0072).
     rules_revision: int
     level_thresholds: list[int]
     duel_level_required: int

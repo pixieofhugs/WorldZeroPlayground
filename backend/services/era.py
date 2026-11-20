@@ -56,7 +56,10 @@ async def overlay_population_dials(
     Never ``dataclasses.replace``: perk inheritance in ``__post_init__`` is not
     idempotent (ADR-0091).
     """
-    sides = dict((await session.execute(select(PopulationDial.dial_key, PopulationDial.side))).all())
+    rows = await session.execute(
+        select(PopulationDial.dial_key, PopulationDial.side)
+    )
+    sides = dict(rows.all())
     for key, dial in live.dials.items():
         for name, value in getattr(dial, sides.get(key, dial.default)).items():
             object.__setattr__(live, name, value)

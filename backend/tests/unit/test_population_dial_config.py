@@ -1,9 +1,15 @@
 """Era-file validation of the population dials (#3656)."""
+
 import dataclasses
 
 import pytest
 
-from game_config import Dial, check_dials, era_config_for_key, registered_era_config_keys
+from game_config import (
+    Dial,
+    check_dials,
+    era_config_for_key,
+    registered_era_config_keys,
+)
 
 ERA_1 = era_config_for_key("era_1")
 

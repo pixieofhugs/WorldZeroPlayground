@@ -2,7 +2,16 @@ import hmac
 from datetime import datetime
 from typing import Literal, Optional
 
-from fastapi import APIRouter, Body, Depends, File, Header, HTTPException, Query, UploadFile
+from fastapi import (
+    APIRouter,
+    Body,
+    Depends,
+    File,
+    Header,
+    HTTPException,
+    Query,
+    UploadFile,
+)
 from pydantic import ConfigDict
 from schemas.base import WireModel
 from sqlalchemy import select
@@ -649,7 +658,7 @@ async def admin_get_small_world(
     _: Account = Depends(require_admin),
     session: AsyncSession = Depends(get_db, scope="function"),
 ) -> list[PopulationDialOut]:
-    """Admin-only: every population dial, its side, both values and who last flipped it."""
+    """Admin-only: each population dial, its side, both values, who flipped it."""
     return [PopulationDialOut(**vars(state)) for state in await list_dials(session)]
 
 

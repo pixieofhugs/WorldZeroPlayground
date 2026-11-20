@@ -16,6 +16,7 @@ from services.activity_feed import (
     FEED_ITEM_TYPE_ERA_ANNOUNCEMENT,
     FEED_ITEM_TYPE_GLOBAL_TASK,
     FEED_ITEM_TYPE_INVITATION_LETTER,
+    FEED_ITEM_TYPE_RULES_CHANGE,
     FEED_ITEM_TYPE_VOTE_CHANGED_ON_MINE,
     FEED_ITEM_TYPE_VOTE_ON_MINE,
     REQUEST_ITEM_TYPES,
@@ -39,6 +40,7 @@ RULED_DEFAULTS = {
     # `level_up` has no feed row (ruling 2026-08-18), so page is locked OFF.
     LEVEL_UP: (False, False, True),
     FEED_ITEM_TYPE_ERA_ANNOUNCEMENT: (True, False, False),
+    FEED_ITEM_TYPE_RULES_CHANGE: (True, False, False),
     FEED_ITEM_TYPE_GLOBAL_TASK: (True, False, False),
 }
 
@@ -62,9 +64,9 @@ def test_junk_in_the_column_resolves_to_defaults(raw):
     } == RULED_DEFAULTS
 
 
-def test_nine_rows_and_awaiting_submission_is_not_one_of_them():
+def test_ten_rows_and_awaiting_submission_is_not_one_of_them():
     """``awaiting_submission`` is state, not an event, so it gets no row."""
-    assert len(NOTIFICATION_EVENTS) == 9
+    assert len(NOTIFICATION_EVENTS) == 10
     every_feed_type = {t for event in NOTIFICATION_EVENTS for t in event.feed_types}
     assert FEED_ITEM_TYPE_AWAITING_SUBMISSION not in every_feed_type
 

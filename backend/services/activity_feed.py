@@ -524,7 +524,9 @@ def _rules_changes_query(ctx: FeedContext) -> Select:
     )
     batch = (
         select(
-            func.string_agg(sibling.detail + literal(":") + sibling.action, literal(","))
+            func.string_agg(
+                sibling.detail + literal(":") + sibling.action, literal(",")
+            )
         )
         .where(same_batch)
         .correlate(ModAction)
