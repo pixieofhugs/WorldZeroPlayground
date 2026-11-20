@@ -2,16 +2,16 @@
 
 ``IF NOT EXISTS`` because a fresh DB's root already built the table.
 
-Revision ID: 0044_push_subscription
-Revises: 0043_population_dial
+Revision ID: 0045_push_subscription
+Revises: 0044_comment_admin_note
 Create Date: 2026-11-20
 """
 from typing import Sequence, Union
 
 from alembic import op
 
-revision: str = "0044_push_subscription"
-down_revision: Union[str, None] = "0043_population_dial"
+revision: str = "0045_push_subscription"
+down_revision: Union[str, None] = "0044_comment_admin_note"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
