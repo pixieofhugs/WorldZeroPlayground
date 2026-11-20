@@ -840,7 +840,8 @@ async def can_view_praxis(
 ) -> bool:
     """Whether ``viewer`` may see ``praxis`` (ADR-0024).
 
-    - ``hidden`` → admins only (#3257), this detail door only; lists still exclude it.
+    - ``hidden`` → admins and the praxis's own members (#3257, #3670: the author
+      reads the removal reason), this detail door only; lists still exclude it.
     - ``submitted`` → public, except an unsealed duel side (author-only, #999).
     - ``in_progress`` → members only (character-scoped).
 
@@ -850,9 +851,11 @@ async def can_view_praxis(
         # Local import: dependencies imports services at module load.
         from dependencies import account_has_admin_role
 
-        return viewer is not None and await account_has_admin_role(
-            viewer.account_id, session
-        )
+        if viewer is None:
+            return False
+        if viewer.id in {member.character_id for member in praxis.members}:
+            return True
+        return await account_has_admin_role(viewer.account_id, session)
     if praxis.status == PraxisStatus.submitted:
         viewer_id = viewer.id if viewer is not None else None
         hidden = await session.scalar(
@@ -1361,7 +1364,7 @@ async def moderate_praxis(
 
     if mod_enum == ModerationStatus.flagged:
         praxis.flagged_at = datetime.now(timezone.utc)
-    if mod_enum == ModerationStatus.failed:
+    if mod_enum in (ModerationStatus.failed, ModerationStatus.hidden):
         praxis.admin_note = admin_note or ""
     elif mod_enum == ModerationStatus.visible:
         praxis.admin_note = ""
