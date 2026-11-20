@@ -232,8 +232,8 @@ from now.
 appears, derived and never hand-set, shown only to a character that has **never completed
 it, ever** — not "not this era". Era resets drop every character to level 0, so an
 era-scoped rule would relight the mark for the whole playerbase at every rollover. This
-costs no new storage: era membership is a seal-time fact
-(`Praxis.era_id`), so praxis history already outlives resets.
+costs no new storage: `Praxis` carries no `era_id` (era membership is a seal-time fact,
+`services/era.py::get_era_row_for_praxis`), so praxis history already outlives resets.
 
 Marking the *surfaces* instead was rejected — two places to keep in sync, and it becomes
 "make the task board new-player-aware", which is out of scope.
