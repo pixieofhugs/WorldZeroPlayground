@@ -1,112 +1,6 @@
 {
   "components": {
     "schemas": {
-      "AccountDetail": {
-        "properties": {
-          "characters": {
-            "items": {
-              "$ref": "#/components/schemas/CharacterBrief"
-            },
-            "title": "Characters",
-            "type": "array"
-          },
-          "created_at": {
-            "format": "date-time",
-            "title": "Created At",
-            "type": "string"
-          },
-          "email": {
-            "title": "Email",
-            "type": "string"
-          },
-          "id": {
-            "title": "Id",
-            "type": "integer"
-          },
-          "status": {
-            "title": "Status",
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "email",
-          "status",
-          "created_at",
-          "characters"
-        ],
-        "title": "AccountDetail",
-        "type": "object"
-      },
-      "AccountPage": {
-        "properties": {
-          "items": {
-            "items": {
-              "$ref": "#/components/schemas/AccountSummary"
-            },
-            "title": "Items",
-            "type": "array"
-          },
-          "limit": {
-            "title": "Limit",
-            "type": "integer"
-          },
-          "offset": {
-            "title": "Offset",
-            "type": "integer"
-          },
-          "total": {
-            "title": "Total",
-            "type": "integer"
-          }
-        },
-        "required": [
-          "items",
-          "total",
-          "limit",
-          "offset"
-        ],
-        "title": "AccountPage",
-        "type": "object"
-      },
-      "AccountSummary": {
-        "properties": {
-          "created_at": {
-            "format": "date-time",
-            "title": "Created At",
-            "type": "string"
-          },
-          "email": {
-            "title": "Email",
-            "type": "string"
-          },
-          "id": {
-            "title": "Id",
-            "type": "integer"
-          },
-          "matched_characters": {
-            "default": [],
-            "items": {
-              "$ref": "#/components/schemas/CharacterBrief"
-            },
-            "title": "Matched Characters",
-            "type": "array"
-          },
-          "status": {
-            "title": "Status",
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "email",
-          "status",
-          "created_at",
-          "matched_characters"
-        ],
-        "title": "AccountSummary",
-        "type": "object"
-      },
       "ActiveCharacterIn": {
         "properties": {
           "character_id": {
@@ -616,39 +510,6 @@
           "file"
         ],
         "title": "Body_upload_media_route_praxes__praxis_id__media_post",
-        "type": "object"
-      },
-      "CharacterBrief": {
-        "properties": {
-          "display_name": {
-            "title": "Display Name",
-            "type": "string"
-          },
-          "faction_slug": {
-            "title": "Faction Slug",
-            "type": "string"
-          },
-          "id": {
-            "title": "Id",
-            "type": "integer"
-          },
-          "status": {
-            "title": "Status",
-            "type": "string"
-          },
-          "username": {
-            "title": "Username",
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "username",
-          "display_name",
-          "faction_slug",
-          "status"
-        ],
-        "title": "CharacterBrief",
         "type": "object"
       },
       "CharacterCreate": {
@@ -6216,6 +6077,23 @@
         "title": "RelationshipTypeEnum",
         "type": "string"
       },
+      "RemoveFlaggedIn": {
+        "properties": {
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "title": "RemoveFlaggedIn",
+        "type": "object"
+      },
       "RemoveFlaggedOut": {
         "properties": {
           "removed": {
@@ -7707,162 +7585,6 @@
         ]
       }
     },
-    "/admin/accounts": {
-      "get": {
-        "operationId": "admin_list_accounts_admin_accounts_get",
-        "parameters": [
-          {
-            "in": "query",
-            "name": "search",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Search"
-            }
-          },
-          {
-            "in": "query",
-            "name": "limit",
-            "required": false,
-            "schema": {
-              "default": 50,
-              "maximum": 200,
-              "minimum": 1,
-              "title": "Limit",
-              "type": "integer"
-            }
-          },
-          {
-            "in": "query",
-            "name": "offset",
-            "required": false,
-            "schema": {
-              "default": 0,
-              "minimum": 0,
-              "title": "Offset",
-              "type": "integer"
-            }
-          },
-          {
-            "in": "cookie",
-            "name": "access_token",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Access Token"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AccountPage"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "summary": "Admin List Accounts",
-        "tags": [
-          "admin"
-        ]
-      }
-    },
-    "/admin/accounts/{account_id}": {
-      "get": {
-        "operationId": "admin_get_account_admin_accounts__account_id__get",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "account_id",
-            "required": true,
-            "schema": {
-              "title": "Account Id",
-              "type": "integer"
-            }
-          },
-          {
-            "in": "cookie",
-            "name": "access_token",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Access Token"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AccountDetail"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "summary": "Admin Get Account",
-        "tags": [
-          "admin"
-        ]
-      }
-    },
     "/admin/accounts/{account_id}/suspend": {
       "post": {
         "operationId": "admin_suspend_account_admin_accounts__account_id__suspend_post",
@@ -8387,6 +8109,23 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/RemoveFlaggedIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Data"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "content": {
@@ -9685,7 +9424,7 @@
     },
     "/admin/tasks/with-history": {
       "get": {
-        "description": "Admin-only: ids of tasks Delete would refuse (#3667).",
+        "description": "Admin-only: ids of tasks with history, which Delete refuses (#3667).\n\nSeed-owned tasks are refused too, but separately (``seed_key``); not listed.",
         "operationId": "list_task_ids_with_history_admin_tasks_with_history_get",
         "parameters": [
           {

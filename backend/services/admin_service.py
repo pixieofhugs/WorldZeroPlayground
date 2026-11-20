@@ -32,11 +32,7 @@ from models.task import Task, TaskStatus
 from models.vote import Vote
 from schemas.admin import (
     AdminRow,
-    AccountDetail,
-    AccountPage,
-    AccountSummary,
     AdminTaskPatch,
-    CharacterBrief,
     CharacterStatsPatch,
     CharacterSummary,
     EraOption,
@@ -68,113 +64,6 @@ from services.era import (
 from services.scoring import compute_vote_budget, compute_votes_available
 
 logger = logging.getLogger(__name__)
-
-ACCOUNT_PAGE_DEFAULT = 50
-ACCOUNT_PAGE_MAX = 200
-
-
-async def list_accounts(
-    session: AsyncSession,
-    search: str | None = None,
-    limit: int = ACCOUNT_PAGE_DEFAULT,
-    offset: int = 0,
-) -> AccountPage:
-    """One page of accounts; ``search`` matches email or any character's name."""
-    match_clause = None
-    if search:
-        pattern = f"%{search}%"
-        match_clause = or_(
-            Character.username.ilike(pattern), Character.display_name.ilike(pattern)
-        )
-    query = select(Account)
-    if match_clause is not None:
-        query = query.where(
-            or_(
-                Account.email.ilike(f"%{search}%"),
-                select(Character.id)
-                .where(Character.account_id == Account.id, match_clause)
-                .exists(),
-            )
-        )
-    total = (
-        await session.execute(select(func.count()).select_from(query.subquery()))
-    ).scalar_one()
-    accounts = (
-        (
-            await session.execute(
-                # id breaks created_at ties so pages stay disjoint.
-                query.order_by(Account.created_at.desc(), Account.id.desc())
-                .limit(limit)
-                .offset(offset)
-            )
-        )
-        .scalars()
-        .all()
-    )
-    matched: dict[int, list[CharacterBrief]] = {}
-    if match_clause is not None and accounts:
-        rows = await session.execute(
-            select(Character)
-            .where(
-                Character.account_id.in_([account.id for account in accounts]),
-                match_clause,
-            )
-            .order_by(Character.created_at)
-        )
-        for character in rows.scalars():
-            matched.setdefault(character.account_id, []).append(
-                CharacterBrief(
-                    id=character.id,
-                    username=character.username,
-                    display_name=character.display_name,
-                    faction_slug=character.faction_slug,
-                    status=character.status.value,
-                )
-            )
-    return AccountPage(
-        items=[
-            AccountSummary(
-                id=account.id,
-                email=account.email,
-                status=account.status.value,
-                created_at=account.created_at,
-                matched_characters=matched.get(account.id, []),
-            )
-            for account in accounts
-        ],
-        total=total,
-        limit=limit,
-        offset=offset,
-    )
-
-
-async def get_account_detail(account_id: int, session: AsyncSession) -> AccountDetail:
-    account = await session.get(Account, account_id)
-    if account is None:
-        raise HTTPException(status_code=404, detail="Account not found.")
-
-    result = await session.execute(
-        select(Character).where(Character.account_id == account_id).order_by(Character.created_at)
-    )
-    characters = result.scalars().all()
-
-    return AccountDetail(
-        id=account.id,
-        email=account.email,
-        status=account.status.value,
-        created_at=account.created_at,
-        characters=[
-            CharacterBrief(
-                id=character.id,
-                username=character.username,
-                display_name=character.display_name,
-                faction_slug=character.faction_slug,
-                status=character.status.value,
-            )
-            for character in characters
-        ],
-    )
-
 
 async def list_characters(
     session: AsyncSession,
@@ -443,9 +332,12 @@ async def authors_for_moderation(
 
 
 async def remove_flagged_praxes_by_author(
-    character_id: int, session: AsyncSession, actor_id: int
+    character_id: int, session: AsyncSession, actor_id: int, note: Optional[str] = None
 ) -> int:
-    """Hide every open-flagged praxis by one author (the single remove, in bulk)."""
+    """Hide every open-flagged praxis by one author (the single remove, in bulk).
+
+    ``note`` is the reason the author reads; None keeps whatever note is there.
+    """
     result = await session.execute(
         select(Praxis.id).where(
             Praxis.created_by_id == character_id,
@@ -454,8 +346,11 @@ async def remove_flagged_praxes_by_author(
     )
     praxis_ids = list(result.scalars())
     for praxis_id in praxis_ids:
+        kept = note or await session.scalar(
+            select(Praxis.admin_note).where(Praxis.id == praxis_id)
+        )
         await moderate_praxis(
-            praxis_id, ModerationStatus.hidden.value, None, session,
+            praxis_id, ModerationStatus.hidden.value, kept, session,
             actor_id=actor_id, log=False,
         )
     await log_mod_action(
@@ -509,6 +404,8 @@ async def set_character_stats(
     patch: CharacterStatsPatch,
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
+    *,
+    actor_id: int,
 ) -> CharacterStats:
     era_row = await get_current_era_row(session)
 
@@ -536,6 +433,10 @@ async def set_character_stats(
         stats.votes_spent_this_era = max(0, cap - patch.votes_available)
 
     await session.flush()
+    await log_mod_action(
+        session, actor_id, "stats_edit", "character", character_id,
+        ", ".join(f"{k}={v}" for k, v in patch.model_dump(exclude_none=True).items()),
+    )
     await session.refresh(stats)
     return stats
 
@@ -691,6 +592,8 @@ async def suspend_account(
 async def archive_message(
     message_id: int,
     session: AsyncSession,
+    *,
+    actor_id: int,
 ) -> ContactMessage:
     """Toggle is_archived on a contact message."""
     message = await session.get(ContactMessage, message_id)
@@ -698,6 +601,10 @@ async def archive_message(
         raise HTTPException(status_code=404, detail="Message not found.")
     message.is_archived = not message.is_archived
     await session.flush()
+    await log_mod_action(
+        session, actor_id, "message_archive" if message.is_archived else "message_unarchive",
+        "message", message_id,
+    )
     await session.refresh(message)
     return message
 
