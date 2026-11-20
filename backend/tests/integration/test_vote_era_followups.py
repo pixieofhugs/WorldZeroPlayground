@@ -155,11 +155,19 @@ async def test_an_active_duel_closes_with_its_no_contest_score(
     )
     db_session.add(new_era)
     await db_session.flush()
-    await apply_era_reset([], new_era, db_session)
+    opening_era = dataclasses.replace(
+        CURRENT_ERA,
+        factions={
+            slug: dataclasses.replace(faction, own_task_modifier=9.0)
+            for slug, faction in CURRENT_ERA.factions.items()
+        },
+    )
+    await apply_era_reset([], new_era, db_session, opening_era)
 
     await db_session.refresh(duel)
     assert duel.status == DuelStatus.resolved and duel.winner_character_id is None
     final = (await _stats(db_session, challenger, era)).score
+    # Re-scored under the closing era's modifiers, not the opening era's 9.0.
     assert final == round(10 * OWN_TASK_MODIFIER + 5)
     assert final < provisional
 

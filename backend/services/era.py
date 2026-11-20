@@ -352,6 +352,14 @@ async def apply_era_reset(
         # must not stay banked in the closing era. Deferred: import cycle.
         from services.character_stats import recalculate_character_stats
 
+        # The closing era's rules, not the opening era's: its score is frozen history.
+        closing_era = era_config_for_key(closing_era_row.config_key)
+        if closing_era is None:
+            raise RuntimeError(
+                f"Era {closing_era_row.id} names unregistered config_key "
+                f"{closing_era_row.config_key!r}; cannot re-score its duels"
+            )
+
         challenger_ids = (
             await session.execute(
                 select(Praxis.created_by_id).where(
@@ -364,7 +372,7 @@ async def apply_era_reset(
             await recalculate_character_stats(
                 character_id,
                 session,
-                era,
+                closing_era,
                 era_row=closing_era_row,
                 emit_taunts=False,
                 rescore_closed=True,
