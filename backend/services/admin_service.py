@@ -23,7 +23,8 @@ from models.era import Era
 from models.roles import AccountRole, Role
 from models.comment import Comment
 from models.contact import ContactMessage
-from models.duel import Duel
+from models.duel import Duel, DuelStatus
+from models.faction import Faction
 from models.flag import Flag
 from models.meta_task import PraxisMetaTask
 from models.praxis import ModerationStatus, Praxis
@@ -39,12 +40,14 @@ from schemas.admin import (
     CharacterStatsPatch,
     CharacterSummary,
     EraOption,
+    EraPreflightOut,
     EraRollOut,
+    LeavingFaction,
     FlagOut,
     OverviewStats,
 )
 # ``seed`` imports no service, so no cycle; it owns the mirror (runs every deploy).
-from seed import upsert_era_factions
+from seed import factions_leaving_roster, upsert_era_factions
 from services.faction_service import refuse_hidden_faction
 from services.character import MOD_BANNED, record_level_reached
 from services.character_stats import recalculate_for_account_votes
@@ -58,7 +61,9 @@ from services.era import (
     get_current_era_row,
     get_current_era_row_safe,
     get_or_create_stats,
+    DUELS_FROZEN_AT_ERA_CLOSE,
     lock_era_rollover,
+    tasks_retired_at_era_close,
 )
 from services.scoring import compute_vote_budget, compute_votes_available
 
@@ -845,6 +850,40 @@ async def list_registered_eras(
         )
         for config_key in registered_era_config_keys()
     ]
+
+
+async def preflight_era_roll(config_key: str, session: AsyncSession) -> EraPreflightOut:
+    """Read-only: what :func:`roll_into_era` would do to the live game, counted
+    with the same predicates and helpers the roll runs. Writes nothing."""
+    era_config = era_config_for_key(config_key)
+    if era_config is None:
+        raise_coded(422, ErrorCode.era_config_unknown, f"Unknown era: {config_key}.")
+
+    async def count(model, *where) -> int:
+        return await session.scalar(select(func.count()).select_from(model).where(*where))
+
+    characters = await list_characters_to_reset(session)
+    factions = (await session.execute(select(Faction))).scalars()
+    in_faction: dict[str, int] = {}
+    for character in characters:
+        in_faction[character.faction_slug] = in_faction.get(character.faction_slug, 0) + 1
+    leaving = factions_leaving_roster({row.slug: row for row in factions}, era_config)
+
+    board_titles = set((await session.execute(select(Task.title))).scalars())
+    return EraPreflightOut(
+        name=era_config.name,
+        characters_reset=len(characters),
+        duels_frozen=await count(Duel, Duel.status.in_(DUELS_FROZEN_AT_ERA_CLOSE)),
+        tasks_retired=await count(Task, *tasks_retired_at_era_close()),
+        tasks_arriving=len(await tasks_to_reactivate(session, era_config))
+        + sum(task.title not in board_titles for task in era_config.tasks),
+        leaving_factions=[
+            LeavingFaction(slug=slug, characters=in_faction.get(slug, 0)) for slug in leaving
+        ],
+        duels_awaiting_answer=await count(Duel, Duel.status == DuelStatus.pending),
+        open_reports=await count(Praxis, Praxis.moderation_status == ModerationStatus.flagged)
+        + await count(Comment, Comment.moderation_status == ModerationStatus.flagged),
+    )
 
 
 async def roll_into_era(

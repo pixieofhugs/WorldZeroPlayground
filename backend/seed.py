@@ -34,6 +34,21 @@ from services.era_tasks import sync_era_tasks
 HIDDEN_FACTION_SLUGS = frozenset({"aged_out", UNAFFILIATED_FACTION_SLUG})
 
 
+def factions_leaving_roster(existing: dict, era) -> list[str]:
+    """Slugs `upsert_era_factions` retires; the admin era preflight counts the same set."""
+    return [
+        slug
+        for slug, row in existing.items()
+        # `hidden` outranks the mirror, checked by slug and by status.
+        if not (
+            slug in era.factions
+            or slug in HIDDEN_FACTION_SLUGS
+            or row.status is FactionStatus.hidden
+        )
+        and row.status is not FactionStatus.retired
+    ]
+
+
 async def upsert_era_factions(session, era) -> tuple[int, int]:
     """Two-way mirror of the era's roster onto `Faction` (ADR-0087). Returns
     `(added, retired)`.
@@ -61,18 +76,10 @@ async def upsert_era_factions(session, era) -> tuple[int, int]:
         elif row.status is FactionStatus.retired:
             row.status = status
 
-    retired = 0
-    for slug, row in existing.items():
-        # `hidden` outranks the mirror, checked by slug and by status.
-        if (
-            slug in era.factions
-            or slug in HIDDEN_FACTION_SLUGS
-            or row.status is FactionStatus.hidden
-        ):
-            continue
-        if row.status is not FactionStatus.retired:
-            row.status = FactionStatus.retired
-            retired += 1
+    leaving = factions_leaving_roster(existing, era)
+    for slug in leaving:
+        existing[slug].status = FactionStatus.retired
+    retired = len(leaving)
 
     await session.flush()
     return added, retired

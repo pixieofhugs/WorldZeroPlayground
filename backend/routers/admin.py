@@ -32,6 +32,7 @@ from schemas.admin import (
     CliTokenResponse,
     EraOption,
     EraRollIn,
+    EraPreflightOut,
     EraRollOut,
     FlaggedCommentOut,
     FlaggedPraxisOut,
@@ -76,6 +77,7 @@ from services.admin_service import (
     list_contact_messages,
     list_pending_tasks_with_proposer,
     list_registered_eras,
+    preflight_era_roll,
     roll_into_era,
     set_character_stats,
     suspend_account,
@@ -595,6 +597,16 @@ async def admin_list_eras(
     two can disagree.
     """
     return await list_registered_eras(session)
+
+
+@router.get("/eras/{config_key}/preflight", response_model=EraPreflightOut)
+async def admin_preflight_era_roll(
+    config_key: str,
+    _: Account = Depends(require_admin),
+    session: AsyncSession = Depends(get_db, scope="function"),
+) -> EraPreflightOut:
+    """Admin-only: count what rolling into this era would do. Writes nothing."""
+    return await preflight_era_roll(config_key, session)
 
 
 @router.put("/eras/live", response_model=EraRollOut)

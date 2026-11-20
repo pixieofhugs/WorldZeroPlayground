@@ -223,6 +223,26 @@ class EraOption(WireModel):
     is_live: bool
 
 
+class LeavingFaction(WireModel):
+    """A faction the next era drops from the roster, with who is in it today."""
+
+    slug: str
+    characters: int
+
+
+class EraPreflightOut(WireModel):
+    """What rolling into ``name`` would do, counted from the live game."""
+
+    name: str
+    characters_reset: int
+    duels_frozen: int
+    tasks_retired: int
+    tasks_arriving: int
+    leaving_factions: list[LeavingFaction]
+    duels_awaiting_answer: int
+    open_reports: int
+
+
 class EraRollIn(WireModel):
     """Just the key: resets are the incoming era's flags (ADR-0042)."""
 
