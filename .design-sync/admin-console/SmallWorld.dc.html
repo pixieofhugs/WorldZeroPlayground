@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Admin — Small world</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wz/styles.css">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>body{margin:0}</style>
+</helmet>
+<div class="adm" data-theme="{{theme}}" style="min-height:1000px">
+  <dc-import name="Rail" active="smallworld" hint-size="260px,1000px"></dc-import>
+  <main class="main">
+    <header class="head">
+      <div>
+        <h1 class="h1">Small world</h1>
+        <p class="lede">Rules that loosen while each community is a handful of players. Both values come from the era; this page picks one.</p>
+      </div>
+      <div class="btns"><button class="btn">Set all to small world</button></div>
+    </header>
+
+    <div class="card scroll">
+      <table class="tbl">
+        <thead><tr><th class="th">Rule</th><th class="th">Small world</th><th class="th">Full game</th><th class="th">Using</th><th class="th">Last changed</th></tr></thead>
+        <tbody>
+          <sc-for list="{{rules}}" as="r" hint-placeholder-count="6">
+            <tr>
+              <td class="td"><strong>{{r.name}}</strong><div class="muted" style="font-size:12px">Turn up when: {{r.when}}</div></td>
+              <td class="td">{{r.small}}</td>
+              <td class="td">{{r.full}}</td>
+              <td class="td">
+                <div class="segs" role="radiogroup" aria-label="{{r.name}}">
+                  <button class="{{r.smallCls}}" role="radio" aria-checked="{{r.isSmall}}">Small world</button>
+                  <button class="{{r.fullCls}}" role="radio" aria-checked="{{r.isFull}}">Full game</button>
+                </div>
+              </td>
+              <td class="td muted">{{r.changed}}</td>
+            </tr>
+          </sc-for>
+        </tbody>
+      </table>
+    </div>
+    <p class="muted" style="margin:0">A change posts a feed announcement in the world's voice and refreshes every player's rules. Nothing already posted is taken back. Every change lands in the mod log.</p>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+renderVals() {
+const r = (name, small, full, when, useSmall, changed) => ({
+  name, small, full, when, changed,
+  isSmall: useSmall ? 'true' : 'false', isFull: useSmall ? 'false' : 'true',
+  smallCls: 'seg' + (useSmall ? ' seg-on' : ''), fullCls: 'seg' + (useSmall ? '' : ' seg-on')
+});
+return {
+  theme: this.props.theme ?? 'dark',
+  rules: [
+    r('Post cooldown', 'none', '24 h', 'someone posts 3+ a day for a week', true, 'You · Nov 19'),
+    r('A vote needs a vote received', 'off', 'on', 'the first suspected second account', true, 'You · Nov 19'),
+    r('Comments unlock at', 'level 1', 'level 2', 'a level-1 comment is flagged as rude', true, 'You · Nov 19'),
+    r('Duels unlock at', 'level 1', 'level 2', 'new players decline most duels', true, 'You · Nov 19'),
+    r('Faction invitation', '1 task · 10 pts', '2 tasks · 50 pts', 'a faction reaches about 5 in one community', true, 'You · Nov 19'),
+    r('Flagging unlocks at', 'level 2', 'level 4', 'flags start getting overturned', false, 'You · yesterday')
+  ]
+};
+}
+}
+</script>
+</body>
+</html>

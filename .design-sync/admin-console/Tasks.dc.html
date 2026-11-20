@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Admin — Tasks</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wz/styles.css">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>body{margin:0}</style>
+</helmet>
+<div class="adm" data-theme="{{theme}}" style="min-height:1000px">
+  <dc-import name="Rail" active="proposals" hint-size="260px,1000px"></dc-import>
+  <main class="main">
+    <header class="head">
+      <div>
+        <h1 class="h1">Tasks</h1>
+        <p class="lede">Every task in the live era. Proposals are players' ideas waiting on you.</p>
+      </div>
+      <div class="btns"><button class="btn">Import CSV…</button><button class="btn btn-pri">New task</button></div>
+    </header>
+
+    <div class="toolbar" role="toolbar" aria-label="Filter tasks">
+      <label class="search"><span class="sr">Search tasks</span><input class="input input-round" placeholder="Search title, description or proposer…"></label>
+      <div class="segs" role="tablist" aria-label="Status">
+        <button class="seg seg-on" role="tab" aria-selected="true">Proposals 2</button>
+        <button class="seg" role="tab" aria-selected="false">Active 9</button>
+        <button class="seg" role="tab" aria-selected="false">Retired 1</button>
+        <button class="seg" role="tab" aria-selected="false">Deleted</button>
+      </div>
+      <button class="chip">Faction ▾</button>
+      <button class="chip">Level ▾</button>
+      <button class="chip">Points ▾</button>
+    </div>
+
+    <div class="split">
+      <div class="split-main card scroll">
+        <table class="tbl">
+          <thead><tr><th class="th">Proposal</th><th class="th">Proposed by</th><th class="th">Faction</th><th class="th num">Lvl</th><th class="th num">Pts</th><th class="th">Unreviewed, goes public</th></tr></thead>
+          <tbody>
+            <tr class="tr-on"><td class="td"><a href="#" style="font-weight:700">Learn a Bird’s Name</a></td><td class="td">Ada Quill</td><td class="td muted">Cross-faction</td><td class="td num">5</td><td class="td num">10</td><td class="td"><span class="tag tag-wait">in 31h</span></td></tr>
+            <tr><td class="td"><a href="#" style="font-weight:700">Sit Somewhere New</a></td><td class="td">Juniper Vale</td><td class="td muted">Warriors of Whimsy</td><td class="td num">1</td><td class="td num">10</td><td class="td"><span class="tag tag-bad">in 6h</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <aside aria-label="Proposal" class="split-side card pad">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:var(--space-xs)">
+          <span class="tag tag-wait">proposal</span>
+          <span class="btns"><a href="ModMode.dc.html" class="btn">View on site ↗</a><button class="btn" aria-label="Close">✕</button></span>
+        </div>
+        <p class="warn">Unreviewed, this goes public to level 3+ players in 31 hours.</p>
+        <label class="field">Title<input class="input" value="Learn a Bird’s Name"></label>
+        <label class="field">Description<textarea class="input textarea">Find a bird near you, work out what it is called, and tell it.</textarea></label>
+        <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--space-xs)">
+          <label class="field">Points<input class="input" value="10"></label>
+          <label class="field">Level<input class="input" value="5"></label>
+          <label class="field">Faction<select class="input"><option>Cross-faction</option></select></label>
+        </div>
+        <label class="field">Their note to you<textarea class="input textarea" readonly>Birds are everywhere and nobody knows their names.</textarea></label>
+        <div class="btns"><button class="btn btn-pri">Activate</button><button class="btn btn-dng">Retire</button></div>
+        <p class="muted" style="margin:0">Edits save with either choice. Delete only shows for a task with no history.</p>
+      </aside>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+renderVals() { return { theme: this.props.theme ?? 'dark' }; }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+{"v":3,"createdOnFiles":{"v":1,"at":"2026-11-19T20:30:00Z"},"title":"Admin redesign","launch":{"view":"canvas"},"pages":[],
+"boards":{
+"Main.dc.html":{"x":0,"y":0,"w":1440,"h":1000,"title":"Reports — one open report (dark)","expand":"fill"},
+"ReportsEmpty.dc.html":{"x":1520,"y":0,"w":1440,"h":1000,"title":"Reports — nothing needs you (dark)","expand":"fill"},
+"ModLog.dc.html":{"x":3040,"y":0,"w":1440,"h":1000,"title":"Mod log — shared, saved (dark)","expand":"fill"},
+"Tasks.dc.html":{"x":4560,"y":0,"w":1440,"h":1000,"title":"Tasks — proposals with the 48h countdown (dark)","expand":"fill"},
+"People.dc.html":{"x":6080,"y":0,"w":1440,"h":1000,"title":"People — account panel, vote ring against who they could vote for (dark)","expand":"fill"},
+"SmallWorld.dc.html":{"x":7600,"y":0,"w":1440,"h":1000,"title":"Small world — the population dial, #3656 (dark)","expand":"fill"},
+"EraRoll.dc.html":{"x":9120,"y":0,"w":1440,"h":1000,"title":"Era roll — preflight, type to confirm (dark)","expand":"fill"},
+"ReportsPhone.dc.html":{"x":10640,"y":0,"w":390,"h":844,"title":"Reports at phone width (dark)"},
+"Rail.dc.html":{"x":11110,"y":0,"w":260,"h":940,"title":"Rail — shared component"},
+"MainLight.dc.html":{"x":0,"y":1120,"w":1440,"h":1000,"title":"Reports — one open report (light)","expand":"fill"},
+"ReportsEmptyLight.dc.html":{"x":1520,"y":1120,"w":1440,"h":1000,"title":"Reports — nothing needs you (light)","expand":"fill"},
+"ModLogLight.dc.html":{"x":3040,"y":1120,"w":1440,"h":1000,"title":"Mod log (light)","expand":"fill"},
+"TasksLight.dc.html":{"x":4560,"y":1120,"w":1440,"h":1000,"title":"Tasks (light)","expand":"fill"},
+"PeopleLight.dc.html":{"x":6080,"y":1120,"w":1440,"h":1000,"title":"People (light)","expand":"fill"},
+"SmallWorldLight.dc.html":{"x":7600,"y":1120,"w":1440,"h":1000,"title":"Small world (light)","expand":"fill"},
+"EraRollLight.dc.html":{"x":9120,"y":1120,"w":1440,"h":1000,"title":"Era roll (light)","expand":"fill"},
+"ReportsPhoneLight.dc.html":{"x":10640,"y":1120,"w":390,"h":844,"title":"Reports at phone width (light)"},
+"Nav.dc.html":{"x":0,"y":2800,"w":1440,"h":900,"title":"Top bar — ADMIN + MOD today → one MOD control (dark + light)"},
+"ModMode.dc.html":{"x":1520,"y":2800,"w":1440,"h":1000,"title":"Mod mode on the player site — dark","expand":"fill"},
+"ModModeLight.dc.html":{"x":3040,"y":2800,"w":1440,"h":1000,"title":"Mod mode on the player site — light","expand":"fill"}
+},
+"order":["Main.dc.html","ReportsEmpty.dc.html","ModLog.dc.html","Tasks.dc.html","People.dc.html","SmallWorld.dc.html","EraRoll.dc.html","ReportsPhone.dc.html","Rail.dc.html","MainLight.dc.html","ReportsEmptyLight.dc.html","ModLogLight.dc.html","TasksLight.dc.html","PeopleLight.dc.html","SmallWorldLight.dc.html","EraRollLight.dc.html","ReportsPhoneLight.dc.html","Nav.dc.html","ModMode.dc.html","ModModeLight.dc.html"],
+"notes":{
+"title":{"x":0,"y":-300,"text":"Admin console: own shell, one list pattern, drawn for ~20 players","kind":"title1","maxW":11370},
+"decisions":{"x":-620,"y":0,"w":540,"size":"m","fill":"orange","text":"Build notes for the console (rows 1–2)\n\nSource of truth: these boards + admin.css. Every colour, face and space is a kit token; light and dark are the same markup under data-theme. No hex.\n\nData is a ~20-player launch: 1 report, 21 people, 10 tasks. The empty Reports state is the screen mods see most.\n\nEvery control is 44px.\n\nRail is one shared component (Rail.dc.html). Groups: Needs you / Run the game / Words, and Danger fenced at the bottom.\n\nOne list pattern: toolbar (search · status segments with counts · chips · one main action) over a table; a row opens a side panel. Ban, suspend and delete live only in panels.\n\nDecided in review (2026-11-19):\n• In: empty state, photo in the report, a reason the author sees on Remove and Doesn't-meet-the-task (renamed from Fail), shared mod log (reverses #237's session-only log), 48h proposal countdown, vote ring vs eligible recipients, Small world page, era preflight.\n• Out for now: flagger track record (too few flags at launch to mean anything), push-to-one-report (no push yet: #3653, #2164).\n\nNot pictured, same pattern: Praxis, Messages, the copy sheets."},
+"title2":{"x":0,"y":2520,"text":"Where admin meets the player site: one door, two modes","kind":"title1","maxW":4480},
+"placement":{"x":-620,"y":2800,"w":540,"size":"m","fill":"blue","text":"Placement rules (for whoever builds this)\n\nHosting: stays at /admin in the same SPA. No admin.worldzero.org: it would need a Caddy block, a second build, a wider COOKIE_DOMAIN and CORS, to isolate ~3 mods. Revisit only for non-player staff.\n\nShell: /admin/* gets its own layout (rail, no player sidebar). '← Back to World Zero' tops the rail.\n\nOne door: the ADMIN nav link goes. The MOD control carries the count badge (reports + messages + proposals) and opens a menu: 'Edit on the page' toggle + 'Open admin'.\n\nTwo modes:\n• Mod mode = one object, in place, reversible (copy wording, task status, hide a praxis). Page gets an accent frame so it can't be forgotten on.\n• Console = queues, search, people, bulk, irreversible (ban, suspend, era).\n\nSame action, same component: the task-status strip on TaskCard and the console panel mount one shared control. Each side links to the other ('Open in admin' / 'View on site')."}
+},
+"designSystems":[{"title":"World Zero Frontend Kit","namespace":"wz","artifact":"https://claude.ai/artifact/T7kJn4EtGDDZF8QXEoCYAu","version":"1794979790-4aa8","copiedAt":"2026-11-19T21:00:00Z"}]}

@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Top bar — one MOD control</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wz/styles.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.lnk{font-family:var(--font-body);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--color-text-tertiary);text-decoration:none;padding-bottom:3px;border-bottom:1.5px solid transparent}
+.lnk-on{color:var(--color-text-primary);border-bottom-color:var(--color-text-primary)}
+.cap{font-family:var(--font-body);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--color-text-tertiary)}
+.mod{font-family:var(--font-body);font-size:11px;letter-spacing:.14em;text-transform:uppercase;background:none;border:1.5px solid transparent;border-radius:2px;padding:5px 9px;color:var(--color-text-tertiary);display:inline-flex;align-items:center;gap:7px;min-height:30px}
+.mod-on{border-color:var(--color-text-primary);color:var(--color-text-primary)}
+.ct{font-size:11px;font-weight:700;letter-spacing:0;min-width:18px;padding:1px 6px;border-radius:999px;background:var(--color-danger);color:var(--color-bg-page);text-align:center}
+.strike{text-decoration:line-through;text-decoration-color:var(--color-danger);text-decoration-thickness:2px}
+</style>
+</helmet>
+<div style="width:1440px;height:900px;display:grid;grid-template-rows:repeat(2,minmax(0,1fr))">
+<sc-for list="{{themes}}" as="th" hint-placeholder-count="2">
+<section data-theme="{{th.t}}" style="background:var(--color-bg-page);color:var(--color-text-primary);font-family:var(--font-body);box-sizing:border-box;padding:28px 48px;display:flex;flex-direction:column;gap:14px">
+  <span class="cap">{{th.label}} · today</span>
+  <header style="display:flex;align-items:center;gap:28px;padding:14px 20px;border:1px solid var(--color-border);border-radius:4px;background:var(--color-bg-surface)">
+    <span style="display:flex;flex-direction:column;gap:2px"><span style="font-family:var(--font-display);font-style:italic;font-size:20px">World Zero</span><span style="height:2px;background-image:var(--faction-default-rainbow)"></span></span>
+    <nav aria-label="Main (today)" style="display:flex;gap:22px;flex-grow:1">
+      <a href="#" class="lnk lnk-on">Home</a><a href="#" class="lnk">Tasks</a><a href="#" class="lnk">Praxis</a><a href="#" class="lnk">Players</a><a href="#" class="lnk">Factions</a><a href="#" class="lnk">Updates</a><a href="#" class="lnk strike" style="color:var(--color-danger)">Admin</a>
+    </nav>
+    <button class="mod">Mod</button>
+    <a href="#" class="lnk" style="text-transform:none;letter-spacing:0;font-size:13px">Settings</a>
+    <span class="lnk">Shot Bot</span>
+  </header>
+  <p style="margin:0;font-size:13px;color:var(--color-text-secondary)">Two doors to one room: an ADMIN link among the player links, and a MOD toggle that silently stays on (localStorage) and gives no sign of what it changed.</p>
+
+  <span class="cap" style="margin-top:10px">{{th.label}} · proposed: one control, menu open</span>
+  <div style="position:relative">
+    <header style="display:flex;align-items:center;gap:28px;padding:14px 20px;border:1px solid var(--color-border);border-radius:4px;background:var(--color-bg-surface)">
+      <span style="display:flex;flex-direction:column;gap:2px"><span style="font-family:var(--font-display);font-style:italic;font-size:20px">World Zero</span><span style="height:2px;background-image:var(--faction-default-rainbow)"></span></span>
+      <nav aria-label="Main (proposed)" style="display:flex;gap:22px;flex-grow:1">
+        <a href="#" class="lnk lnk-on">Home</a><a href="#" class="lnk">Tasks</a><a href="#" class="lnk">Praxis</a><a href="#" class="lnk">Players</a><a href="#" class="lnk">Factions</a><a href="#" class="lnk">Updates</a>
+      </nav>
+      <button class="mod mod-on" aria-expanded="true" aria-haspopup="menu">Mod <span class="ct">7</span></button>
+      <a href="#" class="lnk" style="text-transform:none;letter-spacing:0;font-size:13px">Settings</a>
+      <span class="lnk">Shot Bot</span>
+    </header>
+    <div role="menu" aria-label="Mod" style="position:absolute;right:150px;top:62px;width:330px;background:var(--color-bg-page);border:1.5px solid var(--color-border-strong);border-radius:4px;box-shadow:0 8px 28px var(--color-cast-shadow-soft);padding:14px;display:flex;flex-direction:column;gap:12px;z-index:2">
+      <label style="display:flex;align-items:flex-start;gap:12px;cursor:pointer">
+        <span style="display:flex;flex-direction:column;gap:3px;flex-grow:1">
+          <span style="font-size:14px;font-weight:600">Edit on the page</span>
+          <span style="font-size:12px;color:var(--color-text-secondary);line-height:1.45">Reword copy, change a task's status, hide a praxis, right where it is.</span>
+        </span>
+        <input type="checkbox" role="switch" aria-checked="{{th.on}}" checked="{{th.on}}" style="width:38px;height:22px;accent-color:var(--color-accent-primary);margin-top:2px">
+      </label>
+      <span style="height:1px;background:var(--color-border)"></span>
+      <a href="Main.dc.html" role="menuitem" style="display:flex;flex-direction:column;gap:8px;text-decoration:none;color:var(--color-text-primary)">
+        <span style="display:flex;justify-content:space-between;font-size:14px;font-weight:600"><span>Open admin</span><span aria-hidden="true">→</span></span>
+        <span style="display:grid;grid-template-columns:minmax(0,1fr) auto;row-gap:5px;font-size:13px;color:var(--color-text-secondary)">
+          <span>Reports</span><span class="ct">4</span>
+          <span>Messages</span><span style="font-weight:700;color:var(--color-text-primary)">1</span>
+          <span>Task proposals</span><span style="font-weight:700;color:var(--color-text-primary)">2</span>
+        </span>
+      </a>
+    </div>
+  </div>
+  <p style="margin:0;font-size:13px;color:var(--color-text-secondary);max-width:720px">MOD keeps its place and look. The badge is the only number a mod needs from the player site: reports + messages + proposals. Outlined = mod mode on.</p>
+</section>
+</sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+renderVals() {
+return { themes: [{ t: 'dark', label: 'Dark', on: true }, { t: 'light', label: 'Light', on: true }] };
+}
+}
+</script>
+</body>
+</html>
