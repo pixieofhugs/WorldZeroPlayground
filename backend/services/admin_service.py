@@ -423,7 +423,8 @@ async def remove_flagged_praxes_by_author(
     praxis_ids = list(result.scalars())
     for praxis_id in praxis_ids:
         await moderate_praxis(
-            praxis_id, ModerationStatus.hidden.value, None, session, actor_id=actor_id
+            praxis_id, ModerationStatus.hidden.value, None, session,
+            actor_id=actor_id, log=False,
         )
     await log_mod_action(
         session, actor_id, "remove_flagged", "character", character_id,

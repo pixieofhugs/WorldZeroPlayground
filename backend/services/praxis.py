@@ -1326,6 +1326,7 @@ async def moderate_praxis(
     era: EraConfig = CURRENT_ERA,
     *,
     actor_id: int,
+    log: bool = True,
 ) -> Praxis:
     """Admin moderation: update moderation_status and admin_note.
 
@@ -1342,9 +1343,10 @@ async def moderate_praxis(
         raise HTTPException(status_code=422, detail=f"Invalid moderation status: {new_status}")
 
     praxis.moderation_status = mod_enum
-    await log_mod_action(
-        session, actor_id, f"praxis_{mod_enum.value}", "praxis", praxis_id
-    )
+    if log:
+        await log_mod_action(
+            session, actor_id, f"praxis_{mod_enum.value}", "praxis", praxis_id
+        )
 
     if mod_enum == ModerationStatus.flagged:
         praxis.flagged_at = datetime.now(timezone.utc)

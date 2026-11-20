@@ -94,8 +94,6 @@ async def test_praxis_and_bulk_remove_each_log_once(
     )
     assert removed.json() == {"removed": 2}
     assert await _rows(db_session) == [
-        ("praxis_hidden", "praxis", ids[0], account.id),
-        ("praxis_hidden", "praxis", ids[1], account.id),
         ("remove_flagged", "character", character.id, account.id),
     ]
 
@@ -105,7 +103,7 @@ async def test_praxis_and_bulk_remove_each_log_once(
         headers=auth_headers,
     )
     assert hidden.status_code == 200
-    assert (await _rows(db_session))[3:] == [
+    assert (await _rows(db_session))[1:] == [
         ("praxis_hidden", "praxis", ids[2], account.id)
     ]
 
