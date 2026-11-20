@@ -98,7 +98,6 @@ describe('onboarding flow stage a11y', () => {
     expect(star.closest('[aria-hidden="true"]')).toBeNull()
     expect(container.querySelector('.ob-hold')).not.toBeNull()
     star.focus()
-    fireEvent.keyDown(star, { key: 'Enter' })
     fireEvent.click(star)
     expect(container.querySelector('.ob-hold')).toBeNull()
     expect(container.querySelector('.ob-next')).not.toBeNull()

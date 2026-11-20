@@ -52,13 +52,3 @@ export function characterRedirectTarget(
   if (creationBanned) return null
   return CHARACTER_REDIRECT_EXEMPT_PATHS.has(pathname) ? null : '/characters/create'
 }
-
-/** The redirect with acceptance assumed. */
-export function needsCharacterRedirect(
-  loading: boolean,
-  hasUser: boolean,
-  hasCharacter: boolean,
-  pathname: string,
-): boolean {
-  return characterRedirectTarget(loading, hasUser, hasCharacter, true, pathname) !== null
-}

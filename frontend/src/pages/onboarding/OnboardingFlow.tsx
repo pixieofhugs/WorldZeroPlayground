@@ -6,6 +6,7 @@ import { acceptTerms } from '../../api/terms'
 import type { TaskOut } from '../../api/tasks'
 import { resolveHandoffTask } from '../../utils/onboardingHandoff'
 import { clearTermsAcceptance, holdTermsAcceptance, markTitleSeen, termsAcceptanceHeld, titleSeen } from '../../utils/onboardingResume'
+import { useTitleTyping } from './useTitleTyping'
 import Wisp from './Wisp'
 import { BEATS } from './beats'
 import { HoldNextContext } from './beats/holdNext'
@@ -21,7 +22,6 @@ const loadSteps = () =>
 const TYPE_MS = 28
 const LEAVE_MS = 460
 const TITLE_DELAY_MS = 2800
-const TITLE_CHAR_MS = 84
 // START bounces in as the Wisp starts to drop (1s), not after the title has typed: a player who wants in never waits on the bit.
 const START_DELAY_S = 0.8
 
@@ -32,27 +32,10 @@ const CONFIDENCE: Record<string, number> = { title: 0.08, 1: 0.18, 2: 0.3, 3: 0.
 
 const reducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
 
-/** The title types itself after a pause; `instant` (reduced motion, or coming back) shows it whole. */
-function useTitleTyping(text: string, instant: boolean): string {
-  const [n, setN] = useState(instant ? text.length : 0)
-  useEffect(() => {
-    if (instant) return setN(text.length)
-    let id: ReturnType<typeof setInterval>
-    const start = setTimeout(() => {
-      id = setInterval(() => setN((c) => Math.min(text.length, c + 1)), TITLE_CHAR_MS)
-    }, TITLE_DELAY_MS)
-    return () => {
-      clearTimeout(start)
-      clearInterval(id)
-    }
-  }, [text, instant])
-  return text.slice(0, n)
-}
-
 function Title({ cameBack, returning, onStart }: { cameBack: boolean; returning: boolean; onStart: () => void }) {
   const { t } = useTranslation('onboarding')
   const welcome = t('flow.welcome')
-  const shown = useTitleTyping(welcome, cameBack || returning || reducedMotion())
+  const shown = useTitleTyping(welcome, cameBack || returning || reducedMotion(), TITLE_DELAY_MS)
   const played = shown === welcome
   useEffect(() => {
     if (played) markTitleSeen()

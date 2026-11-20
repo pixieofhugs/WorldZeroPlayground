@@ -15,9 +15,10 @@ import Quill from './Quill'
  * move together. The document is the Disclaimer verbatim (`common:disclaimer.*`,
  * shared with `pages/Disclaimer.tsx`; wording from #2789).
  *
- * No version shown: `CURRENT_TERMS_VERSION` is server-side only. Reached only
- * a session only when the caller's `record` is the API call. No in-flight guard: the log is
- * append-only, so a double tap is two true rows.
+ * No version shown: `CURRENT_TERMS_VERSION` is server-side only. A guest's
+ * `record` only holds the click; a signed-in account's posts it, then the flow
+ * refetches. No in-flight guard: the log is append-only, so a double tap is two
+ * true rows.
  */
 
 const prose: CSSProperties = {
