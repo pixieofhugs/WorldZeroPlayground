@@ -12,12 +12,12 @@ export default function OfflineGate({ children }: { children: ReactNode }) {
   }, [])
   if (!offline) return <>{children}</>
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center gap-4 p-6 text-center bg-[var(--color-bg-page)] text-[var(--color-text-primary)]">
-      <h1 className="font-display text-[length:var(--text-display)]">{t('offline.title')}</h1>
-      <p className="text-[var(--color-text-secondary)]">{t('offline.body')}</p>
+    <main className="min-h-screen flex flex-col items-center justify-center gap-4 p-6 text-center">
+      <h1 className="font-display text-2xl font-bold">{t('offline.title')}</h1>
+      <p className="text-muted">{t('offline.body')}</p>
       <button
         type="button"
-        className="min-h-11 min-w-11 px-6 border border-current rounded-sm cursor-pointer"
+        className="btn-outline"
         onClick={() => window.location.reload()}
       >
         {t('offline.retry')}

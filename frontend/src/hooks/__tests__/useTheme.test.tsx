@@ -93,3 +93,23 @@ describe('ThemeProvider — both consumers read the same value', () => {
     expect(() => renderToStaticMarkup(<NavBarProbe />)).toThrow(/ThemeProvider/)
   })
 })
+
+/** The page colour is copied outside src/css; this pins every copy to the tokens. */
+describe('page colour copies agree with the tokens', () => {
+  const read = (rel: string) => readFileSync(fileURLToPath(new URL(rel, import.meta.url)), 'utf8')
+  const token = (file: string) =>
+    read(`../../css/${file}`).match(/--color-bg-page:\s*(#[0-9a-f]{6})/i)![1].toLowerCase()
+  const light = token('01-base-tokens.css')
+  const dark = token('02-base-tokens-dark.css')
+  const manifest = JSON.parse(read('../../../public/manifest.webmanifest'))
+
+  it('index.html carries both', () => {
+    expect(INDEX_HTML).toContain(`name="theme-color" content="${dark}"`)
+    expect(INDEX_HTML).toContain(`.content = '${light}'`)
+  })
+
+  it('the manifest uses the dark default for splash and chrome', () => {
+    expect(manifest.background_color).toBe(dark)
+    expect(manifest.theme_color).toBe(dark)
+  })
+})

@@ -1,0 +1,56 @@
+{
+  "heading": "World Zero · for {{character}}",
+  "headingAnon": "World Zero",
+  "someone": "Someone",
+  "aTask": "a task",
+  "kinds": {
+    "vote_on_mine": {
+      "title": "New rating",
+      "body": "{{actor}} rated your praxis for {{task}}.",
+      "titleMany": "{{count}} new ratings",
+      "bodyMany": "{{actor}} and {{others}} more rated your praxis for {{task}}."
+    },
+    "comment_on_mine": {
+      "title": "{{actor}} commented",
+      "body": "On your praxis for {{task}}.",
+      "titleMany": "{{count}} new comments",
+      "bodyMany": "{{actor}} and {{others}} more commented on {{task}}."
+    },
+    "comment_mention": {
+      "title": "{{actor}} mentioned you",
+      "body": "In a comment on {{task}}."
+    },
+    "duel_challenge": {
+      "title": "{{actor}} challenged you to a duel",
+      "body": "{{task}}. Answer it from Updates."
+    },
+    "collab_invite": {
+      "title": "{{actor}} wants to collaborate",
+      "body": "Join their praxis for {{task}}."
+    },
+    "invitation_letter": {
+      "title": "{{actor}} invited you",
+      "body": "A faction letter is waiting in Updates."
+    },
+    "level_up": {
+      "title": "You levelled up",
+      "body": "Open World Zero to see what you unlocked."
+    },
+    "era_announcement": {
+      "title": "A new era is announced",
+      "body": "Read it in Updates."
+    },
+    "rules_change": {
+      "title": "The rules changed",
+      "body": "Read what changed in Updates."
+    },
+    "global_task": {
+      "title": "A new task is out",
+      "body": "{{task}}"
+    },
+    "default": {
+      "title": "Something happened",
+      "body": "Open World Zero to see."
+    }
+  }
+}
