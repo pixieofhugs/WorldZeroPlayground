@@ -30,7 +30,7 @@ from schemas.task import TaskOut
 from services.era import get_current_era_row
 from services.nudge import nudged_at_map
 from services.praxis import can_flag_praxis
-from services.praxis_scoring import Contribution, compute_contributions
+from services.praxis_scoring import Contribution, compute_owner_contributions
 from services.vote import viewer_can_vote, viewer_can_vote_map
 from services.vote_tally import (
     get_tally,
@@ -215,8 +215,7 @@ async def author_contributions_for(
 ) -> dict[int, Contribution]:
     """Scoring breakdown per praxis for its AUTHOR, not the viewer (ADR-0047).
 
-    One ``compute_contributions`` call per distinct author, since it applies a
-    single character's faction/level to its whole batch.
+    One batched call whatever the author count (#3618).
     """
     if not praxes:
         return {}
@@ -238,25 +237,17 @@ async def author_contributions_for(
     )
     level_by_author: dict[int, int] = {cid: lvl for cid, lvl in levels_result.all()}
 
-    praxes_by_author: dict[int, list[Praxis]] = {}
-    for praxis in praxes:
-        praxes_by_author.setdefault(praxis.created_by_id, []).append(praxis)
-
-    contributions: dict[int, Contribution] = {}
-    for author_id, author_praxes in praxes_by_author.items():
-        author = authors_by_id.get(author_id)
-        if author is None:
-            continue
-        contributions.update(
-            await compute_contributions(
-                author_praxes,
-                author,
-                era,
-                session,
-                character_level=level_by_author.get(author_id, 0),
-            )
-        )
-    return contributions
+    return await compute_owner_contributions(
+        praxes,
+        {
+            p.id: authors_by_id[p.created_by_id]
+            for p in praxes
+            if p.created_by_id in authors_by_id
+        },
+        level_by_author,
+        era,
+        session,
+    )
 
 
 async def applied_metatasks_for(
