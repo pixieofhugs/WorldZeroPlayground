@@ -8,7 +8,6 @@
 import type { PraxisMemberOut } from '../../api/praxis'
 import { drawAtRoot } from '../ui/drawAtRoot'
 import { useModal } from '../../hooks/useModal'
-import { useFormFactor } from '../../hooks/useFormFactor'
 import { factionCssVar } from '../../utils/factions'
 import { collabCopy } from './collabCopy'
 import { deriveCollabGate } from './CollabRoster'
@@ -27,10 +26,8 @@ export function CollabSuccess({
   /** Manual continue → the praxis detail page. Never fired on a timer. */
   onContinue: () => void
 }) {
-  const formFactor = useFormFactor()
   const gate = deriveCollabGate(members, currentCharacterId)
   const accent = factionCssVar(factionSlug, 'card-accent')
-  const isMobile = formFactor === 'mobile'
   // No onClose: continue is manual only, never an Escape.
   const ref = useModal()
 
@@ -45,19 +42,17 @@ export function CollabSuccess({
       aria-label={collabCopy(factionSlug, 'successHeading')}
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{
-        background: isMobile
-          ? 'var(--color-bg-page)'
-          : 'var(--color-overlay-strong)',
+        background: 'var(--takeover-bg, var(--color-overlay-strong))',
       }}
     >
       <div
-        className={`flex flex-col items-center gap-4 p-6 ${
-          isMobile ? 'w-full h-full justify-center' : 'w-full max-w-[420px]'
-        }`}
+        className="flex flex-col items-center justify-center gap-4 p-6"
         style={{
           background: 'var(--color-bg-page)',
-          border: isMobile ? 'none' : `2px solid ${accent}`,
-          borderRadius: isMobile ? 0 : 8,
+          width: 'var(--sheet-full, min(420px, 100%))',
+          height: 'var(--takeover-height, auto)',
+          border: `var(--sheet-border, 2px solid ${accent})`,
+          borderRadius: 'var(--takeover-radius, 8px)',
         }}
       >
         <span className="label-caption" style={{ color: accent }}>

@@ -126,7 +126,7 @@ const PANEL_BAND_FLOOR = 400;
 
 /** Inline `width:` only; `min-width` is a floor, not a pin. */
 function pinnedWidths(html: string): number[] {
-  return [...html.matchAll(/[;"]width:(\d{3})px/g)]
+  return [...html.matchAll(/[;"]width:(?:var\(--fx-col-width, )?(\d{3})px/g)]
     .map(([, value]) => Number(value))
     .filter((value) => value >= PANEL_BAND_FLOOR);
 }
