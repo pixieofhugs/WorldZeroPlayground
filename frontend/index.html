@@ -4,6 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="theme-color" content="#13121a" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="World Zero" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <title>World Zero</title>
     <script>
       // Pre-paint theme bootstrap (mirrors useTheme's getInitialTheme).
@@ -26,6 +33,8 @@
           /* localStorage can throw (private mode, blocked storage) — keep the default. */
         }
         document.documentElement.setAttribute('data-theme', theme)
+        // The browser bar follows the site's theme, not the OS scheme; the tag above is the dark value.
+        if (theme === 'light') document.querySelector('meta[name="theme-color"]').content = '#f7f4ee'
       })()
     </script>
     <!-- The API is a separate origin in production, so the first data request
