@@ -5,6 +5,7 @@ import AccountsTab from './AccountsTab'
 
 export { default as PraxisPage } from './PraxisTab'
 export { default as TasksPage } from './TasksTab'
+export { default as ModLogPage } from './ModLogTab'
 export { default as EraPage } from './EraTab'
 export { default as CopySheetIndexPage } from './CopySheetIndex'
 

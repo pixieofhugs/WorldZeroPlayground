@@ -56,6 +56,7 @@ const ReportsPage = consolePage((m) => m.ReportsPage)
 const MessagesPage = consolePage((m) => m.MessagesPage)
 const PraxisPage = consolePage((m) => m.PraxisPage)
 const TasksPage = consolePage((m) => m.TasksPage)
+const ModLogPage = consolePage((m) => m.ModLogPage)
 const PeoplePage = consolePage((m) => m.PeoplePage)
 const EraPage = consolePage((m) => m.EraPage)
 const CopySheetIndexPage = consolePage((m) => m.CopySheetIndexPage)
@@ -138,6 +139,7 @@ function AdminRoutes() {
             <Route path="praxis" element={<PraxisPage />} />
             <Route path="tasks" element={<TasksPage />} />
             <Route path="people" element={<PeoplePage />} />
+            <Route path="mod-log" element={<ModLogPage />} />
             <Route path="era" element={<EraPage />} />
             <Route path="copy" element={<CopySheetIndexPage />} />
             {/* One faction's surfaces on one page, for the copy editor. */}

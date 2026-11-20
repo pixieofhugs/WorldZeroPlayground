@@ -721,6 +721,7 @@ async def admin_edit_task(
     task_id: int,
     data: AdminTaskPatch,
     session: AsyncSession,
+    actor_id: int,
     era: EraConfig = CURRENT_ERA,
 ) -> Task:
     """Edit editable fields on a pending or retired task. Active tasks are locked."""
@@ -751,6 +752,7 @@ async def admin_edit_task(
     if data.level_required is not None:
         task.level_required = data.level_required
     await session.flush()
+    await log_mod_action(session, actor_id, "task_edit", "task", task_id)
     await session.refresh(task)
     return task
 
@@ -919,6 +921,9 @@ async def roll_into_era(
     await upsert_era_factions(session, era_config)
 
     await apply_era_reset(characters, new_era_row, session, era=era_config)
+    await log_mod_action(
+        session, operator.id, "era_roll", "era", new_era_row.id, era_config.name
+    )
 
     for task in to_reactivate:
         task.status = TaskStatus.active

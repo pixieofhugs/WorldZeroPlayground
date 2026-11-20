@@ -169,3 +169,44 @@ async def test_log_is_admin_only_newest_first_and_filterable(
         "/admin/mod-log?target_type=account&target_id=999999", headers=auth_headers
     )
     assert other.json()["items"] == []
+
+
+@pytest.mark.asyncio
+async def test_page_filters_by_kind_actor_and_search_and_names_targets(
+    client, account, account2, character2, active_task, auth_headers, db_session
+):
+    await make_admin(db_session, account)
+    await client.post(
+        f"/admin/characters/{character2.id}/ban",
+        json={"banned": True},
+        headers=auth_headers,
+    )
+    await client.put(
+        f"/admin/tasks/{active_task.id}/status",
+        json={"status": "retired"},
+        headers=auth_headers,
+    )
+    await client.patch(
+        f"/admin/tasks/{active_task.id}",
+        json={"title": "Renamed"},
+        headers=auth_headers,
+    )
+
+    async def get(query=""):
+        response = await client.get(f"/admin/mod-log?{query}", headers=auth_headers)
+        return response.json()
+
+    page = await get()
+    actor_name = page["items"][0]["actor_name"]
+    assert page["mods"] == [{"account_id": account.id, "name": actor_name}]
+    assert page["counts"] == {"reports": 0, "tasks": 2, "people": 1, "rules": 0}
+    assert {i["action"] for i in page["items"]} == {"ban", "task_status", "task_edit"}
+    ban = next(i for i in page["items"] if i["action"] == "ban")
+    assert ban["target_name"] == character2.display_name
+    assert [i["action"] for i in (await get("kind=people"))["items"]] == ["ban"]
+    assert (await get("kind=people"))["total"] == 1
+    assert (await get("kind=rules"))["items"] == []
+    assert (await get(f"actor={account2.id}"))["items"] == []
+    found = await get(f"q={character2.display_name[:4].lower()}&kind=people")
+    assert [i["action"] for i in found["items"]] == ["ban"]
+    assert (await get("q=zzzznothing"))["total"] == 0
