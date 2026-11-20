@@ -11,19 +11,7 @@ export type ContactMessageOut = components['schemas']['routers__admin__ContactMe
 
 export type OverviewStats = components['schemas']['OverviewStats']
 
-export type AccountSummary = components['schemas']['AccountSummary']
-
-export type AccountPage = components['schemas']['AccountPage']
-
-export const ACCOUNT_PAGE_SIZE = 50
-
-export type CharacterBrief = components['schemas']['CharacterBrief']
-
-export type AccountDetail = components['schemas']['AccountDetail']
-
-export type CharacterStatus = components['schemas']['CharacterStatus']
-
-type AdminCharacterSummary = components['schemas']['CharacterSummary']
+export type AdminCharacterSummary = components['schemas']['CharacterSummary']
 
 /** `reason` is a vocabulary key (ADR-0037); legacy text and `other` notes are in `reason_detail`. */
 export type FlagOut = components['schemas']['FlagOut']
@@ -78,15 +66,9 @@ export async function getEras(): Promise<EraOption[]> {
   return data
 }
 
-export async function getAdminCharacters(status?: CharacterStatus): Promise<AdminCharacterSummary[]> {
-  const { data } = await apiGet('/admin/characters', { params: { query: { status } } })
-  return data
-}
-
-export async function getAccounts(search?: string, offset = 0): Promise<AccountPage> {
-  const { data } = await apiGet('/admin/accounts', {
-    params: { query: { search, limit: ACCOUNT_PAGE_SIZE, offset } },
-  })
+/** `search` matches name, username or the account's email. */
+export async function getAdminCharacters(search?: string): Promise<AdminCharacterSummary[]> {
+  const { data } = await apiGet('/admin/characters', { params: { query: { search: search || undefined } } })
   return data
 }
 
@@ -94,13 +76,6 @@ export type VoteRing = components['schemas']['VoteRingOut']
 
 export async function getVoteRing(id: number): Promise<VoteRing> {
   const { data } = await apiGet('/admin/accounts/{account_id}/vote-ring', {
-    params: { path: { account_id: id } },
-  })
-  return data
-}
-
-export async function getAccountDetail(id: number): Promise<AccountDetail> {
-  const { data } = await apiGet('/admin/accounts/{account_id}', {
     params: { path: { account_id: id } },
   })
   return data
