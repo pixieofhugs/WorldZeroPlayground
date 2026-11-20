@@ -4266,8 +4266,6 @@
                 "type": "null"
               }
             ],
-            "description": "Smaller copy of an image for cards and tiles; null when none was made.",
-            "readOnly": true,
             "title": "Display Path"
           },
           "file_path": {

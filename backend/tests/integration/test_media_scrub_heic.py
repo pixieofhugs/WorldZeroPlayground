@@ -81,3 +81,34 @@ async def test_interrupted_run_leftover_heic_removed_only_on_apply(
     assert to_unlink == ([leftover] if apply else [])
     assert [path for path, _ in report.failed] == [os.path.join(directory, "LOST.heic")]
     assert os.path.exists(leftover) and os.path.exists(orphan)
+
+
+@pytest.mark.asyncio
+async def test_stale_jpg_is_overwritten_and_bmp_is_renamed(
+    db_session: AsyncSession, character: Character, praxis_solo: Praxis, tmp_path
+):
+    directory = os.path.join(str(character.id), str(praxis_solo.id), "abc")
+    folder = os.path.join(str(tmp_path), directory)
+    os.makedirs(folder)
+    buffer = io.BytesIO()
+    Image.new("RGB", (8, 8), "red").save(buffer, format="BMP")
+    with open(os.path.join(folder, "pic.bmp"), "wb") as handle:
+        handle.write(buffer.getvalue())
+    with open(os.path.join(folder, "pic.jpg"), "wb") as handle:
+        handle.write(b"truncated by a crash")
+    item = MediaItem(
+        praxis_id=praxis_solo.id,
+        type=MediaType.image,
+        file_path=os.path.join(directory, "pic.bmp"),
+        display_order=0,
+    )
+    db_session.add(item)
+    await db_session.flush()
+
+    report, to_unlink = await convert_heic_rows(db_session, str(tmp_path), apply=True)
+
+    assert not report.failed and item.file_path == os.path.join(directory, "pic.jpg")
+    assert to_unlink == [os.path.join(folder, "pic.bmp")]
+    with Image.open(os.path.join(folder, "pic.jpg")) as image:
+        assert image.format == "JPEG"
+    assert sorted(os.listdir(folder)) == ["pic.bmp", "pic.jpg"]

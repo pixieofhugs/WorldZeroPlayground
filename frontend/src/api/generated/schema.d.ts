@@ -3918,11 +3918,8 @@ export interface components {
             created_at: string;
             /** Display Order */
             display_order: number;
-            /**
-             * Display Path
-             * @description Smaller copy of an image for cards and tiles; null when none was made.
-             */
-            readonly display_path: string | null;
+            /** Display Path */
+            display_path: string | null;
             /** File Path */
             file_path: string;
             /** Id */

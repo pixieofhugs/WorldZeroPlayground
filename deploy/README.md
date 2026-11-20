@@ -334,28 +334,31 @@ numbered on collision), so read it from the database, e.g.
 The API answers on `api.dev.worldzero.org` and `api.worldzero.org`, not on the
 site's hostnames. A request to `dev.worldzero.org/auth/…` gets the SPA's 200.
 
+Each stack runs **one** uvicorn process (`backend/start.sh` passes no
+`--workers`). That's deliberate: see the praxis room under §11.
+
 ### Scrubbing location from media stored before #3486/#3487
 
-`scrub_stored_media.py` runs every file under `MEDIA_ROOT` through the upload
-strip and rewrites it in place (idempotent). HEIC/HEIF files are converted to
-`.jpg` as #3589 does for new uploads: the `MediaItem` path is updated in the
-transaction and the old `.heic` is deleted only after the commit, so old
-`.heic` hotlinks stop working. Run it on the host,
-inside the backend container (it reads the `media` volume), **dry run first**:
+`scrub_stored_media.py` runs every file under `MEDIA_ROOT` (and the
+`MEDIA_ROOT-quarantine` sibling) through the upload strip and rewrites it in
+place (idempotent, each write temp + fsync + rename). HEIC/HEIF/AVIF/BMP files
+are converted to `.jpg` as #3589 does for new uploads: the `MediaItem` path is
+updated in the transaction and the old file is deleted only after the commit,
+so old hotlinks stop working. A file it cannot strip or delete is listed, the
+rest carry on, and the exit code is 1. The rewrite has no undo. In order:
 
-    ssh -i ~/.ssh/wz_deploy deploy@<server-ip> \
-      'cd /srv/worldzero/prod && docker compose exec -T backend python scripts/scrub_stored_media.py --env prod'
+1. Back up prod: `ssh deploy@<server-ip> '/srv/worldzero/backup.sh prod pre-scrub'` (§8).
+2. Dev dry run, then read the list:
+   `cd /srv/worldzero/dev && docker compose exec -T backend python scripts/scrub_stored_media.py --env dev`
+3. Dev `--apply` (same command plus `--apply`).
+4. Prod dry run: same, from `/srv/worldzero/prod` with `--env prod`.
+5. Prod `--apply`.
+6. Run `sweep_orphan_media.py` (dry run first) to clear any unreferenced original the script reported.
 
-Read the list, then add `--apply`. Then run `sweep_orphan_media.py` (dry run
-first) to clear any unreferenced `.heic` the script reported. Files it could not strip are listed and left
-untouched (exit code 1). Take a backup first (§8); the rewrite has no undo.
-Run it on dev first, the same way.
+Use the `ssh -i ~/.ssh/wz_deploy deploy@<server-ip> '…'` wrapper from above for each.
 
 - Ran on dev: (date)
 - Ran on prod: (date)
-
-Each stack runs **one** uvicorn process (`backend/start.sh` passes no
-`--workers`). That's deliberate: see the praxis room under §11.
 
 ## 10b. Backfilling display copies
 
@@ -366,7 +369,7 @@ size until this runs. It is idempotent and writes only new files:
     docker compose exec -T backend python scripts/backfill_display_copies.py --env prod          # dry run
     docker compose exec -T backend python scripts/backfill_display_copies.py --env prod --apply
 
-Run it beside the metadata-scrub script. Ran on: dev ____ / prod ____ (owner fills in).
+Run it after `scrub_stored_media.py --apply`. Ran on: dev ____ / prod ____ (owner fills in).
 
 ## 11. Deliberately not built
 

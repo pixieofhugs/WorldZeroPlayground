@@ -97,7 +97,7 @@ from services.praxis_out import (
     build_praxis_cards,
     build_praxis_out,
 )
-from services.media import process_and_save_media
+from services.media import media_item_out, process_and_save_media
 from services.nudge import nudge_the_crew, send_nudge
 from services.vote import cast_vote_on_praxis
 
@@ -345,7 +345,7 @@ async def upload_media_route(
     await session.refresh(media_item)
     # Media is part of the shared document — adding it cancels a pending publish (ADR-0012).
     await on_member_edit(praxis, session)
-    return MediaItemOut.model_validate(media_item)
+    return media_item_out(media_item)
 
 
 @router.post(

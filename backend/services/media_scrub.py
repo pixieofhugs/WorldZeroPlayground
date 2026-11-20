@@ -1,7 +1,7 @@
 """Scrub location metadata from media stored before upload-time stripping (#3590).
 
 Reuses the upload strip functions. ``scrub_media_root`` rewrites files in place
-on disk. HEIC/HEIF are not: #3589 stores them as ``.jpg``, so
+on disk. HEIC/HEIF/AVIF/BMP are not: #3589 stores them as ``.jpg``, so
 ``convert_heic_rows`` does the same for existing rows (new file, row path
 updated, old file unlinked only after the caller commits). Hotlinks to the old
 ``.heic`` URL break; the app serves through the row's path.
@@ -18,6 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.praxis import MediaItem, MediaType
 from services.media import (
+    _OUTPUT_EXTENSIONS,
     _SAFE_EXTENSIONS,
     _strip_av,
     _strip_image,
@@ -35,7 +36,14 @@ class ScrubReport:
     skipped: list[str] = field(default_factory=list)
 
 
-HEIC_EXTENSIONS = (".heic", ".heif")
+#: Image extensions _strip_image cannot keep (it outputs JPEG): upload renames
+#: these to ``.jpg``, so the scrub does too instead of writing JPEG under them.
+RENAME_EXTENSIONS = tuple(
+    sorted(
+        _SAFE_EXTENSIONS[MediaType.image]
+        - {ext for exts in _OUTPUT_EXTENSIONS.values() for ext in exts}
+    )
+)
 
 
 def _media_type(extension: str) -> MediaType | None:
@@ -64,17 +72,40 @@ def _scrubbed(contents: bytes, media_type: MediaType, extension: str) -> bytes |
     return None if stripped == contents else stripped
 
 
-def _replace_atomically(path: str, contents: bytes) -> None:
-    """Same-directory temp + replace: a crash never leaves a half-written file."""
-    descriptor, temp_path = tempfile.mkstemp(dir=os.path.dirname(path))
+def _replace_atomically(path: str, contents: bytes, mode: int | None = None) -> None:
+    """Same-directory temp + fsync + replace: a crash never leaves a half-written file.
+
+    ``mode`` defaults to the existing file's; pass one for a new path.
+    """
+    directory = os.path.dirname(path)
+    descriptor, temp_path = tempfile.mkstemp(dir=directory)
     try:
         with os.fdopen(descriptor, "wb") as handle:
             handle.write(contents)
-        os.chmod(temp_path, os.stat(path).st_mode & 0o777)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.chmod(temp_path, mode if mode is not None else os.stat(path).st_mode & 0o777)
         os.replace(temp_path, path)
+        directory_fd = os.open(directory, os.O_RDONLY)
+        try:
+            os.fsync(directory_fd)
+        finally:
+            os.close(directory_fd)
     except BaseException:
-        os.unlink(temp_path)
+        if os.path.exists(temp_path):
+            os.unlink(temp_path)
         raise
+
+
+def unlink_reporting(paths: list[str], report: ScrubReport) -> None:
+    """Unlink each path; a failure is reported and the rest still go."""
+    for path in paths:
+        try:
+            os.unlink(path)
+        except FileNotFoundError:
+            pass
+        except OSError as exc:
+            report.failed.append((path, repr(exc)))
 
 
 def scrub_media_root(media_root: str, apply: bool) -> ScrubReport:
@@ -84,7 +115,7 @@ def scrub_media_root(media_root: str, apply: bool) -> ScrubReport:
     for scanned in files:
         extension = os.path.splitext(scanned.relative_path)[1].lower()
         media_type = _media_type(extension)
-        if media_type is None or extension in HEIC_EXTENSIONS:
+        if media_type is None or extension in RENAME_EXTENSIONS:
             report.skipped.append(scanned.relative_path)
             continue
         report.scanned += 1
@@ -108,19 +139,20 @@ def scrub_media_root(media_root: str, apply: bool) -> ScrubReport:
 async def convert_heic_rows(
     session: AsyncSession, media_root: str, apply: bool
 ) -> tuple[ScrubReport, list[str]]:
-    """Convert HEIC/HEIF MediaItem files to stripped ``.jpg`` beside the original.
+    """Convert HEIC/HEIF/AVIF/BMP rows to a stripped ``.jpg`` beside the original.
 
     Returns the report (``cleaned`` holds ``old -> new`` lines) and the old
     absolute paths to unlink once the caller has committed. Never commits.
     """
     report = ScrubReport()
     to_unlink: list[str] = []
+    claimed = (await load_known_paths(session, media_root)).claimed_paths
     rows = await session.scalars(
         select(MediaItem).where(MediaItem.type == MediaType.image)
     )
     for item in rows:
         stem, extension = os.path.splitext(item.file_path)
-        if extension.lower() not in HEIC_EXTENSIONS:
+        if extension.lower() not in RENAME_EXTENSIONS:
             continue
         report.scanned += 1
         old_path = resolve_stored_media_path(item.file_path, media_root)
@@ -129,13 +161,13 @@ async def convert_heic_rows(
         try:
             if old_path is None or new_path is None or not os.path.isfile(old_path):
                 raise FileNotFoundError(item.file_path)
-            if os.path.exists(new_path):
+            # An unclaimed .jpg is a crashed run's leftover: overwrite it.
+            if new_path in claimed:
                 raise FileExistsError(new_relative)
             with open(old_path, "rb") as handle:
                 converted, _format = _strip_image(handle.read())
             if apply:
-                with open(new_path, "wb") as handle:
-                    handle.write(converted)
+                _replace_atomically(new_path, converted, 0o644)
                 item.file_path = new_relative
                 to_unlink.append(old_path)
             report.cleaned.append(f"{stem + extension} -> {new_relative}")
@@ -152,7 +184,7 @@ async def _sweep_unclaimed_heic(
     report: ScrubReport,
     to_unlink: list[str],
 ) -> None:
-    """A .heic no row claims still serves its GPS from /media.
+    """An original no row claims still serves its GPS from /media.
 
     With a claimed .jpg beside it, it is an interrupted run's leftover: remove
     it. Otherwise only the orphan sweep may delete it, so fail loudly.
@@ -161,7 +193,8 @@ async def _sweep_unclaimed_heic(
     files, _escaping = scan_media_root(media_root)
     for scanned in files:
         stem, extension = os.path.splitext(scanned.absolute_path)
-        if extension.lower() not in HEIC_EXTENSIONS or scanned.absolute_path in claimed:
+        renames = extension.lower() in RENAME_EXTENSIONS
+        if not renames or scanned.absolute_path in claimed:
             continue
         if scanned.absolute_path in to_unlink:
             continue
@@ -171,5 +204,5 @@ async def _sweep_unclaimed_heic(
             report.cleaned.append(f"{scanned.relative_path} (leftover, removed)")
         else:
             report.failed.append(
-                (scanned.relative_path, "unreferenced .heic; run sweep_orphan_media.py")
+                (scanned.relative_path, "unreferenced; run sweep_orphan_media.py")
             )
