@@ -199,7 +199,14 @@ export default function CopyEditor() {
     if (target) return
     setSpot(null)
     lastSpot.current?.focus({ preventScroll: true })
+    lastSpot.current = null
   }, [target])
+  const box = useRef<HTMLTextAreaElement>(null)
+  const placed = spotRect !== null
+  // Not `autoFocus`: the box mounts before `useSpotRect` has measured, and autoFocus only fires on mount.
+  useEffect(() => {
+    if (placed && target) box.current?.focus()
+  }, [placed, target])
 
   /**
    * `t` in a ref, load-bearing: react-i18next hands back a new `t` on every store
@@ -327,6 +334,7 @@ export default function CopyEditor() {
   return drawAtRoot(
     <div
       ref={panel}
+      data-modal-free
       style={panelStyle(isMobile, target !== null)}
       className="font-body"
       onKeyDown={(event) => keepEscapeInPanel(event, target !== null)}
@@ -382,8 +390,9 @@ export default function CopyEditor() {
           <textarea
             className="font-body"
             value={draft}
-            rows={spotRect ? 1 : 4}
-            autoFocus={spotRect !== null}
+            ref={box}
+            // Firefox lacks field-sizing: one row per line, or a multi-paragraph template is a one-line box.
+            rows={spotRect ? draft.split('\n').length : 4}
             spellCheck
             onChange={(event) => setDraft(event.target.value)}
             aria-label={t('copyEdit.textareaLabel')}

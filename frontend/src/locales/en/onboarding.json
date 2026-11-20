@@ -13,6 +13,7 @@
     "next": "Next",
     "toContract": "To the contract",
     "skip": "Skip",
+    "skipReturning": "Skip it",
     "rewind": "rewind",
     "signIn": "Sign in",
     "stepOf": "{{n}} / 7",

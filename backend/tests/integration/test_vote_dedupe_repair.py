@@ -207,7 +207,7 @@ async def test_the_window_is_the_cast_time_not_the_seal_time(
     praxis_solo: Praxis,
     era: Era,
 ):
-    """Votes charge the voter's current era (#1345), so bound ``Vote.created_at``.
+    """Votes charge the voter's current era (#1345), so key on ``Vote.era_id``.
 
     Explicit timestamps: ``func.now()`` is fixed for the test's one transaction.
     """
@@ -231,6 +231,7 @@ async def test_the_window_is_the_cast_time_not_the_seal_time(
                 voter_character_id=character2.id,
                 voter_account_id=character2.account_id,
                 value=4,
+                era_id=era.id,
                 created_at=era_one_start + timedelta(days=1),
             ),
             Vote(
@@ -238,6 +239,7 @@ async def test_the_window_is_the_cast_time_not_the_seal_time(
                 voter_character_id=character2.id,
                 voter_account_id=account.id,  # one row per (praxis, account)
                 value=2,
+                era_id=era_two.id,
                 created_at=era_two_start + timedelta(days=1),
             ),
         ]

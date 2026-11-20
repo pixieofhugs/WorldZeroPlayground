@@ -45,7 +45,13 @@ def _stamp_sealed_praxis_era(mapper, connection, praxis: Praxis) -> None:
     if praxis.submitted_at is None:
         praxis.submitted_at = datetime.now(timezone.utc)
     if praxis.era_id is None:
-        praxis.era_id = connection.scalar(select(func.max(Era.id)))
+        # By the seal's clock, so a fixture backdated into a closed era lands in it.
+        praxis.era_id = connection.scalar(
+            select(Era.id)
+            .where(Era.started_at <= praxis.submitted_at)
+            .order_by(Era.id.desc())
+            .limit(1)
+        ) or connection.scalar(select(func.max(Era.id)))
 
 
 @event.listens_for(Duel, "before_insert")
