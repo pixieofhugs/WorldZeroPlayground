@@ -175,7 +175,7 @@ export default function TaskPanel({ task, factions, proposal, onChanged, onDelet
             )}
           </div>
           <p className="adm-muted">{t('console.tasks.panel.hint')}</p>
-          {task.status !== 'deleted' && (
+          {task.status !== 'deleted' && !task.has_history && (
             <button type="button" className="adm-btn adm-btn-dng" onClick={() => setConfirmDelete(true)}>
               {t('tasks.actions.delete')}
             </button>

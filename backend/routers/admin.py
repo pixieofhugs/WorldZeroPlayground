@@ -61,6 +61,7 @@ from services.admin_service import (
     archive_message,
     authors_for_moderation,
     delete_unreferenced_task,
+    task_ids_with_history,
     remove_flagged_praxes_by_author,
     find_admin_accounts,
     grant_admin,
@@ -454,6 +455,15 @@ async def admin_update_task_status(
         task_id, new_status, session, actor_id=admin.id
     )
     return await build_task_out(task, session)
+
+
+@router.get("/tasks/with-history", response_model=list[int])
+async def list_task_ids_with_history(
+    _: Account = Depends(require_admin),
+    session: AsyncSession = Depends(get_db, scope="function"),
+):
+    """Admin-only: ids of tasks Delete would refuse (#3667)."""
+    return await task_ids_with_history(session)
 
 
 @router.delete("/tasks/{task_id}", status_code=204)
