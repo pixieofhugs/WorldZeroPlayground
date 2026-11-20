@@ -1,5 +1,5 @@
-import { lazy, Suspense, useState } from 'react'
-import { Routes, Route, useLocation } from 'react-router-dom'
+import { lazy, Suspense, useState, type ComponentType } from 'react'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import Layout from './components/Layout'
 import ProtectedRoute from './auth/ProtectedRoute'
@@ -50,6 +50,14 @@ const Updates = lazy(importUpdates)
 const Praxes = lazy(() => withAppCopy(import('./pages/Praxes')))
 const Settings = lazy(importSettings)
 const Admin = lazy(importAdmin)
+const consolePage = (pick: (m: typeof import('./pages/admin/consolePages')) => ComponentType) =>
+  lazy(() => withAppCopy(import('./pages/admin/consolePages')).then((m) => ({ default: pick(m) })))
+const ModerationPage = consolePage((m) => m.ModerationPage)
+const PraxisPage = consolePage((m) => m.PraxisPage)
+const TasksPage = consolePage((m) => m.TasksPage)
+const PeoplePage = consolePage((m) => m.PeoplePage)
+const EraPage = consolePage((m) => m.EraPage)
+const CopySheetIndexPage = consolePage((m) => m.CopySheetIndexPage)
 const FactionCopySheet = lazy(importFactionCopySheet)
 const LevelUpCopySheet = lazy(importLevelUpCopySheet)
 const CreateCharacter = lazy(importCreateCharacter)
@@ -115,7 +123,35 @@ function AlbescentGate() {
   return user?.albescent_revealed ? <FactionDetail slug="albescent" /> : <AlbescentSecretPlaceholder />
 }
 
-export default function App() {
+/** `/admin/*` brings its own layout (#3665), so it sits beside `Layout`, not in it. */
+function AdminRoutes() {
+  return (
+    <ProtectedRoute adminOnly warm={importAdmin}>
+      <Suspense fallback={<PageLoading />}>
+        <Routes>
+          <Route element={<Admin />}>
+            <Route index element={<Navigate to="reports" replace />} />
+            <Route path="reports" element={<ModerationPage />} />
+            <Route path="messages" element={<ModerationPage />} />
+            <Route path="proposals" element={<TasksPage />} />
+            <Route path="praxis" element={<PraxisPage />} />
+            <Route path="tasks" element={<TasksPage />} />
+            <Route path="people" element={<PeoplePage />} />
+            <Route path="era" element={<EraPage />} />
+            <Route path="copy" element={<CopySheetIndexPage />} />
+            {/* One faction's surfaces on one page, for the copy editor. */}
+            <Route path="copy/:slug" element={<FactionCopySheet />} />
+            {/* Every level's Field Stamp on one page, for the same editor. */}
+            <Route path="level-ups" element={<LevelUpCopySheet />} />
+          </Route>
+        </Routes>
+      </Suspense>
+      <CopyEditorMount />
+    </ProtectedRoute>
+  )
+}
+
+function PlayerRoutes() {
   return (
     <Layout>
       <Suspense fallback={<PageLoading />}>
@@ -171,32 +207,6 @@ export default function App() {
             }
           />
           <Route
-            path="/admin"
-            element={
-              <ProtectedRoute adminOnly warm={importAdmin}>
-                <Admin />
-              </ProtectedRoute>
-            }
-          />
-          {/* One faction's surfaces on one page, for the copy editor. */}
-          <Route
-            path="/admin/copy/:slug"
-            element={
-              <ProtectedRoute adminOnly warm={importFactionCopySheet}>
-                <FactionCopySheet />
-              </ProtectedRoute>
-            }
-          />
-          {/* Every level's Field Stamp on one page, for the same editor. */}
-          <Route
-            path="/admin/level-ups"
-            element={
-              <ProtectedRoute adminOnly warm={importLevelUpCopySheet}>
-                <LevelUpCopySheet />
-              </ProtectedRoute>
-            }
-          />
-          <Route
             path="/characters/create"
             element={
               <ProtectedRoute warm={importCreateCharacter}>
@@ -224,5 +234,14 @@ export default function App() {
       </Suspense>
       <CopyEditorMount />
     </Layout>
+  )
+}
+
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/admin/*" element={<AdminRoutes />} />
+      <Route path="*" element={<PlayerRoutes />} />
+    </Routes>
   )
 }

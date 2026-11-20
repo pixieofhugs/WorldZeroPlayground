@@ -5,7 +5,7 @@
  * `warm` loader resolves to the very module whose component painted.
  */
 import { render, screen } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, Outlet } from 'react-router-dom'
 import { describe, it, expect, vi } from 'vitest'
 
 import App from '../../App'
@@ -29,7 +29,8 @@ vi.mock('../../pages/EditPraxis', () => ({ default: () => 'EditPraxis' }))
 vi.mock('../../pages/EditCharacter', () => ({ default: () => 'EditCharacter' }))
 vi.mock('../../pages/Updates', () => ({ default: () => 'Updates' }))
 vi.mock('../../pages/Settings', () => ({ default: () => 'Settings' }))
-vi.mock('../../pages/Admin', () => ({ default: () => 'Admin' }))
+vi.mock('../../pages/Admin', () => ({ default: () => <Outlet /> }))
+vi.mock('../../pages/admin/consolePages', () => ({ ModerationPage: () => 'ModerationPage' }))
 vi.mock('../../pages/admin/FactionCopySheet', () => ({ default: () => 'FactionCopySheet' }))
 vi.mock('../../pages/admin/LevelUpCopySheet', () => ({ default: () => 'LevelUpCopySheet' }))
 vi.mock('../../pages/CreateCharacter', () => ({ default: () => 'CreateCharacter' }))
@@ -40,7 +41,7 @@ const GUARDED: [path: string, page: string][] = [
   ['/characters/1/edit', 'EditCharacter'],
   ['/updates', 'Updates'],
   ['/settings', 'Settings'],
-  ['/admin', 'Admin'],
+  ['/admin/reports', 'ModerationPage'],
   ['/admin/copy/ua', 'FactionCopySheet'],
   ['/admin/level-ups', 'LevelUpCopySheet'],
   ['/characters/create', 'CreateCharacter'],
@@ -57,6 +58,9 @@ describe('every protected route warms the chunk it renders', () => {
     )
     await screen.findByText(page)
     expect(seen.warm, `${path} has no warm loader`).toBeTypeOf('function')
-    expect((await (seen.warm as Warm)()).default()).toBe(page)
+    // One guard covers /admin/*: it warms the console layout, not each page under it.
+    const warmed = (await (seen.warm as Warm)()).default
+    if (path.startsWith('/admin')) expect(warmed).toBe((await import('../../pages/Admin')).default)
+    else expect(warmed()).toBe(page)
   })
 })
