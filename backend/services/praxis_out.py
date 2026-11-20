@@ -213,7 +213,7 @@ async def author_contributions_for(
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
 ) -> dict[int, Contribution]:
-    """Scoring breakdown per praxis for its AUTHOR, not the viewer (ADR-0047).
+    """Scoring breakdown per praxis for its AUTHOR, not the viewer (ADR-0053).
 
     One batched call whatever the author count (#3618).
     """
