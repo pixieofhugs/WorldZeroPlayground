@@ -1,0 +1,54 @@
+/* Reports (#3670, #3674). Lazy: imported by ReportsTab, so it rides the admin chunk. */
+.rp-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--space-sm); }
+.rp-h1 { margin: 0; display: flex; align-items: center; gap: var(--space-sm); font-family: var(--font-display); font-size: var(--text-heading); font-weight: 700; }
+.rp-count { font-family: var(--font-body); font-size: var(--text-lg); font-weight: 700; min-width: 22px; text-align: center; padding: 2px var(--space-sm); border-radius: 999px; background: var(--color-danger); color: var(--color-bg-page); }
+.rp-lede { margin: var(--space-xs) 0 0; color: var(--color-text-secondary); font-size: var(--text-xl); }
+.rp-h2 { margin: 0; font-size: var(--text-md); letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-text-tertiary); font-weight: 600; }
+.rp-muted { color: var(--color-text-secondary); font-size: var(--text-lg); }
+.rp-segs { display: inline-flex; gap: var(--space-xs); padding: var(--space-xs); border-radius: var(--radius-md); background: var(--color-bg-surface); border: 1px solid var(--color-border); }
+.rp-seg { font: inherit; font-size: var(--text-lg); font-weight: 600; min-height: 44px; padding: 0 var(--space-sm); border-radius: var(--radius-sm); border: 0; background: transparent; color: var(--color-text-secondary); cursor: pointer; }
+.rp-seg[aria-selected="true"] { background: var(--color-bg-page); color: var(--color-text-primary); box-shadow: 0 0 0 1px var(--color-border-strong); }
+.rp-split { display: flex; flex-wrap: wrap; gap: var(--space-lg); align-items: flex-start; }
+.rp-main { flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: var(--space-md); }
+.rp-card { background: var(--color-bg-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: var(--space-lg); display: flex; flex-direction: column; gap: var(--space-md); }
+.rp-side { flex: 1 1 300px; max-width: 380px; gap: var(--space-sm); }
+.rp-entry { margin: 0; font-size: var(--text-xl); }
+.rp-body { display: flex; flex-wrap: wrap; gap: var(--space-lg); }
+.rp-photo { flex: 0 0 240px; max-width: 100%; align-self: flex-start; }
+.rp-photo img { max-height: 180px; }
+.rp-facts { flex: 1 1 300px; min-width: 0; display: flex; flex-direction: column; gap: var(--space-xs); }
+.rp-reason { align-self: flex-start; font-size: var(--text-md); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: var(--space-xs) var(--space-sm); border-radius: 999px; border: 1.5px solid var(--color-danger); color: var(--color-danger); }
+.rp-title { font-family: var(--font-display); font-size: var(--text-xl); font-weight: 700; color: var(--color-text-primary); }
+.rp-quote { margin: 0; padding: var(--space-sm) var(--space-md); background: var(--color-bg-surface-alt); border-radius: var(--radius-md); font-style: italic; font-size: var(--text-xl); }
+.rp-rule { height: 1px; background: var(--color-border); border: 0; margin: 0; }
+.rp-btns { display: flex; flex-wrap: wrap; gap: var(--space-xs); align-items: center; }
+.rp-btn { font: inherit; font-size: var(--text-xl); font-weight: 600; min-height: 44px; box-sizing: border-box; padding: 0 var(--space-md); border-radius: var(--radius-md); border: 1px solid var(--color-border-strong); background: transparent; color: var(--color-text-primary); display: inline-flex; align-items: center; justify-content: center; gap: var(--space-xs); cursor: pointer; text-decoration: none; }
+.rp-btn:disabled { opacity: 0.5; cursor: default; }
+.rp-btn-dng { border-color: var(--color-danger-ring); color: var(--color-danger); }
+.rp-btn-dng[aria-pressed="true"] { background: var(--color-danger-veil); border-color: var(--color-danger); }
+.rp-btn-wrn { border-color: var(--color-warning-ring); color: var(--color-warning); }
+.rp-btn-wrn[aria-pressed="true"] { border-color: var(--color-warning); }
+.rp-tag { font-size: var(--text-md); font-weight: 700; text-transform: uppercase; color: var(--color-danger); }
+.rp-help { margin: 0; }
+.rp-short { display: none; }
+.rp-reason-form { display: flex; flex-direction: column; gap: var(--space-sm); }
+.rp-field { display: flex; flex-direction: column; gap: var(--space-xs); font-size: var(--text-lg); font-weight: 600; color: var(--color-text-secondary); }
+.rp-input { font: inherit; font-size: var(--text-xl); color: var(--color-text-primary); background: var(--color-bg-page); border: 1px solid var(--color-border-strong); border-radius: var(--radius-md); min-height: 44px; box-sizing: border-box; padding: 0 var(--space-sm); width: 100%; }
+.rp-author { display: flex; flex-direction: column; gap: var(--space-sm); }
+.rp-error { margin: 0; padding: var(--space-sm) var(--space-md); border: 1px solid var(--color-danger); border-radius: var(--radius-md); color: var(--color-danger); }
+.rp-calm { padding: var(--space-2xl) var(--space-lg); align-items: center; gap: var(--space-xs); text-align: center; }
+.rp-calm-word { font-family: var(--font-display); font-style: italic; font-size: var(--text-title); }
+
+/* Phone: one report fills the screen; the decision row stays pinned (ReportsPhone). */
+@media (max-width: 767px) {
+  .rp-photo { flex-basis: 100%; }
+  .rp-photo img { max-height: 200px; }
+  .rp-card { padding: var(--space-md); }
+  .rp-split { flex-direction: column; }
+  .rp-side { max-width: none; align-self: stretch; }
+  .rp-decide { position: sticky; bottom: 0; z-index: 1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); padding: var(--space-sm) 0; background: var(--color-bg-surface); border-top: 1px solid var(--color-border); }
+  .rp-decide .rp-btn { padding: 0 var(--space-xs); }
+  .rp-long { display: none; }
+  .rp-short { display: inline; }
+  .rp-help { display: none; }
+}

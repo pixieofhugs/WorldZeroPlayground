@@ -4,9 +4,6 @@ import ModerateConfirm from "./ModerateConfirm";
 
 export type AuthorAction = "ban" | "suspend" | "removeAll";
 
-const dangerButton = { borderColor: "var(--color-danger-ring)", color: "var(--color-danger)" };
-const successButton = { borderColor: "var(--color-success)", color: "var(--color-success)" };
-
 interface AuthorRowProps {
   praxis: FlaggedPraxisOut;
   confirming: AuthorAction | null;
@@ -32,61 +29,42 @@ export default function AuthorRow({
   const count = praxis.author_flagged_count;
   const undo = (kind: AuthorAction) => void onModerate(praxis, kind, false).catch(() => {});
   return (
-    <div className="flex flex-col gap-2 mt-2">
-      <div className="flex items-center gap-2 flex-wrap">
-        {banned && <span className="label-caption danger-text">{t("moderation.queue.author.banned")}</span>}
-        {suspended && <span className="label-caption danger-text">{t("moderation.queue.author.suspended")}</span>}
+    <div className="rp-author">
+      <div className="rp-btns">
+        <span className="rp-muted">{t("console.reports.author.label", { name })}</span>
+        <button type="button" className="rp-btn" onClick={() => onViewAccount(praxis.author_username)}>
+          {t("console.reports.author.openPeople")}
+        </button>
+        <button type="button" className="rp-btn" onClick={() => onAsk("removeAll")}>
+          {t("console.reports.author.removeAll", { count })}
+        </button>
+        {banned && <span className="rp-tag">{t("console.reports.author.banned")}</span>}
         <button
           type="button"
-          className="btn-outline text-xs"
-          style={banned ? successButton : dangerButton}
+          className={banned ? "rp-btn" : "rp-btn rp-btn-dng"}
           onClick={() => (banned ? undo("ban") : onAsk("ban"))}
         >
-          {banned ? t("moderation.queue.author.unban") : t("moderation.queue.author.ban")}
+          {banned ? t("console.reports.author.unban") : t("console.reports.author.ban")}
         </button>
+        {suspended && <span className="rp-tag">{t("console.reports.author.suspended")}</span>}
         <button
           type="button"
-          className="btn-outline text-xs"
-          style={suspended ? successButton : dangerButton}
+          className={suspended ? "rp-btn" : "rp-btn rp-btn-dng"}
           onClick={() => (suspended ? undo("suspend") : onAsk("suspend"))}
         >
-          {suspended ? t("moderation.queue.author.unsuspend") : t("moderation.queue.author.suspend")}
-        </button>
-        {praxis.author_flagged_count > 1 && (
-          <button
-            type="button"
-            className="btn-outline text-xs"
-            style={dangerButton}
-            onClick={() => onAsk("removeAll")}
-          >
-            {t("moderation.queue.author.removeAll", { count: praxis.author_flagged_count })}
-          </button>
-        )}
-        <button
-          type="button"
-          className="label-caption cursor-pointer bg-transparent border-0"
-          onClick={() => onViewAccount(praxis.author_username)}
-        >
-          {t("moderation.queue.author.viewAccount")}
-        </button>
-        <button
-          type="button"
-          className="label-caption cursor-pointer bg-transparent border-0"
-          onClick={() => onViewAccount(praxis.author_username)}
-        >
-          {t("moderation.queue.author.viewRing")}
+          {suspended ? t("console.reports.author.unsuspend") : t("console.reports.author.suspend")}
         </button>
       </div>
       {confirming && (
         <ModerateConfirm
-          heading={t(`moderation.queue.author.${confirming}Confirm.heading`, { name, count })}
-          lead={t(`moderation.queue.author.${confirming}Confirm.lead`, {
+          heading={t(`console.reports.author.${confirming}Confirm.heading`, { name, count })}
+          lead={t(`console.reports.author.${confirming}Confirm.lead`, {
             name,
             username: praxis.author_username,
             count,
           })}
-          confirmLabel={t(`moderation.queue.author.${confirming}Confirm.submit`, { count })}
-          errorFallback={t("moderation.actionError")}
+          confirmLabel={t(`console.reports.author.${confirming}Confirm.submit`, { count })}
+          errorFallback={t("console.reports.actionError")}
           run={() => onModerate(praxis, confirming, true)}
           onCancel={onCancel}
         />

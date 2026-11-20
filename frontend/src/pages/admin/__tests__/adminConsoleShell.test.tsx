@@ -21,7 +21,8 @@ vi.mock('../../../auth/AuthContext', () => ({
 vi.mock('../../../auth/AdminModeContext', () => ({ useAdminMode: () => ({ adminMode: false }) }))
 vi.mock('../../../components/Layout', () => ({ default: () => 'PLAYER LAYOUT' }))
 vi.mock('../consolePages', () => ({
-  ModerationPage: () => 'ModerationPage',
+  ReportsPage: () => 'ReportsPage',
+  MessagesPage: () => 'MessagesPage',
   TasksPage: () => 'TasksPage',
   PraxisPage: () => 'PraxisPage',
   PeoplePage: () => 'PeoplePage',
@@ -43,12 +44,12 @@ const at = (path: string) =>
 describe('admin console shell', () => {
   it('redirects /admin to reports, outside the player layout', async () => {
     at('/admin')
-    expect(await screen.findByText('ModerationPage')).toBeTruthy()
+    expect(await screen.findByText('ReportsPage')).toBeTruthy()
     expect(screen.queryByText('PLAYER LAYOUT')).toBeNull()
   })
 
   it.each([
-    ['/admin/messages', 'ModerationPage'],
+    ['/admin/messages', 'MessagesPage'],
     ['/admin/proposals', 'TasksPage'],
     ['/admin/tasks', 'TasksPage'],
     ['/admin/praxis', 'PraxisPage'],

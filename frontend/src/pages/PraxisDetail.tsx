@@ -41,12 +41,13 @@ export default function PraxisDetail() {
     state.praxis.task_faction_slug,
   )
   // Comments (`PraxisDetailComments`, ADR-0061) and the duel card live inside
-  // the archetype. Only an admin is sent a hidden praxis (#3257): bannered here.
+  // the archetype. Only an admin or its author is sent a hidden praxis (#3257, #3670): bannered here, with the moderator's reason.
   return (
     <>
       {state.praxis.moderation_status === 'hidden' && (
         <p role="status" className="font-body content-text danger-text border-2 danger-edge px-3 py-2 mb-4">
           {t('detail.hiddenBanner')}
+          {state.praxis.admin_note && <span className="block">{state.praxis.admin_note}</span>}
         </p>
       )}
       <Archetype state={state} />
