@@ -17,7 +17,8 @@ if str(BACKEND_ROOT) not in sys.path:
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine  # noqa: E402
 
 from script_utils import add_env_argument, get_settings  # noqa: E402
-from services.media_scrub import convert_heic_rows, scrub_media_root  # noqa: E402
+from services.media import quarantine_root  # noqa: E402
+from services.media_scrub import convert_heic_rows, scrub_media_root, unlink_reporting  # noqa: E402
 
 
 async def convert_heic(database_url: str, media_root: str, apply: bool):
@@ -26,8 +27,7 @@ async def convert_heic(database_url: str, media_root: str, apply: bool):
         async with async_sessionmaker(engine, expire_on_commit=False)() as session:
             report, to_unlink = await convert_heic_rows(session, media_root, apply)
             await (session.commit() if apply else session.rollback())
-        for path in to_unlink:
-            os.unlink(path)
+        unlink_reporting(to_unlink, report)
     finally:
         await engine.dispose()
     return report
@@ -50,6 +50,15 @@ def main() -> int:
         return 1
 
     report = scrub_media_root(media_root, args.apply)
+    # Withdrawn praxes' media: restore_media_to_mount would bring any GPS back.
+    quarantine = quarantine_root()
+    if os.path.isdir(quarantine):
+        held = scrub_media_root(quarantine, args.apply)
+        report.scanned += held.scanned
+        report.already_clean += held.already_clean
+        report.cleaned += [f"[quarantine] {path}" for path in held.cleaned]
+        report.skipped += [f"[quarantine] {path}" for path in held.skipped]
+        report.failed += [(f"[quarantine] {path}", why) for path, why in held.failed]
     heic = asyncio.run(convert_heic(settings.DATABASE_URL, media_root, args.apply))
     report.scanned += heic.scanned
     report.failed += heic.failed

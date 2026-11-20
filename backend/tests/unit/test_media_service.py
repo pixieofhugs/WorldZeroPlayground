@@ -600,3 +600,63 @@ def test_display_copy_is_upright_for_exif_orientation():
     display = media.make_display_bytes(raw.getvalue())
     assert display is not None
     assert Image.open(io.BytesIO(display)).size == (1067, 1600)
+
+
+def _with_sibling(root, relative: str):
+    original = root / relative
+    original.parent.mkdir(parents=True, exist_ok=True)
+    original.write_bytes(b"original")
+    sibling = root / media.display_path_for(relative)
+    sibling.write_bytes(b"display")
+    return original, sibling
+
+
+def test_withdraw_and_restore_move_the_display_sibling(tmp_path, monkeypatch):
+    root = tmp_path / "media"
+    monkeypatch.setattr(media.settings, "MEDIA_ROOT", str(root))
+    relative = os.path.join("7", "42", "u", "p.jpg")
+    original, sibling = _with_sibling(root, relative)
+
+    assert media.withdraw_media_from_mount([relative]) == 2
+    assert not original.exists() and not sibling.exists()
+    held = os.path.join(media.quarantine_root(), media.display_path_for(relative))
+    assert os.path.isfile(held)
+
+    assert media.restore_media_to_mount([relative]) == 2
+    assert original.exists() and sibling.read_bytes() == b"display"
+
+
+def test_delete_stored_media_unlinks_the_display_sibling(tmp_path, monkeypatch):
+    monkeypatch.setattr(media.settings, "MEDIA_ROOT", str(tmp_path))
+    relative = os.path.join("7", "42", "u", "p.jpg")
+    original, sibling = _with_sibling(tmp_path, relative)
+
+    media.delete_stored_media(relative, 7)
+
+    assert not original.exists() and not sibling.exists()
+
+
+@pytest.mark.asyncio
+async def test_animated_gif_gets_no_display_copy(tmp_path, monkeypatch):
+    monkeypatch.setattr(media.settings, "MEDIA_ROOT", str(tmp_path))
+    buffer = io.BytesIO()
+    frames = [Image.effect_noise((2400, 1800), 90).convert("RGB") for _ in range(2)]
+    frames[0].save(buffer, "GIF", save_all=True, append_images=frames[1:])
+
+    item = await media.process_and_save_media(
+        _make_upload("a.gif", buffer.getvalue(), "image/gif"), 1, 2, 0
+    )
+
+    assert media.existing_display_path(item.file_path) is None
+
+
+def test_display_copy_keeps_the_icc_profile():
+    from PIL import ImageCms
+
+    srgb = ImageCms.ImageCmsProfile(ImageCms.createProfile("sRGB")).tobytes()
+    tagged = io.BytesIO()
+    Image.effect_noise((2400, 1800), 90).convert("RGB").save(
+        tagged, format="PNG", icc_profile=srgb
+    )
+    with Image.open(io.BytesIO(media.make_display_bytes(tagged.getvalue()))) as out:
+        assert out.info.get("icc_profile") == srgb
