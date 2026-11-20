@@ -85,7 +85,7 @@ describe("SNIDE's dress", () => {
 
   it("bleeds the submit bar to the sheet's edge at each width", () => {
     // The shared band (#1828; composerDispatch.test.tsx).
-    const bleed = "margin:0 calc(-1 * var(--composer-pad-x)) calc(-1 * var(--composer-pad-bottom))";
+    const bleed = "margin:0 calc(-1 * var(--fx-space-2xl--lg)) calc(-1 * var(--fx-space-2xl--xl))";
     expect(render("desktop")).toContain(bleed);
     expect(render("mobile")).toContain(bleed);
   });

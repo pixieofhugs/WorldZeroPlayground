@@ -237,6 +237,19 @@ export async function removeFlaggedPraxes(characterId: number): Promise<number> 
   return data.removed
 }
 
+export type ModActionOut = components['schemas']['ModActionOut']
+
+export const MOD_LOG_PAGE_SIZE = 20
+
+export async function getModLog(
+  offset = 0,
+): Promise<components['schemas']['ModActionPage']> {
+  const { data } = await apiGet('/admin/mod-log', {
+    params: { query: { offset, limit: MOD_LOG_PAGE_SIZE } },
+  })
+  return data
+}
+
 export async function banCharacter(id: number, banned: boolean): Promise<void> {
   await apiPost('/admin/characters/{character_id}/ban', {
     params: { path: { character_id: id } },
