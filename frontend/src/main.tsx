@@ -10,6 +10,8 @@ import { ThemeProvider } from './hooks/useTheme'
 import { MotionProvider } from './hooks/useMotion'
 import i18n, { loadCopyOverrides } from './i18n'
 import './index.css'
+import './registerSw'
+import OfflineGate from './components/OfflineGate'
 
 // Deliberately not awaited: first paint must not wait on copy overrides.
 void loadCopyOverrides()
@@ -28,7 +30,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                   not wait on `/auth/me` (#1344). */}
               <SidebarProvider>
                 <AdminModeProvider>
-                  <App />
+                  <OfflineGate>
+                    <App />
+                  </OfflineGate>
                 </AdminModeProvider>
               </SidebarProvider>
             </AuthProvider>
