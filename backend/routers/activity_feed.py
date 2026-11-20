@@ -1,12 +1,12 @@
 """Router for the unified activity feed."""
 from dataclasses import asdict
 from datetime import datetime
-from typing import Callable, Optional
+from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db import get_db, get_session_factory
+from db import get_db
 from dependencies import get_current_character
 from models.account import Account
 from models.character import Character
@@ -42,7 +42,6 @@ async def activity_feed(
     # `test_activity_feed_query_count.py`; don't select prefs separately.
     account: Account = Depends(get_current_account),
     session: AsyncSession = Depends(get_db, scope="function"),
-    session_factory: Callable = Depends(get_session_factory),
 ) -> ActivityFeedResponse:
     """Return a unified, paginated activity feed for the current character.
 
@@ -66,7 +65,6 @@ async def activity_feed(
     dc_response = await get_activity_feed(
         character_id=character.id,
         session=session,
-        session_factory=session_factory,
         feed_filter=filter,
         before_cursor=before,
         limit=limit,
@@ -109,13 +107,11 @@ async def dismiss_all_items(
     body: FeedBulkArchiveRequest,
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db, scope="function"),
-    session_factory: Callable = Depends(get_session_factory),
 ) -> FeedBulkArchiveResponse:
     """Archive everything the given filter would currently return."""
     count = await dismiss_feed_items_for_filter(
         character_id=character.id,
         session=session,
-        session_factory=session_factory,
         feed_filter=body.filter,
     )
     return FeedBulkArchiveResponse(count=count, archived=True)

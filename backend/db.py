@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
-from typing import AsyncGenerator, Callable
+from typing import AsyncGenerator
 
 from config import settings
 
@@ -10,14 +10,6 @@ engine = create_async_engine(
 )
 
 AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False)
-
-
-def get_session_factory() -> Callable:
-    """FastAPI dependency: the session factory for concurrent sub-queries.
-
-    Tests override it so sub-queries see uncommitted fixture data.
-    """
-    return AsyncSessionLocal
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
