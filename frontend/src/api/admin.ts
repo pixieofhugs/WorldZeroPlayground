@@ -282,3 +282,16 @@ export async function getEraPreflight(configKey: string): Promise<EraPreflight> 
   })
   return data
 }
+
+export type PopulationDialOut = components['schemas']['PopulationDialOut']
+export type DialSide = PopulationDialOut['side']
+
+export async function getSmallWorld(): Promise<PopulationDialOut[]> {
+  const { data } = await apiGet('/admin/small-world')
+  return data
+}
+
+export async function setSmallWorld(sides: Record<string, DialSide>): Promise<PopulationDialOut[]> {
+  const { data } = await apiPut('/admin/small-world', { body: sides })
+  return data
+}

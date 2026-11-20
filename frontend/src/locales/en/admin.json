@@ -216,6 +216,7 @@
         "factionCopy": "Faction copy",
         "levelCopy": "Level-up copy",
         "era": "Roll into a new era…",
+        "smallWorld": "Small world",
         "modLog": "Mod log"
       }
     },
@@ -420,6 +421,33 @@
         "summary": "{{votes}} votes went to {{count}} of the {{eligible}} people they could vote for.",
         "baseline": "Spread evenly, each person would get about {{share}}; the line on each bar marks it.",
         "votesBack": "{{top}} votes back: {{back}} of their {{of}} votes went to {{name}}."
+      }
+    },
+    "smallWorld": {
+      "title": "Small world",
+      "lede": "Rules that loosen while each community is a handful of players. Both values come from the era; this page picks one.",
+      "loadError": "Couldn't load the small world rules.",
+      "saveError": "Couldn't save that change.",
+      "setAll": "Set all to small world",
+      "cols": { "rule": "Rule", "small": "Small world", "full": "Full game", "using": "Using", "changed": "Last changed" },
+      "turnUp": "Turn up when: {{when}}",
+      "side": { "small": "Small world", "full": "Full game" },
+      "on": "on",
+      "off": "off",
+      "default": "Launch default",
+      "changedBy": "{{who}} · {{when}}",
+      "result": "{{rule}} is now on {{side}}. It was announced in the feed and logged.",
+      "resultAll": "Every rule is now on small world. It was announced in the feed and logged.",
+      "resultNone": "Nothing changed; every rule was already there.",
+      "note": "A change posts a feed announcement in the world's voice and refreshes every player's rules. Nothing already posted is taken back.",
+      "modLog": "Mod log",
+      "rules": {
+        "praxis_post_cooldown": { "name": "Post cooldown", "when": "someone posts three or more a day for a week" },
+        "vote_requires_received_vote": { "name": "A vote needs a vote received", "when": "you spot a suspected second account" },
+        "comment_level": { "name": "Comments unlock at level", "when": "a level-1 comment is flagged as rude" },
+        "duel_level": { "name": "Duels unlock at level", "when": "new players decline most duels" },
+        "invitation": { "name": "Faction invitation (tasks, points)", "when": "a faction reaches about five in one community" },
+        "flag_level": { "name": "Flagging unlocks at level", "when": "flags start getting overturned" }
       }
     },
     "modlog": {
