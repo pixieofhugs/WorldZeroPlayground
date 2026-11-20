@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+# Check backup.sh's off-box push without a box or a bucket (#3620).
+#
+# The seam is backup.sh as a process: `docker` is a stub first on PATH. It
+# answers `compose exec` with bytes and records `run` (the upload) and can be
+# made to fail. Run it: deploy/test-backup-push
+set -uo pipefail
+
+here=$(cd "$(dirname "$0")" && pwd)
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
+mkdir -p "$tmp/bin" "$tmp/root/prod" "$tmp/dest"
+
+cat >"$tmp/bin/docker" <<'EOF'
+#!/usr/bin/env bash
+if [[ $1 == compose ]]; then echo bytes; exit 0; fi
+printf '%s\n' "$@" >>"$STUB/uploads"
+echo "AKEY=$AWS_ACCESS_KEY_ID" >>"$STUB/uploads"
+[[ -e "$STUB/upload-fail" ]] && { echo "stub: 403 Forbidden"; exit 1; }
+exit 0
+EOF
+chmod +x "$tmp/bin/docker"
+
+fails=0
+check() { if "${@:2}"; then echo "ok   $1"; else echo "FAIL $1"; fails=$((fails + 1)); fi; }
+run() {
+  rm -f "$tmp/uploads"
+  out=$(STUB=$tmp PATH="$tmp/bin:$PATH" WZ_STACK_ROOT="$tmp/root" WZ_BACKUP_DEST="$tmp/dest" \
+        "$here/backup.sh" "${1:-prod}" 2>&1)
+  rc=$?
+}
+good_env() {
+  printf 'WZ_OFFSITE_%s\n' ENDPOINT=https://s3.example.invalid BUCKET=wz-bk \
+    REGION=eu-1 KEY_ID=kid SECRET=sec >"$tmp/root/prod/offsite.env"
+}
+
+good_env
+run
+check "success: exits 0"                    test "$rc" = 0
+check "success: both files uploaded"        test "$(grep -c '^s3$' "$tmp/uploads")" = 2
+check "success: custom endpoint passed"     grep -qx 'https://s3.example.invalid' "$tmp/uploads"
+check "success: db key is dated under prod" grep -qE '^s3://wz-bk/prod/[0-9-]{10}/prod-db-' "$tmp/uploads"
+check "success: the credential reached it"  grep -qx 'AKEY=kid' "$tmp/uploads"
+check "success: no failure marker"          test ! -e "$tmp/dest/offsite-failed.txt"
+
+touch "$tmp/upload-fail"
+run
+check "upload fails: exits non-zero"        test "$rc" != 0
+check "upload fails: marker left for pull"  grep -q '403 Forbidden' "$tmp/dest/offsite-failed.txt"
+check "upload fails: local dump is kept"    test -s "$tmp/dest/prod-db-$(date +%u).dump"
+rm "$tmp/upload-fail"
+run
+check "recovers: marker cleared"            test ! -e "$tmp/dest/offsite-failed.txt"
+
+sed -i '/WZ_OFFSITE_SECRET/d' "$tmp/root/prod/offsite.env"
+run
+check "missing config: exits non-zero"      test "$rc" != 0
+check "missing config: names the key"       grep -q 'WZ_OFFSITE_SECRET is not set' "$tmp/dest/offsite-failed.txt"
+check "missing config: nothing uploaded"    test ! -e "$tmp/uploads"
+
+rm "$tmp/root/prod/offsite.env"
+run
+check "no offsite.env at all: still non-zero"      test "$rc" != 0
+
+if ((fails)); then echo "$fails check(s) failed"; exit 1; fi
+echo "all checks passed"
