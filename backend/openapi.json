@@ -2707,6 +2707,17 @@
             "title": "Joinable",
             "type": "boolean"
           },
+          "refusal": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Refusal"
+          },
           "slug": {
             "title": "Slug",
             "type": "string"
@@ -2726,7 +2737,8 @@
         "required": [
           "slug",
           "status",
-          "joinable"
+          "joinable",
+          "refusal"
         ],
         "title": "FactionStatusOut",
         "type": "object"

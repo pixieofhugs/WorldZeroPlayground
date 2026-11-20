@@ -3256,6 +3256,8 @@ export interface components {
         FactionStatusOut: {
             /** Joinable */
             joinable: boolean;
+            /** Refusal */
+            refusal: string | null;
             /** Slug */
             slug: string;
             /**
