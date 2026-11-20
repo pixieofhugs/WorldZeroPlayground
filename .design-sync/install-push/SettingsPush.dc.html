@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Settings, notifications with a Push column</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wz/styles.css">
+<script src="ds/wz/_ds_bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--color-accent-primary)}a:hover{color:var(--color-text-primary)}
+</style>
+</helmet>
+<x-import component-from-global-scope="WZ.DSProvider">
+<div style="width: 860px; height: 1500px; box-sizing: border-box; padding: 24px; display: flex; gap: 32px; background: #d9d4cb;">
+<sc-for list="{{sides}}" as="side" hint-placeholder-count="2">
+  <div data-theme="{{side.theme}}" style="width: 390px; height: 1452px; box-sizing: border-box; padding: 20px 16px; display: flex; flex-direction: column; gap: 16px; background: var(--color-bg-page); color: var(--color-text-primary); font-family: var(--font-body); overflow: hidden;">
+    <p style="margin: 0; font-family: var(--font-accent); font-size: 15px; letter-spacing: 0.14em; color: var(--color-text-tertiary);">SETTINGS · PHONE</p>
+    <x-import component-from-global-scope="WZ.SettingsCard" section-id="notifications" title="Notifications">
+      <div style="display: flex; flex-direction: column;">
+        <sc-for list="{{side.rows}}" as="row" hint-placeholder-count="10">
+          <div style="display: flex; flex-direction: column; gap: 10px; padding: 14px 0; border-bottom: {{row.rule}};">
+            <div style="display: flex; flex-direction: column; gap: 3px;">
+              <span style="font-family: var(--font-display); font-size: 17px; font-weight: 600; line-height: 1.3;">{{row.title}}</span>
+              <span style="font-size: 14px; line-height: 1.5; color: var(--color-text-secondary);">{{row.help}}</span>
+              <sc-if value="{{row.note}}" hint-placeholder-val="{{false}}">
+                <span style="font-size: 13px; line-height: 1.5; color: var(--color-text-tertiary);">{{row.note}}</span>
+              </sc-if>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 8px;">
+              <sc-for list="{{row.cells}}" as="cell" hint-placeholder-count="3">
+                <div style="width: 84px; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                  <x-import component-from-global-scope="WZ.SettingsSwitch" checked="{{cell.on}}" disabled="{{cell.locked}}" label="{{cell.label}}" on-toggle="{{cell.toggle}}"></x-import>
+                  <span aria-hidden="true" style="font-size: 12px; color: {{cell.captionColor}};">{{cell.caption}}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+        <p style="margin: 14px 0 0; font-size: 14px; line-height: 1.6; color: var(--color-text-tertiary);">Email delivery is not implemented yet. When it is, we'll pay attention to these settings. For now, they are merely decorative, like a nice vase.</p>
+      </div>
+    </x-import>
+  </div>
+</sc-for>
+</div>
+</x-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":860,"height":1500}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { off: {} };
+  }
+  renderVals() {
+    const REQ = 'You will always see an alert when something needs your reply.';
+    const BONES = 'No need to check your messages. You will feel the growth in your bones.';
+    const base = [
+      ['all', 'Everything', 'Set every row below at once. Nothing is remembered for this row itself.', [true, true, true], [false, false, false], null],
+      ['duel', 'Duel challenges', 'Someone challenges you to a duel.', [true, true, true], [true, false, false], REQ],
+      ['collab', 'Collaboration invites', 'Someone asks you to join a praxis with them.', [true, true, true], [true, false, false], REQ],
+      ['letter', 'Faction invitations', 'A faction invites you to join them.', [true, true, true], [true, false, false], REQ],
+      ['comment', 'Comments on my praxis', 'Someone comments on a praxis you posted.', [true, true, true], [false, false, false], null],
+      ['mention', 'Mentions', 'Someone writes your name in a comment.', [true, true, true], [false, false, false], null],
+      ['vote', 'Ratings on my praxis', 'Someone rates your praxis, or changes a rating they already gave.', [true, true, true], [false, false, false], null],
+      ['level', 'Leveling up', 'You reach a new level.', [false, false, false], [true, false, false], BONES],
+      ['era', 'Era announcements', 'A new era begins for everyone.', [true, false, false], [false, false, false], null],
+      ['task', 'New tasks', 'A new task is published for everyone to take on.', [true, false, false], [false, false, false], null]
+    ];
+    const caps = ['Updates', 'Email', 'Push'];
+    const verbs = ['Show {e} on Updates', 'Email me about {e}', 'Push {e} to this phone'];
+    const off = this.state.off;
+    const rows = base.map(([key, title, help, on, locked, note], i) => ({
+      title, help, note,
+      rule: i === base.length - 1 ? '0' : '1px solid var(--color-border)',
+      cells: caps.map((caption, j) => {
+        const id = key + ':' + j;
+        const flipped = !!off[id];
+        return {
+          caption,
+          captionColor: j === 2 ? 'var(--color-accent-primary)' : 'var(--color-text-secondary)',
+          on: locked[j] ? on[j] : (flipped ? !on[j] : on[j]),
+          locked: locked[j],
+          label: locked[j] && note ? title + ' — ' + note : verbs[j].replace('{e}', title.toLowerCase()),
+          toggle: () => this.setState({ off: { ...off, [id]: !flipped } })
+        };
+      })
+    }));
+    return { sides: [{ theme: 'light', rows }, { theme: 'dark', rows }] };
+  }
+}
+</script>
+</body>
+</html>
