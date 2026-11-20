@@ -5,6 +5,8 @@ import type { PendingTaskOut } from "../../api/admin";
 export type AdminTaskRow = TaskOut & {
   created_by_name?: string;
   notes?: string;
+  /** Delete is offered only without history (#3667); the server refuses regardless. */
+  has_history?: boolean;
 };
 
 /**
@@ -15,7 +17,9 @@ export type AdminTaskRow = TaskOut & {
 export function mergeAdminTaskRows(
   allTasks: TaskOut[],
   pendingTasks: PendingTaskOut[],
+  historyIds: number[] = [],
 ): AdminTaskRow[] {
+  const withHistory = new Set(historyIds);
   const pendingById = new Map<number, PendingTaskOut>(
     pendingTasks.map((task) => [task.id, task]),
   );
@@ -24,11 +28,14 @@ export function mergeAdminTaskRows(
   const merged: AdminTaskRow[] = allTasks.map((task) => {
     seen.add(task.id);
     const pending = pendingById.get(task.id);
-    return pending ? { ...task, ...pending } : task;
+    return { ...task, ...pending, has_history: withHistory.has(task.id) };
   });
 
   const missing = pendingTasks.filter((task) => !seen.has(task.id));
-  return [...missing, ...merged];
+  return [
+    ...missing.map((task) => ({ ...task, has_history: withHistory.has(task.id) })),
+    ...merged,
+  ];
 }
 
 /** ANDed criteria (#3060); status is a separate axis applied by the tab. */

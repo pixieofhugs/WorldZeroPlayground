@@ -24,6 +24,9 @@ describe('hidden-praxis banner', () => {
   it('shows for a hidden praxis', () => {
     expect(show({ moderation_status: 'hidden' })).toContain(BANNER)
   })
+  it("shows the moderator's reason", () => {
+    expect(show({ moderation_status: 'hidden', admin_note: 'Stock photo.' })).toContain('Stock photo.')
+  })
   it('does not show for a visible praxis', () => {
     expect(show({ moderation_status: 'visible' })).not.toContain(BANNER)
   })
