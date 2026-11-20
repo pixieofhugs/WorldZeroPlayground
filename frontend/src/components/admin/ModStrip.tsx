@@ -15,7 +15,11 @@ export default function ModStrip() {
     const el = document.querySelector<HTMLElement>('.mod-strip')
     const root = document.documentElement
     root.dataset.modStrip = ''
-    const set = () => root.style.setProperty('--modstrip-h', `${el?.offsetHeight ?? 0}px`)
+    const set = () => {
+      root.style.setProperty('--modstrip-h', `${el?.offsetHeight ?? 0}px`)
+      // The page just moved under any open spot box; its measure listens for resize.
+      dispatchEvent(new Event('resize'))
+    }
     set()
     const ro = typeof ResizeObserver === 'undefined' || !el ? null : new ResizeObserver(set)
     if (el) ro?.observe(el)

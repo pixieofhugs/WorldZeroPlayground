@@ -14,7 +14,7 @@
 .mod-item[aria-checked="true"] .mod-switch { background: var(--color-accent-primary); }
 .mod-item[aria-checked="true"] .mod-switch::after { transform: translateX(16px); }
 .mod-rule { height: 1px; background: var(--color-border); border: 0; margin: 0; }
-.mod-counts { display: grid; grid-template-columns: minmax(0, 1fr) auto; row-gap: var(--space-xs); font-size: var(--text-lg); color: var(--color-text-secondary); }
+.mod-counts { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-xs) var(--space-md); font-size: var(--text-lg); color: var(--color-text-secondary); }
 .mod-counts b { color: var(--color-text-primary); }
 
 /* The frame sits over the page and takes no clicks; the strip pushes the page down by its own height. */
