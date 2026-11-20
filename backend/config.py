@@ -43,6 +43,10 @@ class Settings(BaseSettings):
     # False in production: closes cross-site WebSocket hijacking (ADR-0073).
     # Pytest room clients send no Origin, so they set it.
     ROOM_ALLOW_MISSING_ORIGIN: bool = False
+    # Blank = web push is off, and /me/notification-prefs says so.
+    VAPID_PUBLIC_KEY: str = ""
+    VAPID_PRIVATE_KEY: str = ""
+    VAPID_CONTACT: str = ""
 
     model_config = {"env_file": ".env", "extra": "ignore"}
 

@@ -31,19 +31,27 @@ async def test_a_fresh_account_reads_every_default(
     assert events["duel_challenge"] == {
         "on_updates": True,
         "by_email": True,
+        "by_push": True,
         "locked": True,
     }
     assert events["comment_on_mine"] == {
         "on_updates": True,
         "by_email": True,
+        "by_push": True,
         "locked": False,
     }
     assert events["vote_on_mine"] == {
         "on_updates": True,
         "by_email": False,
+        "by_push": False,
         "locked": False,
     }
-    assert events[LEVEL_UP] == {"on_updates": False, "by_email": False, "locked": True}
+    assert events[LEVEL_UP] == {
+        "on_updates": False,
+        "by_email": False,
+        "by_push": False,
+        "locked": True,
+    }
 
 
 @pytest.mark.asyncio
@@ -59,6 +67,7 @@ async def test_a_save_round_trips_and_answers_with_what_was_stored(
     assert save.json()["events"]["vote_on_mine"] == {
         "on_updates": False,
         "by_email": True,
+        "by_push": False,
         "locked": False,
     }
     assert save.json()["events"]["era_announcement"]["on_updates"] is True

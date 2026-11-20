@@ -88,6 +88,9 @@ services:
       DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID:-}
       DISCORD_CLIENT_SECRET: ${DISCORD_CLIENT_SECRET:-}
       DISCORD_REDIRECT_URI: ${DISCORD_REDIRECT_URI:-}
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
+      VAPID_CONTACT: ${VAPID_CONTACT:-}
     # 127.0.0.1 for the same reason as the database, and a sharper one: this
     # stack sets ENVIRONMENT=development, which opens POST /auth/dev-login.
     # That endpoint mints a valid session cookie for a caller supplying no

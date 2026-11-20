@@ -24,6 +24,7 @@ from services.character_stats import recalculate_members_stats
 from services.era import get_current_era_row, get_or_create_stats
 from services.era_gates import may_vote, vote_lock_reason
 from services.praxis_duel import get_duel_for_praxis
+from services.push import notify_vote
 from services.scoring import compute_votes_available
 from services.vote_tally import VoteTally, tally_votes
 
@@ -171,6 +172,8 @@ async def cast_or_update_vote(
     await session.refresh(cast)
 
     # ``tally_votes`` answers for every id given, so the key is always present (#1378).
+    await notify_vote(session, praxis, voter)
+
     tallies = await tally_votes([praxis.id], session)
     # The card scores the sealing era's votes only; the client swaps this in.
     sealed = await tally_votes([praxis.id], session, cast_in="sealed")

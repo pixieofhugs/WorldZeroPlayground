@@ -129,7 +129,20 @@ def test_apply_update_ignores_a_locked_rows_page_value():
     assert stored[FEED_ITEM_TYPE_DUEL_CHALLENGE] == {
         "on_updates": True,
         "by_email": False,
+        "by_push": True,
     }
+
+
+def test_push_defaults_copy_the_email_defaults():
+    for event in NOTIFICATION_EVENTS:
+        assert resolve_prefs({})[event.key].by_push is event.email_default
+
+
+def test_a_save_without_by_push_keeps_the_stored_push_value():
+    row = {"on_updates": False, "by_email": False}
+    first = apply_update({}, {LEVEL_UP: {**row, "by_push": True}})
+    second = apply_update(first, {LEVEL_UP: row})
+    assert resolve_prefs(second)[LEVEL_UP].by_push is True
 
 
 def test_apply_update_writes_one_row_without_disturbing_the_others():

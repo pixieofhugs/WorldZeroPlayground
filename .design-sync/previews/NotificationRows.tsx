@@ -24,15 +24,15 @@ import { noop } from './_fixtures'
 import type { NotificationPrefs } from '../../frontend/src/pages/settings/notificationPrefs'
 
 const DEFAULTS: NotificationPrefs = {
-  duel_challenge: { on_updates: true, by_email: true, locked: true },
-  collab_invite: { on_updates: true, by_email: true, locked: true },
-  invitation_letter: { on_updates: true, by_email: true, locked: true },
-  comment_on_mine: { on_updates: true, by_email: true, locked: false },
-  comment_mention: { on_updates: true, by_email: true, locked: false },
-  vote_on_mine: { on_updates: true, by_email: false, locked: false },
-  level_up: { on_updates: false, by_email: false, locked: true },
-  era_announcement: { on_updates: true, by_email: false, locked: false },
-  global_task: { on_updates: true, by_email: false, locked: false },
+  duel_challenge: { on_updates: true, by_email: true, by_push: true, locked: true },
+  collab_invite: { on_updates: true, by_email: true, by_push: true, locked: true },
+  invitation_letter: { on_updates: true, by_email: true, by_push: true, locked: true },
+  comment_on_mine: { on_updates: true, by_email: true, by_push: true, locked: false },
+  comment_mention: { on_updates: true, by_email: true, by_push: true, locked: false },
+  vote_on_mine: { on_updates: true, by_email: false, by_push: false, locked: false },
+  level_up: { on_updates: false, by_email: false, by_push: false, locked: true },
+  era_announcement: { on_updates: true, by_email: false, by_push: false, locked: false },
+  global_task: { on_updates: true, by_email: false, by_push: false, locked: false },
 }
 
 const ALL_OFF: NotificationPrefs = Object.fromEntries(

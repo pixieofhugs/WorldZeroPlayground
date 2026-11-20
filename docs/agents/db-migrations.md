@@ -244,6 +244,7 @@ copy key, which is likewise written by a human and has no surrogate id.
 | `praxis.py` | `media_item` | `id` | `praxis_id` |
 | `praxis.py` | `praxis_invite` | `id` | `praxis_id`, `inviter_id`, `invitee_id` |
 | `praxis_room.py` | `praxis_room_update` | `id` | `praxis_id` |
+| `push_subscription.py` | `push_subscription` | `id` | `account_id` |
 | `relationship.py` | `relationship` | `id` | `from_character_id`, `to_character_id` |
 | `roles.py` | `role` | `id` | — |
 | `roles.py` | `account_role` | `id` | `account_id`, `role_id`, `granted_by_id` |
@@ -252,7 +253,7 @@ copy key, which is likewise written by a human and has no surrogate id.
 | `terms_acceptance.py` | `terms_acceptance` | `id` | `account_id` |
 | `vote.py` | `vote` | `id` | `praxis_id`, `voter_character_id`, `voter_account_id`, `era_id` |
 
-34 tables, 61 integer foreign keys, 5 string ones.
+35 tables, 62 integer foreign keys, 5 string ones.
 
 `backend/tests/unit/test_model_conventions.py` parses this table and asserts both
 halves against `Base.metadata`, so a new model that skips this list fails there.

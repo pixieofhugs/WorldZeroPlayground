@@ -18,3 +18,6 @@ httpx
 # library upgrade.
 pycrdt==0.14.13
 pycrdt-websocket==0.16.9
+
+# Web push encryption + VAPID signing (#3678).
+pywebpush

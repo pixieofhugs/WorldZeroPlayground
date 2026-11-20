@@ -1,8 +1,9 @@
 """Per-ACCOUNT notification preferences (#1047): registry and resolver.
 
-Each row has two switches. ``on_updates`` is honoured
-(:func:`muted_feed_types` → ``activity_feed._visible_types``). ``by_email`` is
-**stored intent only**: nothing sends email yet (#2164). Do NOT add a sender here.
+Each row has three switches. ``on_updates`` is honoured
+(:func:`muted_feed_types` → ``activity_feed._visible_types``). ``by_push`` is read by
+``services.push.notify``. ``by_email`` is **stored intent only**: nothing sends
+email yet (#2164). Do NOT add an email sender here.
 
 One JSONB column (no cross-account queries); unset keys resolve to defaults
 here, so adding an event needs no migration.
@@ -116,10 +117,11 @@ EVENTS_BY_KEY: dict[str, NotificationEvent] = {
 
 @dataclass(frozen=True)
 class ResolvedPref:
-    """One row's two switches, after defaults and locks have been applied."""
+    """One row's three switches, after defaults and locks have been applied."""
 
     on_updates: bool
     by_email: bool
+    by_push: bool
     locked: bool
 
 
@@ -150,6 +152,7 @@ def resolve_prefs(raw: Any) -> dict[str, ResolvedPref]:
                 else _stored_bool(row, "on_updates", event.page_default)
             ),
             by_email=_stored_bool(row, "by_email", event.email_default),
+            by_push=_stored_bool(row, "by_push", event.email_default),
             locked=event.page_locked,
         )
     return resolved
@@ -196,6 +199,11 @@ def apply_update(raw: Any, incoming: Mapping[str, Mapping[str, bool]]) -> dict:
                 values,
                 "by_email",
                 _stored_bool(current, "by_email", event.email_default),
+            ),
+            "by_push": _stored_bool(
+                values,
+                "by_push",
+                _stored_bool(current, "by_push", event.email_default),
             ),
         }
     return stored

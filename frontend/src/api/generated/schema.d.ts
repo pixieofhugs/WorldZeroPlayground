@@ -1947,6 +1947,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/push/subscriptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Subscribe
+         * @description Idempotent on endpoint. A device belongs to whoever subscribed last: a browser
+         *     holds one subscription per origin, so a shared phone must not keep pushing the
+         *     previous account's events.
+         */
+        post: operations["subscribe_push_subscriptions_post"];
+        /** Unsubscribe */
+        delete: operations["unsubscribe_push_subscriptions_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/relationships": {
         parameters: {
             query?: never;
@@ -4041,6 +4064,8 @@ export interface components {
         NotificationPrefIn: {
             /** By Email */
             by_email: boolean;
+            /** By Push */
+            by_push?: boolean | null;
             /** On Updates */
             on_updates: boolean;
         };
@@ -4053,6 +4078,8 @@ export interface components {
         NotificationPrefOut: {
             /** By Email */
             by_email: boolean;
+            /** By Push */
+            by_push: boolean;
             /** Locked */
             locked: boolean;
             /** On Updates */
@@ -4077,6 +4104,10 @@ export interface components {
             events: {
                 [key: string]: components["schemas"]["NotificationPrefOut"];
             };
+            /** Push Available */
+            push_available: boolean;
+            /** Vapid Public Key */
+            vapid_public_key: string | null;
         };
         /** NudgeItem */
         NudgeItem: {
@@ -4676,6 +4707,24 @@ export interface components {
         PraxisVoteIn: {
             /** Value */
             value: number;
+        };
+        /** PushKeysIn */
+        PushKeysIn: {
+            /** Auth */
+            auth: string;
+            /** P256Dh */
+            p256dh: string;
+        };
+        /** PushSubscriptionIn */
+        PushSubscriptionIn: {
+            /** Endpoint */
+            endpoint: string;
+            keys: components["schemas"]["PushKeysIn"];
+        };
+        /** PushUnsubscribeIn */
+        PushUnsubscribeIn: {
+            /** Endpoint */
+            endpoint: string;
         };
         /** RelationshipCreate */
         RelationshipCreate: {
@@ -8790,6 +8839,72 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["VoterDetail"][];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    subscribe_push_subscriptions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PushSubscriptionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unsubscribe_push_subscriptions_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PushUnsubscribeIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
