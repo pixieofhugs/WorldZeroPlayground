@@ -1416,7 +1416,7 @@ async def _count_sources(
     sources: Sequence[FeedSource],
     ctx: FeedContext,
     archive_view: FeedArchiveView,
-    session_factory: Callable,
+    session: AsyncSession,
     with_answered: bool = False,
 ) -> dict[str, int]:
     """Every source's COUNT in ONE round trip (ADR-0036, #1532).
@@ -1449,10 +1449,9 @@ async def _count_sources(
         )
     if not branches:
         return counts
-    async with session_factory() as session:
-        result = await session.execute(union_all(*branches))
-        for item_type, count in result.all():
-            counts[item_type] = int(count)
+    result = await session.execute(union_all(*branches))
+    for item_type, count in result.all():
+        counts[item_type] = int(count)
     return counts
 
 
@@ -1470,19 +1469,19 @@ def _sum_counts_for_tab(
 async def _count_by_type(
     ctx: FeedContext,
     archive_view: FeedArchiveView,
-    session_factory: Callable,
+    session: AsyncSession,
     with_answered: bool = False,
 ) -> dict[str, int]:
     """Every registry source's COUNT, in one statement (ADR-0036, #1532)."""
     return await _count_sources(
-        FEED_SOURCES, ctx, archive_view, session_factory, with_answered=with_answered
+        FEED_SOURCES, ctx, archive_view, session, with_answered=with_answered
     )
 
 
 async def _compute_counts(
     fetch_ctx: FeedContext,
     archive_view: FeedArchiveView,
-    session_factory: Callable,
+    session: AsyncSession,
     active_filter: str,
     muted: frozenset[str] = frozenset(),
 ) -> FeedCountsDC:
@@ -1498,14 +1497,13 @@ async def _compute_counts(
     live_view = replace(archive_view, archived_only=False)
 
     if archive_view.archived_only:
-        # Sequential: tests inject a factory returning the one request session.
         live_counts = await _count_by_type(
-            live_ctx, live_view, session_factory, with_answered=True
+            live_ctx, live_view, session, with_answered=True
         )
-        facet_counts = await _count_by_type(fetch_ctx, archive_view, session_factory)
+        facet_counts = await _count_by_type(fetch_ctx, archive_view, session)
     else:
         live_counts = await _count_by_type(
-            live_ctx, live_view, session_factory, with_answered=True
+            live_ctx, live_view, session, with_answered=True
         )
         facet_counts = live_counts
 
@@ -1588,7 +1586,6 @@ SIDEBAR_ACTIVITY_LIMIT = 5
 async def get_sidebar_feed(
     character_id: int,
     session: AsyncSession,
-    session_factory: Callable,
     muted: frozenset[str] = frozenset(),
 ) -> tuple[int, list[ActivityFeedItemDC], int]:
     """The rail's pending-request COUNT and its activity panel, in one pass.
@@ -1620,7 +1617,7 @@ async def get_sidebar_feed(
         sources_for(FILTER_ALL), fetch_ctx, archive_view, session, stream=True
     )
     request_counts = await _count_sources(
-        sources_for(FILTER_REQUESTS), fetch_ctx, archive_view, session_factory
+        sources_for(FILTER_REQUESTS), fetch_ctx, archive_view, session
     )
 
     recent_activity.sort(key=lambda item: item.timestamp, reverse=True)
@@ -1634,7 +1631,6 @@ async def get_sidebar_feed(
 async def get_activity_feed(
     character_id: int,
     session: AsyncSession,
-    session_factory: Callable,
     feed_filter: Optional[str] = None,
     before_cursor: Optional[datetime] = None,
     limit: int = 20,
@@ -1647,9 +1643,6 @@ async def get_activity_feed(
     Args:
         character_id: The character requesting the feed.
         session: Database session for the pre-fetch phase (friend/foe/task IDs).
-        session_factory: Callable that returns an async session context manager.
-            Only for the badge ``UNION ALL`` (#1532). Tests override it to
-            return the test session, so never gather the two passes.
         feed_filter: One of "all", "friends", "foes", "your_stuff", "global", "requests".
         before_cursor: ISO datetime cursor for pagination (items before this time).
         limit: Max items to return.
@@ -1673,7 +1666,7 @@ async def get_activity_feed(
 
     allowed_sources = [s for s in FEED_SOURCES if s.item_type in allowed_types]
 
-    # Two connections per page (#1532). Not gathered: see `session_factory`.
+    # One session, so never gather: a second checkout deadlocks the pool (#3624).
     all_items = await _fetch_sources(
         allowed_sources,
         fetch_ctx,
@@ -1682,7 +1675,7 @@ async def get_activity_feed(
         stream=not archived and active_filter in STREAM_FILTERS,
     )
     counts = await _compute_counts(
-        fetch_ctx, archive_view, session_factory, active_filter, muted_types
+        fetch_ctx, archive_view, session, active_filter, muted_types
     )
 
     all_items.sort(key=lambda item: item.timestamp, reverse=True)
@@ -1804,7 +1797,6 @@ async def restore_feed_item(
 async def dismiss_feed_items_for_filter(
     character_id: int,
     session: AsyncSession,
-    session_factory: Callable,
     feed_filter: Optional[str] = None,
 ) -> int:
     """Archive everything the given filter would currently return. One call.
@@ -1815,7 +1807,6 @@ async def dismiss_feed_items_for_filter(
     feed = await get_activity_feed(
         character_id=character_id,
         session=session,
-        session_factory=session_factory,
         feed_filter=feed_filter,
         limit=ARCHIVE_ALL_LIMIT,
     )
