@@ -84,7 +84,8 @@ describe("mergeAdminTaskRows", () => {
 
   it("leaves rows with no pending counterpart untouched", () => {
     const merged = mergeAdminTaskRows(EASIEST_FIFTY, []);
-    expect(merged).toEqual(EASIEST_FIFTY);
+    expect(merged).toEqual(EASIEST_FIFTY.map((t) => ({ ...t, has_history: false })));
+    expect(mergeAdminTaskRows(EASIEST_FIFTY, [], [EASIEST_FIFTY[0].id])[0].has_history).toBe(true);
   });
 });
 

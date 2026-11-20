@@ -178,11 +178,13 @@ async def recalculate_character_stats(
     era_row: Era | None = None,
     *,
     emit_taunts: bool = True,
+    rescore_closed: bool = False,
 ) -> None:
     """Recompute score, level and vote budget for one character in ``era_row``.
 
     Gathers that era's scored solo/duel and collab praxes (ADR-0014), plus votes
-    cast in it on older praxes (ADR-0099). A past ``era_row`` is a no-op.
+    cast in it on older praxes (ADR-0099). A past ``era_row`` is a no-op unless
+    ``rescore_closed`` (the roll re-scoring duels it just froze).
     Also the ADR-0068 taunt hook; pass ``emit_taunts=False`` from backfills.
     """
     if era_row is None:
@@ -195,7 +197,7 @@ async def recalculate_character_stats(
     # None ⟹ era_row is the live era: no upper bound, and invitations may land.
     next_era_row = await get_next_era_row(era_row, session)
     # A closed era's standings are frozen after the roll (ADR-0099).
-    if next_era_row is not None:
+    if next_era_row is not None and not rescore_closed:
         return
 
     # Pre-recalc level gates metatask bonus; slight staleness is acceptable.
@@ -303,8 +305,13 @@ async def recalculate_for_account_votes(
         )
         .options(selectinload(Praxis.members))
     )
-    for praxis in result.scalars().all():
-        await recalculate_members_stats(praxis, session, era)
+    character_ids = {m.character_id for p in result.scalars().all() for m in p.members}
+    if not character_ids:
+        return
+    live = await get_current_era_row(session)
+    for character_id in character_ids:
+        await recalculate_character_stats(character_id, session, era, era_row=live)
+    await session.flush()
 
 
 @dataclasses.dataclass(frozen=True)
@@ -345,12 +352,9 @@ async def recompute_votes_spent_this_era(
             ),
         )
 
-    next_era_row = await get_next_era_row(era_row, session)
-    cast_within_era = _era_window_condition(era_row, next_era_row, Vote.created_at)
-
     counted = await session.execute(
         select(Vote.voter_character_id, func.count())
-        .where(cast_within_era)
+        .where(Vote.era_id == era_row.id)
         .group_by(Vote.voter_character_id)
     )
     votes_cast_by_character: dict[int, int] = {

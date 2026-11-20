@@ -3903,6 +3903,10 @@
             "title": "Level Thresholds",
             "type": "array"
           },
+          "level_to_see_pending_tasks": {
+            "title": "Level To See Pending Tasks",
+            "type": "integer"
+          },
           "max_task_signups": {
             "title": "Max Task Signups",
             "type": "integer"
@@ -3919,6 +3923,7 @@
           "duel_level_required",
           "collab_auto_submit_days",
           "pending_task_admin_review_hours",
+          "level_to_see_pending_tasks",
           "max_task_signups",
           "factions",
           "level_profiles"
@@ -9387,6 +9392,65 @@
           }
         ],
         "summary": "List Pending Tasks",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/tasks/with-history": {
+      "get": {
+        "description": "Admin-only: ids of tasks Delete would refuse (#3667).",
+        "operationId": "list_task_ids_with_history_admin_tasks_with_history_get",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "type": "integer"
+                  },
+                  "title": "Response List Task Ids With History Admin Tasks With History Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Task Ids With History",
         "tags": [
           "admin"
         ]

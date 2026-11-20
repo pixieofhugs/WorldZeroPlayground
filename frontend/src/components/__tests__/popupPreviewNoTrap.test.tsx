@@ -6,7 +6,8 @@ import '../../i18n'
 import InvitationLetterPopup from '../InvitationLetterPopup'
 import LevelUpPopup from '../LevelUpPopup'
 
-vi.mock('../../hooks/useFormFactor', () => ({ useFormFactor: () => 'desktop' }))
+const form = vi.hoisted(() => ({ factor: 'desktop' }))
+vi.mock('../../hooks/useFormFactor', () => ({ useFormFactor: () => form.factor }))
 vi.mock('../../auth/AuthContext', () => ({
   useAuth: () => ({ user: { character: { faction_slug: 'na' } }, applyUser: () => {} }),
 }))
@@ -14,9 +15,11 @@ vi.mock('../../auth/AuthContext', () => ({
 afterEach(cleanup)
 
 it.each([
-  ['LevelUpPopup', <LevelUpPopup key="l" level={2} rankKey="trailhead" abilities={[]} onContinue={() => {}} preview />],
-  ['InvitationLetterPopup', <InvitationLetterPopup key="i" factionSlug="coven" onClose={() => {}} preview />],
-])('%s preview leaves Tab and focus alone', (_name, popup) => {
+  ['desktop', 'LevelUpPopup', <LevelUpPopup key="l" level={2} rankKey="trailhead" abilities={[]} onContinue={() => {}} preview />],
+  ['desktop', 'InvitationLetterPopup', <InvitationLetterPopup key="i" factionSlug="coven" onClose={() => {}} preview />],
+  ['mobile', 'LevelUpPopup', <LevelUpPopup key="m" level={2} rankKey="trailhead" abilities={[]} onContinue={() => {}} preview />],
+])('%s %s preview leaves Tab and focus alone', (factor, _name, popup) => {
+  form.factor = factor as string
   render(
     <>
       <button>editor</button>
