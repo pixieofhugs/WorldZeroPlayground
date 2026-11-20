@@ -187,6 +187,10 @@ class ErrorCode(str, enum.Enum):
     #: Usually two admins reverting the same string: already shipped wording.
     copy_override_not_found = "COPY_OVERRIDE_NOT_FOUND"
 
+    # -- Population dial (#3656) --------------------------------------------
+    #: 422: a PUT named a dial the live era does not declare.
+    population_dial_unknown = "POPULATION_DIAL_UNKNOWN"
+
     # -- Owner-only admin roster (#3258) ------------------------------------
     #: A non-owner on the roster routes. 403, like ``require_admin``.
     admin_owner_required = "ADMIN_OWNER_REQUIRED"

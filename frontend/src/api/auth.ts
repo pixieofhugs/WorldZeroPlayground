@@ -32,7 +32,7 @@ export type CurrentUser = components['schemas']['CurrentUser']
 export async function getMe(): Promise<CurrentUser> {
   const { data } = await apiGet('/auth/me')
   // Earliest, most frequent era stamp (ADR-0072); a mismatch drops the cache.
-  noteEraStamp(data.era_id)
+  noteEraStamp(data.era_id, data.rules_revision)
   return data
 }
 

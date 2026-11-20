@@ -1,0 +1,35 @@
+/* Rules-change feed card (#3656): neutral always-dark chrome, like the era card. */
+.rules-change-card {
+  background: var(--badge-admin-bg);
+  color: var(--badge-admin-text);
+  padding: var(--space-lg) var(--space-xl);
+  position: relative;
+}
+.rules-change-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+.rules-change-label {
+  color: var(--rank-silver);
+}
+.rules-change-badge {
+  margin-left: auto;
+}
+.rules-change-headline {
+  font-size: var(--text-content);
+  color: var(--badge-admin-text);
+  margin-bottom: var(--space-sm);
+  line-height: 1.3;
+}
+.rules-change-list {
+  font-size: var(--text-content);
+  line-height: 1.5;
+  margin: 0 0 var(--space-md);
+  padding-left: var(--space-lg);
+}
+.rules-change-footnote {
+  font-size: var(--text-base);
+  color: color-mix(in srgb, var(--badge-admin-text) 75%, transparent);
+}

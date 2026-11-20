@@ -24,6 +24,7 @@ const KICKER_KEY = {
   awaiting_submission: 'feed:kicker.awaiting_submission',
   nudge: 'feed:kicker.nudge',
   era_announcement: 'feed:kicker.era_announcement',
+  rules_change: 'feed:kicker.rules_change',
   invitation_letter: 'feed:kicker.invitation_letter',
   duel_challenge: 'feed:kicker.duel_challenge',
   collab_invite: 'feed:kicker.collab_invite',

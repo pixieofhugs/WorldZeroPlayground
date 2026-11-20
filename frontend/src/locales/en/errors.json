@@ -114,6 +114,7 @@
     "ERA_CONFIG_UNKNOWN": "No era by that name. Pick one from the list — nothing was changed.",
     "ERA_ROLL_NEEDS_CHARACTER": "This era lists new tasks, and your account has no character to author them. Make a character first; nothing was changed.",
     "ERA_REACTIVATE_AMBIGUOUS": "This era names a task to bring back, and that title matches no task or more than one. Fix the era's task list; nothing was changed.",
+    "POPULATION_DIAL_UNKNOWN": "That rule isn't one this era can loosen. Nothing was changed.",
     "ERA_ALREADY_LIVE": "That era is already the live one. Nothing was changed — pick a different era to roll into.",
     "COPY_OVERRIDE_NOT_FOUND": "That wording is already back to the version the site shipped with.",
     "ADMIN_OWNER_REQUIRED": "Only the owner can change who is an admin.",

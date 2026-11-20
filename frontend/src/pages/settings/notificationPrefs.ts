@@ -74,6 +74,11 @@ export const NOTIFICATION_ROWS: readonly NotificationRow[] = [
     helpKey: 'settings.notifications.rows.eraAnnouncementHelp',
   },
   {
+    key: 'rules_change',
+    titleKey: 'settings.notifications.rows.rulesChange',
+    helpKey: 'settings.notifications.rows.rulesChangeHelp',
+  },
+  {
     key: 'global_task',
     titleKey: 'settings.notifications.rows.globalTask',
     helpKey: 'settings.notifications.rows.globalTaskHelp',

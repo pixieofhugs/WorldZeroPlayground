@@ -70,6 +70,17 @@ class EraAnnouncementPayload(FeedPayloadBase):
     config_key: str
 
 
+class RulesChangeEntry(FeedPayloadBase):
+    dial_key: str
+    side: Literal["small", "full"]
+
+
+class RulesChangePayload(FeedPayloadBase):
+    """A mod flipped population dials (#3656); keys and sides, never numbers."""
+
+    changes: list[RulesChangeEntry]
+
+
 class CollabInvitePayload(FeedPayloadBase):
     """Someone invited the viewer into a collab."""
 
@@ -183,6 +194,7 @@ FeedPayload = Union[
     FoeTauntPayload,
     GlobalTaskPayload,
     EraAnnouncementPayload,
+    RulesChangePayload,
     CollabInvitePayload,
     DuelChallengePayload,
     FriendSignupPayload,
@@ -265,6 +277,11 @@ class EraAnnouncementItem(FeedItemBase):
     payload: EraAnnouncementPayload
 
 
+class RulesChangeItem(FeedItemBase):
+    type: Literal["rules_change"]
+    payload: RulesChangePayload
+
+
 class CollabInviteItem(FeedItemBase):
     type: Literal["collab_invite"]
     payload: CollabInvitePayload
@@ -332,6 +349,7 @@ ActivityFeedItem = Annotated[
         FoeTauntItem,
         GlobalTaskItem,
         EraAnnouncementItem,
+        RulesChangeItem,
         CollabInviteItem,
         DuelChallengeItem,
         FriendSignupItem,

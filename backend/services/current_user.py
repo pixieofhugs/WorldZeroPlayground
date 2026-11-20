@@ -23,6 +23,7 @@ from services.character import (
 )
 from services.character_capabilities import compute_capabilities
 from services.era import get_current_era_row_safe, load_era_stats
+from services.population_dial import rules_revision
 from services.vote import account_has_received_vote
 
 
@@ -108,5 +109,6 @@ async def build_current_user(
         vote_level_required=era.vote_level_required,
         era_name=era.name,
         era_id=era_row.id if era_row is not None else 0,
+        rules_revision=await rules_revision(session),
         **asdict(capabilities),
     )

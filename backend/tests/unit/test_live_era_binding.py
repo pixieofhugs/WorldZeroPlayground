@@ -149,6 +149,9 @@ class _RecordingSession:
         self.commits = 0
         self.live_era_at_commit: str | None = None
 
+    async def execute(self, *_):
+        return type("Rows", (), {"all": staticmethod(list)})()
+
     async def commit(self) -> None:
         self.commits += 1
         self.live_era_at_commit = CURRENT_ERA.config_key

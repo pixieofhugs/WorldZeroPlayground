@@ -55,6 +55,7 @@ function makeConfig(overrides: Partial<GameConfigOut> = {}): GameConfigOut {
   return {
     era_name: 'Era 1',
     era_id: 1,
+    rules_revision: 0,
     level_thresholds: [0, 10, 25],
     duel_level_required: 3,
     collab_auto_submit_days: 7,

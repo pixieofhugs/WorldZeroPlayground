@@ -2,12 +2,23 @@ import hmac
 from datetime import datetime
 from typing import Literal, Optional
 
-from fastapi import APIRouter, Depends, File, Header, HTTPException, Query, UploadFile
+from fastapi import (
+    APIRouter,
+    Body,
+    Depends,
+    File,
+    Header,
+    HTTPException,
+    Query,
+    UploadFile,
+)
 from pydantic import ConfigDict
 from schemas.base import WireModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+
+from services.population_dial import list_dials, set_dials
 
 from config import settings
 from db import get_db
@@ -19,6 +30,7 @@ from models.praxis import ModerationStatus, Praxis, PraxisStatus, PraxisType
 from models.task import TaskStatus
 from schemas.admin import (
     AdminGrantIn,
+    PopulationDialOut,
     AdminRow,
     AdminTaskPatch,
     BanAction,
@@ -630,3 +642,23 @@ async def admin_roll_into_era(
     and a mod control that chooses it.
     """
     return await roll_into_era(data.config_key, admin, session)
+
+
+@router.get("/small-world", response_model=list[PopulationDialOut])
+async def admin_get_small_world(
+    _: Account = Depends(require_admin),
+    session: AsyncSession = Depends(get_db, scope="function"),
+) -> list[PopulationDialOut]:
+    """Admin-only: each population dial, its side, both values, who flipped it."""
+    return [PopulationDialOut(**vars(state)) for state in await list_dials(session)]
+
+
+@router.put("/small-world", response_model=list[PopulationDialOut])
+async def admin_set_small_world(
+    data: dict[str, Literal["small", "full"]] = Body(..., min_length=1),
+    admin: Account = Depends(require_admin),
+    session: AsyncSession = Depends(get_db, scope="function"),
+) -> list[PopulationDialOut]:
+    """Admin-only: set the named dials to a side; unchanged dials write nothing."""
+    await set_dials(data, admin.id, session)
+    return [PopulationDialOut(**vars(state)) for state in await list_dials(session)]

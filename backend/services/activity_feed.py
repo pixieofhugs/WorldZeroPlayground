@@ -34,6 +34,7 @@ from models.era import Era
 from models.faction_defection_history import FactionDefectionHistory
 from models.feed_dismissal import FeedDismissal
 from models.invitation_letter import InvitationLetter
+from models.mod_action import ModAction
 from models.nudge import Nudge
 from models.relationship import Relationship, RelationshipType
 from models.duel import Duel, DuelStatus
@@ -53,6 +54,8 @@ from schemas.activity_feed import (
     CompletionPayload,
     DuelChallengePayload,
     EraAnnouncementPayload,
+    RulesChangeEntry,
+    RulesChangePayload,
     FeedPayload,
     FoeTauntPayload,
     FriendDefectionPayload,
@@ -110,6 +113,7 @@ FEED_ITEM_TYPE_FRIEND_COMPLETION = "friend_completion"
 FEED_ITEM_TYPE_FOE_TAUNT = "foe_taunt"
 FEED_ITEM_TYPE_GLOBAL_TASK = "global_task"
 FEED_ITEM_TYPE_ERA_ANNOUNCEMENT = "era_announcement"
+FEED_ITEM_TYPE_RULES_CHANGE = "rules_change"
 FEED_ITEM_TYPE_COLLAB_INVITE = "collab_invite"
 FEED_ITEM_TYPE_DUEL_CHALLENGE = "duel_challenge"
 FEED_ITEM_TYPE_FRIEND_SIGNUP = "friend_signup"
@@ -500,6 +504,61 @@ def _era_announcement_item(row: Any) -> ActivityFeedItemDC:
             era_notes=era.notes,
             config_key=era.config_key,
         ),
+    )
+
+
+_SMALL_WORLD_ACTIONS = {"small_world_on": "small", "small_world_off": "full"}
+RULES_CHANGE_LIMIT = 5
+
+
+def _rules_changes_query(ctx: FeedContext) -> Select:
+    """One row per PUT (#3656): its first mod-log row, carrying the whole batch.
+
+    A PUT's rows share a transaction, so one ``created_at``; the first by id
+    stands for the batch and its siblings ride along as ``dial:action`` pairs.
+    """
+    sibling = aliased(ModAction)
+    actions = tuple(_SMALL_WORLD_ACTIONS)
+    same_batch = and_(
+        sibling.action.in_(actions), sibling.created_at == ModAction.created_at
+    )
+    batch = (
+        select(
+            func.string_agg(
+                sibling.detail + literal(":") + sibling.action, literal(",")
+            )
+        )
+        .where(same_batch)
+        .correlate(ModAction)
+        .scalar_subquery()
+    )
+    first_of_batch = (
+        select(func.min(sibling.id)).where(same_batch).correlate(ModAction).scalar_subquery()
+    )
+    query: Select = select(ModAction, batch.label("batch")).where(
+        ModAction.action.in_(actions), ModAction.id == first_of_batch
+    )
+    if ctx.before is not None:
+        query = query.where(ModAction.created_at < ctx.before)
+    return query.order_by(ModAction.created_at.desc()).limit(RULES_CHANGE_LIMIT)
+
+
+def _rules_change_item(row: Any) -> ActivityFeedItemDC:
+    action: ModAction = row[0]
+    changes = []
+    for pair in row.batch.split(","):
+        dial_key, mod_action = pair.rsplit(":", 1)
+        changes.append(
+            RulesChangeEntry(dial_key=dial_key, side=_SMALL_WORLD_ACTIONS[mod_action])
+        )
+    return ActivityFeedItemDC(
+        type=FEED_ITEM_TYPE_RULES_CHANGE,
+        item_key=build_item_key(FEED_ITEM_TYPE_RULES_CHANGE, action.id),
+        timestamp=action.created_at,
+        actor_display_name=ADMIN_ACTOR_NAME,
+        actor_faction_slug=None,
+        actor_avatar_url=None,
+        payload=RulesChangePayload(changes=changes),
     )
 
 
@@ -1106,6 +1165,14 @@ FEED_SOURCES: tuple[FeedSource, ...] = (
         query=_era_announcements_query,
         to_item=_era_announcement_item,
         source_id_column=Era.id,
+    ),
+    FeedSource(
+        item_type=FEED_ITEM_TYPE_RULES_CHANGE,
+        filters=frozenset({FILTER_ALL, FILTER_GLOBAL}),
+        needs=frozenset(),
+        query=_rules_changes_query,
+        to_item=_rules_change_item,
+        source_id_column=ModAction.id,
     ),
     FeedSource(
         item_type=FEED_ITEM_TYPE_COLLAB_INVITE,

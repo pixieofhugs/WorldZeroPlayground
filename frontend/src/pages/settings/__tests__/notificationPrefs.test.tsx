@@ -45,11 +45,12 @@ const DEFAULTS: NotificationPrefs = {
   vote_on_mine: { on_updates: true, by_email: false, locked: false },
   level_up: { on_updates: false, by_email: false, locked: true },
   era_announcement: { on_updates: true, by_email: false, locked: false },
+  rules_change: { on_updates: true, by_email: false, locked: false },
   global_task: { on_updates: true, by_email: false, locked: false },
 }
 
 describe('the row list', () => {
-  it('is the nine keys the server registry names, in a stable order', () => {
+  it('is the ten keys the server registry names, in a stable order', () => {
     const source = readFileSync(REGISTRY, 'utf8')
 
     // The registry holds constants, not literals: resolve via `activity_feed.py`.
@@ -59,7 +60,7 @@ describe('the row list', () => {
     expect(
       declared.length,
       'no NotificationEvent matched — the registry was reformatted, so this regex is now blind',
-    ).toBe(9)
+    ).toBe(10)
 
     const feed = readFileSync(
       new URL('../../../../../backend/services/activity_feed.py', import.meta.url),
@@ -110,9 +111,9 @@ describe('the locks', () => {
 
 describe('the master row', () => {
   it('shows its thumb only when every row it governs agrees', () => {
-    // Email defaults disagree: five on, four off.
+    // Email defaults disagree: five on, five off.
     expect(masterChecked(DEFAULTS, 'by_email')).toBe(false)
-    expect(governedRows(DEFAULTS, 'by_email')).toHaveLength(9)
+    expect(governedRows(DEFAULTS, 'by_email')).toHaveLength(10)
 
     const allEmail = setAll(DEFAULTS, 'by_email')
     expect(masterChecked(allEmail, 'by_email')).toBe(true)
@@ -122,12 +123,13 @@ describe('the master row', () => {
   })
 
   it('governs only the page rows it can actually set', () => {
-    // Four page switches are locked, so the master governs five.
+    // Four page switches are locked, so the master governs six.
     expect(governedRows(DEFAULTS, 'on_updates').map((r) => r.key)).toEqual([
       'comment_on_mine',
       'comment_mention',
       'vote_on_mine',
       'era_announcement',
+      'rules_change',
       'global_task',
     ])
     expect(masterChecked(DEFAULTS, 'on_updates')).toBe(true)
@@ -150,7 +152,7 @@ describe('the save body', () => {
   it('sends both switches for every known row and nothing else', () => {
     const body = saveBody(toggleCell(DEFAULTS, 'vote_on_mine', 'on_updates'))
     expect(body.events.vote_on_mine).toEqual({ on_updates: false, by_email: false })
-    expect(Object.keys(body.events)).toHaveLength(9)
+    expect(Object.keys(body.events)).toHaveLength(10)
   })
 
   it('ignores a row the server did not send', () => {
@@ -182,14 +184,14 @@ describe('the rendered card', () => {
     <NotificationRows prefs={DEFAULTS} onToggle={() => {}} onToggleAll={() => {}} />,
   )
 
-  it('draws two switches for each of the nine rows, plus the master pair', () => {
+  it('draws two switches for each of the ten rows, plus the master pair', () => {
     for (const row of NOTIFICATION_ROWS) {
       expect(html).toContain(`data-testid="settings-notifications-${row.key}-on_updates"`)
       expect(html).toContain(`data-testid="settings-notifications-${row.key}-by_email"`)
     }
     expect(html).toContain('data-testid="settings-notifications-all-on_updates"')
     expect(html).toContain('data-testid="settings-notifications-all-by_email"')
-    expect(html.match(/role="switch"/g)).toHaveLength(20)
+    expect(html.match(/role="switch"/g)).toHaveLength(22)
   })
 
   it('renders the three requests page switches ON, unmovable, and explaining themselves', () => {

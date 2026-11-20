@@ -26,7 +26,9 @@ FIX = (
 )
 
 # Text primary keys: ``faction`` slug (ADR-0038), ``copy_override`` i18n key.
-STRING_PRIMARY_KEY_TABLES: frozenset[str] = frozenset({"faction", "copy_override"})
+STRING_PRIMARY_KEY_TABLES: frozenset[str] = frozenset(
+    {"faction", "copy_override", "population_dial"}
+)
 
 # Both halves are FKs; the pair is the fact, so no surrogate key.
 COMPOSITE_PRIMARY_KEY_TABLES: frozenset[str] = frozenset({"praxis_meta_task"})
