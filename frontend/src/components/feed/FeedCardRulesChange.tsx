@@ -3,6 +3,7 @@ import type { ActivityFeedItem } from '../../api/activityFeed'
 import i18n from '../../i18n'
 import { hasOwnKey } from '../../utils/hasOwnKey'
 import FeedBadge from './FeedBadge'
+import './feedCardRulesChange.css'
 
 interface Props {
   item: ActivityFeedItem
@@ -44,7 +45,9 @@ const DIAL_LINE_KEY = {
 
 /** The world announcing a rule change (#3656): neutral always-dark chrome, like the era card. */
 export default function FeedCardRulesChange({ item, archive }: Props) {
-  const changes: Change[] = item.payload.changes ?? []
+  const changes: Change[] = (item.payload.changes ?? []).filter((c: Change) =>
+    hasOwnKey(DIAL_LINE_KEY, c.dial_key),
+  )
 
   return (
     <div className="sidebar-card rules-change-card">
@@ -66,8 +69,7 @@ export default function FeedCardRulesChange({ item, archive }: Props) {
       <ul className="font-body rules-change-list">
         {changes.map((change) => (
           <li key={change.dial_key}>
-            {hasOwnKey(DIAL_LINE_KEY, change.dial_key) &&
-              i18n.t(DIAL_LINE_KEY[change.dial_key as keyof typeof DIAL_LINE_KEY][change.side])}
+            {i18n.t(DIAL_LINE_KEY[change.dial_key as keyof typeof DIAL_LINE_KEY][change.side])}
           </li>
         ))}
       </ul>
