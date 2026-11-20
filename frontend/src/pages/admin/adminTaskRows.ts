@@ -115,3 +115,9 @@ export function hasActiveTaskFilters(
     criteria.maxPoints !== undefined
   );
 }
+
+/** Whole hours until a proposal goes public (`era.pending_task_admin_review_hours`); 0 once it has. */
+export function hoursUntilPublic(createdAt: string, reviewHours: number, now: number): number {
+  const elapsedHours = (now - Date.parse(createdAt)) / 3_600_000;
+  return Math.max(0, Math.ceil(reviewHours - elapsedHours));
+}

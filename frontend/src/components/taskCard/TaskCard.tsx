@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
 import type { TaskOut } from '../../api/tasks'
 // Type-only: the admin chunk stays out of every visitor's waterfall (#1141).
 import type { AdminTaskStatus } from '../../api/admin'
 import { useAuth } from '../../auth/AuthContext'
 import { useAdminMode } from '../../auth/AdminModeContext'
 import StartHereMark from '../StartHereMark'
+import TaskStatusControl from '../admin/TaskStatusControl'
 import { factionCssVar, factionFill, factionName } from '../../utils/factions'
 import { resolveVariant } from '../../utils/factionDispatch'
 import { surfaceMap } from '../../factions'
@@ -160,47 +162,22 @@ export default function TaskCard({
             gap: 'var(--space-xs)', marginTop: 'var(--space-xs)',
           }}
         >
-          {shown.status ==='active' && (
-            <AdminStatusButton label={t('tasks.actions.retire')} tone="danger" onClick={() => void handleStatusChange('retired')} />
-          )}
-          {shown.status ==='retired' && (
-            <AdminStatusButton label={t('tasks.actions.activate')} tone="success" onClick={() => void handleStatusChange('active')} />
-          )}
-          {shown.status ==='pending' && (
-            <>
-              <AdminStatusButton label={t('tasks.actions.activate')} tone="success" onClick={() => void handleStatusChange('active')} />
-              <AdminStatusButton label={t('tasks.actions.retire')} tone="danger" onClick={() => void handleStatusChange('retired')} />
-            </>
-          )}
+          <Link
+            to={`/admin/tasks?task=${shown.id}`}
+            className="label-caption"
+            style={{
+              padding: 'var(--space-xs) var(--space-sm)',
+              border: '1px solid var(--color-border-strong)',
+              color: 'var(--color-text-primary)',
+              background: 'var(--color-surface-scrim)',
+              textDecoration: 'none',
+            }}
+          >
+            {t('tasks.actions.openInAdmin')}
+          </Link>
+          <TaskStatusControl status={shown.status} variant="strip" onChange={(next) => void handleStatusChange(next)} />
         </div>
       )}
     </div>
-  )
-}
-
-function AdminStatusButton({
-  label,
-  tone,
-  onClick,
-}: {
-  label: string
-  tone: 'danger' | 'success'
-  onClick: () => void
-}) {
-  const toneVar = tone === 'danger' ? 'var(--color-danger)' : 'var(--color-success)'
-  return (
-    <button
-      onClick={onClick}
-      className="label-caption"
-      style={{
-        padding: 'var(--space-xs) var(--space-sm)',
-        border: `1px solid color-mix(in srgb, ${toneVar} 30%, transparent)`,
-        color: toneVar,
-        background: 'var(--color-surface-scrim)',
-        cursor: 'pointer',
-      }}
-    >
-      {label}
-    </button>
   )
 }
