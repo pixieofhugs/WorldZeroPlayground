@@ -1,4 +1,4 @@
-"""A removed comment's reason reaches its author and the mod log, nobody else (#3742)."""
+"""A removal note reaches its comment's author and the mod log, nobody else."""
 import pytest
 
 from tests.integration.factories import make_admin
