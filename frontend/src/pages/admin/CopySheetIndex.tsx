@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import './adminConsole.css'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { ALBESCENT_FACTION_SLUG, FACTION_RAINBOW_ORDER, factionName } from '../../utils/factions'
