@@ -11,16 +11,16 @@ const wrap: React.CSSProperties = { padding: 24, maxWidth: 460 }
 const NOW = '2026-07-01T15:04:00Z'
 
 const IMAGES: MediaItemOut[] = [
-  { id: 1, praxis_id: 501, type: 'image', file_path: 'media/praxis/501/portico-1.jpg', display_order: 0, created_at: NOW },
-  { id: 2, praxis_id: 501, type: 'image', file_path: 'media/praxis/501/portico-2.jpg', display_order: 1, created_at: NOW },
-  { id: 3, praxis_id: 501, type: 'image', file_path: 'media/praxis/501/portico-3.jpg', display_order: 2, created_at: NOW },
-  { id: 4, praxis_id: 501, type: 'image', file_path: 'media/praxis/501/portico-4.jpg', display_order: 3, created_at: NOW },
+  { id: 1, praxis_id: 501, type: 'image', file_path: 'media/praxis/501/portico-1.jpg', display_path: null, display_order: 0, created_at: NOW },
+  { id: 2, praxis_id: 501, type: 'image', file_path: 'media/praxis/501/portico-2.jpg', display_path: null, display_order: 1, created_at: NOW },
+  { id: 3, praxis_id: 501, type: 'image', file_path: 'media/praxis/501/portico-3.jpg', display_path: null, display_order: 2, created_at: NOW },
+  { id: 4, praxis_id: 501, type: 'image', file_path: 'media/praxis/501/portico-4.jpg', display_path: null, display_order: 3, created_at: NOW },
 ]
 
 const MIXED: MediaItemOut[] = [
-  { id: 5, praxis_id: 501, type: 'image', file_path: 'media/praxis/501/still.jpg', display_order: 0, created_at: NOW },
-  { id: 6, praxis_id: 501, type: 'video', file_path: 'media/praxis/501/walkthrough.mp4', display_order: 1, created_at: NOW },
-  { id: 7, praxis_id: 501, type: 'audio', file_path: 'media/praxis/501/field-notes.mp3', display_order: 2, created_at: NOW },
+  { id: 5, praxis_id: 501, type: 'image', file_path: 'media/praxis/501/still.jpg', display_path: null, display_order: 0, created_at: NOW },
+  { id: 6, praxis_id: 501, type: 'video', file_path: 'media/praxis/501/walkthrough.mp4', display_path: null, display_order: 1, created_at: NOW },
+  { id: 7, praxis_id: 501, type: 'audio', file_path: 'media/praxis/501/field-notes.mp3', display_path: null, display_order: 2, created_at: NOW },
 ]
 
 /** Grid layout — image specimens in the responsive minmax(150px) grid. */

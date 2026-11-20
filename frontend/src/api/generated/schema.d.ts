@@ -3900,6 +3900,11 @@ export interface components {
             created_at: string;
             /** Display Order */
             display_order: number;
+            /**
+             * Display Path
+             * @description Smaller copy of an image for cards and tiles; null when none was made.
+             */
+            readonly display_path: string | null;
             /** File Path */
             file_path: string;
             /** Id */
@@ -4722,6 +4727,14 @@ export interface components {
         StartFreshOut: {
             /** Message */
             message: string;
+        };
+        /**
+         * SubmitPraxisIn
+         * @description The browser's Yjs state, base64; merged into the room before the seal.
+         */
+        SubmitPraxisIn: {
+            /** Doc State */
+            doc_state: string;
         };
         /** SuspendAction */
         SuspendAction: {
@@ -8472,7 +8485,11 @@ export interface operations {
                 access_token?: string | null;
             };
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["SubmitPraxisIn"] | null;
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {

@@ -42,6 +42,7 @@ from schemas.praxis import (
     PraxisOut,
     PraxisTypeChange,
     PraxisVoteIn,
+    SubmitPraxisIn,
 )
 from services import google_photos
 
@@ -311,6 +312,7 @@ async def set_done_route(
 @router.post("/{praxis_id}/submit", response_model=PraxisOut)
 async def submit_praxis_route(
     praxis_id: int,
+    data: SubmitPraxisIn | None = None,
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db, scope="function"),
 ):
@@ -319,6 +321,7 @@ async def submit_praxis_route(
         character_id=character.id,
         session=session,
         era=CURRENT_ERA,
+        doc_state=data.doc_state if data else None,
     )
     return await build_praxis_out(praxis, session, viewer=character)
 

@@ -5,6 +5,7 @@ CRDT: the bug guarded is two clients each seeding and merging into two copies.
 """
 
 import asyncio
+import base64
 import io
 import linecache
 from contextlib import asynccontextmanager, suppress
@@ -12,6 +13,7 @@ from typing import Any, AsyncIterator, Callable
 
 import pytest
 import pytest_asyncio
+from fastapi import HTTPException
 from pycrdt import (
     Awareness,
     Doc,
@@ -260,11 +262,15 @@ class _Rooms:
         )
         return socket
 
-    async def submit(self, praxis_id: int, character_id: int) -> Any:
+    async def submit(
+        self, praxis_id: int, character_id: int, doc_state: str | None = None
+    ) -> Any:
         """Harness-only: holds the session lock, since a submit races room tasks
         on the one shared session (production uses separate sessions)."""
         async with self.sessions() as session:
-            return await submit_praxis(praxis_id, character_id, session)
+            return await submit_praxis(
+                praxis_id, character_id, session, doc_state=doc_state
+            )
 
     def room_doc(self, praxis_id: int) -> Doc | None:
         room = self.server.rooms.get(room_name_for(praxis_id))
@@ -949,6 +955,121 @@ async def test_typing_while_a_proposal_is_live_cancels_it(
         assert list(approvals) == [False, False]
 
 
+def _offline_state(doc: Doc, words: str) -> str:
+    """The browser's whole state after typing ``words`` the room never received."""
+    offline = Doc()
+    offline.apply_update(doc.get_update())
+    offline.get(ROOM_BODY_KEY, type=Text).insert(0, words)
+    return base64.b64encode(offline.get_update()).decode()
+
+
+async def test_a_proposers_unsent_edits_are_proposed_not_cancelled(
+    db_session, collab, account2, character, monkeypatch
+) -> None:
+    """#3611: merged edits are part of the proposal; the flush mustn't cancel it."""
+    async with running_rooms(
+        db_session, monkeypatch, flush_debounce_seconds=0.05
+    ) as rooms:
+        holdout = await rooms.open(collab.id, account2.id)
+        async with client_doc(holdout) as doc:
+            await _wait_for_body(doc, SEED_BODY, "the holdout")
+            state = _offline_state(doc, "offline ")
+
+            proposed = await rooms.submit(collab.id, character.id, doc_state=state)
+            assert proposed.status == PraxisStatus.pending
+            await _wait_for_record(
+                rooms, collab.id, "the proposed text", body_text=f"offline {SEED_BODY}"
+            )
+            status, proposed_at = await _proposal(rooms, collab.id)
+            assert (status, proposed_at is not None) == (PraxisStatus.pending, True)
+
+            # A duplicate of what the room already holds changes nothing.
+            await rooms.submit(collab.id, character.id, doc_state=state)
+            await _settle()
+            assert (await _proposal(rooms, collab.id))[0] == PraxisStatus.pending
+
+            # Another member's later edit still cancels.
+            doc.get(ROOM_BODY_KEY, type=Text).insert(0, "later ")
+            await _wait_for_drafting(rooms, collab.id, "the later edit to cancel")
+
+
+async def _approved(rooms: _Rooms, praxis_id: int) -> dict[int, bool]:
+    async with rooms.sessions() as session:
+        rows = await session.execute(
+            select(PraxisMember.character_id, PraxisMember.has_approved).where(
+                PraxisMember.praxis_id == praxis_id
+            )
+        )
+    return {cid: approved for cid, approved in rows}
+
+
+@pytest.mark.parametrize("extra_members", [0, 1])
+async def test_a_submit_that_changes_text_cancels_a_live_proposal(
+    db_session, collab, account2, character, character2, character3,
+    extra_members, monkeypatch,
+) -> None:
+    """ADR-0079: text the proposer never saw is a new proposal, not an approval."""
+    if extra_members:
+        db_session.add(PraxisMember(praxis_id=collab.id, character_id=character3.id))
+        await db_session.commit()
+    async with running_rooms(
+        db_session, monkeypatch, flush_debounce_seconds=30
+    ) as rooms:
+        holdout = await rooms.open(collab.id, account2.id)
+        async with client_doc(holdout) as doc:
+            await _wait_for_body(doc, SEED_BODY, "the holdout")
+            await rooms.submit(collab.id, character2.id)  # B proposes
+            state = _offline_state(doc, "unseen ")
+
+            result = await rooms.submit(collab.id, character.id, doc_state=state)
+
+        assert result.status == PraxisStatus.pending
+        approved = await _approved(rooms, collab.id)
+        assert approved[character.id] and not approved[character2.id]
+        assert (await _proposal(rooms, collab.id))[1] is not None
+
+
+async def test_a_submit_after_unflushed_socket_edits_cancels_the_proposal(
+    db_session, collab, account, character, character2, monkeypatch
+) -> None:
+    """The room already holds the text (unflushed), so the merge adds nothing."""
+    async with running_rooms(
+        db_session, monkeypatch, flush_debounce_seconds=30
+    ) as rooms:
+        socket = await rooms.open(collab.id, account.id)
+        async with client_doc(socket) as doc:
+            await _wait_for_body(doc, SEED_BODY, "the editor")
+            await rooms.submit(collab.id, character2.id)  # B proposes
+            doc.get(ROOM_BODY_KEY, type=Text).insert(0, "unseen ")
+            await _wait_for_body(
+                rooms.room_doc(collab.id), f"unseen {SEED_BODY}", "the room"
+            )
+            state = base64.b64encode(doc.get_update()).decode()
+
+            result = await rooms.submit(collab.id, character.id, doc_state=state)
+
+        assert result.status == PraxisStatus.pending
+        approved = await _approved(rooms, collab.id)
+        assert approved[character.id] and not approved[character2.id]
+
+
+async def test_a_submit_that_changes_nothing_still_approves(
+    db_session, collab, account2, character, character2, monkeypatch
+) -> None:
+    async with running_rooms(
+        db_session, monkeypatch, flush_debounce_seconds=30
+    ) as rooms:
+        holdout = await rooms.open(collab.id, account2.id)
+        async with client_doc(holdout) as doc:
+            await _wait_for_body(doc, SEED_BODY, "the holdout")
+            await rooms.submit(collab.id, character2.id)
+            same = base64.b64encode(doc.get_update()).decode()
+
+            result = await rooms.submit(collab.id, character.id, doc_state=same)
+
+        assert result.status == PraxisStatus.submitted
+
+
 async def test_an_awareness_update_never_cancels_a_proposal(
     db_session, collab, account2, character, monkeypatch
 ) -> None:
@@ -1067,6 +1188,74 @@ async def test_publishing_discards_the_document_and_keeps_the_body(
         assert published.status == PraxisStatus.submitted
         assert await _stored_updates(rooms, collab.id) == []
         assert await _record(rooms, collab.id) == ("Collab Praxis", f"final {SEED_BODY}")
+
+
+async def test_a_submit_carries_edits_the_room_never_received(
+    db_session, active_task, character, account, monkeypatch
+) -> None:
+    """#3611: sockets give no ack, so the request itself carries the browser's doc."""
+    solo = Praxis(
+        task_id=active_task.id,
+        created_by_id=character.id,
+        type=PraxisType.solo,
+        status=PraxisStatus.in_progress,
+        title="Solo Praxis",
+        body_text=SEED_BODY,
+    )
+    db_session.add(solo)
+    await db_session.flush()
+    db_session.add(PraxisMember(praxis_id=solo.id, character_id=character.id))
+    await db_session.commit()
+
+    async with running_rooms(
+        db_session, monkeypatch, flush_debounce_seconds=30
+    ) as rooms:
+        socket = await rooms.open(solo.id, account.id)
+        async with client_doc(socket) as doc:
+            await _wait_for_body(doc, SEED_BODY, "the solo author")
+            doc.get(ROOM_BODY_KEY, type=Text).insert(0, "synced ")
+            await _wait_for_body(
+                rooms.room_doc(solo.id), f"synced {SEED_BODY}", "the room"
+            )
+            offline = Doc()
+            offline.apply_update(doc.get_update())
+            offline.get(ROOM_BODY_KEY, type=Text).insert(0, "OFFLINE ")
+            state = base64.b64encode(offline.get_update()).decode()
+
+            published = await rooms.submit(solo.id, character.id, doc_state=state)
+            assert await _record(rooms, solo.id) == (
+                "Solo Praxis",
+                f"OFFLINE synced {SEED_BODY}",
+            )
+
+        assert published.status == PraxisStatus.submitted
+
+
+async def test_an_oversized_or_garbled_doc_state_is_refused(
+    db_session, active_task, character, monkeypatch
+) -> None:
+    solo = Praxis(
+        task_id=active_task.id,
+        created_by_id=character.id,
+        type=PraxisType.solo,
+        status=PraxisStatus.in_progress,
+        title="Solo Praxis",
+        body_text=SEED_BODY,
+    )
+    db_session.add(solo)
+    await db_session.flush()
+    db_session.add(PraxisMember(praxis_id=solo.id, character_id=character.id))
+    await db_session.commit()
+
+    big = base64.b64encode(bytes(praxis_room._MAX_CLIENT_UPDATE_BYTES + 1)).decode()
+    async with running_rooms(db_session, monkeypatch) as rooms:
+        # Opened outside the harness's session lock; a cold open would deadlock.
+        await rooms.server.get_room(room_name_for(solo.id))
+        for state, status in ((big, 413), ("not base64!", 422), ("AAEC", 422)):
+            with pytest.raises(HTTPException) as refused:
+                await rooms.submit(solo.id, character.id, doc_state=state)
+            assert refused.value.status_code == status
+            assert refused.value.detail["code"] == "PRAXIS_DOC_UPDATE_INVALID"
 
 
 async def test_a_solo_seal_flattens_the_live_room_into_the_record(

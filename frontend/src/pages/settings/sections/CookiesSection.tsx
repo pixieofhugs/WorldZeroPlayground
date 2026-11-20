@@ -10,7 +10,7 @@ import { SIDEBAR_COLLAPSED_STORAGE_KEY } from '../../../hooks/useSidebarCollapse
 import { SIDEBAR_PANEL_LAYOUT_STORAGE_KEY } from '../../../hooks/useSidebarPanelLayout'
 import { THEME_STORAGE_KEY } from '../../../hooks/useTheme'
 import { FACTION_SECTIONS, PROFILE_SECTIONS } from '../../factionDetail/sectionDisclosure'
-import { HELD_TERMS_KEY, ONBOARDING_HANDOFF_KEY } from '../../../utils/onboardingResume'
+import { HELD_TERMS_KEY, ONBOARDING_HANDOFF_KEY, TITLE_SEEN_KEY } from '../../../utils/onboardingResume'
 import type { SettingsSectionProps } from '../../Settings'
 import SettingsCard from '../SettingsCard'
 import SettingsRow from '../SettingsRow'
@@ -123,6 +123,11 @@ export const STORED_ENTRIES: readonly StoredEntry[] = [
     name: HELD_TERMS_KEY,
     purposeKey: 'settings.cookies.entries.heldTerms',
     whereKey: TAB_WHERE,
+  },
+  {
+    name: TITLE_SEEN_KEY,
+    purposeKey: 'settings.cookies.entries.titleSeen',
+    whereKey: BROWSER_WHERE,
   },
 ]
 

@@ -738,7 +738,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
           </div>
           <div
             style={{
-              ...actionColumnSize({ desktop, hasAction, width: size.panel }),
+              ...actionColumnSize({ hasAction, width: size.panel }),
               marginTop: desktop ? "var(--space-sm)" : 0,
             }}
           >

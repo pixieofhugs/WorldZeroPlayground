@@ -4,7 +4,7 @@
  *
  * Removing a seal is always allowed pre-submit, so this is a gentle guard, not a
  * consequence dialog like the duel seal. Desktop gets a small centred card;
- * mobile gets a bottom confirm sheet (`useFormFactor()`). Confirming calls
+ * phone gets a bottom confirm sheet (media query). Confirming calls
  * `confirmRemoveMetatask()` (→ `removeMetatask`), returning the praxis to
  * the empty-slot "+ Add" state.
  *
@@ -14,7 +14,6 @@
 import { useTranslation } from "react-i18next";
 import { drawAtRoot } from "../ui/drawAtRoot";
 import { useModal } from "../../hooks/useModal";
-import { useFormFactor } from "../../hooks/useFormFactor";
 import { factionName } from "../../utils/factions";
 import type { EditPraxisState } from "../../pages/editPraxis/useEditPraxis";
 
@@ -31,7 +30,6 @@ export default function MetataskRemoveConfirm({
   | "cancelRemoveMetatask"
 >) {
   const { t } = useTranslation("forms");
-  const isMobile = useFormFactor() === "mobile";
   const target = metataskRemovalTarget;
   const ref = useModal(cancelRemoveMetatask, !!target);
   if (!target) return null;
@@ -47,11 +45,10 @@ export default function MetataskRemoveConfirm({
       role="dialog"
       aria-modal="true"
       aria-label={t("editPraxis.attach.removeTitle")}
-      className={`fixed inset-0 z-50 flex justify-center ${
-        isMobile ? "items-end" : "items-center"
-      }`}
+      className="fixed inset-0 z-50 flex justify-center"
       style={{
-        padding: isMobile ? 0 : "var(--space-lg)",
+        alignItems: "var(--sheet-align, center)",
+        padding: "var(--sheet-pad, var(--space-lg))",
         background: "var(--color-overlay-strong)",
       }}
     >
@@ -60,10 +57,10 @@ export default function MetataskRemoveConfirm({
         style={{
           gap: "var(--space-md)",
           padding: "var(--space-lg)",
-          width: isMobile ? "100%" : "min(400px, 100%)",
+          width: "var(--sheet-full, min(400px, 100%))",
           background: "var(--color-bg-page)",
-          border: isMobile ? "none" : "1px solid var(--color-border)",
-          borderRadius: isMobile ? "16px 16px 0 0" : 12,
+          border: "var(--sheet-border, 1px solid var(--color-border))",
+          borderRadius: "var(--sheet-radius, 12px)",
           boxShadow: "0 8px 28px var(--color-cast-shadow)",
         }}
       >

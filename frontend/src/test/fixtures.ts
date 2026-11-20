@@ -116,6 +116,7 @@ export const aPraxis = (over: Partial<PraxisOut> = {}): PraxisOut => ({
       praxis_id: 1,
       type: 'image',
       file_path: 'proof.png',
+      display_path: null,
       display_order: 0,
       created_at: '2026-01-03T00:00:00Z',
     },

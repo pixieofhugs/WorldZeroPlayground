@@ -9,6 +9,7 @@ import {
   CAPTION,
   CompassRose,
   DECO,
+  DISC,
   INK,
   INNER,
   OCHRE,
@@ -26,7 +27,7 @@ import { factionBodyVars } from "../../../utils/factionBodyFace"
  * The Ephemerists score stamp (#1207, #2145): the Valley plate's TALLY CELL, a
  * cut panel of working with the total struck last in the compass rose. Colours
  * are `--faction-ephemerists-plate-*` tokens; `-brass` is a rule colour, never
- * an ink. Row selection is `scoreBreakdown`'s (ADR-0047/0053/0076).
+ * an ink. Row selection is `scoreBreakdown`'s (ADR-0053/0076).
  *
  * No outer padding on the root (#2634 §5 declined, law 09 #2655): this stamp
  * travels, and the crown's `top: -13` resolves against the root's padding box,
@@ -239,6 +240,8 @@ export default function EphemeristsScoreStamp({ praxis, showCrown }: ScoreStampP
             flexDirection: "column",
             alignItems: "center",
             lineHeight: 0.82,
+            background: DISC,
+            borderRadius: "50%",
           }}
         >
           <span style={{ fontFamily: DECO, fontSize: "var(--text-title)", color: BAND_INK }}>
