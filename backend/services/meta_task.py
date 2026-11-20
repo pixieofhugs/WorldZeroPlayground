@@ -2,7 +2,7 @@
 ``point_value`` is a flat bonus on praxes it's applied to.
 """
 
-from typing import Optional
+from typing import Mapping, Optional, Union
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -49,12 +49,14 @@ def metatask_cap_for_level(character_level: int, era: EraConfig) -> int:
 
 
 async def get_meta_task_points_bulk(
-    praxis_ids: list[int], character_level: int, session: AsyncSession
+    praxis_ids: list[int],
+    character_level: Union[int, Mapping[int, int]],
+    session: AsyncSession,
 ) -> dict[int, int]:
     """``{praxis_id: flat bonus}`` from attached metatasks, in one query.
 
-    Counts only metatasks whose ``level_required`` the viewer meets. Missing
-    key = 0.
+    Counts only metatasks whose ``level_required`` the viewer meets (a mapping
+    gives each praxis its own character's level). Missing key = 0.
     """
     if not praxis_ids:
         return {}
@@ -68,7 +70,12 @@ async def get_meta_task_points_bulk(
     for praxis_id, task in result.all():
         if task.task_type != TaskType.metatask:
             continue
-        if character_level < task.level_required:
+        level = (
+            character_level
+            if isinstance(character_level, int)
+            else character_level.get(praxis_id, 0)
+        )
+        if level < task.level_required:
             continue
         totals[praxis_id] = totals.get(praxis_id, 0) + int(task.point_value)
     return totals

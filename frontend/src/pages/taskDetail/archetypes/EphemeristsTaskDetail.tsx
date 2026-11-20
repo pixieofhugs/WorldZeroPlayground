@@ -732,7 +732,7 @@ export default function EphemeristsTaskDetail({
             </div>
             <div
               style={{
-                ...actionColumnSize({ desktop, hasAction, width: PANEL_WIDTH }),
+                ...actionColumnSize({ hasAction, width: PANEL_WIDTH }),
                 maxWidth: "100%",
               }}
             >

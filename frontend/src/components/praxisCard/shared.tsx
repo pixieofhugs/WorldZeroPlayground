@@ -749,8 +749,10 @@ export function PraxisMediaGallery({
           >
             {item.type === "image" ? (
               <img
-                src={mediaUrl(item.file_path)}
+                src={mediaUrl(item.display_path ?? item.file_path)}
                 alt=""
+                loading="lazy"
+                decoding="async"
                 style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
               />
             ) : (
