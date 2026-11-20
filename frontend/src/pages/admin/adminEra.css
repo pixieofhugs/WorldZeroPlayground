@@ -4,7 +4,7 @@
 .adm-era-danger { color: var(--color-danger); }
 .adm-era-h2 { margin: 0; font-size: var(--text-md); letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-text-tertiary); font-weight: 600; }
 .adm-era-warnh { color: var(--color-warning); }
-.adm-era-list { margin: 0; padding-left: var(--space-lg); display: flex; flex-direction: column; gap: var(--space-xs); line-height: 1.5; font-size: var(--text-xl); }
+.adm-era-list { margin: 0; padding-left: var(--space-lg); list-style: disc; display: flex; flex-direction: column; gap: var(--space-xs); line-height: 1.5; font-size: var(--text-xl); }
 .adm-era-warn a { text-decoration: underline; }
 .adm-era-rule { height: 1px; background: var(--color-border); border: 0; margin: 0; }
 .adm-era-name { font-family: var(--font-display); color: var(--color-text-primary); }

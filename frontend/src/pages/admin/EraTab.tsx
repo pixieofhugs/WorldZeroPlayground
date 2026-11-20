@@ -163,7 +163,9 @@ export default function EraTab() {
 
               <hr className="adm-era-rule" />
               <label className="adm-field" htmlFor={CONFIRM_ID}>
-                <Trans t={t} i18nKey="console.era.type" values={{ name }} components={{ 1: <span className="adm-era-name" /> }} />
+                <span>
+                  <Trans t={t} i18nKey="console.era.type" values={{ name }} components={{ 1: <span className="adm-era-name" /> }} />
+                </span>
                 <input
                   id={CONFIRM_ID}
                   className="adm-input adm-era-input"
