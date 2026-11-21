@@ -15,6 +15,8 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from config import settings
 from models.account import Account
 from models.character import Character
+from models.comment import Comment, CommentMention
+from models.praxis import ModerationStatus
 from models.push_subscription import PushSubscription
 from services import push
 from services.notification_prefs import apply_update
@@ -226,3 +228,89 @@ def test_sender_refuses_redirects(monkeypatch):
     monkeypatch.setattr(push, "webpush", lambda **kw: seen.update(kw))
     push._send_one(push.Target(1, "https://fcm.googleapis.com/x", "k", "a"), "{}")
     assert seen["requests_session"].max_redirects == 0
+
+
+async def _comment(db_session, author, *, praxis=None, task=None, mention=None):
+    c = Comment(
+        praxis_id=praxis.id if praxis else None,
+        task_id=task.id if task else None,
+        created_by_id=author.id,
+        body_text="hi",
+    )
+    db_session.add(c)
+    await db_session.flush()
+    if mention:
+        db_session.add(
+            CommentMention(comment_id=c.id, mentioned_character_id=mention.id)
+        )
+        await db_session.flush()
+    await push.notify_comment(
+        db_session,
+        author,
+        praxis_id=c.praxis_id,
+        task_id=c.task_id,
+        mentioned=[mention] if mention else [],
+    )
+    return c
+
+
+@pytest.fixture
+async def comment_world(db_session, account, character, keys_on):
+    await _subscribe(db_session, account)
+    account.notification_prefs = {
+        "comment_on_mine": {"by_push": True},
+        "comment_mention": {"by_push": True},
+    }
+    task = await make_task(db_session, character, title="Feed a stranger")
+    return task, await make_solo_praxis(db_session, task, character)
+
+
+@pytest.mark.asyncio
+async def test_comment_tags_name_the_target_type(
+    db_session, character, character2, comment_world
+):
+    task, praxis = comment_world
+    await _comment(db_session, character2, praxis=praxis, mention=character)
+    await _comment(db_session, character2, task=task, mention=character)
+    tags = [p["tag"] for p, _ in _queued(db_session)]
+    assert tags == [
+        f"comment_mention:praxis:{praxis.id}",
+        f"comment_mention:task:{task.id}",
+    ]
+
+
+@pytest.mark.asyncio
+async def test_second_comment_on_mine_collapses_with_a_count(
+    db_session, character, character2, character3, comment_world
+):
+    _, praxis = comment_world
+    await _comment(db_session, character2, praxis=praxis)
+    await _comment(db_session, character3, praxis=praxis)
+    first, second = (p for p, _ in _queued(db_session))
+    assert first["count"] is None and second["count"] == 2
+    assert first["tag"] == second["tag"]
+
+
+@pytest.mark.asyncio
+async def test_second_mention_collapses_with_a_count(
+    db_session, character, character2, comment_world
+):
+    _, praxis = comment_world
+    await _comment(db_session, character2, praxis=praxis, mention=character)
+    await _comment(db_session, character2, praxis=praxis, mention=character)
+    first, second = (p for p, _ in _queued(db_session))
+    assert first["count"] is None and second["count"] == 2
+
+
+@pytest.mark.asyncio
+async def test_withdrawn_and_removed_comments_are_not_counted(
+    db_session, character, character2, character3, comment_world
+):
+    _, praxis = comment_world
+    gone = await _comment(db_session, character2, praxis=praxis)
+    gone.is_withdrawn = True
+    removed = await _comment(db_session, character2, praxis=praxis)
+    removed.moderation_status = ModerationStatus.deleted
+    await db_session.flush()
+    await _comment(db_session, character3, praxis=praxis)
+    assert [p["count"] for p, _ in _queued(db_session)][-1] is None
