@@ -1238,9 +1238,12 @@ async def test_vote_on_draft_is_404_and_leaves_no_row(
         headers=auth_headers2,
     )
     pid = draft.json()["id"]
-    resp = await client.post(f"/praxes/{pid}/vote", json={"value": 5}, headers=auth_headers)
+    resp = await client.post(
+        f"/praxes/{pid}/vote", json={"value": 5}, headers=auth_headers
+    )
     assert resp.status_code == 404
-    assert (await db_session.scalars(select(Vote).where(Vote.praxis_id == pid))).all() == []
+    rows = await db_session.scalars(select(Vote).where(Vote.praxis_id == pid))
+    assert rows.all() == []
 
 
 @pytest.mark.asyncio
@@ -1264,13 +1267,17 @@ async def test_vote_on_unsealed_duel_side_is_404_until_it_closes(
     db_session.add(duel)
     await db_session.commit()
 
-    resp = await client.post(f"/praxes/{pid}/vote", json={"value": 5}, headers=auth_headers)
+    resp = await client.post(
+        f"/praxes/{pid}/vote", json={"value": 5}, headers=auth_headers
+    )
     assert resp.status_code == 404
 
     duel.status = DuelStatus.declined
     duel.declined_at = datetime.now(timezone.utc)
     await db_session.commit()
-    resp = await client.post(f"/praxes/{pid}/vote", json={"value": 5}, headers=auth_headers)
+    resp = await client.post(
+        f"/praxes/{pid}/vote", json={"value": 5}, headers=auth_headers
+    )
     assert resp.status_code == 200
 
 
@@ -1290,8 +1297,11 @@ async def test_admin_vote_on_hidden_praxis_is_404(
     pid = await _create_and_submit_solo(client, active_task, auth_headers2)
     praxis = await db_session.get(Praxis, pid)
     praxis.moderation_status = ModerationStatus.hidden
-    await make_admin(db_session, await db_session.get(Account, character.account_id))
+    admin = await db_session.get(Account, character.account_id)
+    await make_admin(db_session, admin)
     await db_session.commit()
 
-    resp = await client.post(f"/praxes/{pid}/vote", json={"value": 5}, headers=auth_headers)
+    resp = await client.post(
+        f"/praxes/{pid}/vote", json={"value": 5}, headers=auth_headers
+    )
     assert resp.status_code == 404
