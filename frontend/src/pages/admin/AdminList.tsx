@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import './adminList.css'
@@ -164,13 +165,22 @@ export function SidePanel({
   children: ReactNode
 }) {
   const { t } = useTranslation('admin')
-  // Wrapped under the table on phone, the panel opens off-screen.
+  // On phone the panel is a full-screen sheet: focus goes in, Esc closes, focus returns to the row.
   const ref = useRef<HTMLElement>(null)
+  const close = useRef(onClose)
+  close.current = onClose
   useEffect(() => {
-    ref.current?.scrollIntoView?.({ block: 'start', behavior: 'smooth' })
+    const from = document.activeElement as HTMLElement | null
+    ref.current?.focus({ preventScroll: true })
+    const esc = (e: KeyboardEvent) => e.key === 'Escape' && close.current()
+    document.addEventListener('keydown', esc)
+    return () => {
+      document.removeEventListener('keydown', esc)
+      if (from?.isConnected) from.focus({ preventScroll: true })
+    }
   }, [])
   return (
-    <aside ref={ref} aria-label={label} className="adm-card adm-split-side">
+    <aside ref={ref} tabIndex={-1} aria-label={label} className="adm-card adm-split-side">
       <div className="adm-panel-top">
         {badge}
         <span className="adm-btns">
@@ -183,4 +193,21 @@ export function SidePanel({
       {children}
     </aside>
   )
+}
+
+/**
+ * A `?param=id` selection. Opening from the bare list pushes an entry (so phone Back closes the
+ * sheet); switching rows replaces; closing pops the entry it pushed, or replaces on a deep link.
+ */
+export function useSelection(param: string) {
+  const [params, setParams] = useSearchParams()
+  const navigate = useNavigate()
+  const { state } = useLocation()
+  const id = Number(params.get(param)) || null
+  const open = (next: number | null) => {
+    if (next) setParams({ [param]: String(next) }, { replace: id !== null, state: { sheet: id !== null ? state?.sheet : true } })
+    else if (state?.sheet) navigate(-1)
+    else setParams({}, { replace: true })
+  }
+  return [id, open] as const
 }
