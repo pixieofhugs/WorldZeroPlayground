@@ -19,6 +19,8 @@ vi.mock("../../../hooks/useFormFactor", () => ({
   useFormFactor: () => mocks.formFactor,
 }));
 
+vi.mock("../../../components/push/PushAsk", () => ({ default: () => "PUSH_ASK_SLOT" }));
+
 // `text` is tag-stripped: some archetypes split the finding across spans.
 const render = markup;
 
@@ -354,6 +356,18 @@ describe("praxis-read owner controls (#2718)", () => {
   }
 });
 
+describe("push ask placement (#3704)", () => {
+  for (const [slug, Archetype] of Object.entries(archetypes)) {
+    it(`${slug} seats the ask for the owner, above the thread`, () => {
+      const owned = aPraxisDetailState({ praxis: PRAXIS, isOwner: true, user: anOwner() });
+      const { text } = render(<Archetype state={owned} />);
+      expect(text.indexOf("PUSH_ASK_SLOT"), "mounted").toBeGreaterThan(-1);
+      expect(text.indexOf("PUSH_ASK_SLOT"), "before the comments").toBeLessThan(text.indexOf(COMMENTS_HEAD));
+      expect(render(<Archetype state={state()} />).text, "and not for a reader").not.toContain("PUSH_ASK_SLOT");
+    });
+  }
+});
+
 describe("praxis-read report card (#2718)", () => {
   for (const [slug, Archetype] of Object.entries(archetypes)) {
     it(`${slug} mounts the report card, and drops it once flagged`, () => {
@@ -412,6 +426,7 @@ const SKIN_OWNED = [
   "PraxisAdminBar",
   "PraxisFlagBlock",
   "PraxisDetailComments",
+  "PushAsk",
   "DuelCard",
   "MetataskSeal",
   // Score-panel gate (#1444): a rule, not dress.

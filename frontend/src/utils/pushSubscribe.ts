@@ -1,4 +1,5 @@
 import { apiPost } from '../api/client'
+import { isIphoneSafari, isStandalone } from './installPrompt'
 
 function keyBytes(b64url: string): Uint8Array<ArrayBuffer> {
   const b64 = b64url.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(b64url.length / 4) * 4, '=')
@@ -47,4 +48,12 @@ export async function subscribePush(
     body: { endpoint: endpoint!, keys: { p256dh: keys!.p256dh, auth: keys!.auth } },
   })
   return 'ok'
+}
+
+/** Why push cannot turn on, or ok. Priority: server, then device, then browser. */
+export function pushBlock(vapidKey: string | null): 'ok' | 'keys' | 'ios' | 'denied' | 'unsupported' {
+  if (!vapidKey) return 'keys'
+  if (isIphoneSafari() && !isStandalone()) return 'ios'
+  if (!pushSupported()) return 'unsupported'
+  return typeof Notification !== 'undefined' && Notification.permission === 'denied' ? 'denied' : 'ok'
 }
