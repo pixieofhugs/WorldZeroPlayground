@@ -38,6 +38,7 @@ class DuelSideOut(WireModel):
     is_submitted: bool
     # Duel twin of `PraxisMemberOut.nudged_at` (#1083).
     nudged_at: Optional[datetime] = None
+    nudge_again_at: Optional[datetime] = None
     # This side's multiplier per outcome (``compute_duel_multiplier``, #2865);
     # ``tie_multiplier`` already resolves ``takes_duel_ties`` (#2664).
     win_multiplier: float = 1.0

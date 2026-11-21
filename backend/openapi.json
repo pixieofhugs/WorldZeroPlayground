@@ -2283,6 +2283,18 @@
             "title": "Loss Multiplier",
             "type": "number"
           },
+          "nudge_again_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nudge Again At"
+          },
           "nudged_at": {
             "anyOf": [
               {
@@ -2330,6 +2342,7 @@
           "points_from_votes",
           "is_submitted",
           "nudged_at",
+          "nudge_again_at",
           "win_multiplier",
           "loss_multiplier",
           "tie_multiplier"
@@ -5832,6 +5845,18 @@
             "title": "Joined At",
             "type": "string"
           },
+          "nudge_again_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nudge Again At"
+          },
           "nudged_at": {
             "anyOf": [
               {
@@ -5859,7 +5884,8 @@
           "is_done",
           "approved_at",
           "joined_at",
-          "nudged_at"
+          "nudged_at",
+          "nudge_again_at"
         ],
         "title": "PraxisMemberOut",
         "type": "object"

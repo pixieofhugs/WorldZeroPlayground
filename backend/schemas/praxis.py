@@ -49,6 +49,8 @@ class PraxisMemberOut(WireModel):
     # When the VIEWER last nudged this member (#1083); NULL once `NUDGE_COOLDOWN`
     # lapses, so non-null means "can't nudge yet".
     nudged_at: Optional[datetime] = None
+    # `nudged_at` + the cooldown; the instant the Nudge button unlocks.
+    nudge_again_at: Optional[datetime] = None
 
     model_config = {"from_attributes": True}
 
