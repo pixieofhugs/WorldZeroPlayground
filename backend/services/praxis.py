@@ -490,7 +490,10 @@ async def _check_create_preconditions(
         task.status == TaskStatus.deleted
         or (
             task.status == TaskStatus.backdoor
-            and (character is None or not may_use_door(task, character.faction_slug, era))
+            and (
+                character is None
+                or not may_use_door(task, character.faction_slug, era)
+            )
         )
     )
     if hidden:

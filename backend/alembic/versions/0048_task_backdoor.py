@@ -7,6 +7,7 @@ Revision ID: 0048_task_backdoor
 Revises: 0047_duel_live_unique
 Create Date: 2026-11-21
 """
+
 from typing import Sequence, Union
 
 from alembic import op
@@ -23,7 +24,10 @@ _OLD = ("pending", "active", "retired", "deleted")
 def _recheck(values: tuple[str, ...]) -> None:
     op.execute("ALTER TABLE task DROP CONSTRAINT ck_task_taskstatus")
     allowed = ", ".join(f"'{v}'" for v in values)
-    op.execute(f"ALTER TABLE task ADD CONSTRAINT ck_task_taskstatus CHECK (status IN ({allowed}))")
+    op.execute(
+        "ALTER TABLE task ADD CONSTRAINT ck_task_taskstatus "
+        f"CHECK (status IN ({allowed}))"
+    )
 
 
 def upgrade() -> None:

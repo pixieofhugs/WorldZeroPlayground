@@ -1,8 +1,9 @@
-"""Backdoor tasks (#3848): a hidden task whose door a mod opens and closes on a schedule.
+"""Backdoor tasks (#3848): a hidden task whose door a mod schedules open and shut.
 
 Time windows are judged when data is read; there is no scheduler. The Python and
 SQL forms of "door open" must stay in parity (test_backdoor_parity).
 """
+
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -46,7 +47,9 @@ def door_open_clause(now: Optional[datetime] = None):
 
 
 def may_use_door(
-    task: Task, faction_slug: Optional[str], era: EraConfig = CURRENT_ERA,
+    task: Task,
+    faction_slug: Optional[str],
+    era: EraConfig = CURRENT_ERA,
     now: Optional[datetime] = None,
 ) -> bool:
     return door_open(task, now) and reads_the_array(faction_slug, era)
@@ -59,7 +62,9 @@ async def settle_closed_backdoors(
     await session.execute(
         update(Task)
         .where(Task.status == TaskStatus.backdoor, Task.backdoor_closes_at <= _now(now))
-        .values(status=TaskStatus.retired, backdoor_opens_at=None, backdoor_closes_at=None)
+        .values(
+            status=TaskStatus.retired, backdoor_opens_at=None, backdoor_closes_at=None
+        )
     )
 
 
@@ -74,6 +79,8 @@ async def list_open_backdoors(
     if not reads_the_array(faction_slug, era):
         return []
     result = await session.scalars(
-        select(Task).where(door_open_clause(now)).order_by(Task.backdoor_opens_at, Task.id)
+        select(Task)
+        .where(door_open_clause(now))
+        .order_by(Task.backdoor_opens_at, Task.id)
     )
     return list(result.all())
