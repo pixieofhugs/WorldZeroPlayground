@@ -129,6 +129,8 @@ class ErrorCode(str, enum.Enum):
     task_not_open_for_comments = "TASK_NOT_OPEN_FOR_COMMENTS"
     #: Exactly-one-target guard; unreachable from today's routes.
     comment_target_ambiguous = "COMMENT_TARGET_AMBIGUOUS"
+    #: 409: a deleted comment is a terminal tombstone (ADR-0006).
+    comment_already_deleted = "COMMENT_ALREADY_DELETED"
     #: One flag per ACCOUNT per comment (#2184).
     comment_already_flagged = "COMMENT_ALREADY_FLAGGED"
 

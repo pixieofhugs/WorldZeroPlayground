@@ -41,3 +41,64 @@ async def test_removal_note_reaches_only_the_author_and_the_mod_log(
     assert [
         (a["action"], a["target_id"], a["detail"]) for a in log["items"]
     ] == [("comment_hidden", cid, NOTE)]
+
+
+async def _comment(client, account, praxis_solo, auth_headers2, db_session):
+    await make_admin(db_session, account)
+    url = f"/praxes/{praxis_solo.id}/comments"
+    made = await client.post(url, json={"body_text": "hi"}, headers=auth_headers2)
+    return url, made.json()["id"]
+
+
+def _moderate(client, cid, status, headers, note=None):
+    return client.patch(
+        f"/admin/comments/{cid}/moderate",
+        json={"status": status, "admin_note": note},
+        headers=headers,
+    )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("again", ["visible", "hidden", "deleted"])
+async def test_deleted_comment_is_terminal(
+    client,
+    account,
+    character2,
+    praxis_solo,
+    auth_headers,
+    auth_headers2,
+    db_session,
+    again,
+):
+    url, cid = await _comment(client, account, praxis_solo, auth_headers2, db_session)
+    done = await _moderate(client, cid, "deleted", auth_headers, NOTE)
+    assert done.status_code == 200, done.text
+
+    refused = await _moderate(client, cid, again, auth_headers, "other")
+    assert refused.status_code == 409, refused.text
+    assert refused.json()["detail"]["code"] == "COMMENT_ALREADY_DELETED"
+
+    mine = (await client.get(url, headers=auth_headers2)).json()
+    assert [(c["id"], c["admin_note"]) for c in mine] == [(cid, NOTE)]
+    assert (await client.get(url, headers=auth_headers)).json() == []
+    log = (await client.get("/admin/mod-log", headers=auth_headers)).json()
+    assert [a["action"] for a in log["items"]] == ["comment_deleted"]
+
+
+@pytest.mark.asyncio
+async def test_hidden_comment_can_still_be_made_visible(
+    client,
+    account,
+    character2,
+    praxis_solo,
+    auth_headers,
+    auth_headers2,
+    db_session,
+):
+    url, cid = await _comment(client, account, praxis_solo, auth_headers2, db_session)
+    hid = await _moderate(client, cid, "hidden", auth_headers, NOTE)
+    assert hid.status_code == 200, hid.text
+    shown = await _moderate(client, cid, "visible", auth_headers)
+    assert shown.status_code == 200, shown.text
+    seen = (await client.get(url, headers=auth_headers)).json()
+    assert [c["id"] for c in seen] == [cid]
