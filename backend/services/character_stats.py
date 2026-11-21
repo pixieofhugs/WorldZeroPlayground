@@ -149,13 +149,9 @@ async def deliver_earned_invitations(
 async def deliver_invitations_to_all(
     session: AsyncSession, era: EraConfig = CURRENT_ERA
 ) -> None:
-    """Deliver owed letters to every character in the live era, no recalc.
+    """Letters owed to every live-era character, no recalc. Caller commits.
 
-    For a dial that loosened the thresholds (#3735). Idempotent: held letters
-    are skipped. Caller commits.
-
-    ponytail: one scoring pass per character; fine at launch scale (~20
-    players), batch or queue it past a few thousand.
+    ponytail: one scoring pass per character; batch past a few thousand players.
     """
     era_row = await get_current_era_row_safe(session)
     if era_row is None:
