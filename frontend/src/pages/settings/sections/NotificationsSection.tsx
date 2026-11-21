@@ -1,6 +1,10 @@
 import { useEffect, useState, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import { apiGet, apiPut } from '../../../api/client'
+import InstallIphoneSteps from '../../../components/install/InstallIphoneSteps'
+import { useFormFactor } from '../../../hooks/useFormFactor'
+import { isIphoneSafari, isStandalone } from '../../../utils/installPrompt'
+import { subscribePush } from '../../../utils/pushSubscribe'
 import { extractError } from '../../../utils/errors'
 import type { SettingsSectionProps } from '../../Settings'
 import SettingsCard from '../SettingsCard'
@@ -64,51 +68,193 @@ const STATUS_LINE: CSSProperties = {
   color: 'var(--color-text-secondary)',
 }
 
-const AXES: readonly PrefAxis[] = ['on_updates', 'by_email']
+const AXES: readonly PrefAxis[] = ['on_updates', 'by_email', 'by_push']
+
+/** Why Push cannot turn on, or 'ok'. Priority: server, then device, then browser. */
+export type PushState = 'ok' | 'keys' | 'ios' | 'denied'
+
+const AXIS_NAME = {
+  on_updates: ['columnPage', 'allPageName', 'rowPageName'],
+  by_email: ['columnEmail', 'allEmailName', 'rowEmailName'],
+  by_push: ['columnPush', 'allPushName', 'rowPushName'],
+} as const
+
+const STACK_CELLS: CSSProperties = {
+  display: 'flex',
+  justifyContent: 'flex-end',
+  gap: 'var(--space-sm)',
+}
+
+const STACK_CELL: CSSProperties = {
+  width: 'var(--space-6xl)',
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  gap: 'var(--space-xs)',
+}
+
+const PUSH_INK = 'var(--color-accent-primary)'
+
+const BLOCKED: CSSProperties = {
+  margin: 'var(--space-lg) 0 0',
+  padding: 'var(--space-lg)',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 'var(--space-sm)',
+  border: '1px solid var(--color-border)',
+  borderRadius: 'var(--radius-lg)',
+}
+
+const BLOCKED_HEAD: CSSProperties = {
+  display: 'flex',
+  alignItems: 'flex-start',
+  justifyContent: 'space-between',
+  gap: 'var(--space-lg)',
+}
+
+const BLOCKED_KICKER: CSSProperties = {
+  fontSize: 'var(--text-content)',
+  letterSpacing: '0.14em',
+  color: 'var(--color-text-tertiary)',
+}
+
+const PUSH_NOTE_ID = 'settings-notifications-push-note'
+
+function PushBlocked({ state }: { readonly state: Exclude<PushState, 'ok'> }) {
+  const { t } = useTranslation('common')
+  const [steps, setSteps] = useState(false)
+  return (
+    <div style={BLOCKED} data-testid="settings-notifications-push-blocked">
+      <span className="font-accent" style={BLOCKED_KICKER}>
+        {t(`settings.notifications.push.${state}.when`)}
+      </span>
+      <div style={BLOCKED_HEAD}>
+        <div>
+          <div className="font-display" style={{ fontSize: 'var(--text-content)', fontWeight: 600 }}>
+            {t('settings.notifications.push.title')}
+          </div>
+          <div
+            id={PUSH_NOTE_ID}
+            style={{
+              marginTop: 'var(--space-xs)',
+              fontSize: 'var(--text-content)',
+              lineHeight: 1.6,
+              color: 'var(--color-text-secondary)',
+            }}
+          >
+            {t(`settings.notifications.push.${state}.note`)}
+          </div>
+        </div>
+        <div style={STACK_CELL}>
+          <SettingsSwitch
+            checked={false}
+            disabled
+            describedById={PUSH_NOTE_ID}
+            label={t(`settings.notifications.push.${state}.label`)}
+            onToggle={() => {}}
+          />
+          <span aria-hidden style={{ fontSize: 'var(--text-content)', color: PUSH_INK }}>
+            {t('settings.notifications.columnPush')}
+          </span>
+        </div>
+      </div>
+      {state === 'ios' && (
+        <>
+          <button
+            type="button"
+            className="btn-outline"
+            style={{ minHeight: 44, alignSelf: 'flex-start' }}
+            aria-expanded={steps}
+            onClick={() => setSteps((v) => !v)}
+          >
+            {t('settings.notifications.push.ios.action')}
+          </button>
+          {steps && <InstallIphoneSteps />}
+        </>
+      )}
+    </div>
+  )
+}
 
 /** Split out for the test: the section only has rows after an effect. */
 export function NotificationRows({
   prefs,
   onToggle,
   onToggleAll,
+  push = 'ok',
 }: {
   readonly prefs: NotificationPrefs
   readonly onToggle: (key: string, axis: PrefAxis) => void
   readonly onToggleAll: (axis: PrefAxis) => void
+  readonly push?: PushState
 }) {
   const { t } = useTranslation('common')
   const rows = rowsFor(prefs)
+  const stacked = useFormFactor() === 'mobile'
+  const pushOff = push !== 'ok'
+
+  /** One cell: the switch, plus its column caption when stacked (or on the master row). */
+  function cell(
+    axis: PrefAxis,
+    props: { checked: boolean; locked: boolean; label: string; describedById?: string; onToggle: () => void; testId: string },
+    caption: boolean,
+  ) {
+    const blocked = axis === 'by_push' && pushOff
+    const [colKey] = AXIS_NAME[axis]
+    return (
+      <div key={axis} style={stacked ? STACK_CELL : caption ? undefined : CELL}>
+        {caption && !stacked && (
+          <span style={CAPTION} aria-hidden>
+            {t(`settings.notifications.${colKey}`)}
+          </span>
+        )}
+        <div style={stacked || !caption ? undefined : CELL}>
+          <SettingsSwitch
+            checked={blocked ? false : props.checked}
+            disabled={props.locked || blocked}
+            describedById={blocked ? PUSH_NOTE_ID : props.describedById}
+            label={blocked ? t(`settings.notifications.push.${push}.label`) : props.label}
+            onToggle={props.onToggle}
+            testId={props.testId}
+          />
+        </div>
+        {stacked && (
+          <span
+            aria-hidden
+            style={{
+              fontSize: 'var(--text-content)',
+              color: axis === 'by_push' ? PUSH_INK : 'var(--color-text-secondary)',
+            }}
+          >
+            {t(`settings.notifications.${colKey}`)}
+          </span>
+        )}
+      </div>
+    )
+  }
 
   return (
     <>
+      {pushOff && <PushBlocked state={push} />}
       <SettingsRow
         title={t('settings.notifications.all')}
         help={t('settings.notifications.allHelp')}
+        stacked={stacked}
       >
-        <div style={CELLS}>
-          {AXES.map((axis) => (
-            <div key={axis}>
-              <span style={CAPTION} aria-hidden>
-                {t(
-                  axis === 'on_updates'
-                    ? 'settings.notifications.columnPage'
-                    : 'settings.notifications.columnEmail',
-                )}
-              </span>
-              <div style={CELL}>
-                <SettingsSwitch
-                  checked={masterChecked(prefs, axis)}
-                  label={t(
-                    axis === 'on_updates'
-                      ? 'settings.notifications.allPageName'
-                      : 'settings.notifications.allEmailName',
-                  )}
-                  onToggle={() => onToggleAll(axis)}
-                  testId={`settings-notifications-all-${axis}`}
-                />
-              </div>
-            </div>
-          ))}
+        <div style={stacked ? STACK_CELLS : CELLS}>
+          {AXES.map((axis) =>
+            cell(
+              axis,
+              {
+                checked: masterChecked(prefs, axis),
+                locked: false,
+                label: t(`settings.notifications.${AXIS_NAME[axis][1]}`),
+                onToggle: () => onToggleAll(axis),
+                testId: `settings-notifications-all-${axis}`,
+              },
+              true,
+            ),
+          )}
         </div>
       </SettingsRow>
 
@@ -124,31 +270,28 @@ export function NotificationRows({
             help={t(row.helpKey)}
             note={noteKey ? t(noteKey) : undefined}
             noteId={noteKey ? noteId : undefined}
+            stacked={stacked}
           >
-            <div style={CELLS}>
+            <div style={stacked ? STACK_CELLS : CELLS}>
               {AXES.map((axis) => {
                 const locked = isLocked(pref, axis)
-                return (
-                  <div key={axis} style={CELL}>
-                    <SettingsSwitch
-                      checked={pref[axis]}
-                      disabled={locked}
-                      describedById={locked ? noteId : undefined}
-                      // Name carries the column, and the reason when locked.
-                      label={
-                        locked && noteKey
-                          ? `${t(row.titleKey)} — ${t(noteKey)}`
-                          : t(
-                              axis === 'on_updates'
-                                ? 'settings.notifications.rowPageName'
-                                : 'settings.notifications.rowEmailName',
-                              { event: t(row.titleKey) },
-                            )
-                      }
-                      onToggle={() => onToggle(row.key, axis)}
-                      testId={`settings-notifications-${row.key}-${axis}`}
-                    />
-                  </div>
+                return cell(
+                  axis,
+                  {
+                    checked: pref[axis],
+                    locked,
+                    describedById: locked ? noteId : undefined,
+                    // Name carries the column, and the reason when locked.
+                    label:
+                      locked && noteKey
+                        ? `${t(row.titleKey)} — ${t(noteKey)}`
+                        : t(`settings.notifications.${AXIS_NAME[axis][2]}`, {
+                            event: t(row.titleKey),
+                          }),
+                    onToggle: () => onToggle(row.key, axis),
+                    testId: `settings-notifications-${row.key}-${axis}`,
+                  },
+                  false,
                 )
               })}
             </div>
@@ -163,12 +306,19 @@ export default function NotificationsSection({ sectionId }: SettingsSectionProps
   const { t } = useTranslation('common')
   const [prefs, setPrefs] = useState<NotificationPrefs | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [vapidKey, setVapidKey] = useState<string | null>(null)
+  const [denied, setDenied] = useState(
+    () => typeof Notification !== 'undefined' && Notification.permission === 'denied',
+  )
 
   useEffect(() => {
     let live = true
     apiGet('/me/notification-prefs')
       .then(({ data }) => {
-        if (live) setPrefs(data.events)
+        if (live) {
+          setPrefs(data.events)
+          setVapidKey(data.vapid_public_key ?? null)
+        }
       })
       .catch((err) => {
         if (live) setError(extractError(err, t('settings.notifications.loadError')))
@@ -191,6 +341,30 @@ export default function NotificationsSection({ sectionId }: SettingsSectionProps
     }
   }
 
+  const push: PushState = !vapidKey
+    ? 'keys'
+    : isIphoneSafari() && !isStandalone()
+      ? 'ios'
+      : denied
+        ? 'denied'
+        : 'ok'
+
+  /** The browser's yes comes first; a no leaves the switch off and shows the blocked state. */
+  async function toggle(next: NotificationPrefs, turningOn: boolean) {
+    if (turningOn && vapidKey) {
+      try {
+        if ((await subscribePush(vapidKey)) === 'denied') {
+          setDenied(true)
+          return
+        }
+      } catch (err) {
+        setError(extractError(err, t('settings.notifications.saveError')))
+        return
+      }
+    }
+    await save(next)
+  }
+
   return (
     <SettingsCard
       sectionId={sectionId}
@@ -204,8 +378,13 @@ export default function NotificationsSection({ sectionId }: SettingsSectionProps
       {prefs && (
         <NotificationRows
           prefs={prefs}
-          onToggle={(key, axis) => void save(toggleCell(prefs, key, axis))}
-          onToggleAll={(axis) => void save(setAll(prefs, axis))}
+          push={push}
+          onToggle={(key, axis) =>
+            void toggle(toggleCell(prefs, key, axis), axis === 'by_push' && !prefs[key].by_push)
+          }
+          onToggleAll={(axis) =>
+            void toggle(setAll(prefs, axis), axis === 'by_push' && !masterChecked(prefs, axis))
+          }
         />
       )}
 
