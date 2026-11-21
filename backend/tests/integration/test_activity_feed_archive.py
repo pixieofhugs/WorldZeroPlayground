@@ -582,6 +582,46 @@ async def test_dismiss_all_skips_awaiting_submission_and_pending_requests(
 
 
 @pytest.mark.asyncio
+async def test_dismiss_all_on_stream_archives_answered_invite_and_duel(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    full_feed: dict,
+    auth_headers: dict,
+):
+    """Requests holds the pending ones (kept); All shows answered ones (archived)."""
+    pending = await client.post(
+        "/activity-feed/dismiss-all",
+        json={"filter": REQUESTS_FILTER},
+        headers=auth_headers,
+    )
+    assert pending.json()["count"] == 1  # invite + duel stayed
+
+    await db_session.execute(
+        update(PraxisInvite)
+        .where(PraxisInvite.id == full_feed["collab_invite_id"])
+        .values(status=PraxisInviteStatus.declined)
+    )
+    await db_session.execute(
+        update(Duel).values(
+            status=DuelStatus.declined, declined_at=datetime.now(timezone.utc)
+        )
+    )
+    await db_session.flush()
+    before = await _feed(client, auth_headers, ALL_FILTER)
+    types = {item["type"] for item in before["items"]}
+    assert {FEED_ITEM_TYPE_COLLAB_INVITE, FEED_ITEM_TYPE_DUEL_CHALLENGE} <= types
+
+    await client.post(
+        "/activity-feed/dismiss-all", json={"filter": ALL_FILTER}, headers=auth_headers
+    )
+    after = await _feed(client, auth_headers, ALL_FILTER)
+    assert not {
+        FEED_ITEM_TYPE_COLLAB_INVITE,
+        FEED_ITEM_TYPE_DUEL_CHALLENGE,
+    } & {item["type"] for item in after["items"]}
+
+
+@pytest.mark.asyncio
 async def test_unknown_and_malformed_keys_are_rejected(
     client: AsyncClient, character: Character, auth_headers: dict
 ):
