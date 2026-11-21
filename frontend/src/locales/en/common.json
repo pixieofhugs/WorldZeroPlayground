@@ -508,6 +508,14 @@
       "requestSent": "Thanks — we'll let you know if enough players ask for the same one.",
       "requestError": "That did not send. Try again in a moment."
     },
+    "blocked": {
+      "eyebrow": "Blocked",
+      "lead": "Blocked players can't taunt you, and you won't see them in your friends-and-foes feed. They aren't told.",
+      "empty": "You haven't blocked anyone. Block someone from their profile and they'll be listed here.",
+      "blockedOn": "Blocked {{date}}",
+      "unblock": "Unblock",
+      "unblockFailed": "Could not unblock {{name}}. Try again."
+    },
     "data": {
       "eyebrow": "Your data",
       "lead": "Download everything tied to your account: your characters, the praxis you posted, the votes you cast, your comments, and the files you uploaded.",
