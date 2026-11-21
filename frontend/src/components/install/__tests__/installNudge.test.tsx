@@ -27,6 +27,7 @@ beforeEach(() => {
 afterEach(() => {
   cleanup()
   vi.restoreAllMocks()
+  window.dispatchEvent(new Event('appinstalled')) // clears the module-level `held`
 })
 
 describe('InstallNudge', () => {

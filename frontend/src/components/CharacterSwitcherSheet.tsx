@@ -161,7 +161,7 @@ export function CharacterSwitcherRows({
   )
 }
 
-// Bottom-sheet band shared with `.filter-factions__*` in index.css: scrim 39, sheet 40
+// Bottom-sheet band shared with `.filter-factions__*` in `components/ui/FilterBar/filterBar.css`: scrim 39, sheet 40
 // (root context, #1591) — above chrome 10, below ConfirmDialog 50 and modals 1000.
 const scrim: CSSProperties = {
   position: 'fixed', inset: 0, zIndex: 39, border: 'none', padding: 0,

@@ -36,7 +36,6 @@ const row: CSSProperties = {
 
 /**
  * 22ch fits beside a 48px switch on a 375px phone, so only text rows wrap.
- * ponytail: one measure for every row; make it a prop if a row needs another.
  */
 const LABEL_MEASURE = '1 1 22ch'
 

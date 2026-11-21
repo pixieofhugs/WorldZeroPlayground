@@ -17,7 +17,7 @@ export default function OfflineGate({ children }: { children: ReactNode }) {
       <p className="text-muted">{t('offline.body')}</p>
       <button
         type="button"
-        className="btn-outline"
+        className="btn-outline min-h-11"
         onClick={() => window.location.reload()}
       >
         {t('offline.retry')}

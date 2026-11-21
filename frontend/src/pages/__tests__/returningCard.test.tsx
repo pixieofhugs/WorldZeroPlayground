@@ -5,7 +5,7 @@
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
-import { describe, it, expect, vi } from 'vitest'
+import { afterEach, describe, it, expect, vi } from 'vitest'
 
 import '../../i18n'
 import onboarding from '../../locales/en/onboarding.json'
@@ -18,6 +18,12 @@ vi.mock('../../api/auth', () => ({
 import ReturningCard, { formatDeletedAt, runStartFresh } from '../onboarding/ReturningCard'
 
 describe('the deletion date the gate states', () => {
+  const tz = process.env.TZ
+  afterEach(() => {
+    if (tz === undefined) delete process.env.TZ
+    else process.env.TZ = tz
+  })
+
   const mod = (zone: string) => {
     process.env.TZ = zone
     return formatDeletedAt('2026-03-03T02:30:00+00:00', 'en-GB')

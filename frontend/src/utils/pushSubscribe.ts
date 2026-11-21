@@ -51,7 +51,9 @@ export async function subscribePush(
 }
 
 /** Why push cannot turn on, or ok. Priority: server, then device, then browser. */
-export function pushBlock(vapidKey: string | null): 'ok' | 'keys' | 'ios' | 'denied' | 'unsupported' {
+export type PushState = 'ok' | 'keys' | 'ios' | 'denied' | 'unsupported'
+
+export function pushBlock(vapidKey: string | null): PushState {
   if (!vapidKey) return 'keys'
   if (isIphoneSafari() && !isStandalone()) return 'ios'
   if (!pushSupported()) return 'unsupported'

@@ -50,8 +50,9 @@ async function focusOrOpen(clients, url) {
   const open = (await clients.matchAll({ type: 'window', includeUncontrolled: true })).find((c) => 'focus' in c)
   if (open) {
     try {
-      await open.focus()
+      // Navigate first: on an uncontrolled client focus() spends the one window interaction.
       await open.navigate(url)
+      await open.focus()
       return
     } catch {
       // navigate refused (uncontrolled client): fall through to a new window
