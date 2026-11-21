@@ -32,6 +32,7 @@ vi.mock('../consolePages', () => ({
 vi.mock('../../../components/admin/ModStrip', () => ({ default: () => 'COPY EDITOR STRIP' }))
 vi.mock('../FactionCopySheet', () => ({ default: () => 'FactionCopySheet' }))
 vi.mock('../LevelUpCopySheet', () => ({ default: () => 'LevelUpCopySheet' }))
+vi.mock('../TauntCopySheet', () => ({ default: () => 'TauntCopySheet' }))
 
 afterEach(cleanup)
 
@@ -59,6 +60,7 @@ describe('admin console shell', () => {
     ['/admin/copy', 'CopySheetIndexPage'],
     ['/admin/copy/ua', 'FactionCopySheet'],
     ['/admin/level-ups', 'LevelUpCopySheet'],
+    ['/admin/taunts', 'TauntCopySheet'],
   ])('%s renders %s inside the rail', async (path, page) => {
     at(path)
     expect(await screen.findByText(page)).toBeTruthy()
