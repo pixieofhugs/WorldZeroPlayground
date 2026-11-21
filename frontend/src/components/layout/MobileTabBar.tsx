@@ -55,7 +55,14 @@ export default function MobileTabBar() {
 
   return (
     <>
-      <nav className="tabbar" aria-label={t('nav.primary')}>
+      <nav
+        className="tabbar"
+        aria-label={t('nav.primary')}
+        style={{
+          height: 'calc(var(--tab-bar-height) + env(safe-area-inset-bottom))',
+          paddingBottom: 'env(safe-area-inset-bottom)',
+        }}
+      >
         <span
           aria-hidden="true"
           className="tabbar__hairline"

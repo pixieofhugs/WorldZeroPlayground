@@ -195,7 +195,6 @@
     "MetataskRemoveConfirm": "src/components/metataskSeal/MetataskRemoveConfirm.tsx",
     "MetataskSeal": "src/components/metataskSeal/MetataskSeal.tsx",
     "MetataskSealStack": "src/components/metataskSeal/MetataskSealStack.tsx",
-    "MobileHeader": "src/components/layout/MobileHeader.tsx",
     "MobilePlayers": "src/pages/players/MobilePlayers.tsx",
     "MobileStickyBar": "src/pages/factionDetail/MobileStickyBar.tsx",
     "MobileTabBar": "src/components/layout/MobileTabBar.tsx",
@@ -631,9 +630,6 @@
     "MetataskRemoveConfirm": {
       "cardMode": "single",
       "viewport": "560x520"
-    },
-    "MobileHeader": {
-      "cardMode": "column"
     },
     "MobilePlayers": {
       "cardMode": "single",

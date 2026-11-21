@@ -28,9 +28,7 @@ describe('MobileTabBar', () => {
   })
 
   it('declares its height from --tab-bar-height plus the bottom inset', () => {
-    // The geometry rule lives in tabBar.css; the bar must keep using it.
-    const css = readCss()
-    expect(css).toContain('height: calc(var(--tab-bar-height) + env(safe-area-inset-bottom))')
+    expect(render('/')).toContain('height:calc(var(--tab-bar-height) + env(safe-area-inset-bottom))')
   })
 
   it('gives every glyph its own gradient id', () => {
@@ -54,8 +52,3 @@ describe('MobileTabBar', () => {
     expect(activeTab('/settings', false)).toBe(-1)
   })
 })
-
-import { readFileSync } from 'node:fs'
-function readCss(): string {
-  return readFileSync(new URL('../tabBar.css', import.meta.url), 'utf8')
-}
