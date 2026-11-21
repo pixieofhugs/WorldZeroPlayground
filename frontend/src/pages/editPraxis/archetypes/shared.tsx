@@ -781,7 +781,7 @@ export function TaskSlip({
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
         style={{
-          flex: "1 1 100%",
+          width: "100%",
           minWidth: 0,
           minHeight: 44,
           display: "flex",
@@ -820,7 +820,7 @@ export function TaskSlip({
         </span>
       </button>
       {open && (
-        <div style={{ ...rowStyle, flex: "1 1 100%", minWidth: 0 }}>{slip}</div>
+        <div style={{ ...rowStyle, width: "100%", minWidth: 0 }}>{slip}</div>
       )}
     </div>
   );
