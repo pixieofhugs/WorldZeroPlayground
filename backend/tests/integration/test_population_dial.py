@@ -8,6 +8,7 @@ from fastapi import HTTPException
 from sqlalchemy import select
 
 from errors import ErrorCode
+from faction_slugs import real_faction_slugs
 from game_config import CURRENT_ERA, ERA_1, era_config_for_key
 from models.invitation_letter import InvitationLetter
 from models.mod_action import ModAction
@@ -196,13 +197,18 @@ async def test_a_rollover_never_exposes_full_rules_to_other_requests(db_session)
 
 async def _owed_player(db_session, era, account):
     """Meets 1 task / 10 pts in a rival faction, not 2 tasks / 50 pts."""
-    author = await make_character(db_session, era, username="earner", account=account)
-    voter = await make_character(db_session, era, username="judge", level=1)
-    task = await make_task(db_session, voter, point_value=20, faction_slug="snide")
+    own, rival = real_faction_slugs(CURRENT_ERA)[:2]
+    author = await make_character(
+        db_session, era, username="earner", account=account, faction_slug=own
+    )
+    voter = await make_character(
+        db_session, era, username="judge", level=1, faction_slug=own
+    )
+    task = await make_task(db_session, voter, point_value=20, faction_slug=rival)
     praxis = await make_solo_praxis(db_session, task, author)
     await cast_vote(db_session, praxis, voter, 5)
     await db_session.commit()
-    return author
+    return rival
 
 
 async def _letters(db_session):
@@ -216,11 +222,12 @@ async def test_loosening_invitation_delivers_to_players_who_now_qualify(
     await make_admin(db_session, account)
     await overlay(db_session)
     await set_dials({"invitation": "full"}, account.id, db_session)
-    await _owed_player(db_session, era, account)
+    rival = await _owed_player(db_session, era, account)
     assert await _letters(db_session) == []
 
     await set_dials({"invitation": "small"}, account.id, db_session)
-    assert [letter.faction_slug for letter in await _letters(db_session)] == ["snide"]
+    letters = await _letters(db_session)
+    assert [letter.faction_slug for letter in letters] == [rival]
 
     await set_dials({"invitation": "full"}, account.id, db_session)
     await set_dials({"invitation": "small"}, account.id, db_session)
