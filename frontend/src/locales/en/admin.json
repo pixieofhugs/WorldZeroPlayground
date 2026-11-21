@@ -337,6 +337,7 @@
           "comment_flagged": "flagged",
           "task_status": "changed status of",
           "task_delete": "deleted",
+          "task_withdraw": "withdrew",
           "stats_edit": "edited the stats of",
           "role_grant": "granted a role to",
           "role_revoke": "revoked a role from"
@@ -524,6 +525,7 @@
         "task_status": "changed status of",
         "task_edit": "edited",
         "task_delete": "deleted",
+        "task_withdraw": "withdrew",
         "stats_edit": "edited the stats of",
         "role_grant": "made admin",
         "role_revoke": "removed admin",

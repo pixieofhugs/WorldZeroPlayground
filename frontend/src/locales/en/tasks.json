@@ -96,6 +96,15 @@
       "heading": "Discussion"
     }
   },
+  "proposalCard": {
+    "pendingReview": "Pending review",
+    "edit": "Edit",
+    "withdraw": "Withdraw",
+    "withdrawTitle": "Withdraw this proposal?",
+    "withdrawBody": "It leaves your Proposed tasks. A moderator can still restore it.",
+    "withdrawConfirm": "Withdraw it",
+    "withdrawFailed": "Couldn't withdraw that proposal."
+  },
   "propose": {
     "pageTitle": "Propose a Task",
     "loginRequired": "You need to be logged in to propose a task.",

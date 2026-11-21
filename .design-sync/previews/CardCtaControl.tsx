@@ -42,7 +42,7 @@ export function Claimable() {
   return (
     <div style={wrap}>
       <CardCtaControl
-        cta={{ label: 'Take up this practice', denied: false, onPress: noop }}
+        cta={{ taskId: 1, label: 'Take up this practice', denied: false, onPress: noop }}
         style={{ ...CHIP, cursor: 'pointer' }}
       >
         Take up this practice
@@ -57,7 +57,7 @@ export function Denied() {
   return (
     <div style={wrap}>
       <CardCtaControl
-        cta={{ label: 'Sign-up has closed', denied: true }}
+        cta={{ taskId: 1, label: 'Sign-up has closed', denied: true }}
         style={{ ...CHIP, cursor: 'not-allowed', opacity: 0.72 }}
       >
         Sign-up has closed
@@ -72,7 +72,7 @@ export function DoorToDraft() {
   return (
     <div style={wrap}>
       <CardCtaControl
-        cta={{ label: 'Work on this?', denied: false, href: '/praxis/9021/edit' }}
+        cta={{ taskId: 1, label: 'Work on this?', denied: false, href: '/praxis/9021/edit' }}
         style={{ ...CHIP, cursor: 'pointer' }}
       >
         Work on this?

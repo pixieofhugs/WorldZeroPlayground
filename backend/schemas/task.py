@@ -83,6 +83,19 @@ class TaskCreate(WireModel):
     metatask_faction_slug: Optional[str] = None
 
 
+class ProposalOut(WireModel):
+    """A proposer's own form fields; ``notes`` is private, so it is not on TaskOut."""
+
+    title: str
+    description: str
+    notes: str
+    point_value: int
+    level_required: int
+    primary_faction_slug: str
+    task_type: TaskType
+    metatask_faction_slug: Optional[str] = None
+
+
 class TaskSignupOut(WireModel):
     """One row of a task's in-progress roster (GET /tasks/{id}/signups).
 

@@ -229,6 +229,14 @@ function PlayerRoutes() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/propose-task/:taskId"
+            element={
+              <ProtectedRoute warm={importProposeTask}>
+                <ProposeTask />
+              </ProtectedRoute>
+            }
+          />
           {/* Post-deletion landing (#2161): unguarded, the session is already
               gone. The delete flow awaits its loader before signing out (#3134). */}
           <Route path="/goodbye" element={<AccountDeleted />} />

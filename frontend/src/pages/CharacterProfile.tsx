@@ -21,6 +21,8 @@ import {
   unblockCharacter,
   type RelationshipListItem,
 } from "../api/relationships";
+import { useOwnProposals } from "./characterProfile/useOwnProposals";
+import { ProposalActionsContext } from "../components/taskCard/proposalActions";
 import RelationshipBlockControl from "./characterProfile/RelationshipBlockControl";
 import AddRelationshipButtons from "./characterProfile/AddRelationshipButtons";
 import { useAuth } from "../auth/AuthContext";
@@ -75,7 +77,12 @@ export default function CharacterProfile() {
   const character = data?.[0] ?? null;
   useDocumentTitle(character?.display_name ?? t("nav.players"));
   const submissions = data?.[1] ?? [];
-  const proposedTasks = data?.[2] ?? [];
+  const own = useOwnProposals(
+    data?.[2] ?? [],
+    !!character && user?.character?.id === character.id,
+    character?.faction_slug,
+  );
+  const proposedTasks = own.tasks;
   const [relationship, setRelationship] = useState<RelationshipListItem | null>(
     null,
   );
@@ -317,12 +324,20 @@ export default function CharacterProfile() {
     <>
       {/* Sign-up failure only (success navigates away); no skin owns a slot. */}
 
+      {own.error && (
+        <p className="font-body content-text border-2 danger-edge danger-text px-3 py-2">
+          {own.error}
+        </p>
+      )}
       {signupMsg && (
         <p className="font-body content-text border-2 danger-edge danger-text px-3 py-2">
           {signupMsg}
         </p>
       )}
-      <FactionProfileBody {...bodyProps} />
+      <ProposalActionsContext.Provider value={own.actions}>
+        <FactionProfileBody {...bodyProps} />
+      </ProposalActionsContext.Provider>
+      {own.dialog}
     </>
   );
 }

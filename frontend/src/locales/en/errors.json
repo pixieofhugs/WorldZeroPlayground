@@ -61,6 +61,8 @@
     "CHARACTER_NOT_FOUND": "Character not found.",
     "TASK_FACTION_UNKNOWN": "That faction is not part of the current era.",
     "TASK_FACTION_HIDDEN": "Tasks can't be created for that faction.",
+    "TASK_NOT_YOURS": "That proposal isn't yours to change.",
+    "TASK_NOT_PENDING": "That proposal has already been reviewed, so it can't be changed.",
     "TASK_HAS_HISTORY": "This task has history — a praxis, a duel, a metatask or a comment points at it — so it can't be deleted. Retire it instead.",
     "TASK_SEED_OWNED": "This task is owned by the seeder and can't be deleted.",
 

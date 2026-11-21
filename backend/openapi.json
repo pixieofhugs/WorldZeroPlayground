@@ -6174,6 +6174,61 @@
         "title": "PraxisVoteIn",
         "type": "object"
       },
+      "ProposalOut": {
+        "description": "A proposer's own form fields; ``notes`` is private, so it is not on TaskOut.",
+        "properties": {
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "level_required": {
+            "title": "Level Required",
+            "type": "integer"
+          },
+          "metatask_faction_slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metatask Faction Slug"
+          },
+          "notes": {
+            "title": "Notes",
+            "type": "string"
+          },
+          "point_value": {
+            "title": "Point Value",
+            "type": "integer"
+          },
+          "primary_faction_slug": {
+            "title": "Primary Faction Slug",
+            "type": "string"
+          },
+          "task_type": {
+            "$ref": "#/components/schemas/TaskType"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "description",
+          "notes",
+          "point_value",
+          "level_required",
+          "primary_faction_slug",
+          "task_type",
+          "metatask_faction_slug"
+        ],
+        "title": "ProposalOut",
+        "type": "object"
+      },
       "PushKeysIn": {
         "properties": {
           "auth": {
@@ -15527,6 +15582,60 @@
       }
     },
     "/tasks/{task_id}": {
+      "delete": {
+        "operationId": "withdraw_proposal_route_tasks__task_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Withdraw Proposal Route",
+        "tags": [
+          "tasks"
+        ]
+      },
       "get": {
         "operationId": "get_task_tasks__task_id__get",
         "parameters": [
@@ -15584,6 +15693,77 @@
           }
         ],
         "summary": "Get Task",
+        "tags": [
+          "tasks"
+        ]
+      },
+      "put": {
+        "operationId": "edit_proposal_route_tasks__task_id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Edit Proposal Route",
         "tags": [
           "tasks"
         ]
@@ -15724,6 +15904,69 @@
         "summary": "Create Task Comment",
         "tags": [
           "comments"
+        ]
+      }
+    },
+    "/tasks/{task_id}/proposal": {
+      "get": {
+        "operationId": "get_own_proposal_route_tasks__task_id__proposal_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProposalOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Own Proposal Route",
+        "tags": [
+          "tasks"
         ]
       }
     },
