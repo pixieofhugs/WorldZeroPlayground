@@ -530,7 +530,9 @@
         "era_roll": "rolled into",
       "task_import": "imported tasks",
       "message_archive": "archived a message",
-      "message_unarchive": "restored a message"
+      "message_unarchive": "restored a message",
+      "small_world_on": "turned Small world on",
+      "small_world_off": "turned Small world off"
       },
       "to": {
         "character": "character {{name}}",
