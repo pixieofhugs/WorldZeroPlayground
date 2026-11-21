@@ -538,6 +538,20 @@ class PraxisRoomServer(WebsocketServer):
         flusher.absorb()
         return _document_values(room.ydoc)
 
+    def loaded_values(self, praxis_id: int) -> dict[str, str]:
+        """The running room's column values, or {} when none is loaded or a proposal
+        already absorbed this exact text (stored row lags it by the flush window).
+        Never opens a room."""
+        name = room_name_for(praxis_id)
+        room, flusher = self.rooms.get(name), self._flushers.get(name)
+        if room is None or flusher is None:
+            return {}
+        values = _document_values(room.ydoc)
+        if values == flusher._absorbed:
+            return {}
+        flusher.absorb()
+        return values
+
     def revoke(self, praxis_id: int, character_id: int) -> None:
         """Door two: close every socket this character holds on this praxis."""
         for connection in list(self._connections):
@@ -683,6 +697,10 @@ async def merge_client_state(praxis_id: int, state_b64: str) -> dict[str, str]:
     if len(update) > _MAX_CLIENT_UPDATE_BYTES:
         raise_coded(413, ErrorCode.praxis_doc_update_invalid, _OVERSIZED_DRAFT)
     return await PRAXIS_ROOM_SERVER.apply_client_update(praxis_id, update)
+
+
+def loaded_room_values(praxis_id: int) -> dict[str, str]:
+    return PRAXIS_ROOM_SERVER.loaded_values(praxis_id)
 
 
 def close_member_sockets(praxis_id: int, character_id: int) -> None:
