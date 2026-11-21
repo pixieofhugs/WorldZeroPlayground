@@ -11,7 +11,6 @@ import { Navigate, useParams } from 'react-router-dom'
 import { usePraxisDetail } from './praxisDetail/usePraxisDetail'
 import { resolveVariant } from '../utils/factionDispatch'
 import { surfaceMap } from '../factions'
-import PushAsk from '../components/push/PushAsk'
 
 export default function PraxisDetail() {
   const { t } = useTranslation(['praxis', 'common'])
@@ -52,7 +51,6 @@ export default function PraxisDetail() {
         </p>
       )}
       <Archetype state={state} />
-      {state.isOwner && <PushAsk praxisId={state.praxis.id} />}
     </>
   )
 }

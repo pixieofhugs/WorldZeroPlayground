@@ -35,6 +35,7 @@ import { useTranslation } from 'react-i18next'
 import Breadcrumb from '../../components/nav/Breadcrumb'
 import { useFormFactor } from '../../hooks/useFormFactor'
 import { DuelCard } from './DuelCard'
+import PushAsk from '../../components/push/PushAsk'
 import MetataskSeal from '../../components/metataskSeal/MetataskSeal'
 import ScoreStamp from '../../components/praxisCard/scoreStamp/ScoreStamp'
 import { voteRegionVisible } from '../../components/vote/VoteUI'
@@ -280,6 +281,7 @@ export function PraxisDetailSkin({
           <>
             {banners}
             {split}
+            {state.isOwner && <PushAsk praxisId={praxis.id} />}
             {/* Third region (ADR-0061): beneath both columns, heading drawn by
                 the layout (#1029). Rows stay dispatched on each author's faction. */}
             <PraxisDetailComments
