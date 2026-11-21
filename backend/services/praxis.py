@@ -49,6 +49,7 @@ from services.character_stats import (
     recalculate_character_stats,
     recalculate_members_stats,
 )
+from services.collab_consensus import _lock_praxis
 from services.era import (
     get_current_era_row,
     get_current_era_row_safe,
@@ -106,7 +107,9 @@ def _require_member(praxis: Praxis, character_id: int, action: str) -> None:
         raise HTTPException(status_code=403, detail=f"Only a member can {action} this praxis.")
 
 
-async def get_praxis(praxis_id: int, session: AsyncSession) -> Praxis:
+async def get_praxis(
+    praxis_id: int, session: AsyncSession, lock: bool = False
+) -> Praxis:
     """Get a praxis by id with detail-view relationships eager-loaded. **A read.**
 
     Moves no state, unlike :func:`get_praxis_settling_consensus` (#2874). Use
@@ -117,12 +120,19 @@ async def get_praxis(praxis_id: int, session: AsyncSession) -> Praxis:
     doesn't need them (FKs cascade, ``passive_deletes``); beware that loaded
     ``media_items`` (no delete-orphan) makes ``session.delete`` write NULL into
     a NOT NULL column. See ``MediaItem.praxis_id``.
+
+    ``lock``: take the praxis lock first, then load fresh, so a path that
+    changes members, type or status sees the result of the one before it (#3682).
     """
-    result = await session.execute(
+    query = (
         select(Praxis)
         .options(selectinload(Praxis.invites), selectinload(Praxis.media_items))
         .where(Praxis.id == praxis_id)
     )
+    if lock:
+        await _lock_praxis(praxis_id, session)
+        query = query.execution_options(populate_existing=True)
+    result = await session.execute(query)
     praxis = result.scalar_one_or_none()
     if praxis is None:
         # Coded (#2875): clients branch on it.
@@ -131,7 +141,10 @@ async def get_praxis(praxis_id: int, session: AsyncSession) -> Praxis:
 
 
 async def get_praxis_settling_consensus(
-    praxis_id: int, session: AsyncSession, era: EraConfig = CURRENT_ERA
+    praxis_id: int,
+    session: AsyncSession,
+    era: EraConfig = CURRENT_ERA,
+    lock: bool = False,
 ) -> Praxis:
     """:func:`get_praxis`, then ADR-0012's lazy-on-access seal. **This one writes.**
 
@@ -139,13 +152,17 @@ async def get_praxis_settling_consensus(
     ``list_praxes``). Use where the answer depends on real published-ness. Call
     **once** per request, at the head; the seal makes repeats no-ops.
     """
-    praxis = await get_praxis(praxis_id, session)
+    praxis = await get_praxis(praxis_id, session, lock=lock)
     await collab_consensus.settle_if_window_lapsed(praxis, session, era)
     return praxis
 
 
 async def get_praxis_for_member(
-    praxis_id: int, character_id: int, action: str, session: AsyncSession
+    praxis_id: int,
+    character_id: int,
+    action: str,
+    session: AsyncSession,
+    lock: bool = False,
 ) -> Praxis:
     """:func:`get_praxis`, then ADR-0013's membership gate. **A read.**
 
@@ -153,7 +170,7 @@ async def get_praxis_for_member(
     member can ``…`` this praxis." Use the settling variant when the answer
     depends on a lapsed window (#2874).
     """
-    praxis = await get_praxis(praxis_id, session)
+    praxis = await get_praxis(praxis_id, session, lock=lock)
     _require_member(praxis, character_id, action)
     return praxis
 
@@ -164,12 +181,13 @@ async def get_praxis_settling_consensus_for_member(
     action: str,
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
+    lock: bool = False,
 ) -> Praxis:
     """:func:`get_praxis_settling_consensus`, then the membership gate. **Writes.**
 
     Call once, at the head of the path.
     """
-    praxis = await get_praxis_settling_consensus(praxis_id, session, era)
+    praxis = await get_praxis_settling_consensus(praxis_id, session, era, lock=lock)
     _require_member(praxis, character_id, action)
     return praxis
 
@@ -513,6 +531,10 @@ _SIGNUP_LOCK_NAMESPACE = 0x5A19
 async def _lock_signups_for_character(character_id: int, session: AsyncSession) -> None:
     """Serialise one character's task signups for the rest of this transaction.
 
+    The one gate for every path that adds a character to a praxis: create,
+    invite accept, duel accept. Take it before the praxis lock and any duel row
+    lock (#3655, #3682); the order is signup, praxis, duel row.
+
     The preconditions are read-then-write and the "one active membership per
     task" rule spans tables, so no unique index can enforce it. Seen in prod: one
     tap made four praxes in 110ms. Advisory, not ``FOR UPDATE``: it serialises a
@@ -666,7 +688,7 @@ async def change_praxis_type(
 
     # Settles: a lapsed collab is published and must not be retyped.
     praxis = await get_praxis_settling_consensus_for_member(
-        praxis_id, character_id, "change the mode of", session, era
+        praxis_id, character_id, "change the mode of", session, era, lock=True
     )
     if praxis.status not in (PraxisStatus.in_progress, PraxisStatus.pending):
         raise HTTPException(
@@ -1019,7 +1041,8 @@ async def invite_to_praxis(
     The invitee isn't held to sign-up eligibility: cross-level/faction invites
     are a deliberate Easter egg (#1511). Which gates lift is era-owned
     (``collab_invite_bypasses_level``/``_faction``); the task bank is charged on
-    accept. Never lifted: one active membership per task (data integrity).
+    accept. Never lifted: one active membership per task (data integrity); every
+    membership-creating path takes the signup lock to hold it.
     """
     # Settles: status guard below.
     praxis = await get_praxis_settling_consensus(praxis_id, session, era)
@@ -1135,7 +1158,17 @@ async def respond_to_invite(
         await session.refresh(invite)
         return invite
 
-    praxis = await session.get(Praxis, invite.praxis_id)
+    # Signup lock, then praxis lock, then re-read: a kick, leave, switch or seal
+    # that won the race may have deleted the invite or sealed the praxis (#3655, #3682).
+    await _lock_signups_for_character(character_id, session)
+    await _lock_praxis(invite.praxis_id, session)
+    invite = await session.get(PraxisInvite, invite_id, populate_existing=True)
+    if invite is None:
+        raise HTTPException(status_code=404, detail="Invite not found.")
+    if invite.status != PraxisInviteStatus.pending:
+        raise HTTPException(status_code=400, detail="Invite has already been resolved.")
+
+    praxis = await session.get(Praxis, invite.praxis_id, populate_existing=True)
     if praxis is None:
         raise HTTPException(status_code=404, detail="Praxis no longer exists.")
 
@@ -1148,6 +1181,17 @@ async def respond_to_invite(
         )
 
     already_member = any(m.character_id == character_id for m in praxis.members)
+    if not already_member:
+        invitee = await session.get(Character, character_id)
+        if invitee is not None and await is_active_member_of_task(
+            invitee, praxis.task, session, era
+        ):
+            raise_coded(
+                409,
+                ErrorCode.task_already_active_member,
+                "You already have an active praxis for this task.",
+                {DETAIL_CONTEXT_PARAM: "invite"},
+            )
     if not era.collab_invite_bypasses_task_bank and not already_member:
         in_progress_count = await count_in_progress_praxes(character_id, session)
         if in_progress_count >= era.max_task_signups:
@@ -1223,7 +1267,7 @@ async def kick_member(
     """
     # Settles: status guard below.
     praxis = await get_praxis_settling_consensus_for_member(
-        praxis_id, requester_id, "kick from", session, era
+        praxis_id, requester_id, "kick from", session, era, lock=True
     )
 
     if member_id == requester_id:
@@ -1267,7 +1311,7 @@ async def leave_praxis(
     Live.
     """
     # Settles: else on_member_leave could cancel a consensus silence already carried.
-    praxis = await get_praxis_settling_consensus(praxis_id, session, era)
+    praxis = await get_praxis_settling_consensus(praxis_id, session, era, lock=True)
     # Type check before membership on purpose (see invite_to_praxis).
     if praxis.type != PraxisType.collab:
         raise HTTPException(status_code=400, detail="Only collab memberships can be left.")
@@ -1321,7 +1365,9 @@ async def submit_praxis(
     """
     # Plain read on purpose (#2874): settling first would seal twice (double
     # taunts, habit re-stamp, new submitted_at). The settling read below seals.
-    praxis = await get_praxis_for_member(praxis_id, character_id, "submit", session)
+    praxis = await get_praxis_for_member(
+        praxis_id, character_id, "submit", session, lock=True
+    )
 
     # The sealed text must hold every edit the browser had; sockets give no ack (#3611).
     # No doc_state: the loaded room may still hold edits inside the flush window.
