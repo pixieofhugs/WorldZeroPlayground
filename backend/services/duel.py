@@ -110,21 +110,12 @@ async def forfeit_settled_duels_for_character(
         await session.flush()
 
 
-async def get_duel(duel_id: int, session: AsyncSession) -> Duel:
-    duel = await session.get(Duel, duel_id)
-    if duel is None:
-        raise HTTPException(status_code=404, detail="Duel not found.")
-    return duel
-
-
-async def _lock_duel(duel_id: int, session: AsyncSession) -> Duel:
-    """Row-lock the duel so a concurrent transition waits and then sees its result."""
-    duel = await session.scalar(
-        select(Duel)
-        .where(Duel.id == duel_id)
-        .with_for_update()
-        .execution_options(populate_existing=True)
-    )
+async def get_duel(duel_id: int, session: AsyncSession, lock: bool = False) -> Duel:
+    """``lock`` row-locks it so a concurrent transition waits and then sees the result."""
+    query = select(Duel).where(Duel.id == duel_id)
+    if lock:
+        query = query.with_for_update().execution_options(populate_existing=True)
+    duel = await session.scalar(query)
     if duel is None:
         raise HTTPException(status_code=404, detail="Duel not found.")
     return duel
@@ -331,7 +322,7 @@ async def respond_to_duel_challenge(
 ) -> tuple[Optional[Praxis], Duel]:
     """Accept (create opponent praxis, → active) or decline (→ declined).
     Returns (opponent_praxis_or_None, duel)."""
-    duel = await _lock_duel(duel_id, session)
+    duel = await get_duel(duel_id, session, lock=True)
 
     if duel.opponent_character_id != character_id:
         raise_coded(
@@ -450,7 +441,7 @@ async def cancel_duel_challenge(
 
     Both sides stay plain solo praxes, no penalty.
     """
-    duel = await _lock_duel(duel_id, session)
+    duel = await get_duel(duel_id, session, lock=True)
 
     if duel.status not in (DuelStatus.pending, DuelStatus.active):
         raise HTTPException(status_code=400, detail="Duel has already been resolved.")
