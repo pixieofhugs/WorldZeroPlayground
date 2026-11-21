@@ -14799,7 +14799,6 @@
         ]
       },
       "post": {
-        "description": "Idempotent on endpoint. A device belongs to whoever subscribed last: a browser\nholds one subscription per origin, so a shared phone must not keep pushing the\nprevious account's events.",
         "operationId": "subscribe_push_subscriptions_post",
         "parameters": [
           {

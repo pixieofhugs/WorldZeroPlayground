@@ -49,6 +49,8 @@ logger = logging.getLogger(__name__)
 GONE_STATUSES = frozenset({404, 410})
 #: How long a push service holds a push for an offline device.
 PUSH_TTL_SECONDS = 86400
+#: A stalled push service must not hold the serial batch behind it.
+PUSH_TIMEOUT_SECONDS = 10
 #: Ratings on one praxis inside this window collapse into one "N new ratings".
 RATING_COLLAPSE_WINDOW = timedelta(hours=24)
 
@@ -72,6 +74,35 @@ class Target:
     auth: str
 
 
+
+async def subscribe_device(
+    session: AsyncSession, account_id: int, endpoint: str, p256dh: str, auth: str
+) -> None:
+    """Idempotent on endpoint. A device belongs to whoever subscribed last: a browser
+    holds one subscription per origin, so a shared phone must not keep pushing the
+    previous account's events."""
+    existing = await session.scalar(
+        select(PushSubscription).where(PushSubscription.endpoint == endpoint)
+    )
+    if existing is None:
+        existing = PushSubscription(endpoint=endpoint)
+        session.add(existing)
+    existing.account_id = account_id
+    existing.p256dh = p256dh
+    existing.auth = auth
+
+
+async def unsubscribe_device(
+    session: AsyncSession, account_id: int, endpoint: str
+) -> None:
+    await session.execute(
+        delete(PushSubscription).where(
+            PushSubscription.endpoint == endpoint,
+            PushSubscription.account_id == account_id,
+        )
+    )
+
+
 def _send_one(target: Target, body: str) -> None:
     # Zero redirects allowed: a push service never redirects, an attacker's would.
     session = requests.Session()
@@ -87,6 +118,7 @@ def _send_one(target: Target, body: str) -> None:
         # A fresh dict each call: pywebpush writes the audience into it.
         vapid_claims={"sub": settings.VAPID_CONTACT},
         ttl=PUSH_TTL_SECONDS,
+        timeout=PUSH_TIMEOUT_SECONDS,
     )
 
 

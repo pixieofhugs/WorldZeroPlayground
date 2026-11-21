@@ -1956,12 +1956,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /**
-         * Subscribe
-         * @description Idempotent on endpoint. A device belongs to whoever subscribed last: a browser
-         *     holds one subscription per origin, so a shared phone must not keep pushing the
-         *     previous account's events.
-         */
+        /** Subscribe */
         post: operations["subscribe_push_subscriptions_post"];
         /** Unsubscribe */
         delete: operations["unsubscribe_push_subscriptions_delete"];

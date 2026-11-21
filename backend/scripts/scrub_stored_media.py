@@ -18,7 +18,12 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine  # no
 
 from script_utils import add_env_argument, get_settings  # noqa: E402
 from services.media import quarantine_root  # noqa: E402
-from services.media_scrub import convert_heic_rows, scrub_media_root, unlink_reporting  # noqa: E402
+from services.media_scrub import (  # noqa: E402
+    convert_heic_rows,
+    merge_held_report,
+    scrub_media_root,
+    unlink_reporting,
+)
 
 
 async def convert_heic(database_url: str, media_root: str, apply: bool):
@@ -54,16 +59,12 @@ def main() -> int:
     quarantine = quarantine_root()
     if os.path.isdir(quarantine):
         held = scrub_media_root(quarantine, args.apply)
-        report.scanned += held.scanned
-        report.already_clean += held.already_clean
-        report.cleaned += [f"[quarantine] {path}" for path in held.cleaned]
-        report.skipped += [f"[quarantine] {path}" for path in held.skipped]
-        report.failed += [(f"[quarantine] {path}", why) for path, why in held.failed]
+        merge_held_report(report, held)
     heic = asyncio.run(convert_heic(settings.DATABASE_URL, media_root, args.apply))
     report.scanned += heic.scanned
     report.failed += heic.failed
     verb = "Rewrote" if args.apply else "Would rewrite"
-    print(f"HEIC -> .jpg: {verb} {len(heic.cleaned)} row(s); old .heic URLs stop.")
+    print(f"Renamed to .jpg: {verb} {len(heic.cleaned)} row(s); old URLs stop.")
     for line in heic.cleaned:
         print(f"  {line}")
     print(f"Scanned {report.scanned} media file(s); {report.already_clean} clean.")

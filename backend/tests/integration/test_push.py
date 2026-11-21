@@ -228,6 +228,7 @@ def test_sender_refuses_redirects(monkeypatch):
     monkeypatch.setattr(push, "webpush", lambda **kw: seen.update(kw))
     push._send_one(push.Target(1, "https://fcm.googleapis.com/x", "k", "a"), "{}")
     assert seen["requests_session"].max_redirects == 0
+    assert seen["timeout"] == push.PUSH_TIMEOUT_SECONDS
 
 
 async def _comment(db_session, author, *, praxis=None, task=None, mention=None):

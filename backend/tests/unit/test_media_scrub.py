@@ -8,7 +8,7 @@ import subprocess
 import pytest
 from PIL import Image
 
-from services.media_scrub import scrub_media_root
+from services.media_scrub import ScrubReport, merge_held_report, scrub_media_root
 
 GPS_IFD = 0x8825
 
@@ -148,3 +148,15 @@ def test_unlink_reporting_keeps_going_after_a_failure(tmp_path):
     unlink_reporting([stuck, os.path.join(str(tmp_path), "gone"), good], report)
     assert [path for path, _ in report.failed] == [stuck]
     assert not os.path.exists(good)
+
+
+def test_quarantine_report_merges_tagged():
+    live = ScrubReport(scanned=1, already_clean=1)
+    held = ScrubReport(
+        scanned=3, cleaned=["a.jpg"], skipped=["b.txt"], failed=[("c.jpg", "bad")]
+    )
+    merge_held_report(live, held)
+    assert (live.scanned, live.already_clean) == (4, 1)
+    assert live.cleaned == ["[quarantine] a.jpg"]
+    assert live.skipped == ["[quarantine] b.txt"]
+    assert live.failed == [("[quarantine] c.jpg", "bad")]
