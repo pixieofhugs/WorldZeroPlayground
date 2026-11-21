@@ -1142,31 +1142,30 @@ async def respond_to_invite(
     The task bank is charged here, not at invite time: the bank may have
     changed since (#1511).
     """
-    invite = await session.get(PraxisInvite, invite_id)
-    if invite is None:
-        raise HTTPException(status_code=404, detail="Invite not found.")
+    # Two passes: the second re-reads under the signup and praxis locks, since a
+    # kick, leave, switch or seal that won the race may have deleted the invite.
+    for locked in (False, True):
+        invite = await session.get(PraxisInvite, invite_id, populate_existing=locked)
+        if invite is None:
+            raise HTTPException(status_code=404, detail="Invite not found.")
 
-    if invite.invitee_id != character_id:
-        raise HTTPException(status_code=403, detail="This invite is not for you.")
+        if invite.invitee_id != character_id:
+            raise HTTPException(status_code=403, detail="This invite is not for you.")
 
-    if invite.status != PraxisInviteStatus.pending:
-        raise HTTPException(status_code=400, detail="Invite has already been resolved.")
+        if invite.status != PraxisInviteStatus.pending:
+            raise HTTPException(
+                status_code=400, detail="Invite has already been resolved."
+            )
 
-    if not accept:
-        invite.status = PraxisInviteStatus.declined
-        await session.flush()
-        await session.refresh(invite)
-        return invite
+        if not accept:
+            invite.status = PraxisInviteStatus.declined
+            await session.flush()
+            await session.refresh(invite)
+            return invite
 
-    # Signup lock, then praxis lock, then re-read: a kick, leave, switch or seal
-    # that won the race may have deleted the invite or sealed the praxis (#3655, #3682).
-    await _lock_signups_for_character(character_id, session)
-    await _lock_praxis(invite.praxis_id, session)
-    invite = await session.get(PraxisInvite, invite_id, populate_existing=True)
-    if invite is None:
-        raise HTTPException(status_code=404, detail="Invite not found.")
-    if invite.status != PraxisInviteStatus.pending:
-        raise HTTPException(status_code=400, detail="Invite has already been resolved.")
+        if not locked:
+            await _lock_signups_for_character(character_id, session)
+            await _lock_praxis(invite.praxis_id, session)
 
     praxis = await session.get(Praxis, invite.praxis_id, populate_existing=True)
     if praxis is None:
@@ -1190,7 +1189,6 @@ async def respond_to_invite(
                 409,
                 ErrorCode.task_already_active_member,
                 "You already have an active praxis for this task.",
-                {DETAIL_CONTEXT_PARAM: "invite"},
             )
     if not era.collab_invite_bypasses_task_bank and not already_member:
         in_progress_count = await count_in_progress_praxes(character_id, session)
