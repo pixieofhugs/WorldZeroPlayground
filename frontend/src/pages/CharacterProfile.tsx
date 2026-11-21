@@ -323,11 +323,7 @@ export default function CharacterProfile() {
     <>
       {/* Sign-up failure only (success navigates away); no skin owns a slot. */}
 
-      {own.error && (
-        <p className="font-body content-text border-2 danger-edge danger-text px-3 py-2">
-          {own.error}
-        </p>
-      )}
+      <ErrorBanner message={own.error} />
       {signupMsg && (
         <ErrorBanner message={signupMsg} />
       )}
