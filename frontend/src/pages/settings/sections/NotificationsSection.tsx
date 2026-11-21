@@ -34,7 +34,7 @@ import {
 
 /** Shared cell width so rows align under the captions (wider than a switch). */
 const CELL: CSSProperties = {
-  width: 'var(--space-6xl)',
+  width: 'var(--space-5xl)',
   display: 'flex',
   justifyContent: 'center',
 }
@@ -238,6 +238,7 @@ export function NotificationRows({
         title={t('settings.notifications.all')}
         help={t('settings.notifications.allHelp')}
         stacked={stacked}
+        labelMeasure="1 1 16ch"
       >
         <div style={stacked ? STACK_CELLS : CELLS}>
           {AXES.map((axis) =>
@@ -269,6 +270,7 @@ export function NotificationRows({
             note={noteKey ? t(noteKey) : undefined}
             noteId={noteKey ? noteId : undefined}
             stacked={stacked}
+            labelMeasure="1 1 16ch"
           >
             <div style={stacked ? STACK_CELLS : CELLS}>
               {AXES.map((axis) => {
@@ -369,8 +371,8 @@ export default function NotificationsSection({ sectionId }: SettingsSectionProps
           return
         }
         setSubscribed(true)
-      } catch (err) {
-        setError(extractError(err, t('settings.notifications.saveError')))
+      } catch {
+        setError(t('settings.notifications.push.failed'))
         return
       }
     }

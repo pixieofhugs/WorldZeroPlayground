@@ -34,12 +34,12 @@
   }
 }
 
-/* 232px jump rail beside the pane from 768px; stacked below (#3296). Width-only,
+/* 232px jump rail beside the pane from 1100px so the switch columns keep their width; stacked below (#3296). Width-only,
    like `.sg-hero-split` (#3182). */
 .wz-settings-body {
   grid-template-columns: minmax(0, 1fr);
 }
-@media (min-width: 768px) {
+@media (min-width: 1100px) {
   .wz-settings-body {
     grid-template-columns: 232px minmax(0, 1fr);
   }
