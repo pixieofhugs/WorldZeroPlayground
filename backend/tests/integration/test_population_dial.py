@@ -9,6 +9,7 @@ from sqlalchemy import select
 
 from errors import ErrorCode
 from game_config import CURRENT_ERA, ERA_1, era_config_for_key
+from models.invitation_letter import InvitationLetter
 from models.mod_action import ModAction
 from models.population_dial import PopulationDial
 from services.collab_consensus import _check_post_cooldown
@@ -18,7 +19,6 @@ from services.era import (
     read_dial_sides,
 )
 from services.era_gates import may_comment, may_create_duel, vote_lock_reason
-from models.invitation_letter import InvitationLetter
 from services.population_dial import set_dials
 from tests.integration.factories import (
     cast_vote,
@@ -228,7 +228,9 @@ async def test_loosening_invitation_delivers_to_players_who_now_qualify(
 
 
 @pytest.mark.asyncio
-async def test_tightening_invitation_delivers_nothing(db_session, account, era, some_faction):
+async def test_tightening_invitation_delivers_nothing(
+    db_session, account, era, some_faction
+):
     await make_admin(db_session, account)
     await overlay(db_session)
     await _owed_player(db_session, era, account)
