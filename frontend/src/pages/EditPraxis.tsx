@@ -81,6 +81,7 @@ export default function EditPraxis() {
           (no editor); a moderated praxis still renders its locked text. */}
       <PraxisRoomProvider
         praxisId={isWaitingStage(state.phase) ? null : state.praxis.id}
+        roomGeneration={state.praxis.room_generation}
         onUpdate={state.setAutosaveAt}
         onEnded={state.resolveRoomEnd}
       >
