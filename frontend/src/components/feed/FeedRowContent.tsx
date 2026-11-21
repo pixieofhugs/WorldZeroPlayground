@@ -233,7 +233,9 @@ function QuotedHeadline({
   /** True when this quote is the anchor that owns the whole body (#1893). */
   stretched: boolean
 }) {
-  const quoted = i18n.t('feed:row.quotedHeadline', { headline })
+  // No postProcess: recording the wrapper would make a click on the quote open
+  // it instead of the taunt wording inside it.
+  const quoted = i18n.t('feed:row.quotedHeadline', { headline, postProcess: [] })
   const style: React.CSSProperties = {
     margin: 0,
     fontSize: 'var(--text-content)',

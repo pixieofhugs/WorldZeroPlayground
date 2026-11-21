@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import type { AdminCounts } from '../../pages/admin/useAdminCounts'
 
 type Badge = 'urgent' | 'quiet'
-type ItemKey = 'era' | 'reports' | 'messages' | 'proposals' | 'praxis' | 'tasks' | 'people' | 'smallWorld' | 'modLog' | 'factionCopy' | 'levelCopy'
+type ItemKey = 'era' | 'reports' | 'messages' | 'proposals' | 'praxis' | 'tasks' | 'people' | 'smallWorld' | 'modLog' | 'factionCopy' | 'levelCopy' | 'tauntCopy'
 type GroupKey = 'needs' | 'run' | 'words'
 interface Item {
   key: ItemKey
@@ -37,6 +37,7 @@ const GROUPS: { key: GroupKey; items: Item[] }[] = [
     items: [
       { key: 'factionCopy', to: '/admin/copy' },
       { key: 'levelCopy', to: '/admin/level-ups' },
+      { key: 'tauntCopy', to: '/admin/taunts' },
     ],
   },
 ]
