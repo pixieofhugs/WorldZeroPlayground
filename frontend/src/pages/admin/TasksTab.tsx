@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
-import { useLocation, useSearchParams } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { getAllTasks, getPendingTasks, getTaskIdsWithHistory } from '../../api/admin'
 import { extractError } from '../../utils/errors'
 import { useGameConfig } from '../../hooks/useGameConfig'
 import { factionName, isFactionHiddenFromChoosers, UNAFFILIATED_FACTION_SLUG } from '../../utils/factions'
-import { ListTable, ListToolbar, SelectChip, type Column } from './AdminList'
+import { ListTable, ListToolbar, SelectChip, useSelection, type Column } from './AdminList'
 import TaskImportPanel from './TaskImportPanel'
 import TaskPanel from './TaskPanel'
 import {
@@ -32,7 +32,6 @@ const segmentOf = (status: string): Segment => SEGMENTS.find((s) => s.status ===
 export default function TasksTab() {
   const { t } = useTranslation(['admin', 'common'])
   const { pathname } = useLocation()
-  const [params, setParams] = useSearchParams()
   const config = useGameConfig()
   const reloadCounts = useReloadCounts()
   const [tasks, setTasks] = useState<AdminTaskRow[]>([])
@@ -64,13 +63,12 @@ export default function TasksTab() {
   // The rail's Proposals and Tasks are one component instance; follow the route.
   useEffect(() => setSegment(pathname.endsWith('/proposals') ? 'proposals' : 'active'), [pathname])
 
-  const selectedId = Number(params.get('task')) || null
+  const [selectedId, open] = useSelection('task')
   const selected = tasks.find((row) => row.id === selectedId) ?? null
   // A deep link, or a status change in the panel, brings the list to the task.
   useEffect(() => {
     if (selected) setSegment(segmentOf(selected.status))
   }, [selected?.id, selected?.status])
-  const open = (id: number | null) => setParams(id ? { task: String(id) } : {}, { replace: true })
 
   const reviewHours = config?.pending_task_admin_review_hours
   const left = (row: AdminTaskRow) =>

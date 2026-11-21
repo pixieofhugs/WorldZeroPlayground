@@ -48,3 +48,10 @@
 .adm-panel-top { display: flex; justify-content: space-between; align-items: center; gap: var(--space-xs); }
 
 @media (max-width: 767px) { .adm-wide { display: none; } }
+
+/* Phone: an open panel is a full-screen sheet over the list, which keeps its scroll position underneath. */
+@media (max-width: 767px) {
+  .adm-split-side { position: fixed; inset: var(--modstrip-h) 0 0; z-index: 100; background: var(--color-bg-page); max-width: none; border-radius: 0; border: 0; overflow-y: auto; overscroll-behavior: contain; box-sizing: border-box; padding-bottom: calc(var(--space-lg) + env(safe-area-inset-bottom)); }
+  .adm-split-side:focus { outline: none; }
+  body:has(.adm-split-side) { overflow: hidden; }
+}
