@@ -379,12 +379,15 @@
       "emailPending": "Email delivery is not implemented yet. When it is, we'll pay attention to these settings. For now, they are merely decorative, like a nice vase.",
       "columnPage": "Updates",
       "columnEmail": "Email",
+      "columnPush": "Push",
       "all": "Everything",
       "allHelp": "Set every row below at once. Nothing is remembered for this row itself.",
       "allPageName": "Show everything on Updates",
       "allEmailName": "Email me about everything",
+      "allPushName": "Push everything to this phone",
       "rowPageName": "Show {{event}} on Updates",
       "rowEmailName": "Email me about {{event}}",
+      "rowPushName": "Push {{event}} to this phone",
       "lockedRequest": "You will always see an alert when something needs your reply.",
       "lockedNoFeedRow": "No need to check your messages. You will feel the growth in your bones.",
       "loading": "Loading your notification settings…",
@@ -411,6 +414,26 @@
         "rulesChangeHelp": "A mod tightens or loosens a rule for everyone.",
         "globalTask": "New tasks",
         "globalTaskHelp": "A new task is published for everyone to take on."
+      },
+      "push": {
+        "title": "Push to this phone",
+        "unsupported": "This browser can’t receive push notifications. Try your browser proper, or add World Zero to your home screen.",
+        "ios": {
+          "when": "IPHONE, NOT ON THE HOME SCREEN",
+          "note": "iPhones only deliver notifications to the home-screen app. Put World Zero there first, then open it from the icon.",
+          "label": "Push to this phone — add World Zero to your home screen first",
+          "action": "Show me how"
+        },
+        "denied": {
+          "when": "YOU SAID NO TO THE BROWSER",
+          "note": "Your browser is blocking World Zero. Unblock notifications in this site’s settings, then come back. We can’t ask twice; browsers don’t let us.",
+          "label": "Push to this phone — notifications are blocked in your browser settings"
+        },
+        "keys": {
+          "when": "NO PUSH KEYS ON THIS SERVER",
+          "note": "Push isn’t set up on this server, so nothing will buzz. Updates and the rest still work.",
+          "label": "Push to this phone — push is not set up on this server"
+        }
       }
     },
     "cookies": {

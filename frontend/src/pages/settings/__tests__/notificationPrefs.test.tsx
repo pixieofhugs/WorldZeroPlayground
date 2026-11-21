@@ -151,7 +151,7 @@ describe('the master row', () => {
 describe('the save body', () => {
   it('sends both switches for every known row and nothing else', () => {
     const body = saveBody(toggleCell(DEFAULTS, 'vote_on_mine', 'on_updates'))
-    expect(body.events.vote_on_mine).toEqual({ on_updates: false, by_email: false })
+    expect(body.events.vote_on_mine).toEqual({ on_updates: false, by_email: false, by_push: false })
     expect(Object.keys(body.events)).toHaveLength(10)
   })
 
@@ -184,14 +184,29 @@ describe('the rendered card', () => {
     <NotificationRows prefs={DEFAULTS} onToggle={() => {}} onToggleAll={() => {}} />,
   )
 
-  it('draws two switches for each of the ten rows, plus the master pair', () => {
+  it('draws three switches for each of the ten rows, plus the master trio', () => {
     for (const row of NOTIFICATION_ROWS) {
       expect(html).toContain(`data-testid="settings-notifications-${row.key}-on_updates"`)
       expect(html).toContain(`data-testid="settings-notifications-${row.key}-by_email"`)
     }
     expect(html).toContain('data-testid="settings-notifications-all-on_updates"')
     expect(html).toContain('data-testid="settings-notifications-all-by_email"')
-    expect(html.match(/role="switch"/g)).toHaveLength(22)
+    expect(html.match(/role="switch"/g)).toHaveLength(33)
+  })
+
+  it.each(['keys', 'ios', 'denied'] as const)('%s: every Push switch is disabled and points at the reason', (state) => {
+    const blocked = renderToStaticMarkup(
+      <NotificationRows prefs={DEFAULTS} push={state} onToggle={() => {}} onToggleAll={() => {}} />,
+    )
+    for (const row of NOTIFICATION_ROWS) {
+      const cell = switchFor(blocked, `settings-notifications-${row.key}-by_push`)
+      expect(cell).toContain('aria-disabled="true"')
+      expect(cell).toContain('aria-checked="false"')
+      expect(cell).toContain('aria-describedby="settings-notifications-push-note"')
+    }
+    expect(blocked).toContain(i18n.t(`settings.notifications.push.${state}.note`))
+    expect(blocked.includes(i18n.t('settings.notifications.push.ios.action'))).toBe(state === 'ios')
+    expect(html).not.toContain('settings-notifications-push-blocked')
   })
 
   it('renders the three requests page switches ON, unmovable, and explaining themselves', () => {

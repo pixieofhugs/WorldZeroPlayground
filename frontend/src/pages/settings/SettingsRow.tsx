@@ -13,6 +13,8 @@ interface SettingsRowProps {
   readonly noteId?: string
   /** Drops the bottom rule. */
   readonly last?: boolean
+  /** Controls drop under the text instead of beside it (phones, #3703). */
+  readonly stacked?: boolean
   readonly children: ReactNode
 }
 
@@ -42,17 +44,19 @@ export default function SettingsRow({
   note,
   noteId,
   last = false,
+  stacked = false,
   children,
 }: SettingsRowProps) {
   return (
     <div
       style={{
         ...row,
+        ...(stacked && { flexDirection: 'column' as const, alignItems: 'stretch' }),
         paddingBottom: last ? 0 : 'var(--space-lg)',
         borderBottom: last ? undefined : '1px solid var(--color-border)',
       }}
     >
-      <div className="font-body" style={{ flex: LABEL_MEASURE }}>
+      <div className="font-body" style={{ flex: stacked ? 'none' : LABEL_MEASURE }}>
         <div style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-primary)' }}>
           {title}
         </div>
