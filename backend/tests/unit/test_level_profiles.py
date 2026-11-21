@@ -86,7 +86,12 @@ def test_moving_an_already_moved_ladder_leaves_one_rung_per_ability():
         ]
         for key in ("comment", "duels", "flag_praxis")
     }
-    assert rungs == {"comment": [2], "duels": [2], "flag_praxis": [4]}
+    full = _era_on("full")
+    assert rungs == {
+        "comment": [full.comment_level_required],
+        "duels": [full.duel_level_required],
+        "flag_praxis": [full.flag_level_required],
+    }
 
 
 def test_overlay_leaves_era_1_ladder_alone():

@@ -234,6 +234,27 @@ async def test_dev_login_received_vote_unlocks_voting_idempotently(
         assert (await client.get("/auth/me")).json()["can_vote"] is True
 
 
+@pytest.mark.unstamped_praxis
+@pytest.mark.asyncio
+async def test_dev_login_received_vote_seals_its_own_praxis(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    era: Era,
+    some_faction: Faction,
+) -> None:
+    """With the conftest stamping hook off, the seed must stamp its praxis itself."""
+    first = await client.post("/auth/dev-login?key=rv-bare&name=Rv%20Bare")
+    creator = await db_session.get(Character, first.json()["character_id"])
+    await make_task(db_session, creator, commit=True)
+    resp = await client.post("/auth/dev-login?key=rv-bare&received_vote=true")
+    assert resp.status_code == 200
+    praxis = await db_session.scalar(
+        select(Praxis).where(Praxis.title == "Seeded proof")
+    )
+    assert praxis.submitted_at is not None
+    assert praxis.era_id == era.id
+
+
 @pytest.mark.asyncio
 async def test_dev_login_received_vote_without_character_is_rejected(
     client: AsyncClient,

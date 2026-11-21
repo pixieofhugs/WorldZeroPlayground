@@ -1259,7 +1259,8 @@ async def test_vote_on_draft_is_404_and_leaves_no_row(
     await db_session.refresh(voter_stats)
     assert compute_votes_available(voter_stats) == budget_before
 
-    await client.post(f"/praxes/{pid}/submit", headers=auth_headers2)
+    submit = await client.post(f"/praxes/{pid}/submit", headers=auth_headers2)
+    assert submit.status_code == 200
     tally = (await tally_votes([pid], db_session))[pid]
     assert (tally.points_from_votes, tally.voter_count) == (0, 0)
 

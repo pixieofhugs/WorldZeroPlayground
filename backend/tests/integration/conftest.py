@@ -36,11 +36,22 @@ from services.auth import create_jwt
 from tests.integration.factories import DEFAULT_FACTION_SLUG, attach_proof
 
 
+_stamping = {"on": True}
+
+
+@pytest.fixture(autouse=True)
+def stamp_sealed_praxes(request):
+    """Tests marked ``unstamped_praxis`` see the production seal path, not the stamps."""
+    _stamping["on"] = request.node.get_closest_marker("unstamped_praxis") is None
+    yield
+    _stamping["on"] = True
+
+
 @event.listens_for(Praxis, "before_insert")
 @event.listens_for(Praxis, "before_update")
 def _stamp_sealed_praxis_era(mapper, connection, praxis: Praxis) -> None:
     """Fixtures seal praxes directly; the CHECK wants the seal's stamps."""
-    if praxis.status != PraxisStatus.submitted:
+    if not _stamping["on"] or praxis.status != PraxisStatus.submitted:
         return
     if praxis.submitted_at is None:
         praxis.submitted_at = datetime.now(timezone.utc)
