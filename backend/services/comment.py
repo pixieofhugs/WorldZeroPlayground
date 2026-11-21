@@ -265,6 +265,9 @@ async def flag_comment(
 ) -> Comment:
     """Flag for moderation; mirrors :func:`services.praxis.flag_praxis`."""
     comment = await get_comment(comment_id, session)
+    # Same 404 as an unknown id: a removed comment can't be told from a missing one.
+    if comment.moderation_status in (ModerationStatus.hidden, ModerationStatus.deleted):
+        raise HTTPException(status_code=404, detail="Comment not found.")
 
     # Account-scoped (#328): the review threshold is 1, so a second life could
     # otherwise queue its own account's comment.
