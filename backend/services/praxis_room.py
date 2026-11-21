@@ -45,7 +45,7 @@ from config import settings
 from db import AsyncSessionLocal
 from errors import ErrorCode, raise_coded
 from models.account import Account, AccountStatus
-from models.praxis import Praxis
+from models.praxis import Praxis, PraxisStatus
 from models.praxis_room import PraxisRoomUpdate
 from services.auth import decode_jwt
 from services.character import resolve_active_character
@@ -578,6 +578,9 @@ class PraxisRoomServer(WebsocketServer):
             # The one membership rule (ADR-0013); deferred, praxis imports us.
             from services.praxis import _require_member
 
+            if praxis.status == PraxisStatus.submitted:
+                logger.info("Praxis room handshake refused: praxis %d is live", praxis_id)
+                return None
             try:
                 _require_member(praxis, character.id, "edit")
             except HTTPException:

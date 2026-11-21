@@ -1322,6 +1322,14 @@ async def submit_praxis(
     # The sealed text must hold every edit the browser had; sockets give no ack (#3611).
     merged = {}
     if doc_state is not None:
+        # A live praxis has no room (ADR-0073); its one road back is the reopen (ADR-0012).
+        await collab_consensus.settle_if_window_lapsed(praxis, session, era)
+        if praxis.status == PraxisStatus.submitted:
+            raise_coded(
+                409,
+                ErrorCode.praxis_already_live,
+                "This praxis is already live. Reopen it to edit it.",
+            )
         merged = await merge_client_state(praxis_id, doc_state)
     # Against the stored row, not the pre-merge room: unflushed edits are unseen too.
     if any(getattr(praxis, column) != value for column, value in merged.items()):
