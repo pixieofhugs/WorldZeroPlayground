@@ -1,7 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
-const GUARD_KEY = 'wz-chunk-reload'
+export const CHUNK_RELOAD_KEY = 'wz-chunk-reload'
 const GUARD_MS = 30_000
 
 const CHUNK_ERROR = /Failed to fetch dynamically imported module|Importing a module script failed/i
@@ -9,9 +9,9 @@ const CHUNK_ERROR = /Failed to fetch dynamically imported module|Importing a mod
 /** One reload per GUARD_MS; false when the guard already fired or storage is unusable (no guard means no reload, never a loop). */
 export function reloadOnce(): boolean {
   try {
-    const last = Number(sessionStorage.getItem(GUARD_KEY))
+    const last = Number(sessionStorage.getItem(CHUNK_RELOAD_KEY))
     if (last && Date.now() - last < GUARD_MS) return false
-    sessionStorage.setItem(GUARD_KEY, String(Date.now()))
+    sessionStorage.setItem(CHUNK_RELOAD_KEY, String(Date.now()))
   } catch {
     return false
   }
@@ -20,11 +20,9 @@ export function reloadOnce(): boolean {
 }
 
 // Left unhandled when the guard has fired, so the failed import reaches the boundary.
-function onPreloadError(event: Event) {
+export function onPreloadError(event: Event) {
   if (reloadOnce()) event.preventDefault()
 }
-
-window.addEventListener('vite:preloadError', onPreloadError)
 
 function Fallback() {
   const { t } = useTranslation('common')

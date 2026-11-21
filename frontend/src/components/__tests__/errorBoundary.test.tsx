@@ -6,18 +6,20 @@ import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import '../../i18n'
-import ErrorBoundary from '../ErrorBoundary'
+import ErrorBoundary, { onPreloadError } from '../ErrorBoundary'
 
 const reload = vi.fn()
 
 beforeEach(() => {
   sessionStorage.clear()
+  window.addEventListener('vite:preloadError', onPreloadError)
   reload.mockReset()
   vi.stubGlobal('location', { reload })
   vi.spyOn(console, 'error').mockImplementation(() => {})
 })
 afterEach(() => {
   cleanup()
+  window.removeEventListener('vite:preloadError', onPreloadError)
   vi.restoreAllMocks()
 })
 

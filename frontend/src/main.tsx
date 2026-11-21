@@ -11,12 +11,13 @@ import { MotionProvider } from './hooks/useMotion'
 import i18n, { loadCopyOverrides } from './i18n'
 import './index.css'
 import './registerSw'
-import ErrorBoundary from './components/ErrorBoundary'
+import ErrorBoundary, { onPreloadError } from './components/ErrorBoundary'
 import OfflineGate from './components/OfflineGate'
 import { captureInstallPrompt } from './utils/installPrompt'
 
 // Deliberately not awaited: first paint must not wait on copy overrides.
 captureInstallPrompt()
+window.addEventListener('vite:preloadError', onPreloadError)
 void loadCopyOverrides()
 warmMe()
 
