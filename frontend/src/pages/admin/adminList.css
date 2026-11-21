@@ -13,7 +13,8 @@
 .adm-toolbar { display: flex; flex-wrap: wrap; gap: var(--space-xs); align-items: center; }
 .adm-search { flex: 1 1 280px; display: flex; }
 .adm-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-.adm-input { font-family: inherit; font-size: var(--text-xl); color: var(--color-text-primary); background: var(--color-bg-page); border: 1px solid var(--color-border-strong); border-radius: var(--radius-md); min-height: 44px; box-sizing: border-box; padding: 0 var(--space-sm); width: 100%; }
+.adm-input { font-family: inherit; font-size: var(--text-content); color: var(--color-text-primary); background: var(--color-bg-page); border: 1px solid var(--color-border-strong); border-radius: var(--radius-md); min-height: 44px; box-sizing: border-box; padding: 0 var(--space-sm); width: 100%; }
+.adm-input:disabled { background: var(--control-off-fill); color: var(--control-off-ink); border-style: dashed; cursor: not-allowed; }
 .adm-input-round { border-radius: 999px; padding: 0 var(--space-md); }
 .adm-textarea { padding: var(--space-xs) var(--space-sm); min-height: 72px; resize: vertical; }
 .adm-segs { display: inline-flex; flex-wrap: wrap; gap: var(--space-xs); padding: var(--space-xs); border-radius: var(--radius-md); background: var(--color-bg-surface); border: 1px solid var(--color-border); }

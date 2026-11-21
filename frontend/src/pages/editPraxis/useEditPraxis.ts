@@ -38,7 +38,7 @@ import {
 import type { CharacterOut } from "../../api/characters";
 import { deriveCollabGate } from "../../components/collab/CollabRoster";
 import { deriveEditPraxisPhase } from "./editPraxisPhase";
-import { discardRoomStore, roomState } from "./roomStore";
+import { discardRoomStore, dropStaleRoomStores, roomState } from "./roomStore";
 import { editNeedsProposalConfirm } from "./proposalGuard";
 import { planInitialLoad, loadPlannedPraxis } from "./initialLoadPlan";
 import { planLoadedPraxis } from "./loadedPraxisPlan";
@@ -643,11 +643,14 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
 
   // Published = server doc destroyed (#1745); drop the local copy or `pullBack`
   // duplicates the body. For non-publishing clients; `publish()` covers its own (#2381).
+  // The publish bumped the generation, so the store to delete is an older one.
   const publishedPraxisId = isPublished ? (praxis?.id ?? null) : null;
   const publishedGeneration = praxis?.room_generation ?? 0;
   useEffect(() => {
-    if (publishedPraxisId !== null)
+    if (publishedPraxisId !== null) {
       discardRoomStore(publishedPraxisId, publishedGeneration);
+      dropStaleRoomStores(publishedPraxisId, publishedGeneration);
+    }
   }, [publishedPraxisId, publishedGeneration]);
   const isModerated =
     praxis?.moderation_status === "hidden" ||
