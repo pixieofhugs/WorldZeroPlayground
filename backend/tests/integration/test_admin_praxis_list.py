@@ -14,8 +14,8 @@ from models.character import Character
 from models.character_stats import CharacterStats
 from models.flag import Flag
 from models.praxis import ModerationStatus, PraxisStatus
-from services.character_stats import recalculate_character_stats
 from models.task import Task
+from services.character_stats import recalculate_character_stats
 from tests.integration.factories import make_admin, make_solo_praxis
 
 ADMIN_LIST = "/admin/praxes"
@@ -372,7 +372,7 @@ async def test_flag_on_a_failed_praxis_is_refused_and_the_ruling_stands(
             select(CharacterStats).where(CharacterStats.character_id == character.id)
         )
     ).scalar_one()
-    stats.level = 10  # past flag_level_required, so only `failed` can refuse
+    stats.level = 10  # past flag_level_required: only `failed` can refuse
     failed = await make_solo_praxis(
         db_session, active_task, character2, moderation_status=ModerationStatus.failed
     )
@@ -394,10 +394,8 @@ async def test_flag_on_a_failed_praxis_is_refused_and_the_ruling_stands(
 
     async def score() -> int:
         await recalculate_character_stats(character2.id, db_session)
-        row = await db_session.execute(
-            select(CharacterStats.score).where(CharacterStats.character_id == character2.id)
-        )
-        return row.scalar_one()
+        q = select(CharacterStats.score).filter_by(character_id=character2.id)
+        return (await db_session.execute(q)).scalar_one()
 
     assert await score() == 0
 
