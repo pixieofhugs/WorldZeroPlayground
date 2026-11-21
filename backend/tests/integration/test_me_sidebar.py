@@ -433,3 +433,23 @@ async def test_activity_panel_is_the_head_of_the_live_all_view(
     )
     head = [item["item_key"] for item in feed.json()["items"]][:5]
     assert [item["item_key"] for item in body["global_activity"]] == head
+
+
+@pytest.mark.asyncio
+async def test_archiving_pending_requests_leaves_the_bell_count(
+    client: AsyncClient, four_request_types: int, auth_headers: dict
+):
+    """ADR-0070: an archive row never hides a pending invite or duel from the bell."""
+    queue = await client.get(
+        "/activity-feed", params={"filter": "requests"}, headers=auth_headers
+    )
+    for item in queue.json()["items"]:
+        if item["type"] in ("collab_invite", "duel_challenge"):
+            r = await client.post(
+                "/activity-feed/dismiss",
+                json={"item_key": item["item_key"]},
+                headers=auth_headers,
+            )
+            assert r.status_code == 200, r.text
+    sidebar = await client.get("/me/sidebar", headers=auth_headers)
+    assert sidebar.json()["pending_requests_count"] == four_request_types

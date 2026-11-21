@@ -170,7 +170,8 @@ describe('every type the backend emits, inside this chassis', () => {
       const html = card(type)
       expect(html, `${type} is proclaimed`).toContain(RIBBON)
       expect(html, `${type} is named`).toContain(feedKicker(type))
-      if (!NON_ARCHIVABLE_TYPES.has(type)) {
+      // a pending request offers no ✕ live (#3767)
+      if (!NON_ARCHIVABLE_TYPES.has(type) && type !== 'duel_challenge' && type !== 'collab_invite') {
         expect(html, `${type} can be dismissed`).toContain(i18n.t('feed:archive.dismissLabel'))
       }
     }
