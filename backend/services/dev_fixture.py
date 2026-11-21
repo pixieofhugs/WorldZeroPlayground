@@ -62,6 +62,7 @@ async def seed_received_vote(character: Character, session: AsyncSession) -> Non
         created_by_id=character.id,
         type=PraxisType.solo,
         title="Seeded proof",
+        status=PraxisStatus.submitted,
         body_text="seeded by dev-login",
     )
     session.add(praxis)

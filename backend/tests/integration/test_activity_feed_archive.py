@@ -553,8 +553,11 @@ async def test_bad_item_keys_are_told_apart_by_code(
 
 
 @pytest.mark.asyncio
-async def test_dismiss_all_skips_awaiting_submission(
-    client: AsyncClient, full_feed: dict, auth_headers: dict
+async def test_dismiss_all_skips_awaiting_submission_and_pending_requests(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    full_feed: dict,
+    auth_headers: dict,
 ):
     response = await client.post(
         "/activity-feed/dismiss-all",
@@ -562,10 +565,14 @@ async def test_dismiss_all_skips_awaiting_submission(
         headers=auth_headers,
     )
     assert response.status_code == 200, response.text
-    assert response.json() == {"count": 3, "archived": True}
+    # Pending invite and duel ignore the archive (ADR-0070): only the one other
+    # request left, and the count says so.
+    assert response.json() == {"count": 1, "archived": True}
+    assert (
+        await db_session.scalar(select(func.count()).select_from(FeedDismissal)) == 1
+    )
 
     after = await _feed(client, auth_headers, REQUESTS_FILTER)
-    # Invite and duel are archived but still unanswered (ADR-0070): they stay queued.
     assert {item["type"] for item in after["items"]} == {
         FEED_ITEM_TYPE_AWAITING_SUBMISSION,
         FEED_ITEM_TYPE_COLLAB_INVITE,
