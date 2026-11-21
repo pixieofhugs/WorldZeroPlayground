@@ -7,6 +7,7 @@
  *    on a phone the sheet IS the screen.
  * The phone keeps `--color-bg-page` under `ground` so inner-painted skins stay
  * opaque. Both shells are flex columns: a pinned action band = middle `flex: 1`.
+ * Both scroll when the sheet is taller than the screen, top included (#3837).
  */
 import type { CSSProperties, ReactNode } from 'react'
 import { drawAtRoot } from '../ui/drawAtRoot'
@@ -53,10 +54,12 @@ export default function DuelSealSheet({
         role="dialog"
         aria-modal="true"
         aria-label={label}
-        className={`fixed inset-0 z-50 flex flex-col justify-end overflow-y-auto ${
+        // `mt-auto` on the first child, not `justify-end`: flex-end overflow off the top is unreachable (#3837).
+        className={`fixed inset-0 z-50 flex flex-col [&>:first-child]:mt-auto overflow-y-auto ${
           phoneClassName ?? ''
         }`}
-        style={{ background: 'var(--color-bg-page)', ...ground }}
+        // After the spread: a skin's `position: relative` (UA, Ephemerists) would sink the sheet below the page.
+        style={{ background: 'var(--color-bg-page)', ...ground, position: 'fixed' }}
       >
         {children}
       </div>,
@@ -71,10 +74,11 @@ export default function DuelSealSheet({
       role="dialog"
       aria-modal="true"
       aria-label={label}
-      className="fixed inset-0 z-50 flex items-center justify-center"
+      // Scrolls, card centred by `my-auto`: a landscape phone is desktop-wide but 390px tall (#3837).
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto overscroll-contain"
       style={{ padding: 'var(--space-lg)', background: scrim }}
     >
-      <div className="w-full max-w-[460px] flex flex-col" style={{ ...ground, ...card }}>
+      <div className="w-full max-w-[460px] my-auto flex flex-col" style={{ ...ground, ...card }}>
         {children}
       </div>
     </div>,
