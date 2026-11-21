@@ -938,7 +938,8 @@ async def test_archiving_a_pending_invite_or_duel_never_empties_the_queue(
         assert response.status_code == 200, response.text
 
     after = await _feed(client, auth_headers, REQUESTS_FILTER)
-    assert {i["item_key"] for i in after["items"]} == {i["item_key"] for i in before["items"]}
+    keys_of = lambda feed: {i["item_key"] for i in feed["items"]}  # noqa: E731
+    assert keys_of(after) == keys_of(before)
     assert after["counts"]["requests"] == before["counts"]["requests"]
     archived = await _feed(client, auth_headers, ALL_FILTER, archived=True)
     assert set(keys) <= {i["item_key"] for i in archived["items"]}

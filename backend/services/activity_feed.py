@@ -1403,7 +1403,8 @@ def _scoped_query(
         return query.where(source.source_id_column.in_(dismissed_ids))
     # ADR-0070: archiving is a view state, never a decision, and there is exactly one
     # count of what is outstanding. An unanswered invite/challenge ignores the archive.
-    if source.item_type in ARCHIVE_PROOF_WHEN_UNANSWERED and ctx.unanswered_requests_only:
+    unanswered = ctx.unanswered_requests_only
+    if unanswered and source.item_type in ARCHIVE_PROOF_WHEN_UNANSWERED:
         return query
     if not dismissed_ids:
         return query

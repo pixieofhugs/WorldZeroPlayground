@@ -439,7 +439,7 @@ async def test_activity_panel_is_the_head_of_the_live_all_view(
 async def test_archiving_pending_requests_leaves_the_bell_count(
     client: AsyncClient, four_request_types: int, auth_headers: dict
 ):
-    """ADR-0070: an archive row never hides an unanswered invite or duel from the bell."""
+    """ADR-0070: an archive row never hides a pending invite or duel from the bell."""
     queue = await client.get(
         "/activity-feed", params={"filter": "requests"}, headers=auth_headers
     )
