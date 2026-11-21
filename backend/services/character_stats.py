@@ -45,8 +45,8 @@ from services.scoring import compute_level, exact, round_half_up
 from services.taunt_service import emit_recalc_taunts
 from services.push import notify_invitation_letter, notify_level_up
 
-#: Advisory-lock namespace; distinct from signup 0x5A19, vote 0x5A1A and the
-#: per-praxis 0x5A1B. Always the LAST lock a transaction takes.
+#: Advisory-lock namespace (signup 0x5A19, vote 0x5A1A, praxis 0x5A1B);
+#: the last lock a transaction takes.
 _STATS_LOCK_NAMESPACE = 0x5A1C
 
 _NON_INVITE_FACTION_SLUGS: frozenset[str] = frozenset(
@@ -220,15 +220,13 @@ async def recalculate_character_stats(
     if era_row is None:
         era_row = await get_current_era_row(session)
 
-    # Serialise recalcs of one character: each reads votes under its own snapshot,
-    # so without this the last commit wins and drops the other's points (#3708).
+    # Concurrent recalcs each read their own snapshot; last commit would win.
     await session.execute(
         select(func.pg_advisory_xact_lock(_STATS_LOCK_NAMESPACE, character_id))
     )
     author = await session.get(Character, character_id)
     if author is None:
         return
-    # The identity map may hold copies loaded before the lock.
     await session.refresh(author)
 
     # None ⟹ era_row is the live era: no upper bound, and invitations may land.
@@ -335,10 +333,7 @@ async def _recalculate_with_duel_opponents(
     era: EraConfig,
     era_row: Era,
 ) -> None:
-    """Recalculate each member of ``praxis_ids`` and their duel opponents once.
-
-    Ascending ``character_id`` so recalcs sharing members lock in one order.
-    """
+    """Members of ``praxis_ids`` and their duel opponents, once, ascending id."""
     ids = await with_duel_opponents(praxis_ids, session)
     members = await session.execute(
         select(PraxisMember.character_id).where(PraxisMember.praxis_id.in_(ids))
