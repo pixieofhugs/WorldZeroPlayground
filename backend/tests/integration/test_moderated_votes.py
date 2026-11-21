@@ -166,3 +166,18 @@ async def test_the_vote_sorts_count_only_counted_votes(
     # A tie falls to newest first in both directions.
     least = expected[::-1] if how == "depart" else expected
     assert await order(PraxisSort.least_voted) == least
+    if how == "ban":
+        await client.post(
+            f"/admin/characters/{character2.id}/ban",
+            json={"banned": False},
+            headers=auth_headers,
+        )
+    elif how == "suspend":
+        await client.post(
+            f"/admin/accounts/{character2.account_id}/suspend",
+            json={"suspended": False},
+            headers=auth_headers,
+        )
+    else:
+        return
+    assert await order(PraxisSort.most_voted) == [rigged.id, newer.id]

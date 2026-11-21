@@ -16,7 +16,7 @@ import { listPraxes, type PraxisCardOut } from "../../api/praxis";
 import { useAuth } from "../../auth/AuthContext";
 import { useFactions } from "../../hooks/useFactions";
 import { useTaskSignup } from "../../hooks/useTaskSignup";
-import { extractError } from "../../utils/errors";
+import { ErrorCode, extractError } from "../../utils/errors";
 import { useFactionBackdrop } from "../../components/backdrop/BackdropContext";
 import type { JoinTarget } from "../../components/JoinControl";
 
@@ -61,7 +61,7 @@ export function resolveMembershipState(
   if (rawStatus === "defected") return "burned";
   if (rawStatus === "invited" || rawStatus === "can_return" || hasInvite)
     return "eligible";
-  if (refusal === "FACTION_ALBESCENT_NEW_GAME_PLUS_ONLY") return "ng_plus";
+  if (refusal === ErrorCode.factionAlbescentNewGamePlusOnly) return "ng_plus";
   return "gate";
 }
 

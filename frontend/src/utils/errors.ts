@@ -56,6 +56,7 @@ export const ErrorCode = {
   taskBankFull: 'TASK_BANK_FULL',
   taskNotFound: 'TASK_NOT_FOUND',
   factionAlreadyMember: 'FACTION_ALREADY_MEMBER',
+  factionAlbescentNewGamePlusOnly: 'FACTION_ALBESCENT_NEW_GAME_PLUS_ONLY',
 } as const
 
 /**

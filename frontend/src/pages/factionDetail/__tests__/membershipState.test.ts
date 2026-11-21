@@ -1,9 +1,11 @@
 /**
  * The status → MembershipState mapping (#1305). `"defected"` (no rejoin this
+import { ErrorCode } from '../../../utils/errors'
  * era) must map to `burned`, not the soft "keep doing tasks" `gate`, which is
  * right only for "not invited yet" (#454).
  */
 import { describe, it, expect } from 'vitest'
+import { ErrorCode } from '../../../utils/errors'
 import { resolveMembershipState } from '../useFactionDetail'
 
 describe('resolveMembershipState', () => {
@@ -51,7 +53,7 @@ describe('resolveMembershipState', () => {
   })
 
   it('maps the New Game+ refusal to ng_plus, slug-blind; other refusals stay gate', () => {
-    const ngPlus = 'FACTION_ALBESCENT_NEW_GAME_PLUS_ONLY'
+    const ngPlus = ErrorCode.factionAlbescentNewGamePlusOnly
     expect(resolveMembershipState(true, 'not_invited', false, ngPlus)).toBe('ng_plus')
     expect(resolveMembershipState(true, 'not_invited', false, null)).toBe('gate')
     expect(
