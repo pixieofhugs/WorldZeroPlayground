@@ -2,6 +2,7 @@
  * Lightly skinned, accessible control primitives shared by all archetypes.
  * Archetypes own the outer containers; these are the inner essentials.
  */
+import { CARD_CTA } from "../../../components/ctaTapFloor";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { CSSProperties, DragEvent, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
@@ -672,7 +673,8 @@ export function DropButton({
           : undefined
       }
       className={skin?.className}
-      style={skin?.style}
+      // Skins zero the padding; the floor goes last so none can drop below it.
+      style={{ ...skin?.style, ...CARD_CTA, minWidth: 44 }}
     >
       {label}
     </button>

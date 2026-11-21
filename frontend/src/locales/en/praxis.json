@@ -6,6 +6,7 @@
   "listPage": {
     "title": "Praxis",
     "loading": "Loading praxis…",
+    "loadError": "Couldn't load praxis.",
     "empty": "No praxis yet. Be the first.",
     "emptyFiltered": "Nothing filed under those terms. Clear the search or pick a different faction.",
     "emptyCaughtUp": "All caught up",

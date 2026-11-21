@@ -27,6 +27,29 @@ async def get_duel_for_praxis(praxis_id: int, session: AsyncSession) -> Optional
     return result.scalar_one_or_none()
 
 
+async def with_duel_opponents(
+    praxis_ids: set[int], session: AsyncSession
+) -> set[int]:
+    """``praxis_ids`` plus the opposing side of every duel among them (#3684).
+
+    A duel side's worth depends on the other side's tally, so a recalc of one
+    side must cover the other. Same statuses as ``get_duel_for_praxis``.
+    """
+    if not praxis_ids:
+        return set()
+    rows = await session.execute(
+        select(Duel.challenger_praxis_id, Duel.opponent_praxis_id).where(
+            Duel.challenger_praxis_id.in_(praxis_ids)
+            | Duel.opponent_praxis_id.in_(praxis_ids),
+            Duel.status.in_(
+                [DuelStatus.pending, DuelStatus.active, DuelStatus.settled]
+            ),
+        )
+    )
+    both = {pid for row in rows.all() for pid in row if pid is not None}
+    return praxis_ids | both
+
+
 async def maybe_settle_duel(praxis_id: int, session: AsyncSession) -> None:
     """Settle the active duel this praxis is a side of once both sides are submitted."""
     duel = await get_duel_for_praxis(praxis_id, session)

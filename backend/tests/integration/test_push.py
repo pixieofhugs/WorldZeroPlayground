@@ -9,7 +9,7 @@ import json
 import pytest
 from httpx import AsyncClient
 from pywebpush import WebPushException
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from config import settings
@@ -270,6 +270,12 @@ async def test_comment_tags_name_the_target_type(
     db_session, character, character2, comment_world
 ):
     task, praxis = comment_world
+    await db_session.execute(  # next praxis id == task.id, so a swapped tag fails
+        text("select setval(pg_get_serial_sequence('praxis', 'id'), :n, false)"),
+        {"n": task.id},
+    )
+    praxis = await make_solo_praxis(db_session, task, character)
+    assert praxis.id == task.id
     await _comment(db_session, character2, praxis=praxis, mention=character)
     await _comment(db_session, character2, task=task, mention=character)
     tags = [p["tag"] for p, _ in _queued(db_session)]
@@ -293,13 +299,23 @@ async def test_second_comment_on_mine_collapses_with_a_count(
 
 @pytest.mark.asyncio
 async def test_second_mention_collapses_with_a_count(
-    db_session, character, character2, comment_world
+    db_session, character, character2, character3, comment_world
 ):
     _, praxis = comment_world
     await _comment(db_session, character2, praxis=praxis, mention=character)
-    await _comment(db_session, character2, praxis=praxis, mention=character)
+    await _comment(db_session, character3, praxis=praxis, mention=character)
     first, second = (p for p, _ in _queued(db_session))
     assert first["count"] is None and second["count"] == 2
+
+
+@pytest.mark.asyncio
+async def test_count_is_distinct_people_not_comments(
+    db_session, character, character2, character3, comment_world
+):
+    _, praxis = comment_world
+    for author in (character2, character2, character3):
+        await _comment(db_session, author, praxis=praxis)
+    assert [p["count"] for p, _ in _queued(db_session)] == [None, None, 2]
 
 
 @pytest.mark.asyncio

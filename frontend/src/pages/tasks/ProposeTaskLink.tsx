@@ -7,14 +7,7 @@ import type { CurrentUser } from '../../api/auth'
  * sidebar is status, not authoring. The `can_propose_task` gate is inside the
  * component so no call site can forget it. Renders nothing when unusable.
  */
-export default function ProposeTaskLink({
-  user,
-  fullWidth = false,
-}: {
-  user: CurrentUser | null
-  /** Stretch to the container (phone, #494); desktop is a pill beside the title. */
-  fullWidth?: boolean
-}) {
+export default function ProposeTaskLink({ user }: { user: CurrentUser | null }) {
   const { t } = useTranslation('common')
 
   if (!user?.can_propose_task) return null
@@ -22,9 +15,7 @@ export default function ProposeTaskLink({
   return (
     <Link
       to="/propose-task"
-      className={`font-display flex items-center justify-center gap-2.5 shrink-0 hover:opacity-90 ${
-        fullWidth ? 'w-full' : ''
-      }`}
+      className="font-display flex items-center justify-center gap-2.5 shrink-0 hover:opacity-90 w-full md:w-auto mb-6"
       style={{
         boxSizing: 'border-box',
         padding: 'var(--space-md) var(--space-lg)',

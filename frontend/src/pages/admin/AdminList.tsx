@@ -150,6 +150,9 @@ export function ListTable<T>({
   )
 }
 
+/** The row button that opened the panel; SidePanel takes it, since focus has moved by the time it mounts. */
+let opener: HTMLElement | null = null
+
 export function SidePanel({
   label,
   badge,
@@ -170,9 +173,12 @@ export function SidePanel({
   const close = useRef(onClose)
   close.current = onClose
   useEffect(() => {
-    const from = document.activeElement as HTMLElement | null
+    const from = opener ?? (document.activeElement as HTMLElement | null)
+    opener = null
     ref.current?.focus({ preventScroll: true })
-    const esc = (e: KeyboardEvent) => e.key === 'Escape' && close.current()
+    // Esc in a field would drop TaskPanel's unsaved edits.
+    const esc = (e: KeyboardEvent) =>
+      e.key === 'Escape' && !(e.target as Element).closest?.('input,textarea,select,[contenteditable]') && close.current()
     document.addEventListener('keydown', esc)
     return () => {
       document.removeEventListener('keydown', esc)
@@ -205,6 +211,8 @@ export function useSelection(param: string) {
   const { state } = useLocation()
   const id = Number(params.get(param)) || null
   const open = (next: number | null) => {
+    // Switching rows remounts the panel after the old one's cleanup moved focus back to the first row.
+    if (next) opener = document.activeElement as HTMLElement | null
     if (next) setParams({ [param]: String(next) }, { replace: id !== null, state: { sheet: id !== null ? state?.sheet : true } })
     else if (state?.sheet) navigate(-1)
     else setParams({}, { replace: true })

@@ -10,7 +10,8 @@ from models.character import Character
 from models.character_stats import CharacterStats
 from models.comment import MAX_COMMENT_BODY, Comment
 from models.era import Era
-from models.praxis import Praxis
+from models.flag import Flag
+from models.praxis import ModerationStatus, Praxis
 from models.roles import AccountRole, Role
 from models.task import Task
 from services.comment import create_comment
@@ -198,6 +199,49 @@ async def test_flag_threshold_flags_and_hides(
     # review threshold is 1
     list_resp = await client.get(f"/praxes/{praxis_solo.id}/comments")
     assert list_resp.json() == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "status", [ModerationStatus.hidden, ModerationStatus.deleted]
+)
+async def test_flag_refused_on_removed_comment(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    character2: Character,
+    praxis_solo: Praxis,
+    era: Era,
+    auth_headers: dict,
+    auth_headers2: dict,
+    status: ModerationStatus,
+):
+    create = await client.post(
+        f"/praxes/{praxis_solo.id}/comments",
+        json={"body_text": "gone"},
+        headers=auth_headers2,
+    )
+    comment_id = create.json()["id"]
+    db_session.add(
+        Flag(comment_id=comment_id, flagged_by_id=character2.id, reason="spam")
+    )
+    comment = await db_session.get(Comment, comment_id)
+    comment.moderation_status = status
+    await db_session.commit()
+    await _set_level(db_session, character, era, 5)
+
+    resp = await client.post(
+        f"/comments/{comment_id}/flag",
+        json={"reason": "spam"},
+        headers=auth_headers,
+    )
+
+    assert resp.status_code == 404
+    assert resp.json()["detail"] == "Comment not found."
+    db_session.expire_all()
+    flags = await db_session.execute(select(Flag).where(Flag.comment_id == comment_id))
+    assert len(flags.scalars().all()) == 1
+    assert (await db_session.get(Comment, comment_id)).moderation_status == status
 
 
 @pytest.mark.asyncio

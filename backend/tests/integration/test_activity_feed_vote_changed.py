@@ -10,7 +10,7 @@ import pytest
 from httpx import AsyncClient
 
 from models.account import Account, AccountStatus
-from models.character import Character
+from models.character import Character, CharacterStatus
 from models.task import Task
 
 
@@ -37,12 +37,21 @@ async def _praxis_and_vote(
     return praxis_id
 
 
-async def _your_stuff(client: AsyncClient, auth_headers: dict) -> list[dict]:
+async def _your_stuff_body(client: AsyncClient, auth_headers: dict) -> dict:
     resp = await client.get(
         "/activity-feed", params={"filter": "your_stuff"}, headers=auth_headers
     )
     assert resp.status_code == 200, resp.text
-    return resp.json()["items"]
+    return resp.json()
+
+
+async def _your_stuff(client: AsyncClient, auth_headers: dict) -> list[dict]:
+    return (await _your_stuff_body(client, auth_headers))["items"]
+
+
+async def _vote_count(client: AsyncClient, auth_headers: dict) -> int:
+    body = await _your_stuff_body(client, auth_headers)
+    return body["counts"]["by_type"]["vote_on_mine"]
 
 
 def _of_type(items: list[dict], item_type: str) -> list[dict]:
@@ -186,3 +195,28 @@ async def test_a_suspended_voters_vote_leaves_the_feed_until_unsuspended(
     voter.status = AccountStatus.suspended
     await db_session.commit()
     assert not vote_types & await kinds()
+
+
+@pytest.mark.asyncio
+async def test_a_banned_voters_vote_leaves_the_feed_but_a_departed_ones_stays(
+    client: AsyncClient,
+    db_session,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+):
+    await _praxis_and_vote(client, active_task, auth_headers, auth_headers2, 3)
+    assert len(_of_type(await _your_stuff(client, auth_headers), "vote_on_mine")) == 1
+    assert await _vote_count(client, auth_headers) == 1
+
+    character2.status = CharacterStatus.banned
+    await db_session.commit()
+    assert _of_type(await _your_stuff(client, auth_headers), "vote_on_mine") == []
+    assert await _vote_count(client, auth_headers) == 0
+
+    # Leaving the game keeps the vote (ADR-0098); only moderation hides it.
+    character2.departed_at = character2.created_at
+    await db_session.commit()
+    assert len(_of_type(await _your_stuff(client, auth_headers), "vote_on_mine")) == 1
+    assert await _vote_count(client, auth_headers) == 1

@@ -2,26 +2,15 @@ import { useTranslation } from 'react-i18next'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import TaskCard from '../components/taskCard/TaskCard'
 import PageTitle from '../components/ui/PageTitle'
-import { extractError } from '../utils/errors'
-import { useFormFactor } from '../hooks/useFormFactor'
-import { useTasks, type TasksState } from './tasks/useTasks'
-import DefaultTasks from './tasks/mobileArchetypes/DefaultTasks'
+import { useTasks } from './tasks/useTasks'
 import TaskFilterBar, { TaskListEmpty } from './tasks/TaskFilterBar'
 import ProposeTaskLink from './tasks/ProposeTaskLink'
 import MetataskSeal from '../components/metataskSeal/MetataskSeal'
 
+/** One responsive page; each <TaskCard> skins itself (ADR-0056). */
 export default function Tasks() {
   useDocumentTitle('Tasks')
   const state = useTasks()
-  const formFactor = useFormFactor()
-
-  // Faction-agnostic chrome (#565); each <TaskCard> skins itself (ADR-0056).
-  if (formFactor === 'mobile') return <DefaultTasks state={state} />
-
-  return <DesktopTasks state={state} />
-}
-
-function DesktopTasks({ state }: { state: TasksState }) {
   const { t } = useTranslation('tasks')
   const { t: tc } = useTranslation('common')
   const {
@@ -42,7 +31,7 @@ function DesktopTasks({ state }: { state: TasksState }) {
   return (
     <div className="py-8">
       {/* Propose beside the title (#1556); renders nothing if refused. */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-wrap items-start justify-between gap-x-4">
         {/* No eyebrow: the count is in the filter bar (#2262). */}
         <PageTitle title="Tasks" />
         <ProposeTaskLink user={user} />
@@ -63,7 +52,7 @@ function DesktopTasks({ state }: { state: TasksState }) {
         <p className="font-body text-muted">{t('listPage.loading')}</p>
       ) : error ? (
         <p className="font-body content-text danger-text border-2 danger-edge px-3 py-2">
-          {extractError(error, "Couldn't load tasks.")}{' '}
+          {t('listPage.loadError')}{' '}
           <button onClick={() => window.location.reload()} className="underline">{tc('states.tryRefreshing')}</button>
         </p>
       ) : tasks.length === 0 ? (
@@ -107,7 +96,7 @@ function DesktopTasks({ state }: { state: TasksState }) {
               <button
                 type="button"
                 onClick={loadMore}
-                className="font-body uppercase"
+                className="font-body uppercase w-full md:w-auto"
                 style={{
                   fontSize: 'var(--text-md)',
                   letterSpacing: '0.1em',
