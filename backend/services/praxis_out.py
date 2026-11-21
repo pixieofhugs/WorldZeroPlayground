@@ -15,7 +15,6 @@ from sqlalchemy.orm import aliased, selectinload
 from dependencies import account_has_admin_role
 from game_config import CURRENT_ERA, EraConfig
 from models.character import Character
-from models.character_stats import CharacterStats
 from models.duel import Duel, DuelStatus
 from models.meta_task import PraxisMetaTask
 from models.praxis import (
@@ -34,7 +33,6 @@ from schemas.praxis import (
     PraxisOut,
 )
 from schemas.task import TaskOut
-from services.era import get_current_era_row
 from services.nudge import nudged_at_map
 from services.praxis import can_flag_praxis
 from services.praxis_scoring import Contribution, compute_owner_contributions
@@ -236,22 +234,11 @@ async def author_contributions_for(
     if not praxes:
         return {}
 
-    era_row = await get_current_era_row(session)
-
     author_ids = {p.created_by_id for p in praxes}
     authors_result = await session.execute(
         select(Character).where(Character.id.in_(author_ids))
     )
     authors_by_id: dict[int, Character] = {c.id: c for c in authors_result.scalars()}
-
-    # Author level gates metatask points.
-    levels_result = await session.execute(
-        select(CharacterStats.character_id, CharacterStats.level).where(
-            CharacterStats.character_id.in_(author_ids),
-            CharacterStats.era_id == era_row.id,
-        )
-    )
-    level_by_author: dict[int, int] = {cid: lvl for cid, lvl in levels_result.all()}
 
     return await compute_owner_contributions(
         praxes,
@@ -260,7 +247,6 @@ async def author_contributions_for(
             for p in praxes
             if p.created_by_id in authors_by_id
         },
-        level_by_author,
         era,
         session,
     )

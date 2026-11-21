@@ -1034,9 +1034,8 @@ async def test_admin_edit_task_faction_rescores_doers(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("field,value", [("point_value", 50), ("level_required", 99)])
 async def test_admin_edit_metatask_rescores_applied_praxis_authors(
-    client, account, character, era, auth_headers, db_session, field, value
+    client, account, character, era, auth_headers, db_session
 ):
     await make_admin(db_session, account)
     parent = await make_task(db_session, character)
@@ -1048,7 +1047,7 @@ async def test_admin_edit_metatask_rescores_applied_praxis_authors(
         meta=(parent,),
     )
     before, after = await _patch_and_compare(
-        client, auth_headers, db_session, doer, meta, {field: value}
+        client, auth_headers, db_session, doer, meta, {"point_value": 50}
     )
     assert after[0] != before[0]
 

@@ -3,13 +3,12 @@ compete (#3618), and the batched scores equal the per-author path."""
 from datetime import datetime, timezone
 
 import pytest
-from sqlalchemy import select, update
+from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from faction_slugs import real_faction_slugs
 from game_config import CURRENT_ERA
 from models.character import Character
-from models.character_stats import CharacterStats
 from models.era import Era
 from models.faction import Faction
 from models.meta_task import PraxisMetaTask
@@ -80,23 +79,15 @@ async def test_batched_contributions_equal_per_author(
     per_author = {}
     for praxis in praxes:
         author = await db_session.get(Character, praxis.created_by_id)
-        level = await db_session.scalar(
-            select(CharacterStats.level).where(
-                CharacterStats.character_id == author.id,
-                CharacterStats.era_id == era.id,
-            )
-        )
         per_author.update(
-            await compute_contributions(
-                [praxis], author, CURRENT_ERA, db_session, character_level=level
-            )
+            await compute_contributions([praxis], author, CURRENT_ERA, db_session)
         )
     assert len(batched) == len(praxes)
     assert batched == per_author
 
 
 @pytest.mark.asyncio
-async def test_batch_gates_metatask_by_author_level_and_reads_own_habit_row(
+async def test_batch_sums_metatask_for_every_author_and_reads_own_habit_row(
     db_session: AsyncSession, era: Era, some_faction: Faction
 ):
     creator = await make_character(db_session, era, username="creator")
@@ -106,7 +97,6 @@ async def test_batch_gates_metatask_by_author_level_and_reads_own_habit_row(
         point_value=7, level_required=2,
     )
     solo = await _compete(db_session, era, [task], 0, 5)  # levels 0,1,2,3,0
-    by_level = {p.created_by_id: i % 4 for i, p in enumerate(solo)}
     for praxis in solo:
         db_session.add(PraxisMetaTask(praxis_id=praxis.id, task_id=meta.id))
         await db_session.execute(
@@ -136,9 +126,9 @@ async def test_batch_gates_metatask_by_author_level_and_reads_own_habit_row(
 
     for praxis in solo:
         c = got[praxis.id]
-        assert c.metatask_points == (7 if by_level[praxis.created_by_id] >= 2 else 0)
+        assert c.metatask_points == 7
         assert c.habit_bonus_points == 100 + praxis.created_by_id
-    assert got[collabs[0].id].metatask_points == 0
+    assert got[collabs[0].id].metatask_points == 7
     assert got[collabs[0].id].habit_bonus_points == 11
     assert got[collabs[1].id].metatask_points == 7
     assert got[collabs[1].id].habit_bonus_points == 17

@@ -681,10 +681,10 @@ async def test_snide_duel_loss_keeps_the_metatask(
 
 
 @pytest.mark.asyncio
-async def test_under_level_author_earns_zero_but_keeps_the_seal(
+async def test_under_level_author_still_earns_the_metatask_bonus(
     db_session: AsyncSession, era: Era, some_faction: Faction
 ):
-    """Below the metatask's level bar: ``metatask_points`` 0, seal row kept."""
+    """No scoring-time level gate (#3765): a high-bar metatask still pays."""
     author = await _make_character(
         db_session, era, username="underlvl", email="ul@x.com", level=0
     )
@@ -701,8 +701,10 @@ async def test_under_level_author_earns_zero_but_keeps_the_seal(
 
     card = await _load_card(db_session, praxis.id)
 
-    assert card.metatask_points == 0
-    assert card.score == pytest.approx(10 * modifiers_of(author).own_task_modifier)
+    assert card.metatask_points == 5
+    assert card.score == pytest.approx(
+        10 * modifiers_of(author).own_task_modifier + 5
+    )
     assert len(card.applied_metatasks) == 1
     assert card.applied_metatasks[0].id == metatask.id
     assert_invariant(card)
@@ -745,3 +747,48 @@ async def test_non_duel_solo_card_has_null_duel_id(
     card = await _load_card(db_session, praxis.id)
 
     assert card.duel_id is None
+
+
+@pytest.mark.asyncio
+async def test_hide_then_restore_lands_on_the_baseline(
+    db_session: AsyncSession, era: Era, some_faction: Faction
+):
+    """#3765: a hide + restore is an undo, even past a high-bar metatask."""
+    author = await _make_character(
+        db_session, era, username="hidebase", email="hb@x.com"
+    )
+    big = await _make_solo(
+        db_session, await _make_task(db_session, author, points=700), author
+    )
+    small = await _make_solo(
+        db_session, await _make_task(db_session, author, points=10), author
+    )
+    metatask = await _make_metatask(
+        db_session, author, points=100, level_required=5
+    )
+    await _apply_metatask(db_session, small, metatask)
+
+    async def recalc() -> tuple[float, int]:
+        await recalculate_character_stats(author.id, db_session, era_row=era)
+        stats = (
+            await db_session.execute(
+                select(CharacterStats).where(
+                    CharacterStats.character_id == author.id,
+                    CharacterStats.era_id == era.id,
+                )
+            )
+        ).scalar_one()
+        await db_session.refresh(stats)
+        return stats.score, stats.level
+
+    await recalc()
+    baseline = await recalc()
+    assert baseline[1] >= 5
+
+    big.moderation_status = ModerationStatus.hidden
+    await db_session.flush()
+    assert (await recalc())[1] < 5
+
+    big.moderation_status = ModerationStatus.visible
+    await db_session.flush()
+    assert await recalc() == baseline

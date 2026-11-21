@@ -88,11 +88,7 @@ async def test_seeded_metatask_praxis_scores_a_metatask_bonus(
     praxis = await _praxis(db_session, METATASK_PRAXIS_TITLE)
 
     contributions = await compute_contributions(
-        [praxis],
-        owner,
-        CURRENT_ERA,
-        db_session,
-        character_level=CURRENT_ERA.metatask_apply_level,
+        [praxis], owner, CURRENT_ERA, db_session
     )
     assert contributions[praxis.id].metatask_points > 0
 
