@@ -29,6 +29,10 @@ if TYPE_CHECKING:
     from models.vote import Vote
 
 
+# Write-only caps (#3750), like MAX_COMMENT_BODY: reads stay uncapped, no migration.
+PRAXIS_TITLE_MAX = 200
+PRAXIS_BODY_MAX = 20000
+
 class MediaType(enum.Enum):
     image = "image"
     video = "video"

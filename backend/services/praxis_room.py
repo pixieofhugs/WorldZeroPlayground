@@ -45,7 +45,7 @@ from config import settings
 from db import AsyncSessionLocal
 from errors import ErrorCode, raise_coded
 from models.account import Account, AccountStatus
-from models.praxis import Praxis, PraxisStatus
+from models.praxis import PRAXIS_BODY_MAX, PRAXIS_TITLE_MAX, Praxis, PraxisStatus
 from models.praxis_room import PraxisRoomUpdate
 from services.auth import decode_jwt
 from services.character import resolve_active_character
@@ -109,6 +109,13 @@ def _document_values(document: Doc) -> dict[str, str]:
     if isinstance(title, str):
         values["title"] = title
     return values
+
+
+def _over_cap(values: dict[str, str]) -> bool:
+    return (
+        len(values.get("title", "")) > PRAXIS_TITLE_MAX
+        or len(values["body_text"]) > PRAXIS_BODY_MAX
+    )
 
 
 class PostgresYStore(BaseYStore):
@@ -266,6 +273,10 @@ class _RoomFlusher:
         transaction as ``on_room_edit`` so text and countdown can't diverge.
         """
         values = _document_values(self._room.ydoc)
+        if _over_cap(values):
+            self._log.warning("Praxis %s room over the length cap; not flushed", self._praxis_id)
+            self._pending = False
+            return
 
         async with self._session_factory() as session:
             await session.execute(
@@ -501,10 +512,12 @@ class PraxisRoomServer(WebsocketServer):
         """
         name = room_name_for(praxis.id)
         async with self._open_lock:
+            room = self.rooms.get(name)
+            if room is not None and _over_cap(_document_values(room.ydoc)):
+                raise_coded(413, ErrorCode.praxis_doc_update_invalid, _OVERSIZED_DRAFT)
             flusher = self._flushers.pop(name, None)
             if flusher is not None:
                 flusher.abandon()
-            room = self.rooms.get(name)
             if room is not None:
                 for column, value in _document_values(room.ydoc).items():
                     setattr(praxis, column, value)
@@ -535,8 +548,11 @@ class PraxisRoomServer(WebsocketServer):
         except Exception:
             raise_coded(422, ErrorCode.praxis_doc_update_invalid, _INVALID_DRAFT)
         # The caller cancels on a difference; this text is the new proposal.
+        values = _document_values(room.ydoc)
+        if _over_cap(values):
+            raise_coded(413, ErrorCode.praxis_doc_update_invalid, _OVERSIZED_DRAFT)
         flusher.absorb()
-        return _document_values(room.ydoc)
+        return values
 
     def loaded_values(self, praxis_id: int) -> dict[str, str]:
         """The running room's column values, or {} when none is loaded or a proposal
