@@ -1,5 +1,6 @@
 """Integration tests for /admin endpoints."""
 from datetime import datetime, timezone
+
 import pytest
 from httpx import AsyncClient
 from sqlalchemy import select
