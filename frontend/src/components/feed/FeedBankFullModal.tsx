@@ -76,7 +76,7 @@ export default function FeedBankFullModal({
         aria-describedby={bodyId}
         tabIndex={-1}
         style={{
-          background: 'var(--color-bg-surface)',
+          background: 'var(--color-bg-page)',
           border: '1px solid var(--color-border)',
           padding: 'var(--space-xl)',
           maxWidth: 420,

@@ -100,7 +100,7 @@ const scrim: CSSProperties = {
 }
 const sheet: CSSProperties = {
   position: 'relative',
-  background: 'var(--color-bg-surface)',
+  background: 'var(--color-bg-page)',
   width: 'var(--signin-width)',
   borderRadius: 'var(--signin-radius)',
   // Neutral border: no faction owns a logged-out surface.
