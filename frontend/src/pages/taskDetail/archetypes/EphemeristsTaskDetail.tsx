@@ -519,7 +519,18 @@ export default function EphemeristsTaskDetail({
             <Link className="eph-cta" to={`/praxis/${inProgressPraxisId}/edit`} style={{ ...primaryButton, flex: 1, width: "auto" }}>
               {t("detail.inProgress.continue")}
             </Link>
-            <button onClick={handleDrop} style={quietButton}>
+            <button
+              onClick={handleDrop}
+              style={{
+                ...quietButton,
+                minHeight: 44,
+                minWidth: 44,
+                justifyContent: "center",
+                borderBottom: "none",
+                textDecoration: "underline",
+                textDecorationColor: LINE,
+              }}
+            >
               {t("detail.inProgress.drop")}
             </button>
           </div>

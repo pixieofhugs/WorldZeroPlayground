@@ -1,4 +1,5 @@
 import { useState, type CSSProperties, type ReactNode } from "react";
+import { CARD_CTA } from "../../../components/ctaTapFloor";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
@@ -264,8 +265,11 @@ export default function DefaultTaskDetail({
                 fontSize: "var(--text-md)",
                 background: "none",
                 border: "none",
-                borderBottom: "1px solid var(--color-border)",
+                textDecoration: "underline",
+                textDecorationColor: "var(--color-border)",
                 cursor: "pointer",
+                ...CARD_CTA,
+                minWidth: 44,
                 padding: 0,
                 color: "var(--color-text-secondary)",
               }}
