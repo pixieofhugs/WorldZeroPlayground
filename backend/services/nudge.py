@@ -26,6 +26,11 @@ from schemas.nudge import NudgeOut, NudgeResultOut
 # A window, not a stored "next allowed at", so rows alone answer it.
 NUDGE_COOLDOWN = timedelta(days=1)
 
+def nudge_again_at(nudged_at: Optional[datetime]) -> Optional[datetime]:
+    """When the window closes; the client never learns the cooldown length."""
+    return None if nudged_at is None else nudged_at + NUDGE_COOLDOWN
+
+
 # `pending` = collab mid-consensus (ADR-0012), still unfinished.
 _OPEN_PRAXIS_STATUSES = (PraxisStatus.in_progress, PraxisStatus.pending)
 

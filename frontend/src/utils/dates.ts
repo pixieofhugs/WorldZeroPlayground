@@ -9,6 +9,23 @@ export function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString(undefined, { dateStyle: 'medium' })
 }
 
+/** Clock time plus zone name; the weekday leads when not today, so it never reads as earlier. */
+export function formatClockTime(
+  iso: string,
+  { timeZone, now = new Date() }: { timeZone?: string; now?: Date } = {},
+): string {
+  const at = new Date(iso)
+  const day = (d: Date) =>
+    new Intl.DateTimeFormat(undefined, { timeZone, dateStyle: 'short' }).format(d)
+  return new Intl.DateTimeFormat(undefined, {
+    timeZone,
+    ...(day(at) === day(now) ? {} : { weekday: 'short' }),
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZoneName: 'short',
+  }).format(at)
+}
+
 /** Returns a human-friendly relative time string (e.g. "2h ago", "3d ago"). */
 export function relativeTime(iso: string): string {
   const seconds = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)

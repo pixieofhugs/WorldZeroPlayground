@@ -210,7 +210,7 @@ describe("summariseCrewNudge (#1418)", () => {
         aNudgeResult({ to_character_id: 5, error: "too soon", status_code: 422 }),
         aNudgeResult({ to_character_id: 6, nudge: {} as never }),
       ]),
-    ).toEqual({ sent: 2, skipped: 1 });
+    ).toEqual({ sent: 2, skipped: 1, skippedIds: [5] });
   });
 
   it("reports a wholly refused press as nothing sent, not as nothing at all", () => {
@@ -218,7 +218,7 @@ describe("summariseCrewNudge (#1418)", () => {
       summariseCrewNudge([
         aNudgeResult({ error: "too soon", status_code: 422 }),
       ]),
-    ).toEqual({ sent: 0, skipped: 1 });
+    ).toEqual({ sent: 0, skipped: 1, skippedIds: [expect.any(Number)] });
   });
 
   it("challenges through the same box, and reloads for the new duel_id (#311)", async () => {

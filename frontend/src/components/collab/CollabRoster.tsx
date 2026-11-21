@@ -25,6 +25,7 @@ import type { CollabCopyKey } from './collabCopy'
 import { deriveCollabGate } from './collabGate'
 import { RosterAvatar } from './RosterAvatar'
 import { buildRosterRows, isRowDone } from './rosterRows'
+import { formatClockTime } from '../../utils/dates'
 import type { RosterRow, RosterRowState } from './rosterRows'
 
 // Re-exported so existing importers keep this path.
@@ -146,7 +147,7 @@ export function CollabRoster({
    * dependency). Outlives the button: a press is often part refused, and nudging
    * the last reachable member removes the control.
    */
-  crewNudge?: { sent: number; skipped: number } | null
+  crewNudge?: { sent: number; skipped: number; skippedIds: number[] } | null
 }) {
   const { t } = useTranslation('forms')
   // Declared before the solo early-return so hook order never changes (#1082).
@@ -196,6 +197,16 @@ export function CollabRoster({
         ).length
       : 0
   const showCrewNudge = reachableCrew >= 2
+  // Latest window among the refused, so all of them are open by then.
+  const crewNudgeAgain = Math.max(
+    0,
+    ...members
+      .filter((m) => crewNudge?.skippedIds.includes(m.character_id))
+      .map((m) => (m.nudge_again_at ? Date.parse(m.nudge_again_at) : 0)),
+  )
+  const crewNudgeTime = crewNudgeAgain
+    ? formatClockTime(new Date(crewNudgeAgain).toISOString())
+    : ''
   /**
    * Which nudge explanation to show. Rows count everyone outstanding, spent
    * window or not, since a row draws its (disabled) button either way.
@@ -399,7 +410,12 @@ export function CollabRoster({
                   aria-label={collabCopy(
                     factionSlug,
                     row.member.nudged_at != null ? 'nudgeSentAria' : 'nudgeAria',
-                    { name: row.name },
+                    {
+                      name: row.name,
+                      time: row.member.nudge_again_at
+                        ? formatClockTime(row.member.nudge_again_at)
+                        : '',
+                    },
                   )}
                   className="label-caption"
                   style={nudgeStyle(row.member.nudged_at != null)}
@@ -473,11 +489,12 @@ export function CollabRoster({
         >
           {collabCopy(
             factionSlug,
-            crewNudge.skipped > 0 ? 'nudgeCrewResultPartial' : 'nudgeCrewResult',
+            crewNudgeTime ? 'nudgeCrewResultPartial' : 'nudgeCrewResult',
             {
               sent: crewNudge.sent,
               total: crewNudge.sent + crewNudge.skipped,
               skipped: crewNudge.skipped,
+              time: crewNudgeTime,
             },
           )}
         </span>

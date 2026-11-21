@@ -29,7 +29,7 @@ from schemas.duel import DuelDetailOut, DuelSideOut
 from services.character import is_playable
 from services.scoring import compute_duel_multiplier
 from services.character_stats import recalculate_character_stats
-from services.nudge import latest_nudge_at
+from services.nudge import latest_nudge_at, nudge_again_at
 from services.vote_tally import get_tally, tally_votes
 from services.era import get_current_era_row, get_or_create_stats
 from services.era_gates import may_create_duel
@@ -195,6 +195,7 @@ async def get_duel_detail(
             ),
             is_submitted=praxis is not None and praxis.status == PraxisStatus.submitted,
             nudged_at=nudged_at,
+            nudge_again_at=nudge_again_at(nudged_at),
             win_multiplier=_multiplier(True, False),
             loss_multiplier=_multiplier(False, False),
             tie_multiplier=_multiplier(False, True),

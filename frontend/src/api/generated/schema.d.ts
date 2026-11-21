@@ -3104,6 +3104,8 @@ export interface components {
              * @default 1
              */
             loss_multiplier: number;
+            /** Nudge Again At */
+            nudge_again_at: string | null;
             /** Nudged At */
             nudged_at: string | null;
             /** Points From Votes */
@@ -4596,6 +4598,8 @@ export interface components {
              * Format: date-time
              */
             joined_at: string;
+            /** Nudge Again At */
+            nudge_again_at: string | null;
             /** Nudged At */
             nudged_at: string | null;
             /** Praxis Id */

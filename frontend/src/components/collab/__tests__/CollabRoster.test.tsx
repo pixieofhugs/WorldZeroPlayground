@@ -4,6 +4,7 @@ import '../../../i18n'
 import type { PraxisInviteOut, PraxisMemberOut } from '../../../api/praxis'
 import { CollabRoster, deriveCollabGate } from '../CollabRoster'
 import { collabCopy } from '../collabCopy'
+import { formatClockTime } from '../../../utils/dates'
 import { stripResourceHints } from '../../../test/ssrMarkup'
 
 function member(id: number, cast: boolean, avatar = ''): PraxisMemberOut {
@@ -17,6 +18,7 @@ function member(id: number, cast: boolean, avatar = ''): PraxisMemberOut {
     is_done: false,
     joined_at: '2026-01-01T00:00:00Z',
     nudged_at: null,
+    nudge_again_at: null,
     approved_at: null,
   }
 }
@@ -505,7 +507,7 @@ describe('CollabRoster — the bulk press in the header (#1952)', () => {
 
   const withCrew = (
     members: PraxisMemberOut[],
-    crewNudge: { sent: number; skipped: number } | null = null,
+    crewNudge: { sent: number; skipped: number; skippedIds: number[] } | null = null,
   ) =>
     renderToStaticMarkup(
       <CollabRoster
@@ -564,18 +566,31 @@ describe('CollabRoster — the bulk press in the header (#1952)', () => {
   })
 
   it('reports what a press actually did, under the roster', () => {
-    const html = withCrew([member(1, true), member(2, false), member(3, false)], {
-      sent: 2,
-      skipped: 1,
+    const at = (id: number, iso: string): PraxisMemberOut => ({
+      ...spent(id),
+      nudge_again_at: iso,
+    })
+    const early = '2026-01-03T10:00:00Z'
+    const late = '2026-01-03T20:00:00Z'
+    const html = withCrew([member(1, true), at(2, early), at(3, late), member(4, false)], {
+      sent: 1,
+      skipped: 2,
+      skippedIds: [2, 3],
     })
     expect(html).toContain(
-      collabCopy(null, 'nudgeCrewResultPartial', { sent: 2, total: 3, skipped: 1 }),
+      collabCopy(null, 'nudgeCrewResultPartial', {
+        sent: 1,
+        total: 3,
+        skipped: 2,
+        time: formatClockTime(late),
+      }),
     )
+    expect(html).not.toContain(`by ${formatClockTime(early)}`)
   })
 
   it('keeps the report up after its own button has gone', () => {
     // Silence would read as "all of them"; presses are often part refused.
-    const html = withCrew([member(1, true), spent(2), spent(3)], { sent: 2, skipped: 0 })
+    const html = withCrew([member(1, true), spent(2), spent(3)], { sent: 2, skipped: 0, skippedIds: [] })
     expect(html).not.toContain(CREW)
     expect(html).toContain(collabCopy(null, 'nudgeCrewResult', { sent: 2, total: 2 }))
   })

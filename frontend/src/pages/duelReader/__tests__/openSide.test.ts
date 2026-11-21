@@ -12,6 +12,7 @@ function side(overrides: Partial<DuelSideOut> = {}): DuelSideOut {
     faction_slug: 'na',
     is_submitted: true,
     nudged_at: null,
+    nudge_again_at: null,
     win_multiplier: 1,
     loss_multiplier: 1,
     tie_multiplier: 1,

@@ -33,7 +33,7 @@ from schemas.praxis import (
     PraxisOut,
 )
 from schemas.task import TaskOut
-from services.nudge import nudged_at_map
+from services.nudge import nudge_again_at, nudged_at_map
 from services.praxis import can_flag_praxis
 from services.praxis_scoring import Contribution, compute_owner_contributions
 from services.vote import viewer_can_vote, viewer_can_vote_map
@@ -62,6 +62,7 @@ def _build_member_out(
         approved_at=member.approved_at,
         joined_at=member.joined_at,
         nudged_at=nudged_at,
+        nudge_again_at=nudge_again_at(nudged_at),
     )
 
 

@@ -24,6 +24,7 @@ const member = (id: number): PraxisMemberOut => ({
   approved_at: null,
   joined_at: AT,
   nudged_at: null,
+  nudge_again_at: null,
 })
 
 const praxis = (over: Partial<ProposalPraxis> = {}): ProposalPraxis => ({
