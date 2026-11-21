@@ -684,7 +684,9 @@ async def list_tasks(
         query = query.where(Task.task_type == TaskType.standard)
 
     if not skip_level_check:
-        if not character_sees_metatasks(viewer_level, era):
+        if not character_sees_metatasks(
+            viewer_level, viewer.faction_slug if viewer is not None else None, era
+        ):
             query = query.where(Task.task_type != TaskType.metatask)
 
     # evaluate_signup's gates restated as SQL (per-row call = N+1).
