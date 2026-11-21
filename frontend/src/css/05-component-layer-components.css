@@ -370,16 +370,17 @@
       @apply px-0;
     }
     .ob-sheet-outer {
-      padding-left: 0 !important; /* beats the card's inline padding */
-      padding-right: 0 !important;
+      padding-inline: 0 !important; /* beats the card's inline padding */
     }
     /* Phone drops the masthead floor (#2995 keeps it on desktop): an unmasthead kit left ~80px empty. */
     [data-composer-head] {
       min-height: 0 !important;
     }
-    .composer-slip {
-      padding-left: var(--space-md) !important;
-      padding-right: var(--space-md) !important;
+    .composer-slip,
+    .profile-frame,
+    .profile-header,
+    .ob-sheet {
+      padding-inline: var(--space-md) !important;
     }
     /* The stamp's own max-width is a one-size mount; on a phone it fills its row. */
     .composer-stamp {
@@ -389,24 +390,14 @@
       width: 100% !important;
       max-width: none !important;
     }
-    .profile-frame,
-    .profile-header {
-      padding-left: var(--space-md) !important;
-      padding-right: var(--space-md) !important;
-    }
-    .profile-level {
-      padding: 0 !important;
-      border: 0 !important;
-      background: none !important;
-      max-width: none !important;
-    }
-    .ob-sheet {
-      padding-left: var(--space-md) !important;
-      padding-right: var(--space-md) !important;
-    }
+    .profile-level,
     .ob-terms-doc {
       padding: 0 !important;
       border: 0 !important;
+    }
+    .profile-level {
+      background: none !important;
+      max-width: none !important;
     }
   }
 

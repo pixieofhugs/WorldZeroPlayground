@@ -1,3 +1,4 @@
+import './filterBar.css'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useFormFactor } from '../../../hooks/useFormFactor'

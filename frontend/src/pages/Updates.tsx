@@ -1,3 +1,4 @@
+import '../components/ui/FilterBar/filterBar.css'
 import { useTranslation } from 'react-i18next'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import PageTitle from '../components/ui/PageTitle'
