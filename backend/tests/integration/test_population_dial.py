@@ -284,3 +284,21 @@ async def test_delivery_that_completes_coverage_unlocks_albescent(
     await db_session.commit()
 
     assert await can_start_as_albescent(account.id, db_session) is True
+
+
+@pytest.mark.asyncio
+async def test_a_raising_delivery_leaves_the_flip_standing(
+    db_session, account, era, some_faction, monkeypatch
+):
+    await make_admin(db_session, account)
+    await overlay(db_session)
+    await set_dials({"invitation": "full"}, account.id, db_session)
+
+    async def boom(*_):
+        raise RuntimeError("unique backstop")
+
+    monkeypatch.setattr("services.population_dial.deliver_invitations_to_all", boom)
+    assert await set_dials({"invitation": "small"}, account.id, db_session) == [
+        "invitation"
+    ]
+    assert (await read_dial_sides(db_session))["invitation"] == "small"
