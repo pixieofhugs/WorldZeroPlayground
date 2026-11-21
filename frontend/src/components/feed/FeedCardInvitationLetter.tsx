@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { Trans } from "react-i18next";
 import type { ActivityFeedItem } from "../../api/activityFeed";
@@ -11,6 +11,7 @@ import {
   factionCssVar,
   factionName,
 } from "../../utils/factions";
+import { JoinConfirm } from "../JoinControl";
 import FeedBadge from "./FeedBadge";
 
 interface Props {
@@ -66,7 +67,7 @@ const QUIET: CSSProperties = {
  *    nothing (ADR-0070), the letter stays valid. Label is the letter's
  *    `factions:invitation.dismiss` (#2620).
  *
- * The confirm step is `InvitationLetterPopup`'s inline two-stage idiom.
+ * The confirm step is the shared `JoinConfirm`, with this card's own wording.
  *
  * This card ANNOUNCES the letter, it doesn't PREVIEW it (owner ruling, #2620):
  * `feed:invitationLetter.*` and the letter's copy are independent vocabularies
@@ -88,6 +89,17 @@ export default function FeedCardInvitationLetter({ item, onNotNow }: Props) {
   const [joining, setJoining] = useState(false);
   const [joined, setJoined] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // The Accept button unmounts while confirming, so JoinConfirm cannot restore
+  // focus to it; put it back once it remounts.
+  const acceptRef = useRef<HTMLButtonElement>(null);
+  const restoreFocus = useRef(false);
+  useEffect(() => {
+    if (!confirming && restoreFocus.current) {
+      restoreFocus.current = false;
+      acceptRef.current?.focus();
+    }
+  }, [confirming]);
 
   const join = async () => {
     if (joining) return;
@@ -174,53 +186,45 @@ export default function FeedCardInvitationLetter({ item, onNotNow }: Props) {
 
       {confirming ? (
         <div data-invitation-confirm>
-          <p
-            className="font-display italic"
-            style={{
-              fontSize: "var(--text-content)",
-              color: "var(--color-text-primary)",
-              marginBottom: "var(--space-xs)",
+          <JoinConfirm
+            membership={{ currentFactionSlug: user?.character?.faction_slug, join, joining, joinError: null }}
+            name={letterName}
+            skin={{ openStyle: acceptStyle, confirmStyle: acceptStyle, cancelStyle: QUIET, className: "feed-action" }}
+            joiningLabel={i18n.t("feed:invitationLetter.confirm.confirm")}
+            confirmLabel={i18n.t("feed:invitationLetter.confirm.confirm")}
+            cancelLabel={i18n.t("feed:invitationLetter.confirm.cancel")}
+            onCancel={() => {
+              restoreFocus.current = true;
+              setConfirming(false);
             }}
-          >
-            {i18n.t("feed:invitationLetter.confirm.title", {
-              current: currentName,
-              faction: letterName,
-            })}
-          </p>
-          <p
-            className="font-body"
-            style={{
-              fontSize: "var(--text-content)",
-              color: "var(--color-text-secondary)",
-              marginBottom: "var(--space-md)",
-            }}
-          >
-            {i18n.t("feed:invitationLetter.confirm.body", { current: currentName })}
-          </p>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "var(--space-sm)",
-              flexWrap: "wrap",
-            }}
-          >
-            {/* [Cancel] … [Confirm] (#646). Can't mount `JoinConfirm` (own copy,
-                one-click mode, joined state); order held by
-                `joinControlOrder.test.tsx` (#2656). */}
-            <button
-              type="button"
-              className="feed-action"
-              onClick={() => setConfirming(false)}
-              disabled={joining}
-              style={QUIET}
-            >
-              {i18n.t("feed:invitationLetter.confirm.cancel")}
-            </button>
-            <button type="button" className="feed-action" onClick={() => void join()} disabled={joining} style={acceptStyle}>
-              {i18n.t("feed:invitationLetter.confirm.confirm")}
-            </button>
-          </div>
+            body={
+              <>
+                <p
+                  className="font-display italic"
+                  style={{
+                    fontSize: "var(--text-content)",
+                    color: "var(--color-text-primary)",
+                    marginBottom: "var(--space-xs)",
+                  }}
+                >
+                  {i18n.t("feed:invitationLetter.confirm.title", {
+                    current: currentName,
+                    faction: letterName,
+                  })}
+                </p>
+                <p
+                  className="font-body"
+                  style={{
+                    fontSize: "var(--text-content)",
+                    color: "var(--color-text-secondary)",
+                    marginBottom: "var(--space-md)",
+                  }}
+                >
+                  {i18n.t("feed:invitationLetter.confirm.body", { current: currentName })}
+                </p>
+              </>
+            }
+          />
         </div>
       ) : (
         <div
@@ -244,6 +248,7 @@ export default function FeedCardInvitationLetter({ item, onNotNow }: Props) {
               {mode !== "suppressed" && (
                 <button
                   type="button"
+                  ref={acceptRef}
                   className="feed-action"
                   data-invitation-accept={mode}
                   onClick={() => {

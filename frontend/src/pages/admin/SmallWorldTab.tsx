@@ -3,12 +3,12 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { getSmallWorld, setSmallWorld, type DialSide, type PopulationDialOut } from '../../api/admin'
 import { extractError } from '../../utils/errors'
+import { formatTimestamp } from '../../utils/dates'
 import './adminSmallWorld.css'
 import { useReloadCounts } from './useAdminCounts'
 
 const SIDES: DialSide[] = ['small', 'full']
-const when = (iso: string) =>
-  new Date(iso).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+const when = formatTimestamp
 
 export default function SmallWorldTab() {
   const { t: typed } = useTranslation('admin')

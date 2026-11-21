@@ -31,6 +31,7 @@ import {
   useSectionDisclosures,
 } from '../../factionDetail/sectionDisclosure'
 import type { ProfileBodyProps } from '../FactionProfileBody'
+import { formatDate } from '../../../utils/dates'
 
 /** The costume knobs a faction fills in: CSS var references only, no hex. */
 interface ProfileKit {
@@ -348,10 +349,7 @@ export function ProfileSkin({
   const headerMuted = kit.headerMuted ?? kit.muted
   const { character, submissions, proposedTasks, progression, identityActions, onSignup } = props
   const badges = character.badges ?? []
-  const joined = new Date(character.created_at).toLocaleDateString(undefined, {
-    month: 'short',
-    year: 'numeric',
-  })
+  const joined = formatDate(character.created_at, { month: 'short', year: 'numeric' })
 
   // ⑤ FDL laurel target: highest full `score` (the number the card shows), not base+vote.
   const topScore = submissions.reduce((max, p) => Math.max(max, p.score ?? 0), 0)

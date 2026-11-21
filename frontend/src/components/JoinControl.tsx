@@ -125,12 +125,19 @@ export function JoinConfirm({
   joiningLabel,
   onCancel,
   autoFocus = false,
+  body,
+  cancelLabel,
+  confirmLabel,
 }: {
   membership: JoinTarget;
   name: string;
   skin: JoinControlSkin;
   joiningLabel: ReactNode;
   onCancel: () => void;
+  /** A host with its own wording (the feed letter): replaces the prose paragraph and button labels. */
+  body?: ReactNode;
+  cancelLabel?: ReactNode;
+  confirmLabel?: ReactNode;
   /**
    * `true` focuses the AFFIRMATIVE. `"cancel"` for hosts opened by Enter in a
    * text field (#3149), where a repeating keypress would confirm.
@@ -149,11 +156,13 @@ export function JoinConfirm({
 
   return (
     <>
-      <p className="content-text" style={skin.proseStyle}>
-        {current && current !== NA_SLUG
-          ? t("detail.join.confirmSwitch", { faction: name, current: factionName(current) })
-          : t("detail.join.confirm", { faction: name })}
-      </p>
+      {body ?? (
+        <p className="content-text" style={skin.proseStyle}>
+          {current && current !== NA_SLUG
+            ? t("detail.join.confirmSwitch", { faction: name, current: factionName(current) })
+            : t("detail.join.confirm", { faction: name })}
+        </p>
+      )}
       {membership.joinError && (
         <p className="content-text" style={skin.errorStyle}>
           {membership.joinError}
@@ -169,7 +178,7 @@ export function JoinConfirm({
           disabled={busy}
           style={{ ...CARD_CTA, ...skin.cancelStyle, cursor: busy ? "not-allowed" : "pointer" }}
         >
-          {t("detail.join.cancel")}
+          {cancelLabel ?? t("detail.join.cancel")}
         </button>
         <button
           type="button"
@@ -187,7 +196,7 @@ export function JoinConfirm({
             cursor: busy ? "not-allowed" : "pointer",
           }}
         >
-          {busy ? joiningLabel : t("detail.join.confirmAction")}
+          {busy ? joiningLabel : (confirmLabel ?? t("detail.join.confirmAction"))}
         </button>
       </div>
     </>

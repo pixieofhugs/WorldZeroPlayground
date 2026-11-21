@@ -4,6 +4,7 @@ import { factionBodyVars } from "../../../utils/factionBodyFace";
 import { WowBand } from "../../cardMasthead/factionBands";
 import { AdminOverlay } from "../shared";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
+import { formatDate } from "../../../utils/dates";
 
 /**
  * Warriors of Whimsy — the chronicle of proof (#840, ADR-0050): cream parchment
@@ -14,10 +15,7 @@ import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
  */
 export function WowPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   const submitted = praxis.submitted_at
-    ? new Date(praxis.submitted_at).toLocaleDateString(undefined, {
-        month: "short",
-        day: "numeric",
-      })
+    ? formatDate(praxis.submitted_at, { month: "short", day: "numeric" })
     : null;
 
   return (

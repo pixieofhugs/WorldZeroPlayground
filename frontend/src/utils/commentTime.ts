@@ -25,3 +25,13 @@ export function formatCommentTime(iso: string, now: number = Date.now()): string
   if (d.minutes >= 1) return i18n.t('praxis:comments.time.default.minutes', { count: d.minutes })
   return i18n.t('praxis:comments.time.default.now')
 }
+
+/** The feed's short form ("3m ago", "2d ago", "1mo ago"); copy in `comments.time.compact`. */
+export function formatCompactTime(iso: string, now: number = Date.now()): string {
+  const d = timeDelta(iso, now)
+  if (d.days >= 30) return i18n.t('praxis:comments.time.compact.months', { count: Math.floor(d.days / 30) })
+  if (d.days >= 1) return i18n.t('praxis:comments.time.compact.days', { count: d.days })
+  if (d.hours >= 1) return i18n.t('praxis:comments.time.compact.hours', { count: d.hours })
+  if (d.minutes >= 1) return i18n.t('praxis:comments.time.compact.minutes', { count: d.minutes })
+  return i18n.t('praxis:comments.time.compact.now')
+}

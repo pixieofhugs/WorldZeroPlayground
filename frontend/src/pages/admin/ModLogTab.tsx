@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { getModLog, type ModActionOut, type ModLogFilters } from '../../api/admin'
 import { extractError } from '../../utils/errors'
+import { formatTimestamp } from '../../utils/dates'
 import './adminModLog.css'
 import { ListTable, ListToolbar, SelectChip, SidePanel, type Column } from './AdminList'
 
@@ -13,8 +14,7 @@ const OK = new Set(['unban', 'unsuspend', 'praxis_visible', 'comment_visible'])
 const REASON = new Set(['praxis_failed', 'comment_deleted'])
 
 const tone = (action: string) => (BAD.has(action) ? 'adm-tag-bad' : OK.has(action) ? 'adm-tag-ok' : 'adm-tag-wait')
-const when = (iso: string) =>
-  new Date(iso).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+const when = formatTimestamp
 
 type Page = Awaited<ReturnType<typeof getModLog>>
 

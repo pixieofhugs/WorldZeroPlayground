@@ -184,6 +184,13 @@
     "editError": "Could not save the edit.",
     "withdrawError": "Could not withdraw the comment.",
     "time": {
+      "compact": {
+        "days": "{{count}}d ago",
+        "hours": "{{count}}h ago",
+        "minutes": "{{count}}m ago",
+        "months": "{{count}}mo ago",
+        "now": "just now"
+      },
       "default": {
         "days_one": "{{count}} day ago",
         "days_other": "{{count}} days ago",

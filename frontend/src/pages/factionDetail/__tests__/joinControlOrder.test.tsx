@@ -224,7 +224,7 @@ const JOIN_SURFACES: Record<string, string> = {
     'builds the JoinTarget the shared control consumes; draws no buttons',
   'components/InvitationLetterPopup.tsx': 'mounts JoinConfirm',
   'components/feed/FeedCardInvitationLetter.tsx':
-    'its own copy, its own one-click mode — cannot mount the shared control',
+    'mounts JoinConfirm with its own copy; one-click mode and the joined line stay outside it',
   'components/AlbescentInvitation.tsx':
     'no confirm pair at all: a life picker, then Accept (#2399)',
   'pages/characterPaths/useEditCharacter.ts':
