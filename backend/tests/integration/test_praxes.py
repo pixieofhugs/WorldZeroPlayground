@@ -18,7 +18,13 @@ from models.account import Account
 from models.character import Character
 from models.character_stats import CharacterStats
 from models.era import Era
-from models.praxis import PRAXIS_BODY_MAX, PRAXIS_TITLE_MAX, ModerationStatus, Praxis, PraxisMember
+from models.praxis import (
+    PRAXIS_BODY_MAX,
+    PRAXIS_TITLE_MAX,
+    ModerationStatus,
+    Praxis,
+    PraxisMember,
+)
 from models.task import Task, TaskStatus, TaskType
 from tests.integration.factories import DEFAULT_FACTION_SLUG, make_character
 

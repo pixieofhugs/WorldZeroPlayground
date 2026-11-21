@@ -274,7 +274,7 @@ class _RoomFlusher:
         """
         values = _document_values(self._room.ydoc)
         if _over_cap(values):
-            self._log.warning("Praxis %s room over the length cap; not flushed", self._praxis_id)
+            self._log.warning("Praxis %s over cap; not flushed", self._praxis_id)
             self._pending = False
             return
 

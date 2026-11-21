@@ -31,7 +31,14 @@ import services.praxis_room as praxis_room
 from config import settings
 from main import app as fastapi_app
 from models.character import Character
-from models.praxis import PRAXIS_BODY_MAX, PRAXIS_TITLE_MAX, Praxis, PraxisMember, PraxisStatus, PraxisType
+from models.praxis import (
+    PRAXIS_BODY_MAX,
+    PRAXIS_TITLE_MAX,
+    Praxis,
+    PraxisMember,
+    PraxisStatus,
+    PraxisType,
+)
 from models.praxis_room import PraxisRoomUpdate
 from models.task import Task
 from services.auth import create_jwt
@@ -1441,7 +1448,8 @@ async def test_an_over_cap_room_document_is_not_flushed(
     db_session, collab, account, monkeypatch
 ) -> None:
     pad = "x" * (PRAXIS_BODY_MAX - len(SEED_BODY))
-    async with running_rooms(db_session, monkeypatch, flush_debounce_seconds=0.05) as rooms:
+    flush = {"flush_debounce_seconds": 0.05}
+    async with running_rooms(db_session, monkeypatch, **flush) as rooms:
         socket = await rooms.open(collab.id, account.id)
         async with client_doc(socket) as doc:
             await _wait_for_body(doc, SEED_BODY, "the first client")
@@ -1453,6 +1461,7 @@ async def test_an_over_cap_room_document_is_not_flushed(
             await _wait_for_record(
                 rooms, collab.id, "the at-cap flush", body_text=pad + SEED_BODY
             )
-            doc.get(ROOM_META_KEY, type=Map)[ROOM_TITLE_KEY] = "t" * (PRAXIS_TITLE_MAX + 1)
+            long_title = "t" * (PRAXIS_TITLE_MAX + 1)
+            doc.get(ROOM_META_KEY, type=Map)[ROOM_TITLE_KEY] = long_title
             await asyncio.sleep(0.4)
             assert (await _record(rooms, collab.id))[0] == "Collab Praxis"
