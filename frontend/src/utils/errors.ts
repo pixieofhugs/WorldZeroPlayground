@@ -71,7 +71,7 @@ function catalogMessage(detail: CodedDetail): string | null {
   // The backend sends an instant; the wording names it in the reader's zone.
   const params =
     typeof detail.params?.next_post_at === 'string'
-      ? { ...detail.params, time: formatClockTime(detail.params.next_post_at) }
+      ? { ...detail.params, next_post_at: formatClockTime(detail.params.next_post_at) }
       : detail.params
   if (typeof code !== 'string' || !isCataloged(code)) return null
   if (!hasEveryPlaceholder(catalogTemplate(code, params?.context), params)) {
