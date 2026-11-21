@@ -15,6 +15,8 @@ interface SettingsRowProps {
   readonly last?: boolean
   /** Controls drop under the text instead of beside it (phones, #3703). */
   readonly stacked?: boolean
+  /** Label flex-basis; the default 22ch leaves no room for three switch columns at 800px. */
+  readonly labelMeasure?: string
   readonly children: ReactNode
 }
 
@@ -45,6 +47,7 @@ export default function SettingsRow({
   noteId,
   last = false,
   stacked = false,
+  labelMeasure = LABEL_MEASURE,
   children,
 }: SettingsRowProps) {
   return (
@@ -56,7 +59,7 @@ export default function SettingsRow({
         borderBottom: last ? undefined : '1px solid var(--color-border)',
       }}
     >
-      <div className="font-body" style={{ flex: stacked ? 'none' : LABEL_MEASURE }}>
+      <div className="font-body" style={{ flex: stacked ? 'none' : labelMeasure }}>
         <div style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-primary)' }}>
           {title}
         </div>
