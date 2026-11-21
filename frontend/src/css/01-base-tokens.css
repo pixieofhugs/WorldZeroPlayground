@@ -1490,9 +1490,7 @@
   /* ── Mobile bottom-chrome clearance (#1566) ── `MobileTabBar` is fixed and
      pads itself by the home indicator, so anything pinned to the phone bottom
      owes bar height + inset. Theme-invariant, :root only.
-     ponytail: 3.5rem is the bar's MEASURED height (five `py-2` tabs at
-     --text-lg + a 2px rule), not declared; re-measure if its type or padding
-     moves — nothing enforces the match. */
+     The bar's height is declared from --tab-bar-height (MobileTabBar.test). */
   --tab-bar-height: 3.5rem;
   --tab-bar-clearance: calc(var(--tab-bar-height) + env(safe-area-inset-bottom));
 

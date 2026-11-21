@@ -23,6 +23,7 @@ export default function MobileTabBar() {
         background: 'var(--color-nav-bg)',
         backdropFilter: 'blur(var(--nav-blur))',
         borderTop: '1px solid var(--color-border)',
+        height: 'calc(var(--tab-bar-height) + env(safe-area-inset-bottom))',
         paddingBottom: 'env(safe-area-inset-bottom)',
       }}
     >
@@ -31,7 +32,7 @@ export default function MobileTabBar() {
           key={to}
           to={to}
           end={end}
-          className="flex-1 text-center font-body py-2"
+          className="flex-1 flex items-center justify-center text-center font-body"
           style={({ isActive }) => ({
             fontSize: 'var(--text-lg)',
             textDecoration: 'none',
