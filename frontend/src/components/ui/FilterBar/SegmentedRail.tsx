@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import './filterBar.css'
 import {
   sameBoxes,
   thumbGeometry,
