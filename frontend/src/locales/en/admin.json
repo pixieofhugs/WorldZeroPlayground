@@ -182,6 +182,17 @@
   "nav": {
     "mod": {
       "label": "Mod",
+      "group": "Moderation",
+      "modeLabel": "Mod mode",
+      "queue": "Mod queue",
+      "queueWithCount_one": "Mod queue, {{count}} waiting",
+      "queueWithCount_other": "Mod queue, {{count}} waiting",
+      "queueReports_one": "{{count}} report",
+      "queueReports_other": "{{count}} reports",
+      "queueMessages_one": "{{count}} message",
+      "queueMessages_other": "{{count}} messages",
+      "queueProposals_one": "{{count}} proposal",
+      "queueProposals_other": "{{count}} proposals",
       "buttonWithCount_one": "Mod, {{count}} waiting",
       "buttonWithCount_other": "Mod, {{count}} waiting",
       "edit": "Edit on the page",

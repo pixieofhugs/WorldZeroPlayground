@@ -5,7 +5,7 @@ import { useAdminMode } from '../../auth/AdminModeContext'
 import { useAdminCounts } from '../../pages/admin/useAdminCounts'
 import './modMode.css'
 
-/** The one MOD control in the top bar (#3666). NavBar and MobileHeader lazy-load it for admins only, so players never fetch this chunk or the counts. */
+/** The one MOD control in the top bar (#3666). NavBar lazy-loads it for admins only (the phone's twin is the You sheet's ModGroup), so players never fetch this chunk or the counts. */
 export default function ModControl() {
   const { t } = useTranslation('admin')
   const { adminMode, toggleAdminMode } = useAdminMode()

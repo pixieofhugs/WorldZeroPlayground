@@ -1,9 +1,12 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 // Initialize the i18n catalog so nav copy keys resolve to English text.
 import '../../../i18n'
-import MobileTabBar from '../MobileTabBar'
+import MobileTabBar, { activeTab } from '../MobileTabBar'
+
+vi.mock('../../../auth/AuthContext', () => ({ useAuth: () => ({ user: null }) }))
+vi.mock('../../../hooks/useSidebarPanels', () => ({ useSidebarPanels: () => ({ pending_requests_count: 0 }) }))
 
 function render(path: string): string {
   return renderToStaticMarkup(
@@ -14,12 +17,12 @@ function render(path: string): string {
 }
 
 describe('MobileTabBar', () => {
-  it('renders the five core-loop destinations', () => {
+  it('renders Home, Tasks, Praxis, Community, You in order with labels', () => {
     const html = render('/')
-    for (const label of ['Home', 'Tasks', 'Praxis', 'Players', 'Factions']) {
-      expect(html).toContain(label)
-    }
-    for (const href of ['href="/"', 'href="/tasks"', 'href="/praxis"', 'href="/leaderboard"', 'href="/factions"']) {
+    const at = ['Home', 'Tasks', 'Praxis', 'Community', 'You'].map((l) => html.indexOf(`>${l}<`))
+    expect(at.every((i) => i > 0)).toBe(true)
+    expect([...at].sort((a, b) => a - b)).toEqual(at)
+    for (const href of ['href="/"', 'href="/tasks"', 'href="/praxis"', 'href="/leaderboard"']) {
       expect(html).toContain(href)
     }
   })
@@ -28,11 +31,24 @@ describe('MobileTabBar', () => {
     expect(render('/')).toContain('height:calc(var(--tab-bar-height) + env(safe-area-inset-bottom))')
   })
 
-  it('marks the active route with the primary-text underline', () => {
-    // NavLink applies the active style only to the matching tab.
-    const activeStyle = 'border-top:2px solid var(--color-text-primary)'
-    const onTasks = render('/tasks')
-    expect((onTasks.match(/border-top:2px solid var\(--color-text-primary\)/g) || []).length).toBe(1)
-    expect(onTasks).toContain(activeStyle)
+  it('gives every glyph its own gradient id', () => {
+    const ids = [...render('/').matchAll(/<linearGradient id="([^"]+)"/g)].map((m) => m[1])
+    expect(ids).toHaveLength(4)
+    expect(new Set(ids).size).toBe(4)
+  })
+
+  it('lights one tab: solid glyph at full strength, hairline over it', () => {
+    const html = render('/tasks')
+    expect(html.match(/aria-current="page"/g)).toHaveLength(1)
+    expect(html.match(/opacity:0\.72/g)).toHaveLength(3)
+    expect(html).toContain('left:calc(30% - 14px)')
+  })
+
+  it('marks Community active on either of its routes', () => {
+    expect(activeTab('/leaderboard', false)).toBe(3)
+    expect(activeTab('/factions', false)).toBe(3)
+    expect(activeTab('/factions/snide', false)).toBe(3)
+    expect(activeTab('/tasks/4', true)).toBe(4)
+    expect(activeTab('/settings', false)).toBe(-1)
   })
 })

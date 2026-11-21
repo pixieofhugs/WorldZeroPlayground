@@ -93,7 +93,6 @@ src/components/invitation/SingularityInvitationLetter.tsx
 src/components/invitation/SnideInvitationLetter.tsx
 src/components/invitation/UaInvitationLetter.tsx
 src/components/invitation/WowInvitationLetter.tsx
-src/components/layout/MobileHeader.tsx
 src/components/layout/MobileTabBar.tsx
 src/components/layout/Sidebar.tsx
 src/components/layout/WatercolorBackground.tsx

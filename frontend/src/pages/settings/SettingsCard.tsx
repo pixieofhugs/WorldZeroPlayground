@@ -22,7 +22,7 @@ const card: CSSProperties = {
   background: 'var(--color-bg-surface)',
   backdropFilter: 'blur(var(--card-blur))',
   // Clears the sticky NavBar.
-  scrollMarginTop: 'calc(var(--navbar-h, 56px) + var(--space-sm))',
+  scrollMarginTop: 'calc(var(--navbar-h, 56px) + env(safe-area-inset-top) + var(--space-sm))',
 }
 
 export default function SettingsCard({

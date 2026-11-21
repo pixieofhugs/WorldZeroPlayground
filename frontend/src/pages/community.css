@@ -1,0 +1,5 @@
+/* The phone Community header (#3761): shared title and a full-width Players | Factions rail. */
+.community-head { padding-top: var(--space-xs); }
+.community-title { margin: 0 0 var(--space-md); font-family: var(--font-display); font-style: italic; font-weight: 500; line-height: 1.1; font-size: var(--text-heading); color: var(--color-text-primary); }
+.community-switch .filter-rail { width: 100%; flex-wrap: nowrap; }
+.community-switch .filter-rail__segment { flex: 1 1 0; }

@@ -90,40 +90,32 @@ function view(overrides: Partial<React.ComponentProps<typeof FactionsDirectoryVi
   )
 }
 
-function stripeBar(html: string): string {
-  const start = html.indexOf('data-testid="faction-stripe-bar"')
-  expect(start, 'stripe bar rendered').toBeGreaterThan(-1)
-  return html.slice(start, html.indexOf('</div>', start))
-}
 
-describe('mobile factions directory — stripe/card correspondence (#743)', () => {
-  it('draws exactly one stripe per rendered card, na dropped', () => {
+describe('mobile factions directory — cards (#743)', () => {
+  it('draws one card per faction, na dropped', () => {
     const { html } = view()
-    const stripes = (stripeBar(html).match(/<span/g) ?? []).length
     // One CTA button per card is the only <button on the page.
     const cards = (html.match(/<button/g) ?? []).length
 
-    expect(stripes, 'six stripes').toBe(6)
     expect(cards, 'six cards').toBe(6)
-    expect(stripes, 'stripe N == card N').toBe(cards)
   })
 
   it('keeps rainbow order, not desktop member-first sort', () => {
     const { html } = view()
-    const bar = stripeBar(html)
+    const bar = html
     // Coven (member) would float first under a member-first sort. Ephemerists
     // sit before S.N.I.D.E. since their hue moved to gold (#2078).
     const order = ['everymen', 'ua', 'ephemerists', 'snide', 'singularity', 'coven']
-    const positions = order.map((slug) => bar.indexOf(`--faction-${slug}`))
+    const positions = order.map((slug) => bar.indexOf(`faction-${slug}`))
     for (const [index, pos] of positions.entries()) {
       expect(pos, `${order[index]} present in bar`).toBeGreaterThan(-1)
     }
     const sorted = [...positions].sort((a, b) => a - b)
     expect(positions, 'stripes ascend in rainbow order').toEqual(sorted)
     expect(
-      bar.indexOf('--faction-coven'),
+      bar.indexOf('faction-coven'),
       'the member faction is not floated to the front',
-    ).toBeGreaterThan(bar.indexOf('--faction-everymen'))
+    ).toBeGreaterThan(bar.indexOf('faction-everymen'))
   })
 })
 
@@ -177,13 +169,13 @@ describe('mobile factions directory — states (#743)', () => {
 
 /** The container: only proves it wires the view's chrome up. */
 describe('mobile factions directory — the container', () => {
-  it('renders the heading and the unaffiliated banner', () => {
+  it('renders the unaffiliated banner, no title of its own (Community owns it)', () => {
     const { text } = render(
       <DefaultFactionsDirectory
         state={{ factions: [], factionPage: null, loading: true, error: null }}
       />,
     )
-    expect(text).toContain('Factions')
+    expect(text).not.toContain('Factions')
     expect(text).toContain('Unaffiliated')
   })
 })

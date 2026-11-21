@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next'
  * (#3304). On a phone the fixed `MobileTabBar` sits over the bottom edge, so the
  * footer carries `--tab-bar-clearance` itself (the page region no longer does).
  *
- * Chrome only — see {@link MobileHeader} for why the shells no longer wrap the
+ * Chrome only — see {@link ShellContent} for why the shells no longer wrap the
  * page (#1116).
  */
 export default function SiteFooter({ isMobile = false }: { isMobile?: boolean }) {

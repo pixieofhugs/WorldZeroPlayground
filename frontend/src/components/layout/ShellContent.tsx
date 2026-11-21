@@ -22,14 +22,18 @@ interface ShellContentProps {
 }
 
 /** Full-bleed on the phone; `SiteFooter` (after this region) carries the tab-bar clearance (#3304). */
-const MOBILE_REGION = 'flex-1 relative px-4 py-4'
+const MOBILE_REGION = 'flex-1 relative px-4 pb-4'
 /**
  * Centred content column (Style Guide §4.1, #1562). `--shell-max-width` is
  * shared with `NavBar`. `pb-[72px]` is arbitrary: the --space-* ramp skips 72.
  */
 const DESKTOP_REGION = 'flex-1 relative max-w-[var(--shell-max-width)] mx-auto w-full pt-8 px-10 pb-[72px]'
 
-const MOBILE_REGION_STYLE: CSSProperties = { zIndex: 5 }
+// No top bar on the phone (#3761): the region itself clears the status bar.
+const MOBILE_REGION_STYLE: CSSProperties = {
+  zIndex: 5,
+  paddingTop: 'calc(var(--space-lg) + env(safe-area-inset-top))',
+}
 const DESKTOP_REGION_STYLE: CSSProperties = { zIndex: 5 }
 
 /**

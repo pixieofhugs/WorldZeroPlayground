@@ -13,7 +13,6 @@ import NavBar from './NavBar'
 import { flushPendingCasts } from './vote/pendingCasts'
 import { characterRedirectTarget } from './layout/characterOnboardingGate'
 import { markOnboardingHandoff, onboardingHandoffPending } from '../utils/onboardingResume'
-import MobileHeader from './layout/MobileHeader'
 import MobileTabBar from './layout/MobileTabBar'
 import ShellContent from './layout/ShellContent'
 import SiteFooter from './layout/SiteFooter'
@@ -81,7 +80,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       {/* Singularity's perk (#1869): renders nothing, speaks in the console. */}
       <TheArray />
 
-      {isMobile ? <MobileHeader /> : <NavBar />}
+      {!isMobile && <NavBar />}
       <ShellContent
         isMobile={isMobile}
         sidebarCollapsed={sidebarCollapsed}

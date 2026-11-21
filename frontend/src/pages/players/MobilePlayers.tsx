@@ -1,5 +1,6 @@
 import { useMemo, useState, type CSSProperties } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { sideHref } from '../communitySide'
 import { useTranslation } from 'react-i18next'
 import FactionAvatar from '../../components/avatar/FactionAvatar'
 import FactionSigil from '../../components/sigil/FactionSigil'
@@ -52,10 +53,10 @@ export default function MobilePlayers({
   latest,
 }: PlayersViewProps) {
   const { t } = useTranslation('common')
+  const navigate = useNavigate()
   const [filters, setFilters] = useState<PlayersFilters>(PLAYERS_FILTERS_DEFAULT)
   const [visible, setVisible] = useState(ROSTER_PAGE_STEP)
   const [raceOpen, setRaceOpen] = useState(true)
-  const [allLanes, setAllLanes] = useState(false)
   const [rosterOpen, setRosterOpen] = useState(true)
 
   const podium = ranked.slice(0, PODIUM_SIZE)
@@ -65,33 +66,15 @@ export default function MobilePlayers({
     [ranked, filters, related],
   )
   const view = rosterView(roster, visible, myCharId)
-  const lanes = allLanes ? standings : standings.slice(0, RACE_PREVIEW)
+  const lanes = standings.slice(0, RACE_PREVIEW)
   const hiddenLanes = standings.length - RACE_PREVIEW
 
   return (
     <div className="py-4" data-testid="mobile-players-directory">
-      <p className="label-heading">{eyebrow}</p>
-      <div className="flex items-end justify-between" style={{ marginTop: 'var(--space-xs)' }}>
-        <h1
-          className="font-display italic font-medium leading-tight"
-          style={{ fontSize: 'var(--text-heading)', color: 'var(--color-text-primary)' }}
-        >
-          {t('leaderboard.title')}
-        </h1>
+      <div className="flex items-center justify-between" style={{ gap: 'var(--space-md)' }}>
+        <p className="label-heading">{eyebrow}</p>
         <ScoreToggle mode={scoreMode} onChange={onScoreMode} fontSize="var(--text-md)" />
       </div>
-      {/* No PageTitle underline on the phone, so this is the only spectrum (#1699). */}
-      <span
-        aria-hidden
-        style={{
-          display: 'block',
-          marginTop: 'var(--space-sm)',
-          width: 100,
-          height: 3,
-          borderRadius: 2,
-          background: 'var(--faction-default-rainbow)',
-        }}
-      />
 
       <div style={{ marginTop: 'var(--space-lg)' }}>
         {podium.map((row, index) => (
@@ -137,7 +120,7 @@ export default function MobilePlayers({
             {hiddenLanes > 0 && (
               <button
                 type="button"
-                onClick={() => setAllLanes(!allLanes)}
+                onClick={() => navigate(sideHref('factions'), { replace: true })}
                 className="font-body text-left"
                 style={{
                   marginTop: 'var(--space-sm)',
@@ -149,9 +132,7 @@ export default function MobilePlayers({
                   cursor: 'pointer',
                 }}
               >
-                {allLanes
-                  ? t('leaderboard.race.fewer')
-                  : t('leaderboard.race.more', { count: hiddenLanes })}
+                {t('leaderboard.race.more', { count: hiddenLanes })}
               </button>
             )}
           </div>

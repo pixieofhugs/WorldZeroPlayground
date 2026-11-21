@@ -74,8 +74,7 @@
       "heading": "Faction Points",
       "share": "{{share}}%",
       "more_one": "{{count}} more faction",
-      "more_other": "{{count}} more factions",
-      "fewer": "Show fewer"
+      "more_other": "{{count}} more factions"
     },
     "roster": {
       "heading": "Players",
@@ -213,9 +212,16 @@
     "updates": "Updates",
     "updatesWithPending_one": "Updates — {{count}} pending request",
     "updatesWithPending_other": "Updates — {{count}} pending requests",
-    "bell": "Requests — nothing waiting on you",
-    "bellWithPending_one": "Requests — {{count}} waiting on you",
-    "bellWithPending_other": "Requests — {{count}} waiting on you",
+    "primary": "Main",
+    "community": "Community",
+    "you": "You",
+    "youWithPending_one": "You — {{count}} request waiting on you",
+    "youWithPending_other": "You — {{count}} requests waiting on you",
+    "youRequests_one": "{{count}} request waiting on you",
+    "youRequests_other": "{{count}} requests waiting on you",
+    "youMeta": "Level {{level}} · {{faction}}",
+    "youProfile": "Your profile",
+    "youClose": "Close",
     "createCharacter": "create character",
     "login": "Login"
   },
@@ -476,6 +482,7 @@
         "sessionHint": "A yes-or-no note that you were signed in last visit, so the likely page can start loading sooner. Never used to decide what you are shown.",
         "adminMode": "Whether a moderator left the admin view switched on.",
         "sidebarCollapsed": "Whether the side rail is folded away.",
+        "communitySide": "Whether the phone's Community tab opens Players or Factions.",
         "sidebarPanels": "The order of the side rail's panels and which are folded. One entry for each account signed in on this browser.",
         "factionSections": "Which galleries on a faction page you left folded. One entry for each account signed in on this browser.",
         "profileSections": "Which galleries on a character profile you left folded. One entry for each account signed in on this browser.",

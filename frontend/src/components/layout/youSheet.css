@@ -1,0 +1,14 @@
+/* The You sheet (#3761). Root-drawn (#1591): scrim 39, sheet 40; both stop above the tab bar, which stays live. */
+.you-scrim { position: fixed; top: 0; left: 0; right: 0; bottom: var(--tab-bar-clearance); z-index: 39; border: 0; padding: 0; background: var(--color-overlay-strong); cursor: pointer; }
+.you-sheet { position: fixed; left: 0; right: 0; bottom: var(--tab-bar-clearance); z-index: 40; box-sizing: border-box; max-height: calc(100vh - var(--tab-bar-clearance) - var(--space-3xl)); overflow-y: auto; padding: var(--space-md) var(--space-lg) var(--space-sm); background: var(--color-bg-page); border-radius: 22px 22px 0 0; box-shadow: 0 -12px 34px var(--color-cast-shadow); }
+.you-grab { display: block; width: 38px; height: 4px; border-radius: 999px; background: var(--color-border-strong); margin: var(--space-xs) auto var(--space-lg); }
+.you-head { display: flex; align-items: center; gap: var(--space-md); padding-bottom: var(--space-md); border-bottom: 1px solid var(--color-border); }
+.you-name { font-family: var(--font-display); font-style: italic; font-size: var(--text-title); color: var(--color-text-primary); }
+.you-meta { font-size: var(--text-lg); color: var(--color-text-secondary); }
+.you-row { display: flex; align-items: center; gap: var(--space-md); width: 100%; min-height: 56px; box-sizing: border-box; padding: var(--space-sm) var(--space-xs); border: 0; border-bottom: 1px solid var(--color-border); background: none; font-family: var(--font-body); font-size: var(--text-content); color: var(--color-text-primary); text-align: left; text-decoration: none; cursor: pointer; }
+.you-row__text { flex: 1; min-width: 0; }
+.you-row__sub { display: block; font-size: var(--text-lg); color: var(--color-text-secondary); }
+.you-row > [aria-hidden="true"]:last-child:not(.mod-switch) { color: var(--color-text-tertiary); }
+.you-group { padding: var(--space-lg) var(--space-xs) var(--space-xs); font-size: var(--text-lg); letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-text-secondary); }
+.you-row.mod-item { margin: 0; align-items: center; }
+.you-row .mod-switch { margin-top: 0; }

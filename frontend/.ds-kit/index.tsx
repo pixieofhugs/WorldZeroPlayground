@@ -187,7 +187,6 @@ export { default as MetataskPicker } from "../src/components/metataskSeal/Metata
 export { default as MetataskRemoveConfirm } from "../src/components/metataskSeal/MetataskRemoveConfirm";
 export { default as MetataskSeal } from "../src/components/metataskSeal/MetataskSeal";
 export { MetataskSealStack } from "../src/components/metataskSeal/MetataskSealStack";
-export { default as MobileHeader } from "../src/components/layout/MobileHeader";
 export { default as MobilePlayers } from "../src/pages/players/MobilePlayers";
 export { MobileStickyBar } from "../src/pages/factionDetail/MobileStickyBar";
 export { default as MobileTabBar } from "../src/components/layout/MobileTabBar";
