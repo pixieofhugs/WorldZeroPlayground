@@ -33,7 +33,7 @@ from services.nudge import latest_nudge_at
 from services.vote_tally import get_tally, tally_votes
 from services.era import get_current_era_row, get_or_create_stats
 from services.era_gates import may_create_duel
-from services.praxis import get_praxis
+from services.praxis import _lock_signups_for_character, get_praxis
 from services.praxis_duel import get_duel_for_praxis
 from services.push import notify_duel_challenge
 from services.signup_eligibility import (
@@ -322,6 +322,14 @@ async def respond_to_duel_challenge(
 ) -> tuple[Optional[Praxis], Duel]:
     """Accept (create opponent praxis, → active) or decline (→ declined).
     Returns (opponent_praxis_or_None, duel)."""
+    # Signup lock before the duel row lock (#3655): peek unlocked, lock, reload.
+    peek = await get_duel(duel_id, session)
+    if (
+        accept
+        and peek.opponent_character_id == character_id
+        and peek.status == DuelStatus.pending
+    ):
+        await _lock_signups_for_character(character_id, session)
     duel = await get_duel(duel_id, session, lock=True)
 
     if duel.opponent_character_id != character_id:
