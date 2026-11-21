@@ -3,8 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { apiGet, apiPut } from '../../../api/client'
 import InstallIphoneSteps from '../../../components/install/InstallIphoneSteps'
 import { useFormFactor } from '../../../hooks/useFormFactor'
-import { isIphoneSafari, isStandalone } from '../../../utils/installPrompt'
-import { deviceSubscribed, subscribePush } from '../../../utils/pushSubscribe'
+import { deviceSubscribed, pushBlock, subscribePush, type PushState } from '../../../utils/pushSubscribe'
 import { extractError } from '../../../utils/errors'
 import type { SettingsSectionProps } from '../../Settings'
 import '../pushBlocked.css'
@@ -34,7 +33,7 @@ import {
 
 /** Shared cell width so rows align under the captions (wider than a switch). */
 const CELL: CSSProperties = {
-  width: 'var(--space-5xl)',
+  width: 'var(--space-6xl)',
   display: 'flex',
   justifyContent: 'center',
 }
@@ -70,9 +69,6 @@ const STATUS_LINE: CSSProperties = {
 }
 
 const AXES: readonly PrefAxis[] = ['on_updates', 'by_email', 'by_push']
-
-/** Why Push cannot turn on, or 'ok'. Priority: server, then device, then browser. */
-export type PushState = 'ok' | 'keys' | 'ios' | 'denied'
 
 const AXIS_NAME = {
   on_updates: ['columnPage', 'allPageName', 'rowPageName'],
@@ -346,13 +342,8 @@ export default function NotificationsSection({ sectionId }: SettingsSectionProps
     }
   }
 
-  const push: PushState = !vapidKey
-    ? 'keys'
-    : isIphoneSafari() && !isStandalone()
-      ? 'ios'
-      : denied
-        ? 'denied'
-        : 'ok'
+  const block = pushBlock(vapidKey)
+  const push: PushState = block === 'ok' && denied ? 'denied' : block
 
   const deviceOff = push === 'ok' && !subscribed
 
@@ -367,7 +358,7 @@ export default function NotificationsSection({ sectionId }: SettingsSectionProps
         }
         if (result === 'dismissed') return
         if (result === 'unsupported') {
-          setError(t('settings.notifications.push.unsupported'))
+          setError(t('settings.notifications.push.unsupported.note'))
           return
         }
         setSubscribed(true)

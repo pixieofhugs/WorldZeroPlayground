@@ -14,10 +14,12 @@ const m = vi.hoisted(() => ({
   subscribe: vi.fn(),
   subscribed: vi.fn(),
 }))
+
 vi.mock('../../../api/client', () => ({ apiGet: m.get, apiPut: m.put }))
 vi.mock('../../../utils/pushSubscribe', () => ({
   subscribePush: m.subscribe,
   deviceSubscribed: m.subscribed,
+  pushBlock: () => 'ok',
 }))
 
 import NotificationsSection, { NotificationRows } from '../sections/NotificationsSection'
@@ -69,6 +71,13 @@ describe('an unsubscribed device', () => {
     await tap()
     await waitFor(() => expect(m.subscribe).toHaveBeenCalled())
     await new Promise((r) => setTimeout(r, 0))
+    expect(m.put).not.toHaveBeenCalled()
+  })
+
+  it('a subscribe that rejects says push failed and saves nothing', async () => {
+    m.subscribe.mockRejectedValue(new Error('service worker not ready'))
+    await tap()
+    expect((await screen.findByRole('alert')).textContent).toMatch(/couldn’t turn on push/i)
     expect(m.put).not.toHaveBeenCalled()
   })
 

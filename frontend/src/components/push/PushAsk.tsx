@@ -8,7 +8,11 @@ import { deviceSubscribed, pushBlock, subscribePush } from '../../utils/pushSubs
 import { dismissPushAsk, pushAskDismissed } from '../../utils/pushAskDismissed'
 import './pushAsk.css'
 
-/** The rows the card's copy promises: someone rates, comments, or calls you out. */
+/**
+ * The rows the card's copy promises: someone rates, comments, or calls you out. This turns
+ * `vote_on_mine` push on against its default (#3704): the player just said yes to "know when
+ * someone rates this", so the default no longer applies.
+ */
 const ASKED_ROWS = ['vote_on_mine', 'comment_on_mine', 'comment_mention']
 
 /** One-time "want to know when someone rates this?" under a player's first praxis (#3704). */

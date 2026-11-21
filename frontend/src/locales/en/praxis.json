@@ -20,7 +20,7 @@
     },
     "filter": {
       "showLabel": "Show",
-      "searchPlaceholder": "Search proof, task, or player…",
+      "searchPlaceholder": "Proof, task or player…",
       "searchLabel": "Search praxis",
       "all": "Every praxis",
       "needsMyVote": "Needs my vote",

@@ -1,16 +1,13 @@
 /* The console's list pattern (#3668): toolbar over a table, a row opens a side panel. Lazy, with the admin chunk. */
-.adm-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--space-sm); }
 .adm-h1 { margin: 0; font-family: var(--font-display); font-size: var(--text-heading); font-weight: 700; }
 .adm-lede { margin: var(--space-xs) 0 0; color: var(--color-text-secondary); font-size: var(--text-xl); }
 .adm-muted { color: var(--color-text-secondary); font-size: var(--text-xl); }
 .adm-card { background: var(--color-bg-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); }
-.adm-btns { display: flex; flex-wrap: wrap; gap: var(--space-xs); align-items: center; }
 .adm-btn { font-family: inherit; font-size: var(--text-xl); font-weight: 600; min-height: 44px; padding: 0 var(--space-md); border-radius: var(--radius-md); border: 1px solid var(--color-border-strong); background: transparent; color: var(--color-text-primary); display: inline-flex; align-items: center; gap: var(--space-xs); cursor: pointer; text-decoration: none; }
 .adm-btn:disabled { opacity: 0.5; cursor: default; }
 .adm-btn-pri { background: var(--color-text-primary); color: var(--color-bg-page); border-color: var(--color-text-primary); }
 .adm-btn-dng { border-color: var(--color-danger-ring); color: var(--color-danger); }
 
-.adm-toolbar { display: flex; flex-wrap: wrap; gap: var(--space-xs); align-items: center; }
 .adm-search { flex: 1 1 280px; display: flex; }
 .adm-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .adm-input { font-family: inherit; font-size: var(--text-content); color: var(--color-text-primary); background: var(--color-bg-page); border: 1px solid var(--color-border-strong); border-radius: var(--radius-md); min-height: 44px; box-sizing: border-box; padding: 0 var(--space-sm); width: 100%; }
@@ -26,7 +23,6 @@
 .adm-chip-pop { position: absolute; top: 100%; left: 0; z-index: 2; margin-top: var(--space-xs); display: flex; gap: var(--space-xs); padding: var(--space-sm); background: var(--color-bg-surface); border: 1px solid var(--color-border-strong); border-radius: var(--radius-md); }
 .adm-chip-pop .adm-input { width: 6rem; }
 
-.adm-split { display: flex; flex-wrap: wrap; gap: var(--space-lg); align-items: flex-start; }
 .adm-split-main { flex: 999 1 560px; min-width: 0; overflow-x: auto; }
 .adm-split-side { flex: 1 1 300px; max-width: 380px; padding: var(--space-lg); display: flex; flex-direction: column; gap: var(--space-md); }
 .adm-tbl { width: 100%; border-collapse: collapse; }
@@ -44,7 +40,6 @@
 .adm-tag-bad { color: var(--color-danger); }
 .adm-warn { margin: 0; padding: var(--space-sm) var(--space-md); border: 1px solid var(--color-warning-edge); background: var(--color-warning-veil); border-radius: var(--radius-md); font-size: var(--text-xl); }
 .adm-err { margin: 0; color: var(--color-danger); font-size: var(--text-xl); }
-.adm-field { display: flex; flex-direction: column; gap: var(--space-xs); font-size: var(--text-lg); font-weight: 600; color: var(--color-text-secondary); }
 .adm-fields3 { display: grid; grid-template-columns: 1fr 1fr 2fr; gap: var(--space-xs); }
 .adm-panel-top { display: flex; justify-content: space-between; align-items: center; gap: var(--space-xs); }
 

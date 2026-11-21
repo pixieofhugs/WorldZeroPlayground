@@ -53,6 +53,11 @@ describe('pushMessage', () => {
     expect(m.options.data.url).toBe('/praxis/7')
     expect(m.options.body).not.toMatch(/vote/i)
   })
+  it('collapses several mentions', () => {
+    const m = pushMessage({ kind: 'comment_mention', character: 'X', actor: 'Juniper', task: 'Find a Cool Stick', count: 3 }, S)
+    expect(m.options.body).toContain('3 new mentions')
+    expect(m.options.body).toContain('Juniper and 2 more mentioned you on Find a Cool Stick.')
+  })
   it('falls back for a missing actor, task or unknown kind', () => {
     const m = pushMessage({ kind: 'nope', url: '/', character: 'X', actor: null, task: null, count: null }, S)
     expect(m.options.body).toBe('Something happened\nOpen World Zero to see.')
@@ -75,6 +80,7 @@ describe('focusOrOpen', () => {
     const clients = { matchAll: async () => [c], openWindow: vi.fn() }
     await focusOrOpen(clients, '/tasks')
     expect(c.navigate).toHaveBeenCalledWith('/tasks')
+    expect(c.navigate.mock.invocationCallOrder[0]).toBeLessThan(c.focus.mock.invocationCallOrder[0])
     expect(clients.openWindow).not.toHaveBeenCalled()
   })
   it('opens a window when none is open or navigate is refused', async () => {

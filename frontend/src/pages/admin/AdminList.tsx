@@ -33,7 +33,7 @@ export function ListToolbar({
   children?: ReactNode
 }) {
   return (
-    <div className="adm-toolbar" role="toolbar" aria-label={label}>
+    <div className="adm-btns" role="toolbar" aria-label={label}>
       <label className="adm-search">
         <span className="adm-sr">{search.label}</span>
         <input

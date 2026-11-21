@@ -124,8 +124,8 @@ function PraxisReport({
         </div>
       </div>
 
-      <hr className="rp-rule" />
-      <div className="rp-btns rp-decide" role="group" aria-label={t('console.reports.decision.label')}>
+      <hr className="adm-rule" />
+      <div className="adm-btns rp-decide" role="group" aria-label={t('console.reports.decision.label')}>
         <button type="button" className="rp-btn" onClick={() => void act('visible')}>
           {t('console.reports.decision.keep')}
         </button>
@@ -157,7 +157,7 @@ function PraxisReport({
           if (deciding) void act(deciding, reason.trim()).then(cancel, () => {})
         }}
       >
-        <label className="rp-field">
+        <label className="adm-field">
           {t('console.reports.decision.reasonLabel')}
           <input
             ref={reasonRef}
@@ -168,7 +168,7 @@ function PraxisReport({
           />
         </label>
         {deciding && (
-          <div className="rp-btns">
+          <div className="adm-btns">
             <button type="submit" className="rp-btn rp-btn-dng" disabled={!reason.trim()}>
               {t(deciding === 'hidden' ? 'console.reports.decision.submitRemove' : 'console.reports.decision.submitFail')}
             </button>
@@ -179,7 +179,7 @@ function PraxisReport({
         )}
       </form>
 
-      <hr className="rp-rule" />
+      <hr className="adm-rule" />
       <AuthorRow
         praxis={praxis}
         confirming={confirming}
@@ -228,7 +228,7 @@ function CommentReport({
           {t('console.reports.viewThread')}
         </Link>
       </div>
-      <div className="rp-btns rp-decide">
+      <div className="adm-btns rp-decide">
         <button type="button" className="rp-btn" onClick={() => void act('visible')}>
           {t('console.reports.decision.keep')}
         </button>
@@ -250,7 +250,7 @@ function CommentReport({
             void act('deleted', reason.trim()).then(cancel, () => {})
           }}
         >
-          <label className="rp-field">
+          <label className="adm-field">
             {t('console.reports.decision.reasonLabel')}
             <input
               className="rp-input"
@@ -260,7 +260,7 @@ function CommentReport({
               onChange={(event) => setReason(event.target.value)}
             />
           </label>
-          <div className="rp-btns">
+          <div className="adm-btns">
             <button type="submit" className="rp-btn rp-btn-dng" disabled={!reason.trim()}>
               {t('console.reports.decision.submitRemove')}
             </button>
@@ -300,7 +300,7 @@ function Calm({ last, newestPraxisId }: { last: ModActionOut | undefined; newest
           ? t('console.reports.empty.last', { entry: logLine(last), age: relativeTime(last.created_at) })
           : t('console.reports.empty.none')}
       </span>
-      <div className="rp-btns">
+      <div className="adm-btns">
         {newestPraxisId !== null && (
           <Link to={`/praxis/${newestPraxisId}`} className="rp-btn">
             {t('console.reports.empty.newest')}
@@ -415,7 +415,7 @@ export default function ReportsTab({ onViewAccount }: { onViewAccount: (search: 
 
   return (
     <>
-      <header className="rp-head">
+      <header className="adm-head">
         <div>
           <h1 className="rp-h1">
             {t('console.reports.title')}
@@ -447,10 +447,10 @@ export default function ReportsTab({ onViewAccount }: { onViewAccount: (search: 
         </p>
       )}
       {actionError && <p role="alert" className="rp-error">{actionError}</p>}
-      <div className="rp-split">
+      <div className="adm-split rp-stack">
         <div className="rp-main">{body}</div>
         <aside aria-label={t('console.reports.recent.heading')} className="rp-card rp-side">
-          <h2 className="rp-h2">{t('console.reports.recent.heading')}</h2>
+          <h2 className="adm-h2">{t('console.reports.recent.heading')}</h2>
           {recent.length === 0 && <p className="rp-muted">{t('console.reports.recent.none')}</p>}
           {recent.slice(0, 3).map((entry) => (
             <p key={entry.id} className="rp-entry">

@@ -145,7 +145,7 @@ export default function EraTab() {
 
           {preflight && (
             <>
-              <h2 className="adm-era-h2">{t("console.era.happens")}</h2>
+              <h2 className="adm-h2">{t("console.era.happens")}</h2>
               <ul className="adm-era-list">
                 <li>{t("console.era.effects.characters", { count: preflight.characters_reset, name })}</li>
                 <li>{t("console.era.effects.duels", { count: preflight.duels_frozen })}</li>
@@ -162,10 +162,10 @@ export default function EraTab() {
                 </li>
               </ul>
 
-              <h2 className="adm-era-h2 adm-era-warnh">{t("console.era.check")}</h2>
+              <h2 className="adm-h2 adm-era-warnh">{t("console.era.check")}</h2>
               {warnings.length > 0 ? warnings : <p className="adm-muted">{t("console.era.clear")}</p>}
 
-              <hr className="adm-era-rule" />
+              <hr className="adm-rule" />
               <label className="adm-field" htmlFor={CONFIRM_ID}>
                 <span>
                   <Trans t={t} i18nKey="console.era.type" values={{ name }} components={{ 1: <span className="adm-era-name" /> }} />

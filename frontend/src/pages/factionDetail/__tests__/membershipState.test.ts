@@ -1,6 +1,5 @@
 /**
  * The status → MembershipState mapping (#1305). `"defected"` (no rejoin this
-import { ErrorCode } from '../../../utils/errors'
  * era) must map to `burned`, not the soft "keep doing tasks" `gate`, which is
  * right only for "not invited yet" (#454).
  */
