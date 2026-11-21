@@ -251,6 +251,7 @@ export function makePraxis(overrides: Partial<PraxisOut> = {}): PraxisOut {
     flagged_at: null,
     submitted_at: NOW,
     submit_proposed_at: null,
+    room_generation: 0,
     created_by_id: 7,
     created_by_display_name: 'Ada Reed',
     created_by_avatar_url: '',

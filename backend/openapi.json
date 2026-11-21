@@ -3201,6 +3201,10 @@
             "title": "Points From Votes",
             "type": "integer"
           },
+          "room_generation": {
+            "title": "Room Generation",
+            "type": "integer"
+          },
           "score": {
             "title": "Score",
             "type": "number"
@@ -3309,6 +3313,7 @@
           "flagged_at",
           "submitted_at",
           "submit_proposed_at",
+          "room_generation",
           "created_by_id",
           "created_by_display_name",
           "created_by_avatar_url",
@@ -5987,6 +5992,10 @@
             "title": "Points From Votes",
             "type": "integer"
           },
+          "room_generation": {
+            "title": "Room Generation",
+            "type": "integer"
+          },
           "score": {
             "title": "Score",
             "type": "number"
@@ -6095,6 +6104,7 @@
           "flagged_at",
           "submitted_at",
           "submit_proposed_at",
+          "room_generation",
           "created_by_id",
           "created_by_display_name",
           "created_by_avatar_url",

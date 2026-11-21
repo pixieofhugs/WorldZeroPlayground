@@ -68,6 +68,7 @@ function praxis(overrides: Partial<PraxisOut> = {}): PraxisOut {
     score: 47.4,
     status: 'submitted',
     submit_proposed_at: null,
+    room_generation: 0,
     submitted_at: '2026-08-14T09:00:00Z',
     task_faction_slug: null,
     task_id: 101,

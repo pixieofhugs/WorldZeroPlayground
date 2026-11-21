@@ -95,6 +95,7 @@ class PraxisOut(WireModel):
     flagged_at: Optional[datetime]
     submitted_at: Optional[datetime] = None  # set on in_progress→submitted
     submit_proposed_at: Optional[datetime] = None  # collab pending-publish window opened-at (ADR-0012)
+    room_generation: int  # keys the browser's offline room store (#3644)
     created_by_id: int
     created_by_display_name: str  # populated by build_praxis_out
     # Relative media path or "" (monogram fallback) (#2106).

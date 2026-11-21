@@ -41,6 +41,7 @@ from services.praxis import (
     submit_praxis,
     unsubmit_praxis,
 )
+from services.praxis_out import build_praxis_out
 from services.praxis_room import (
     ROOM_BODY_KEY,
     ROOM_META_KEY,
@@ -1166,6 +1167,21 @@ async def test_withdrawing_a_proposal_has_the_same_effect_as_an_edit(
             await _wait_for_body(
                 rooms.room_doc(collab.id), f"withdrawn {SEED_BODY}", "the room"
             )
+
+
+async def test_unsubmit_after_publish_carries_a_newer_room_generation(
+    db_session, collab, character, character2, monkeypatch
+) -> None:
+    """#3644: a browser's offline copy is told apart from the reseed by this."""
+    async with running_rooms(db_session, monkeypatch):
+        before = collab.room_generation
+        await submit_praxis(collab.id, character.id, db_session)
+        await submit_praxis(collab.id, character2.id, db_session)
+        reopened = await unsubmit_praxis(collab.id, character2.id, db_session)
+
+        assert reopened.room_generation == before + 1
+        out = await build_praxis_out(reopened, db_session, viewer=character2)
+        assert out.room_generation == before + 1
 
 
 async def test_publishing_discards_the_document_and_keeps_the_body(
