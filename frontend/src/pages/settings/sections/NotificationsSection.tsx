@@ -4,7 +4,7 @@ import { apiGet, apiPut } from '../../../api/client'
 import InstallIphoneSteps from '../../../components/install/InstallIphoneSteps'
 import { useFormFactor } from '../../../hooks/useFormFactor'
 import { isIphoneSafari, isStandalone } from '../../../utils/installPrompt'
-import { subscribePush } from '../../../utils/pushSubscribe'
+import { deviceSubscribed, subscribePush } from '../../../utils/pushSubscribe'
 import { extractError } from '../../../utils/errors'
 import type { SettingsSectionProps } from '../../Settings'
 import '../pushBlocked.css'
@@ -24,7 +24,7 @@ import {
 } from '../notificationPrefs'
 
 /**
- * Notifications (#1047): nine events, two switches each, PER ACCOUNT. Rules live
+ * Notifications (#1047): ten rows, three switches each (Page, Email, Push), PER ACCOUNT. Rules live
  * in `../notificationPrefs.ts` (see there for what each axis means); this file
  * is fetch, save and markup. The email-pending line is what keeps the Email
  * column honest (#1263): do NOT delete it, and do not fake a send.
@@ -177,11 +177,14 @@ export function NotificationRows({
   onToggle,
   onToggleAll,
   push = 'ok',
+  deviceOff = false,
 }: {
   readonly prefs: NotificationPrefs
   readonly onToggle: (key: string, axis: PrefAxis) => void
   readonly onToggleAll: (axis: PrefAxis) => void
   readonly push?: PushState
+  /** Push is allowed but this device isn't subscribed: draw Push off, leave it tappable. */
+  readonly deviceOff?: boolean
 }) {
   const { t } = useTranslation('common')
   const rows = rowsFor(prefs)
@@ -205,7 +208,7 @@ export function NotificationRows({
         )}
         <div style={stacked || !caption ? undefined : CELL}>
           <SettingsSwitch
-            checked={blocked ? false : props.checked}
+            checked={blocked || (deviceOff && axis === 'by_push') ? false : props.checked}
             disabled={props.locked || blocked}
             describedById={blocked ? PUSH_NOTE_ID : props.describedById}
             label={blocked ? t(`settings.notifications.push.${push}.label`) : props.label}
@@ -302,6 +305,7 @@ export default function NotificationsSection({ sectionId }: SettingsSectionProps
   const [prefs, setPrefs] = useState<NotificationPrefs | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [vapidKey, setVapidKey] = useState<string | null>(null)
+  const [subscribed, setSubscribed] = useState(true)
   const [denied, setDenied] = useState(
     () => typeof Notification !== 'undefined' && Notification.permission === 'denied',
   )
@@ -314,6 +318,10 @@ export default function NotificationsSection({ sectionId }: SettingsSectionProps
           setPrefs(data.events)
           setVapidKey(data.vapid_public_key ?? null)
         }
+        return data.vapid_public_key ? deviceSubscribed().catch(() => false) : true
+      })
+      .then((on) => {
+        if (live) setSubscribed(on)
       })
       .catch((err) => {
         if (live) setError(extractError(err, t('settings.notifications.loadError')))
@@ -344,14 +352,23 @@ export default function NotificationsSection({ sectionId }: SettingsSectionProps
         ? 'denied'
         : 'ok'
 
+  const deviceOff = push === 'ok' && !subscribed
+
   /** The browser's yes comes first; a no leaves the switch off and shows the blocked state. */
   async function toggle(next: NotificationPrefs, turningOn: boolean) {
     if (turningOn && vapidKey) {
       try {
-        if ((await subscribePush(vapidKey)) === 'denied') {
+        const result = await subscribePush(vapidKey)
+        if (result === 'denied') {
           setDenied(true)
           return
         }
+        if (result === 'dismissed') return
+        if (result === 'unsupported') {
+          setError(t('settings.notifications.push.unsupported'))
+          return
+        }
+        setSubscribed(true)
       } catch (err) {
         setError(extractError(err, t('settings.notifications.saveError')))
         return
@@ -374,12 +391,22 @@ export default function NotificationsSection({ sectionId }: SettingsSectionProps
         <NotificationRows
           prefs={prefs}
           push={push}
-          onToggle={(key, axis) =>
-            void toggle(toggleCell(prefs, key, axis), axis === 'by_push' && !prefs[key].by_push)
-          }
-          onToggleAll={(axis) =>
-            void toggle(setAll(prefs, axis), axis === 'by_push' && !masterChecked(prefs, axis))
-          }
+          deviceOff={deviceOff}
+          onToggle={(key, axis) => {
+            // Drawn off on an unsubscribed device: the tap subscribes and keeps the stored choice.
+            const keep = deviceOff && axis === 'by_push' && prefs[key].by_push
+            void toggle(
+              keep ? prefs : toggleCell(prefs, key, axis),
+              axis === 'by_push' && (deviceOff || !prefs[key].by_push),
+            )
+          }}
+          onToggleAll={(axis) => {
+            const keep = deviceOff && axis === 'by_push' && masterChecked(prefs, axis)
+            void toggle(
+              keep ? prefs : setAll(prefs, axis),
+              axis === 'by_push' && (deviceOff || !masterChecked(prefs, axis)),
+            )
+          }}
         />
       )}
 

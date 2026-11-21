@@ -184,7 +184,7 @@ describe('the rendered card', () => {
     <NotificationRows prefs={DEFAULTS} onToggle={() => {}} onToggleAll={() => {}} />,
   )
 
-  it('draws two switches for each of the ten rows, plus the master pair', () => {
+  it('draws three switches for each of the ten rows, plus the master trio', () => {
     for (const row of NOTIFICATION_ROWS) {
       expect(html).toContain(`data-testid="settings-notifications-${row.key}-on_updates"`)
       expect(html).toContain(`data-testid="settings-notifications-${row.key}-by_email"`)

@@ -412,6 +412,7 @@
       },
       "push": {
         "title": "Push to this phone",
+        "unsupported": "This browser can’t receive push notifications. Try your browser proper, or add World Zero to your home screen.",
         "ios": {
           "when": "IPHONE, NOT ON THE HOME SCREEN",
           "note": "iPhones only deliver notifications to the home-screen app. Put World Zero there first, then open it from the icon.",
