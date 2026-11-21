@@ -5,7 +5,7 @@ import { useAuth } from '../../auth/AuthContext'
 import { relativeTime } from '../../utils/dates'
 import { factionCssVar, factionName, isKnownFaction } from '../../utils/factions'
 import { factionRoleVar, factionRoleVars } from '../../utils/factionRoles'
-import { mediaUrl } from '../../utils/media'
+import FactionAvatar from '../avatar/FactionAvatar'
 import type { ActivityFeedItem } from '../../api/activityFeed'
 import type { PraxisCardOut } from '../../api/praxis'
 import { useSidebarPanels } from '../../hooks/useSidebarPanels'
@@ -684,21 +684,7 @@ export default function Sidebar() {
               className="shrink-0 rounded-full"
               style={{ width: 58, height: 58, padding: 'var(--space-xs)', background: 'var(--rail-spectrum, var(--faction-default-rainbow-conic))' }}
             >
-              {character.avatar_url ? (
-                <img
-                  src={mediaUrl(character.avatar_url)}
-                  alt={character.display_name}
-                  className="w-full h-full rounded-full"
-                  style={{ objectFit: 'cover' }}
-                />
-              ) : (
-                <div
-                  className="w-full h-full rounded-full"
-                  style={{
-                    background: `linear-gradient(135deg, ${factionCssVar(character.faction_slug, 'light')}, ${factionCssVar(character.faction_slug)})`,
-                  }}
-                />
-              )}
+              <FactionAvatar character={character} size={50} badge={false} />
             </div>
             <div className="min-w-0">
               <Link

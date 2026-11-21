@@ -12,6 +12,7 @@ import AlbescentInvitation from '../components/AlbescentInvitation'
 import PraxisCard from '../components/praxisCard/PraxisCard'
 import TaskCard from '../components/taskCard/TaskCard'
 import { mediaUrl } from '../utils/media'
+import FactionAvatar from '../components/avatar/FactionAvatar'
 import { resolveVariant } from '../utils/factionDispatch'
 import { formatPoints } from '../utils/points'
 import { praxisModeLabel } from '../utils/praxis'
@@ -109,11 +110,7 @@ export default function FieldDesk() {
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 'var(--space-sm)' }}>
           {active && lives !== null && (
             <div style={pillStyle}>
-              {active.avatar_url ? (
-                <img src={mediaUrl(active.avatar_url)} alt={active.display_name} style={pillAvatar} />
-              ) : (
-                <span style={{ ...pillAvatar, display: 'inline-block' }} />
-              )}
+              <FactionAvatar character={active} size={22} badge={false} />
               <span style={{ fontSize: 'var(--text-lg)', color: 'var(--color-text-secondary)' }}>
                 @{active.username} ·{' '}
                 <b style={{ color: 'var(--color-text-primary)' }}>
@@ -508,13 +505,6 @@ const pillStyle: CSSProperties = {
   border: '1px solid var(--color-border)',
   borderRadius: 999,
   padding: 'var(--space-xs) var(--space-md) var(--space-xs) var(--space-xs)',
-}
-const pillAvatar: CSSProperties = {
-  width: 22,
-  height: 22,
-  borderRadius: '50%',
-  objectFit: 'cover',
-  background: 'var(--color-bg-surface-alt)',
 }
 // Size comes from .content-title.
 const dossierTitle: CSSProperties = {
