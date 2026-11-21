@@ -33,6 +33,7 @@ vi.mock('../../pages/Admin', () => ({ default: () => <Outlet /> }))
 vi.mock('../../pages/admin/consolePages', () => ({ ReportsPage: () => 'ReportsPage' }))
 vi.mock('../../pages/admin/FactionCopySheet', () => ({ default: () => 'FactionCopySheet' }))
 vi.mock('../../pages/admin/LevelUpCopySheet', () => ({ default: () => 'LevelUpCopySheet' }))
+vi.mock('../../pages/admin/TauntCopySheet', () => ({ default: () => 'TauntCopySheet' }))
 vi.mock('../../pages/CreateCharacter', () => ({ default: () => 'CreateCharacter' }))
 vi.mock('../../pages/ProposeTask', () => ({ default: () => 'ProposeTask' }))
 
@@ -44,6 +45,7 @@ const GUARDED: [path: string, page: string][] = [
   ['/admin/reports', 'ReportsPage'],
   ['/admin/copy/ua', 'FactionCopySheet'],
   ['/admin/level-ups', 'LevelUpCopySheet'],
+  ['/admin/taunts', 'TauntCopySheet'],
   ['/characters/create', 'CreateCharacter'],
   ['/propose-task', 'ProposeTask'],
 ]
