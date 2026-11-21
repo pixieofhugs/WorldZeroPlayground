@@ -33,6 +33,7 @@ from services.character import (
 from services.era import (
     get_closing_era_id,
     get_current_era_row,
+    get_current_era_row_safe,
     get_next_era_row,
     get_or_create_stats,
 )
@@ -73,7 +74,7 @@ def _era_window_condition(
     )
 
 
-async def _deliver_earned_invitations(
+async def deliver_earned_invitations(
     character: Character,
     praxes: list[Praxis],
     contributions: dict[int, Contribution],
@@ -143,6 +144,32 @@ async def _deliver_earned_invitations(
             InvitationLetter(character_id=character.id, faction_slug=slug, era_id=era_row.id)
         )
         await notify_invitation_letter(session, character)
+
+
+async def deliver_invitations_to_all(
+    session: AsyncSession, era: EraConfig = CURRENT_ERA
+) -> None:
+    """Deliver owed letters to every character in the live era, no recalc.
+
+    For a dial that loosened the thresholds (#3735). Idempotent: held letters
+    are skipped. Caller commits.
+
+    ponytail: one scoring pass per character; fine at launch scale (~20
+    players), batch or queue it past a few thousand.
+    """
+    era_row = await get_current_era_row_safe(session)
+    if era_row is None:
+        return
+    within_era = _era_window_condition(era_row, None)
+    for character in (await session.execute(select(Character))).scalars().all():
+        praxes = await _scored_praxes(character.id, within_era, session)
+        stats = await get_or_create_stats(session, character.id, era_row.id)
+        contributions = await compute_contributions(
+            praxes, character, era, session, character_level=stats.level
+        )
+        await deliver_earned_invitations(
+            character, praxes, contributions, session, era, era_row
+        )
 
 
 async def _scored_praxes(
@@ -257,7 +284,7 @@ async def recalculate_character_stats(
             new_level=stats.level,
         )
 
-    await _deliver_earned_invitations(
+    await deliver_earned_invitations(
         author, all_praxes, contributions, session, era, era_row
     )
 

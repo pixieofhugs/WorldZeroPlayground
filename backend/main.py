@@ -14,6 +14,7 @@ from db import AsyncSessionLocal, engine
 from routers import activity_feed, admin, auth, characters, duel, factions, game_config, leaderboard, praxes, relationships, tasks, votes
 from routers import comments, contact, copy, google_photos, me, push, terms
 from schemas.system import HealthOut
+from services.character_stats import deliver_invitations_to_all
 from services.era import rebind_live_era
 from services.praxis_room import (
     PRAXIS_ROOM_APP,
@@ -44,7 +45,8 @@ async def lifespan(app: FastAPI):
         # Live era is a DB fact (ADR-0091); sound process-wide only because one
         # worker runs. Inside the try so a DB down at boot still releases the lock.
         async with AsyncSessionLocal() as session:
-            await rebind_live_era(session)
+            await deliver_invitations_to_all(session, await rebind_live_era(session))
+            await session.commit()
 
         # The room server's task group must outlive every socket it serves.
         async with PRAXIS_ROOM_SERVER:

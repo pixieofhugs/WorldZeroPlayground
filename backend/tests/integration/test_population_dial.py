@@ -18,7 +18,15 @@ from services.era import (
     read_dial_sides,
 )
 from services.era_gates import may_comment, may_create_duel, vote_lock_reason
-from tests.integration.factories import make_admin
+from models.invitation_letter import InvitationLetter
+from services.population_dial import set_dials
+from tests.integration.factories import (
+    cast_vote,
+    make_admin,
+    make_character,
+    make_solo_praxis,
+    make_task,
+)
 
 SMALL = {n: v for d in ERA_1.dials.values() for n, v in d.small.items()}
 FULL = {name: getattr(ERA_1, name) for name in SMALL}
@@ -184,3 +192,45 @@ async def test_a_rollover_never_exposes_full_rules_to_other_requests(db_session)
     task.cancel()
     assert len(seen) > 1
     assert all(snapshot == SMALL for snapshot in seen)
+
+
+async def _owed_player(db_session, era, account):
+    """Meets 1 task / 10 pts in a rival faction, not 2 tasks / 50 pts."""
+    author = await make_character(db_session, era, username="earner", account=account)
+    voter = await make_character(db_session, era, username="judge", level=1)
+    task = await make_task(db_session, voter, point_value=20, faction_slug="snide")
+    praxis = await make_solo_praxis(db_session, task, author)
+    await cast_vote(db_session, praxis, voter, 5)
+    await db_session.commit()
+    return author
+
+
+async def _letters(db_session):
+    return (await db_session.execute(select(InvitationLetter))).scalars().all()
+
+
+@pytest.mark.asyncio
+async def test_loosening_invitation_delivers_to_players_who_now_qualify(
+    db_session, account, era, some_faction
+):
+    await make_admin(db_session, account)
+    await overlay(db_session)
+    await set_dials({"invitation": "full"}, account.id, db_session)
+    await _owed_player(db_session, era, account)
+    assert await _letters(db_session) == []
+
+    await set_dials({"invitation": "small"}, account.id, db_session)
+    assert [letter.faction_slug for letter in await _letters(db_session)] == ["snide"]
+
+    await set_dials({"invitation": "full"}, account.id, db_session)
+    await set_dials({"invitation": "small"}, account.id, db_session)
+    assert len(await _letters(db_session)) == 1
+
+
+@pytest.mark.asyncio
+async def test_tightening_invitation_delivers_nothing(db_session, account, era, some_faction):
+    await make_admin(db_session, account)
+    await overlay(db_session)
+    await _owed_player(db_session, era, account)
+    await set_dials({"invitation": "full"}, account.id, db_session)
+    assert await _letters(db_session) == []
