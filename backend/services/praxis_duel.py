@@ -63,12 +63,13 @@ async def maybe_settle_duel(praxis_id: int, session: AsyncSession) -> None:
         else None
     )
 
-    if (
-        challenger_praxis
-        and challenger_praxis.status == PraxisStatus.submitted
-        and opponent_praxis
-        and opponent_praxis.status == PraxisStatus.submitted
-    ):
+    sides = [challenger_praxis, opponent_praxis]
+    # A forfeiter can't submit, so only the honest side has to (#3766).
+    required = [
+        p for p in sides
+        if p is None or p.created_by_id != duel.forfeited_by_character_id
+    ]
+    if all(p is not None and p.status == PraxisStatus.submitted for p in required):
         duel.status = DuelStatus.settled
         await session.flush()
 

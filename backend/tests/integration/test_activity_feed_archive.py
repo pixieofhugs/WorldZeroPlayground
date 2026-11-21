@@ -71,10 +71,10 @@ REQUESTS_FILTER = "requests"
 # ADR-0070: the four request types leave the live stream, so ALL and YOUR_STUFF
 # read four short of their registry membership.
 SEEDED_ITEM_COUNTS = {
-    ALL_FILTER: 14,
+    ALL_FILTER: 15,
     FRIENDS_FILTER: 3,
     FOES_FILTER: 2,
-    YOUR_STUFF_FILTER: 6,
+    YOUR_STUFF_FILTER: 7,
     GLOBAL_FILTER: 3,
     REQUESTS_FILTER: 4,
 }
@@ -100,7 +100,7 @@ async def full_feed(
     active_task: Task,
     some_faction,
 ) -> dict:
-    """Seed one feed item of each of the 18 types for ``character``."""
+    """Seed one feed item of each of the 19 types for ``character``."""
     now = datetime.now(timezone.utc)
 
     # character2 friend, character3 foe: feeds the friend_*/foe_* sources.
@@ -269,6 +269,29 @@ async def full_feed(
     )
     db_session.add(duel)
 
+    # --- duel_forfeited: the viewer's own challenge, ended by a lock-out ---
+    own_praxis = Praxis(
+        task_id=active_task.id,
+        created_by_id=character.id,
+        type=PraxisType.solo,
+        status=PraxisStatus.in_progress,
+        title="Mine",
+        body_text="proof",
+    )
+    db_session.add(own_praxis)
+    await db_session.flush()
+    db_session.add(
+        Duel(
+            task_id=active_task.id,
+            challenger_praxis_id=own_praxis.id,
+            opponent_character_id=character3.id,
+            status=DuelStatus.declined,
+            declined_at=now,
+            forfeited_by_character_id=character3.id,
+            forfeited_at=now,
+        )
+    )
+
     # --- invitation_letter + friend_defection ---
     # Letter is for a faction the viewer is NOT in, so unanswered (ADR-0070).
     letter = InvitationLetter(
@@ -349,7 +372,7 @@ def _key_of(feed: dict, item_type: str) -> str:
 async def test_every_feed_type_yields_a_stable_item_key(
     client: AsyncClient, full_feed: dict, auth_headers: dict
 ):
-    """All 18 types present, keyed, and stable across two requests (stream + queue)."""
+    """All 19 types present, keyed, and stable across two requests (stream + queue)."""
     first = await _feed(client, auth_headers)
     second = await _feed(client, auth_headers)
     queue = await _feed(client, auth_headers, REQUESTS_FILTER)

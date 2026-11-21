@@ -173,6 +173,7 @@ export const FEED_TYPE_LABEL_KEY = {
   invitation_letter: 'feed:kicker.invitation_letter',
   collab_invite: 'feed:kicker.collab_invite',
   duel_challenge: 'feed:kicker.duel_challenge',
+  duel_forfeited: 'feed:kicker.duel_forfeited',
   awaiting_submission: 'feed:kicker.awaiting_submission',
 } as const satisfies Record<string, string>
 

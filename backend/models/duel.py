@@ -99,8 +99,14 @@ class Duel(CreatedAtMixin, Base):
         DateTime(timezone=True), nullable=True
     )
     # Sticky forfeit of a settled duel; resubmitting doesn't restore it (ADR-0011).
+    # Also the locked-out player of a live duel a ban/suspension ended (#3766):
+    # active, then settling on the honest side's submit; or a declined pending one.
     forfeited_by_character_id: Mapped[Optional[int]] = mapped_column(
         BigInteger, ForeignKey("character.id"), nullable=True
+    )
+    # Set only by the lock-out path; the honest player's feed line sorts on it.
+    forfeited_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
     )
 
     # Frozen at era close (ADR-0052). NULL winner = tie or no-contest.

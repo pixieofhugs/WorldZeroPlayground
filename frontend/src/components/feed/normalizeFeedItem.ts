@@ -27,6 +27,7 @@ export const FACTION_ROW_TYPES = new Set([
   'collaborator_submitted',
   'awaiting_submission',
   'nudge',
+  'duel_forfeited',
   'comment_mention',
   'comment_on_mine',
 ])
@@ -340,6 +341,21 @@ export function normalizeFeedItem(
         actions: [],
       }
     }
+    case 'duel_forfeited':
+      // The other player was banned or suspended (#3766).
+      return {
+        slug,
+        actor,
+        actorHref: null,
+        action: i18n.t('feed:row.action.duelForfeited'),
+        badge: { type: 'duel', label: i18n.t('feed:badge.duel') },
+        headline: p.task_title ?? null,
+        headlineHref: p.praxis_id != null ? `/praxis/${p.praxis_id}` : null,
+        headlineQuoted: false,
+        points: null,
+        level: null,
+        actions: [],
+      }
     case 'friend_defection':
       return {
         slug,
