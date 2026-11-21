@@ -56,7 +56,7 @@ export default function SettingsRow({
         borderBottom: last ? undefined : '1px solid var(--color-border)',
       }}
     >
-      <div className="font-body" style={{ flex: LABEL_MEASURE }}>
+      <div className="font-body" style={{ flex: stacked ? 'none' : LABEL_MEASURE }}>
         <div style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-primary)' }}>
           {title}
         </div>
