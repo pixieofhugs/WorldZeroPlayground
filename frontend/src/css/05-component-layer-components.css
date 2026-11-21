@@ -400,9 +400,6 @@
       background: none !important;
       max-width: none !important;
     }
-    [data-composer-heading] {
-      min-height: 0 !important;
-    }
     .ob-sheet {
       padding-left: var(--space-md) !important;
       padding-right: var(--space-md) !important;

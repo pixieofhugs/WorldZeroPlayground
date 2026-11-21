@@ -44,7 +44,7 @@ describe('composer sizes', () => {
       '--composer-gap': 'var(--space-lg)',
       '--composer-title-size': 'var(--text-title)',
       '--composer-head-height': '80px',
-      '--composer-heading-height': '82px',
+      '--composer-heading-height': '44px',
       '--composer-sheet-padding': 'var(--space-lg) var(--space-md) var(--space-3xl)',
       '--composer-bar-padding': 'var(--space-sm) var(--space-lg)',
       '--composer-page-inset': 'var(--space-md)',
