@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import push from '../locales/en/push.json'
 // @ts-expect-error classic-script worker with no types; vite-node supplies the `module` its guard exports to.
-import { route, shellUrls, pushMessage, safeUrl, focusOrOpen } from '../../public/sw.js'
+import { route, isShell, shellUrls, pushMessage, safeUrl, focusOrOpen } from '../../public/sw.js'
 
 const O = 'https://worldzero.org'
 
@@ -16,6 +16,16 @@ describe('service worker route', () => {
     expect(route(`${O}/media/x.png`, 'navigate', 'GET', O)).toBeNull()
     expect(route(`${O}/tasks`, 'cors', 'GET', O)).toBeNull()
     expect(route(`${O}/assets/a.js`, 'cors', 'POST', O)).toBeNull()
+  })
+})
+
+describe('isShell', () => {
+  const res = (type: string, ok = true) => new Response('x', { status: ok ? 200 : 500, headers: { 'content-type': type } })
+  it('lets HTML replace the cached shell, not a navigated file like the manifest', () => {
+    expect(isShell(res('text/html; charset=utf-8'))).toBe(true)
+    expect(isShell(res('application/manifest+json'))).toBe(false)
+    expect(isShell(res('image/svg+xml'))).toBe(false)
+    expect(isShell(res('text/html', false))).toBe(false)
   })
 })
 

@@ -15,6 +15,9 @@ function route(url, mode, method, origin) {
   return null
 }
 
+// Real files (manifest, icons, marks) are navigable too; only HTML may stand in as the offline shell.
+const isShell = (res) => res.ok && (res.headers.get('content-type') || '').startsWith('text/html')
+
 function shellUrls(html) {
   return [...new Set((html.match(/\/?assets\/[^"'\s)]+/g) || []).map((u) => '/' + u.replace(/^\//, '')))]
 }
@@ -57,7 +60,7 @@ async function focusOrOpen(clients, url) {
   await clients.openWindow(url)
 }
 
-if (typeof module !== 'undefined') module.exports = { route, shellUrls, pushMessage, safeUrl, focusOrOpen }
+if (typeof module !== 'undefined') module.exports = { route, isShell, shellUrls, pushMessage, safeUrl, focusOrOpen }
 
 if (typeof self !== 'undefined' && self.addEventListener) {
   // Precache so a first visit works offline. No clients.claim: the next navigation is controlled by the
@@ -111,7 +114,7 @@ if (typeof self !== 'undefined' && self.addEventListener) {
       event.respondWith(
         fetch(request).then(
           (res) => {
-            if (res.ok) {
+            if (isShell(res)) {
               const copy = res.clone()
               event.waitUntil(caches.open(CACHE).then((c) => c.put(SHELL, copy)))
             }
