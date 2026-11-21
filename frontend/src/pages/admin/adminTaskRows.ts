@@ -4,7 +4,6 @@ import type { PendingTaskOut } from "../../api/admin";
 /** An admin Tasks row; proposer name and note come only from `/admin/tasks/pending`. */
 export type AdminTaskRow = TaskOut & {
   created_by_name?: string;
-  notes?: string;
   /** Delete is offered only without history (#3667); the server refuses regardless. */
   has_history?: boolean;
 };

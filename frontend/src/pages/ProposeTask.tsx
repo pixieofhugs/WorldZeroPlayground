@@ -7,6 +7,7 @@
  */
 import { useDocumentTitle } from "../hooks/useDocumentTitle"
 import { useTranslation } from "react-i18next";
+import { useParams } from "react-router-dom";
 import { useProposeTask } from "./proposeTask/useProposeTask";
 import PageTitle from "../components/ui/PageTitle";
 import { resolveVariant } from "../utils/factionDispatch";
@@ -15,7 +16,8 @@ import { surfaceMap } from "../factions";
 export default function ProposeTask() {
   const { t } = useTranslation("tasks");
   useDocumentTitle(t("propose.pageTitle"))
-  const state = useProposeTask();
+  const { taskId } = useParams<{ taskId?: string }>();
+  const state = useProposeTask(taskId ? Number(taskId) : undefined);
 
   if (!state.isLoggedIn) {
     return (

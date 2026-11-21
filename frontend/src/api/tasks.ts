@@ -1,4 +1,4 @@
-import { apiGet, apiPost } from './client'
+import { apiDelete, apiGet, apiPost, apiPut } from './client'
 import type { components } from './generated/schema'
 
 export type TaskType = components['schemas']['TaskType']
@@ -59,6 +59,16 @@ export async function getTask(id: number): Promise<TaskOut> {
 export async function proposeTask(body: TaskCreate): Promise<TaskOut> {
   const { data } = await apiPost('/tasks', { body })
   return data
+}
+
+/** Proposer-only, while pending; same body and gates as {@link proposeTask}. */
+export async function editProposal(id: number, body: TaskCreate): Promise<TaskOut> {
+  const { data } = await apiPut('/tasks/{task_id}', { params: { path: { task_id: id } }, body })
+  return data
+}
+
+export async function withdrawProposal(id: number): Promise<void> {
+  await apiDelete('/tasks/{task_id}', { params: { path: { task_id: id } } })
 }
 
 /** `level` is current-era (ADR-0042); `joined_at` is `PraxisMember.joined_at`. */

@@ -3,9 +3,9 @@
  * every archetype consumes. Archetypes dispatch on the picked `factionSlug`.
  * Deliberately no metatask faction guard: `na` is a valid issuer (#894).
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { proposeTask, type TaskCreate } from "../../api/tasks";
+import { editProposal, getTask, proposeTask, type TaskCreate } from "../../api/tasks";
 import { proposeMetatask, type MetataskProposal } from "../../api/metatasks";
 import type { FactionOut } from "../../api/factions";
 import { useFactions } from "../../hooks/useFactions";
@@ -102,7 +102,8 @@ export interface ProposeTaskState {
   handleCancel: () => void;
 }
 
-export function useProposeTask(): ProposeTaskState {
+/** With `editId`, prefills from that pending proposal and saves through the edit route (#3771). */
+export function useProposeTask(editId?: number): ProposeTaskState {
   const { user } = useAuth();
   const navigate = useNavigate();
   // App-wide cached (#1284).
@@ -119,6 +120,27 @@ export function useProposeTask(): ProposeTaskState {
   const [success, setSuccess] = useState(false);
   const [isMetatask, setIsMetatask] = useState(false);
   const [metaBonusValue, setMetaBonusValue] = useState("10");
+
+  useEffect(() => {
+    if (editId === undefined) return;
+    getTask(editId)
+      .then((task) => {
+        const meta = task.task_type === "metatask";
+        setIsMetatask(meta);
+        setTitle(task.title);
+        setDescription(task.description);
+        setNotes(task.notes ?? "");
+        setLevelRequired(task.level_required);
+        if (meta) {
+          setMetaBonusValue(String(task.point_value));
+          setFactionSlug(task.metatask_faction_slug ?? UNAFFILIATED_FACTION_SLUG);
+        } else {
+          setPointValue(String(task.point_value));
+          setFactionSlug(task.primary_faction_slug);
+        }
+      })
+      .catch((err) => setError(extractError(err, i18n.t("forms:proposeTask.errors.propose"))));
+  }, [editId]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -144,6 +166,14 @@ export function useProposeTask(): ProposeTaskState {
         factionSlug,
         notes,
       });
+      if (editId !== undefined) {
+        await editProposal(editId, {
+          ...plan.body,
+          ...(plan.kind === "metatask" && { task_type: "metatask" }),
+        });
+        navigate(`/characters/${user?.character?.id}`);
+        return;
+      }
       if (plan.kind === "metatask") {
         await proposeMetatask(plan.body);
       } else {

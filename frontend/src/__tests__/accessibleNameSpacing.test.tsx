@@ -47,6 +47,7 @@ function metatask(): TaskOut {
     allowed_modes: [],
     eligible_for_current_user: false,
     start_here: false,
+    notes: null,
     viewer_faction_multiplier: 1,
   }
 }

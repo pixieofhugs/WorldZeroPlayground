@@ -46,6 +46,7 @@ export const aTask = (over: Partial<TaskOut> = {}): TaskOut => ({
   eligible_for_current_user: true,
   // *start here* mark (#1861): true only on the onboarding task until done.
   start_here: false,
+  notes: null,
   viewer_faction_multiplier: 1,
   ...over,
 })

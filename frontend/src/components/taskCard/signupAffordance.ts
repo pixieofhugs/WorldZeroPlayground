@@ -16,6 +16,7 @@ import {
 export interface TaskCardSignupCta {
   /** Resolved copy; the skin never picks a key. */
   label: string;
+  taskId: number;
   /** Server shut sign-up; the same slot says WHY instead. */
   denied: boolean;
   /**
@@ -51,6 +52,7 @@ export function taskCardSignupCta(
       if (task.in_progress_praxis_id != null) {
         return {
           label: i18n.t(`tasks:${SIGNUP_IN_PROGRESS_KEY}`),
+          taskId: task.id,
           denied: false,
           href: `/praxis/${task.in_progress_praxis_id}/edit`,
         };
@@ -58,6 +60,7 @@ export function taskCardSignupCta(
       if (task.submitted_praxis_id != null) {
         return {
           label: i18n.t(`tasks:${SIGNUP_SUBMITTED_KEY}`),
+          taskId: task.id,
           denied: false,
           href: `/praxis/${task.submitted_praxis_id}`,
         };
@@ -65,7 +68,7 @@ export function taskCardSignupCta(
     }
     // `level` is only read by `denied.belowLevel`; harmless elsewhere.
     const key = signupCtaKey(task.signup_reason);
-    return { label: i18n.t(`tasks:${key}`, { level: task.level_required }), denied: true };
+    return { label: i18n.t(`tasks:${key}`, { level: task.level_required }), taskId: task.id, denied: true };
   }
 
   // Shut with no copy (a new backend reason, or fields disagreeing): hide.
@@ -76,5 +79,5 @@ export function taskCardSignupCta(
     key === SIGNUP_CTA_KEY
       ? i18n.t("feed:taskCard.signup")
       : i18n.t(`tasks:${key}`, { level: task.level_required });
-  return { label, denied: false, onPress: () => onSignup(task.id) };
+  return { label, taskId: task.id, denied: false, onPress: () => onSignup(task.id) };
 }
