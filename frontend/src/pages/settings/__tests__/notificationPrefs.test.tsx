@@ -8,10 +8,11 @@ import { readFileSync } from 'node:fs'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect, vi } from 'vitest'
 
+const formFactor = vi.hoisted(() => ({ current: 'desktop' }))
 vi.mock('../../../hooks/useFormFactor', () => ({
   MOBILE_QUERY: '(max-width: 767px)',
   formFactorFor: (matches: boolean) => (matches ? 'mobile' : 'desktop'),
-  useFormFactor: () => 'desktop',
+  useFormFactor: () => formFactor.current,
 }))
 
 import i18n from '../../../i18n'
@@ -192,6 +193,21 @@ describe('the rendered card', () => {
     expect(html).toContain('data-testid="settings-notifications-all-on_updates"')
     expect(html).toContain('data-testid="settings-notifications-all-by_email"')
     expect(html.match(/role="switch"/g)).toHaveLength(33)
+  })
+
+  it('on a phone each row stacks its three switches under their own captions', () => {
+    formFactor.current = 'mobile'
+    try {
+      const phone = renderToStaticMarkup(
+        <NotificationRows prefs={DEFAULTS} onToggle={() => {}} onToggleAll={() => {}} />,
+      )
+      for (const col of ['columnPage', 'columnEmail', 'columnPush'] as const) {
+        const caption = i18n.t(`common:settings.notifications.${col}`)
+        expect(phone.split(`>${caption}</span>`).length - 1).toBe(NOTIFICATION_ROWS.length + 1)
+      }
+    } finally {
+      formFactor.current = 'desktop'
+    }
   })
 
   it.each(['keys', 'ios', 'denied'] as const)('%s: every Push switch is disabled and points at the reason', (state) => {

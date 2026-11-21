@@ -205,6 +205,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
             display: "flex",
             alignItems: "center",
             gap: "var(--space-sm)",
+            flexWrap: "wrap",
           }}
         >
           <span

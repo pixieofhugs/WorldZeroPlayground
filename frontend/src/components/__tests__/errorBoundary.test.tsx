@@ -61,4 +61,14 @@ describe('ErrorBoundary', () => {
     expect(fire()).toBe(false)
     expect(reload).toHaveBeenCalledTimes(1)
   })
+
+  it('with unusable sessionStorage it never reloads and leaves the event alone', () => {
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('denied')
+    })
+    const e = new Event('vite:preloadError', { cancelable: true })
+    window.dispatchEvent(e)
+    expect(e.defaultPrevented).toBe(false)
+    expect(reload).not.toHaveBeenCalled()
+  })
 })

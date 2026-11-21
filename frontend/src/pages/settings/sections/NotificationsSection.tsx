@@ -369,8 +369,8 @@ export default function NotificationsSection({ sectionId }: SettingsSectionProps
           return
         }
         setSubscribed(true)
-      } catch (err) {
-        setError(extractError(err, t('settings.notifications.saveError')))
+      } catch {
+        setError(t('settings.notifications.push.failed'))
         return
       }
     }
