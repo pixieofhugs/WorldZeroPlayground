@@ -103,6 +103,8 @@ class ErrorCode(str, enum.Enum):
     task_has_history = "TASK_HAS_HISTORY"
     #: #3062. A ``seed_key`` row would come back on the next deploy.
     task_seed_owned = "TASK_SEED_OWNED"
+    #: #3848. A backdoor must close after it opens.
+    backdoor_window_invalid = "BACKDOOR_WINDOW_INVALID"
 
     # -- Factions: joining, defecting, and the letters that gate both --------
     faction_not_found = "FACTION_NOT_FOUND"

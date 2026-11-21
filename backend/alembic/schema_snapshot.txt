@@ -441,6 +441,8 @@ table role
   constraint uq_role_name UNIQUE (name)
 
 table task
+  column backdoor_closes_at timestamp with time zone
+  column backdoor_opens_at timestamp with time zone
   column created_at timestamp with time zone NOT NULL DEFAULT now()
   column created_by_id bigint NOT NULL
   column description text NOT NULL DEFAULT ''::text
@@ -457,7 +459,7 @@ table task
   column updated_at timestamp with time zone NOT NULL DEFAULT now()
   constraint ck_task_metatask_faction_iff_metatask CHECK ((((task_type)::text = 'metatask'::text) = (metatask_faction_slug IS NOT NULL)))
   constraint ck_task_point_value_nonnegative CHECK ((point_value >= 0))
-  constraint ck_task_taskstatus CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'active'::character varying, 'retired'::character varying, 'deleted'::character varying])::text[])))
+  constraint ck_task_taskstatus CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'active'::character varying, 'retired'::character varying, 'deleted'::character varying, 'backdoor'::character varying])::text[])))
   constraint ck_task_tasktype CHECK (((task_type)::text = ANY ((ARRAY['standard'::character varying, 'metatask'::character varying])::text[])))
   constraint fk_task_created_by_id_character FOREIGN KEY (created_by_id) REFERENCES "character"(id)
   constraint fk_task_metatask_faction_slug_faction FOREIGN KEY (metatask_faction_slug) REFERENCES faction(slug)

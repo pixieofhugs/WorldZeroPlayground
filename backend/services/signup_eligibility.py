@@ -16,6 +16,7 @@ from models.character import Character
 from models.character_stats import CharacterStats
 from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.task import Task, TaskStatus, TaskType
+from services.backdoor import may_use_door
 from services.era import get_current_era_row, get_or_create_stats
 from services.era_gates import may_create_collab_praxis
 from services.faction_service import faction_permits
@@ -54,6 +55,8 @@ def task_status_closed(task: Task, character: Character, era: EraConfig = CURREN
     # No faction allowance can reopen a deleted task (#3305).
     if task.status == TaskStatus.deleted:
         return True
+    if task.status == TaskStatus.backdoor:
+        return not may_use_door(task, character.faction_slug, era)
     if task.status == TaskStatus.retired:
         return character.faction_slug not in era.allow_praxis_on_retired_task_factions
     if task.status == TaskStatus.pending:

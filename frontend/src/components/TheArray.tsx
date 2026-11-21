@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { getBackdoors, type BackdoorOut } from '../api/tasks'
 import { useAuth } from '../auth/AuthContext'
 import { useGameConfig } from '../hooks/useGameConfig'
 import type { FactionConfigOut, GameConfigOut, LevelProfile } from '../api/gameConfig'
@@ -10,6 +11,7 @@ import { isFactionHiddenFromChoosers } from '../utils/factions'
  *
  * STANDING RULES:
  * 1. Print only from responses already received. No new endpoint/field/query.
+ *    One owner-approved exception (#3848): `GET /tasks/backdoor`, task fields only.
  * 2. Print a CURATED ALLOWLIST by name, never a raw dump: `/auth/me`'s field
  *    NAMES alone leak "Albescent" (ADR-0027). `theArray.test.ts` forbids a spread.
  */
@@ -99,6 +101,25 @@ export function printTheArray(readout: ArrayReadout): void {
   console.table(readout.factions)
 }
 
+const DAY_MS = 86_400_000
+
+/** Each stage adds to the last; `stageDays` is `/game-config`'s, never a literal. */
+export function backdoorHint(
+  door: BackdoorOut,
+  now: number,
+  stageDays: readonly number[],
+): string[] {
+  const age = (now - Date.parse(door.backdoor_opens_at)) / DAY_MS
+  const stage = 1 + stageDays.filter((days) => age >= days).length
+  const path = `/tasks/${door.id}`
+  const lines = [`\u27DF ${btoa(path)}`]
+  if (stage >= 2) lines.push('the array speaks base64. atob() is listening.')
+  if (stage >= 3) {
+    lines.push(`backdoor open \u2192 ${path} "${door.title}" (${door.point_value} pts)`)
+  }
+  return lines
+}
+
 /**
  * Mounted once in `Layout`; renders nothing.
  * ponytail: eager (~0.4 KB gz in the initial chunk); ceiling is
@@ -112,6 +133,14 @@ export default function TheArray() {
   useEffect(() => {
     if (!config || !readsTheArray(factionSlug, config)) return
     printTheArray(buildArrayReadout(config))
+    // Silence is the joke: a failed lookup prints nothing, same as no doors.
+    getBackdoors()
+      .then((doors) => {
+        for (const door of doors) {
+          console.log(backdoorHint(door, Date.now(), config.backdoor_hint_stage_days).join('\n'))
+        }
+      })
+      .catch(() => {})
   }, [factionSlug, config])
 
   return null

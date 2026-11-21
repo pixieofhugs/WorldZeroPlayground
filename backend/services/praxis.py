@@ -44,6 +44,7 @@ from schemas.praxis import (
 )
 from services import collab_consensus
 from services.albescent_reveal import is_albescent_revealed
+from services.backdoor import may_use_door, settle_closed_backdoors
 from services.character import is_playable
 from services.character_stats import (
     recalculate_character_stats,
@@ -480,12 +481,25 @@ async def _check_create_preconditions(
     Returns the task and the stats row the gates judged, so the caller needn't
     re-read (#2873).
     """
+    await settle_closed_backdoors(session)
     task = await session.get(Task, task_id)
-    # Deleted tasks (#3305) look nonexistent.
-    if task is None or task.status == TaskStatus.deleted:
-        raise HTTPException(status_code=404, detail="Task not found.")
-
     character = await session.get(Character, character_id)
+    # Deleted tasks (#3305) look nonexistent, and so does a backdoor closed to
+    # this character: a refusal that named it would give it away (#3848).
+    hidden = task is not None and (
+        task.status == TaskStatus.deleted
+        or (
+            task.status == TaskStatus.backdoor
+            and (
+                character is None
+                or not may_use_door(task, character.faction_slug, era)
+            )
+        )
+    )
+    if hidden:
+        raise_coded(404, ErrorCode.task_not_found, "Task not found.")
+    if task is None:
+        raise HTTPException(status_code=404, detail="Task not found.")
     if character is None:
         raise HTTPException(status_code=404, detail="Character not found.")
 

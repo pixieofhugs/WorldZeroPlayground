@@ -8,6 +8,7 @@ import { useAuth } from '../../auth/AuthContext'
 import { useAdminMode } from '../../auth/AdminModeContext'
 import StartHereMark from '../StartHereMark'
 import TaskStatusControl from '../admin/TaskStatusControl'
+import type { BackdoorWindow } from '../admin/backdoorWindow'
 import { factionCssVar, factionFill, factionName } from '../../utils/factions'
 import { resolveVariant } from '../../utils/factionDispatch'
 import { surfaceMap } from '../../factions'
@@ -70,9 +71,9 @@ export default function TaskCard({
   const shownInProgressCount = inProgressCount ?? shown.in_progress_count
 
   // Dynamic import keeps the admin chunk out of every visitor's waterfall (#1141).
-  const handleStatusChange = async (newStatus: AdminTaskStatus) => {
+  const handleStatusChange = async (newStatus: AdminTaskStatus, window?: BackdoorWindow) => {
     const { updateTaskStatus } = await import('../../api/admin')
-    setModerated(await updateTaskStatus(task.id, newStatus))
+    setModerated(await updateTaskStatus(task.id, newStatus, window))
   }
 
   const Card = resolveVariant(surfaceMap('taskCard'), shown.primary_faction_slug)
@@ -175,7 +176,13 @@ export default function TaskCard({
           >
             {t('tasks.actions.openInAdmin')} {'\u2197\uFE0E'}
           </Link>
-          <TaskStatusControl status={shown.status} variant="strip" onChange={(next) => void handleStatusChange(next)} />
+          <TaskStatusControl
+            status={shown.status}
+            variant="strip"
+            opensAt={shown.backdoor_opens_at}
+            closesAt={shown.backdoor_closes_at}
+            onChange={handleStatusChange}
+          />
         </div>
       )}
     </div>

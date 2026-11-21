@@ -2076,6 +2076,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tasks/backdoor": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Backdoors */
+        get: operations["list_backdoors_tasks_backdoor_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tasks/{task_id}": {
         parameters: {
             query?: never;
@@ -2195,6 +2212,10 @@ export interface components {
         };
         /** AdminTaskPatch */
         AdminTaskPatch: {
+            /** Backdoor Closes At */
+            backdoor_closes_at?: string | null;
+            /** Backdoor Opens At */
+            backdoor_opens_at?: string | null;
             /** Description */
             description?: string | null;
             /** Level Required */
@@ -2254,6 +2275,25 @@ export interface components {
             task_point_value: number;
             /** Task Title */
             task_title: string;
+        };
+        /**
+         * BackdoorOut
+         * @description One open door, as the Array's console hints at it (#3848): task fields only.
+         */
+        BackdoorOut: {
+            /**
+             * Backdoor Opens At
+             * Format: date-time
+             */
+            backdoor_opens_at: string;
+            /** Id */
+            id: number;
+            /** Level Required */
+            level_required: number;
+            /** Point Value */
+            point_value: number;
+            /** Title */
+            title: string;
         };
         /**
          * BadgeOut
@@ -3749,6 +3789,8 @@ export interface components {
         };
         /** GameConfigOut */
         GameConfigOut: {
+            /** Backdoor Hint Stage Days */
+            backdoor_hint_stage_days: number[];
             /** Collab Auto Submit Days */
             collab_auto_submit_days: number;
             /** Duel Level Required */
@@ -4235,6 +4277,10 @@ export interface components {
              * @default []
              */
             allowed_modes: string[];
+            /** Backdoor Closes At */
+            backdoor_closes_at: string | null;
+            /** Backdoor Opens At */
+            backdoor_opens_at: string | null;
             /**
              * Can Sign Up
              * @default false
@@ -4964,6 +5010,10 @@ export interface components {
              * @default []
              */
             allowed_modes: string[];
+            /** Backdoor Closes At */
+            backdoor_closes_at: string | null;
+            /** Backdoor Opens At */
+            backdoor_opens_at: string | null;
             /**
              * Can Sign Up
              * @default false
@@ -5080,14 +5130,18 @@ export interface components {
          * TaskStatus
          * @enum {string}
          */
-        TaskStatus: "pending" | "active" | "retired" | "deleted";
+        TaskStatus: "pending" | "active" | "retired" | "deleted" | "backdoor";
         /** TaskStatusAction */
         TaskStatusAction: {
+            /** Backdoor Closes At */
+            backdoor_closes_at?: string | null;
+            /** Backdoor Opens At */
+            backdoor_opens_at?: string | null;
             /**
              * Status
              * @enum {string}
              */
-            status: "pending" | "active" | "retired" | "deleted";
+            status: "pending" | "active" | "retired" | "deleted" | "backdoor";
         };
         /**
          * TaskType
@@ -9185,6 +9239,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TaskOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_backdoors_tasks_backdoor_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackdoorOut"][];
                 };
             };
             /** @description Validation Error */

@@ -106,10 +106,14 @@ export async function getTaskIdsWithHistory(): Promise<number[]> {
 /** Leaving `deleted` is the undo. */
 export type AdminTaskStatus = components['schemas']['TaskStatusAction']['status']
 
-export async function updateTaskStatus(id: number, status: AdminTaskStatus): Promise<TaskOut> {
+export async function updateTaskStatus(
+  id: number,
+  status: AdminTaskStatus,
+  window: { opens?: string; closes?: string } = {},
+): Promise<TaskOut> {
   const { data } = await apiPut('/admin/tasks/{task_id}/status', {
     params: { path: { task_id: id } },
-    body: { status },
+    body: { status, backdoor_opens_at: window.opens, backdoor_closes_at: window.closes },
   })
   return data
 }

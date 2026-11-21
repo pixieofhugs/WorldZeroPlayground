@@ -19,12 +19,13 @@ import {
 import { markTaskRowDeleted } from './taskDelete'
 import { useReloadCounts } from './useAdminCounts'
 
-type Segment = 'proposals' | 'active' | 'retired' | 'deleted'
+type Segment = 'proposals' | 'active' | 'retired' | 'deleted' | 'backdoor'
 const SEGMENTS: { key: Segment; status: string }[] = [
   { key: 'proposals', status: 'pending' },
   { key: 'active', status: 'active' },
   { key: 'retired', status: 'retired' },
   { key: 'deleted', status: 'deleted' },
+  { key: 'backdoor', status: 'backdoor' },
 ]
 const segmentOf = (status: string): Segment => SEGMENTS.find((s) => s.status === status)?.key ?? 'active'
 
@@ -185,7 +186,7 @@ export default function TasksTab() {
         </div>
         {selected && (
           <TaskPanel
-            key={selected.id}
+            key={`${selected.id}:${selected.status}`}
             task={selected}
             factions={factions}
             proposal={proposalWindow}

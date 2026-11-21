@@ -8,6 +8,18 @@ from models.praxis import PraxisType
 from models.task import TaskStatus, TaskType
 
 
+class BackdoorOut(WireModel):
+    """One open door, as the Array's console hints at it (#3848): task fields only."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    title: str
+    point_value: int
+    level_required: int
+    backdoor_opens_at: datetime
+
+
 class TaskOut(WireModel):
     model_config = ConfigDict(from_attributes=True, use_enum_values=True)
 
@@ -25,6 +37,9 @@ class TaskOut(WireModel):
     primary_faction_slug: str
     metatask_faction_slug: Optional[str] = None
     created_at: datetime
+    # The backdoor window (#3848); None unless the task is a backdoor.
+    backdoor_opens_at: Optional[datetime] = None
+    backdoor_closes_at: Optional[datetime] = None
     # Active signups (in_progress + pending), as GET /tasks/{id}/signups (#1021).
     # Defaults (here and below) because metatask rows in the praxis seal stack
     # are TaskOut.model_validate()'d on a bare Task (praxis_out.applied_metatasks_for).

@@ -47,15 +47,26 @@
     "pointsLabel": "Points",
     "factionLabel": "Faction",
     "crossFaction": "cross-faction",
+    "backdoor": {
+      "opens": "Opens",
+      "closes": "Closes (optional)",
+      "submit": "schedule backdoor",
+      "cancel": "cancel",
+      "opensOn": "Door opens {{when}}.",
+      "closesOn": "Door open until {{when}}.",
+      "openNoClose": "Door open, no close date."
+    },
     "status": {
       "active": "active",
       "pending": "pending",
       "retired": "retired",
-      "deleted": "deleted"
+      "deleted": "deleted",
+      "backdoor": "backdoor"
     },
     "actions": {
       "restoreAs": "restore as {{status}}",
       "activate": "activate",
+      "backdoor": "backdoor",
       "retire": "retire",
       "delete": "delete",
       "save": "save",
@@ -359,7 +370,8 @@
         "proposals": "Proposals",
         "active": "Active",
         "retired": "Retired",
-        "deleted": "Deleted"
+        "deleted": "Deleted",
+        "backdoor": "Backdoor"
       },
       "cols": {
         "proposal": "Proposal",

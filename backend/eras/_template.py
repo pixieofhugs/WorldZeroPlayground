@@ -163,6 +163,7 @@ ERA_N = EraConfig(
     level_to_see_pending_tasks=3,
     # Hours a proposal stays admin-only (#1695).
     pending_task_admin_review_hours=48,
+    backdoor_hint_stage_days=(30, 60),  # console hint gets plainer (#3848)
 
     duel_level_required=2,
     collaboration_level_required=1,

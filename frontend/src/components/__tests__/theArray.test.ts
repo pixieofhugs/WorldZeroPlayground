@@ -62,6 +62,7 @@ function makeConfig(overrides: Partial<GameConfigOut> = {}): GameConfigOut {
     pending_task_admin_review_hours: 48,
     level_to_see_pending_tasks: 3,
     max_task_signups: 3,
+    backdoor_hint_stage_days: [30, 60],
     factions: [
       makeFaction('singularity'),
       makeFaction('coven', { collab_own_modifier: 1.1 }),

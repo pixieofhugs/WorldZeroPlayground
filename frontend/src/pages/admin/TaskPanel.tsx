@@ -5,6 +5,7 @@ import { adminPatchTask, updateTaskStatus, type AdminTaskStatus } from '../../ap
 import { extractError } from '../../utils/errors'
 import { useGameConfig } from '../../hooks/useGameConfig'
 import TaskStatusControl from '../../components/admin/TaskStatusControl'
+import { fromLocalInput, toLocalInput, type BackdoorWindow } from '../../components/admin/backdoorWindow'
 import { SidePanel } from './AdminList'
 import TaskDeleteConfirm from './TaskDeleteConfirm'
 import { requestTaskDelete } from './taskDelete'
@@ -40,23 +41,27 @@ export default function TaskPanel({ task, factions, proposal, onChanged, onDelet
     points: String(task.point_value),
     level: String(task.level_required),
     faction: task.primary_faction_slug,
+    opens: toLocalInput(task.backdoor_opens_at),
+    closes: toLocalInput(task.backdoor_closes_at),
   })
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
 
+  const backdoor = task.status === 'backdoor'
   const dirty =
     form.title !== task.title ||
     form.description !== task.description ||
     form.points !== String(task.point_value) ||
     form.level !== String(task.level_required) ||
-    form.faction !== task.primary_faction_slug
+    form.faction !== task.primary_faction_slug ||
+    (backdoor && (form.opens !== toLocalInput(task.backdoor_opens_at) || form.closes !== toLocalInput(task.backdoor_closes_at)))
   const set = (key: keyof typeof form) => (e: { target: { value: string } }) =>
     setForm({ ...form, [key]: e.target.value })
 
   /** Edits first, then the status: both choices keep what was typed. */
-  const save = async (next?: AdminTaskStatus) => {
+  const save = async (next?: AdminTaskStatus, window?: BackdoorWindow) => {
     setBusy(true)
     setError(null)
     try {
@@ -67,9 +72,11 @@ export default function TaskPanel({ task, factions, proposal, onChanged, onDelet
           point_value: form.points !== '' ? Number(form.points) : undefined,
           level_required: form.level !== '' ? Number(form.level) : undefined,
           primary_faction_slug: form.faction || undefined,
+          // Null means unchanged server-side, so a blank closes leaves it be.
+          ...(backdoor && { backdoor_opens_at: fromLocalInput(form.opens), backdoor_closes_at: fromLocalInput(form.closes) }),
         })
       }
-      if (next) await updateTaskStatus(task.id, next)
+      if (next) await updateTaskStatus(task.id, next, window)
       onChanged()
     } catch (err) {
       setError(extractError(err, next ? t('tasks.statusError') : t('tasks.saveError')))
@@ -89,7 +96,7 @@ export default function TaskPanel({ task, factions, proposal, onChanged, onDelet
 
   const pending = task.status === 'pending'
   const locked = task.status === 'active'
-  const tone = pending ? 'wait' : task.status === 'active' ? 'ok' : 'bad'
+  const tone = pending || backdoor ? 'wait' : task.status === 'active' ? 'ok' : 'bad'
 
   return (
     <SidePanel
@@ -144,6 +151,18 @@ export default function TaskPanel({ task, factions, proposal, onChanged, onDelet
           </label>
         )}
       </div>
+      {backdoor && (
+        <>
+          <label className="adm-field">
+            {t('tasks.backdoor.opens')}
+            <input className="adm-input" type="datetime-local" value={form.opens} onChange={set('opens')} />
+          </label>
+          <label className="adm-field">
+            {t('tasks.backdoor.closes')}
+            <input className="adm-input" type="datetime-local" value={form.closes} onChange={set('closes')} />
+          </label>
+        </>
+      )}
       {pending && task.notes && (
         <label className="adm-field">
           {t('console.tasks.panel.note')}
@@ -169,7 +188,13 @@ export default function TaskPanel({ task, factions, proposal, onChanged, onDelet
                 </button>
               ))
             ) : (
-              <TaskStatusControl status={task.status} variant="panel" onChange={(next) => void save(next)} />
+              <TaskStatusControl
+                status={task.status}
+                variant="panel"
+                opensAt={task.backdoor_opens_at}
+                closesAt={task.backdoor_closes_at}
+                onChange={(next, window) => save(next, window)}
+              />
             )}
             {dirty && !locked && task.status !== 'deleted' && (
               <button type="button" className="adm-btn" disabled={busy} onClick={() => void save()}>

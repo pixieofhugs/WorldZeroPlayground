@@ -4,7 +4,7 @@ from enum import Enum
 from typing import Collection, Optional
 
 from fastapi import HTTPException
-from sqlalchemy import and_, exists, false, func, or_, select, true
+from sqlalchemy import and_, exists, false, func, literal, or_, select, true
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from errors import ErrorCode, raise_coded
@@ -18,6 +18,12 @@ from models.task import Task, TaskStatus, TaskType
 from schemas.task import TaskCreate, TaskOut, TaskSignupOut
 from seed import ONBOARDING_TASK_SEED_KEY
 from services.albescent_reveal import is_albescent_revealed
+from services.backdoor import (
+    door_open_clause,
+    may_use_door,
+    reader_slugs,
+    settle_closed_backdoors,
+)
 from services.era import (
     get_current_era_row,
     get_current_era_row_safe,
@@ -214,6 +220,8 @@ async def build_task_out(
         primary_faction_slug=task.primary_faction_slug,
         metatask_faction_slug=task.metatask_faction_slug,
         created_at=task.created_at,
+        backdoor_opens_at=task.backdoor_opens_at,
+        backdoor_closes_at=task.backdoor_closes_at,
         in_progress_count=in_progress_count,
         created_by_display_name=author.display_name,
         created_by_avatar_url=author.avatar_url,
@@ -443,6 +451,23 @@ def pending_visibility_clause(
     return or_(Task.status != TaskStatus.pending, own)
 
 
+async def _may_see_backdoor(
+    session: AsyncSession, task: Task, viewer: Optional[Character], era: EraConfig
+) -> bool:
+    """A reader of the array while the door is open, or anyone on a praxis for it."""
+    if viewer is None:
+        return False
+    if may_use_door(task, viewer.faction_slug, era):
+        return True
+    member = await session.scalar(
+        select(PraxisMember.id)
+        .join(Praxis, Praxis.id == PraxisMember.praxis_id)
+        .where(Praxis.task_id == task.id, PraxisMember.character_id == viewer.id)
+        .limit(1)
+    )
+    return member is not None
+
+
 async def get_task_for_viewer(
     session: AsyncSession,
     task_id: int,
@@ -457,9 +482,15 @@ async def get_task_for_viewer(
     Only ``pending`` (and ``deleted`` for non-admins) is withheld: the retired
     level gate covers the archive browse, not links to a retired task.
     """
+    await settle_closed_backdoors(session)
     task = await session.get(Task, task_id)
-    if task is not None and task.status is TaskStatus.deleted and not is_admin:
-        return None
+    if task is not None and not is_admin:
+        if task.status is TaskStatus.deleted:
+            return None
+        if task.status is TaskStatus.backdoor and not await _may_see_backdoor(
+            session, task, viewer, era
+        ):
+            return None
     if task is None or task.status is not TaskStatus.pending:
         return task
     viewer_level = -1
@@ -518,6 +549,7 @@ async def list_tasks(
     ``faction`` is a union of slugs; empty = no filter. ``sort`` None =
     ``TaskSort.level``.
     """
+    await settle_closed_backdoors(session)
     hidden_slugs = await hidden_faction_slugs(session)
 
     query = select(Task)
@@ -552,9 +584,11 @@ async def list_tasks(
         )
     )
 
-    # Deleted tasks are admin-only on every door (#3305).
+    # Deleted (#3305) and backdoor (#3848) tasks are admin-only on every door.
     if not is_admin:
-        query = query.where(Task.status != TaskStatus.deleted)
+        query = query.where(
+            Task.status.notin_([TaskStatus.deleted, TaskStatus.backdoor])
+        )
 
     if status and status != "all":
         try:
@@ -621,6 +655,15 @@ async def list_tasks(
         query = query.where(Task.level_required <= viewer_stats.level + level_reach)
         # Gates 3-4: exclusions, so a new enum status isn't silently opted in.
         query = query.where(Task.status != TaskStatus.deleted)
+        query = query.where(
+            or_(
+                Task.status != TaskStatus.backdoor,
+                and_(
+                    door_open_clause(),
+                    literal(viewer.faction_slug).in_(reader_slugs(era)),
+                ),
+            )
+        )
         if viewer.faction_slug not in era.allow_praxis_on_retired_task_factions:
             query = query.where(Task.status != TaskStatus.retired)
         if viewer.faction_slug not in era.allow_praxis_on_pending_task_factions:

@@ -405,7 +405,11 @@ async def retire_board_at_era_close(session: AsyncSession) -> int:
     result = await session.execute(
         update(Task)
         .where(*tasks_retired_at_era_close())
-        .values(status=TaskStatus.retired)
+        .values(
+            status=TaskStatus.retired,
+            backdoor_opens_at=None,
+            backdoor_closes_at=None,
+        )
     )
     return result.rowcount
 
