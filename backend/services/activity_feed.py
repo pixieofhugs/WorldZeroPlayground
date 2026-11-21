@@ -14,6 +14,7 @@ from sqlalchemy import (
     Select,
     String,
     and_,
+    case,
     delete,
     exists,
     func,
@@ -265,6 +266,16 @@ async def _get_my_task_ids(
 _VOTE_WAS_CHANGED = Vote.updated_at > Vote.created_at
 
 
+def _owns_praxis(character_id: int):
+    """Creator OR member. EXISTS, not a join, so multi-member praxes give one row."""
+    return or_(
+        Praxis.created_by_id == character_id,
+        exists().where(
+            and_(PraxisMember.praxis_id == Praxis.id, PraxisMember.character_id == character_id)
+        ),
+    )
+
+
 def _vote_query_factory(changed: bool) -> Callable[[FeedContext], Select]:
     """Build the cast-vote or changed-vote query — they differ only in time.
 
@@ -292,7 +303,7 @@ def _vote_query_factory(changed: bool) -> Callable[[FeedContext], Select]:
             .join(Task, Praxis.task_id == Task.id)
             .join(voter_char, Vote.voter_character_id == voter_char.c.id)
             .where(
-                Praxis.created_by_id == ctx.character_id,
+                _owns_praxis(ctx.character_id),
                 _VOTE_WAS_CHANGED if changed else ~_VOTE_WAS_CHANGED,
             )
         )
@@ -337,12 +348,19 @@ def _completions_query_factory(character_ids_attr: str) -> Callable[[FeedContext
     """Build a completions query reading its character-id list from ``ctx.<attr>``."""
     def build(ctx: FeedContext) -> Select:
         character_ids = getattr(ctx, character_ids_attr)
+        # The creator if they qualify, else the lowest-id qualifying member.
+        actor_id = case(
+            (Praxis.created_by_id.in_(character_ids), Praxis.created_by_id),
+            else_=select(func.min(PraxisMember.character_id))
+            .where(PraxisMember.praxis_id == Praxis.id, PraxisMember.character_id.in_(character_ids))
+            .scalar_subquery(),
+        )
         query = (
             select(
                 Praxis.id,
                 Praxis.title,
                 Praxis.created_at,
-                Praxis.created_by_id.label("character_id"),
+                actor_id.label("character_id"),
                 Task.title.label("task_title"),
                 Task.point_value.label("task_point_value"),
                 Task.primary_faction_slug.label("task_faction_slug"),
@@ -351,9 +369,14 @@ def _completions_query_factory(character_ids_attr: str) -> Callable[[FeedContext
                 Character.avatar_url.label("author_avatar_url"),
             )
             .join(Task, Praxis.task_id == Task.id)
-            .join(Character, Praxis.created_by_id == Character.id)
+            .join(Character, actor_id == Character.id)
             .where(
-                Praxis.created_by_id.in_(character_ids),
+                or_(
+                    Praxis.created_by_id.in_(character_ids),
+                    exists().where(
+                        and_(PraxisMember.praxis_id == Praxis.id, PraxisMember.character_id.in_(character_ids))
+                    ),
+                ),
                 Praxis.status == PraxisStatus.submitted,
                 # Anyone can declare you a foe and read this source, so apply the
                 # same visibility as every other door: moderation `hidden`, and
@@ -878,15 +901,7 @@ def _comments_on_mine_query(ctx: FeedContext) -> Select:
         .join(Character, Comment.created_by_id == Character.id)
         .where(
             Comment.created_by_id != ctx.character_id,
-            or_(
-                Praxis.created_by_id == ctx.character_id,
-                exists().where(
-                    and_(
-                        PraxisMember.praxis_id == Praxis.id,
-                        PraxisMember.character_id == ctx.character_id,
-                    )
-                ),
-            ),
+            _owns_praxis(ctx.character_id),
             ~_mentions_the_viewer(ctx),
             Comment.is_withdrawn.is_(False),
             Comment.moderation_status == ModerationStatus.visible,
