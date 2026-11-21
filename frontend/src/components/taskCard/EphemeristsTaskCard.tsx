@@ -217,6 +217,7 @@ export default function EphemeristsTaskCard({
             </div>
 
             <h2
+              className="card-title"
               style={{
                 fontFamily: DECO,
                 fontSize: size.titleSize,

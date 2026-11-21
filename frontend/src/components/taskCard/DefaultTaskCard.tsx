@@ -185,6 +185,7 @@ export default function DefaultTaskCard({
           </div>
 
           <h2
+            className="card-title"
             style={{
               fontFamily: LORA,
               fontWeight: 600,

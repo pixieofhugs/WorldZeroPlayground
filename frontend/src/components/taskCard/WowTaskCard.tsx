@@ -195,6 +195,7 @@ export default function WowTaskCard({
             </div>
 
             <h2
+              className="card-title"
               style={{
                 fontFamily: MED,
                 fontSize: size.titleSize,

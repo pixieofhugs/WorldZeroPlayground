@@ -43,7 +43,7 @@
     "proposedTasksHeading": "Proposed tasks",
     "proposedTasksTotal": "{{count}} total",
     "proposedTasksEmpty": "No proposed tasks yet.",
-    "handleJoined": "@{{username}} · joined {{joined}}",
+    "joined": "joined {{joined}}",
     "lvl": "Level",
     "ptsThisLevel": "{{current}} / {{span}} pts this level",
     "nextLevel": "next · lvl {{level}}",

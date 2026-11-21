@@ -172,6 +172,7 @@ export default function SingularityTaskCard({
             </div>
 
             <h2
+              className="card-title"
               style={{
                 fontFamily: MONO,
                 fontSize: size.titleSize,

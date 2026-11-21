@@ -5,6 +5,8 @@
  * stamp's `min-width: auto` is its own drawn size.
  */
 import { describe, it, expect } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import type { ReactElement } from 'react'
@@ -109,5 +111,13 @@ describe('an unbreakable title stays inside its column (#2556)', () => {
     const style = column(body())
     expect(style, 'the column still asks for a measure').toContain(`flex:1 1 ${TEXT_MEASURE}px`)
     expect(style, 'and still yields rather than push the stamp off').toContain('min-width:0')
+  })
+})
+
+describe('a list-card title clamps to 3 lines', () => {
+  it('the title carries the clamp class, and the class clamps', () => {
+    expect(body({ title: 'word '.repeat(80) })).toMatch(/<h2 class="[^"]*\bcard-title\b/)
+    const css = readFileSync(resolve(__dirname, '../../../css/05-component-layer-components.css'), 'utf8')
+    expect(css).toMatch(/\.card-title \{[^}]*-webkit-line-clamp: 3/)
   })
 })

@@ -151,7 +151,7 @@ export default function UaTaskCard({
             </div>
 
             <h2
-              className="content-title"
+              className="content-title card-title"
               style={{
                 fontFamily: UA_DISPLAY,
                 fontWeight: 600,

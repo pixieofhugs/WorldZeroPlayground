@@ -573,7 +573,7 @@ export function ProfileSkin({
                   marginTop: 'var(--space-md)',
                 }}
               >
-                {t('profile.handleJoined', { username: character.username, joined })}
+                {t('profile.joined', { joined })}
               </div>
 
               {progression && (

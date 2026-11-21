@@ -96,7 +96,7 @@ export function PraxisTitle({
   return (
     <Link to={`/praxis/${praxis.id}`}>
       <h2
-        className="content-title font-display font-semibold leading-tight hover:underline"
+        className="content-title card-title font-display font-semibold leading-tight hover:underline"
         style={{
           marginBottom: "var(--space-sm)",
           fontFamily: fonts?.display,

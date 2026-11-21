@@ -171,6 +171,7 @@ export default function EverymenTaskCard({
               </div>
 
               <h2
+                className="card-title"
                 style={{
                   fontFamily: POSTER,
                   fontSize: size.titleSize,

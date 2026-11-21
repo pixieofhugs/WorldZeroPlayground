@@ -164,6 +164,7 @@ export default function SnideTaskCard({
                 a flex row — flex drops whitespace-only children and the words
                 run together in the text content. */}
             <h2
+              className="card-title"
               style={{
                 fontSize: size.titleSize,
                 lineHeight: 1.35,

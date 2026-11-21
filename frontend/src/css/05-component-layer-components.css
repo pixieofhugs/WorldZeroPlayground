@@ -310,6 +310,14 @@
     font-size: var(--text-title);
   }
 
+  /* List-card titles stop at 3 lines, like .card-description. Never on a detail page. */
+  .card-title {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+  }
+
   /* ── Functional ink role classes (#1609) ──
      Replace Tailwind's stock `text-red-*`, which ignores the dark cascade.
      Paint only, one class per token — spacing belongs to a future

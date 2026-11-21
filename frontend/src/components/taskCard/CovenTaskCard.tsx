@@ -168,6 +168,7 @@ export default function CovenTaskCard({
             </div>
 
             <h2
+              className="card-title"
               style={{
                 fontFamily: DISPLAY,
                 fontWeight: 600,
