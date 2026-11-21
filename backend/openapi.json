@@ -5185,6 +5185,7 @@
           "primary_faction_slug",
           "metatask_faction_slug",
           "created_at",
+          "notes",
           "in_progress_count",
           "created_by_display_name",
           "created_by_avatar_url",
@@ -5198,8 +5199,7 @@
           "submitted_praxis_id",
           "start_here",
           "viewer_faction_multiplier",
-          "created_by_name",
-          "notes"
+          "created_by_name"
         ],
         "title": "PendingTaskOut",
         "type": "object"
@@ -6909,6 +6909,17 @@
             ],
             "title": "Metatask Faction Slug"
           },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
           "point_value": {
             "title": "Point Value",
             "type": "integer"
@@ -6972,6 +6983,7 @@
           "primary_faction_slug",
           "metatask_faction_slug",
           "created_at",
+          "notes",
           "in_progress_count",
           "created_by_display_name",
           "created_by_avatar_url",

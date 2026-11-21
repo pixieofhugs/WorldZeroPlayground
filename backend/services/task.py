@@ -345,6 +345,9 @@ async def build_task_out_for_viewer(
     if viewer is None:
         return base
 
+    if task.created_by_id == viewer.id and task.status == TaskStatus.pending:
+        base.notes = task.notes
+
     if signup_facts is None:
         signup_facts = await gather_signup_facts(viewer, [task.id], session, era)
     stats = signup_facts.stats

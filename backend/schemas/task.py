@@ -25,6 +25,9 @@ class TaskOut(WireModel):
     primary_faction_slug: str
     metatask_faction_slug: Optional[str] = None
     created_at: datetime
+    # The proposer's own note to the reviewer, only on their pending proposal
+    # (#3771), so the edit form can prefill it. Never public.
+    notes: Optional[str] = None
     # Active signups (in_progress + pending), as GET /tasks/{id}/signups (#1021).
     # Defaults (here and below) because metatask rows in the praxis seal stack
     # are TaskOut.model_validate()'d on a bare Task (praxis_out.applied_metatasks_for).
