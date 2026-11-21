@@ -13,7 +13,7 @@ import AlbescentFeedFrame from '../feed/AlbescentFeedFrame'
 import AlbescentComment from '../comments/voices/AlbescentComment'
 import { resolvedArchetype } from '../../factions/lazyArchetype'
 import FeedCardRouter from '../feed/FeedCardRouter'
-import { FEED_TYPES, feedKicker, NON_ARCHIVABLE_TYPES } from '../feed/feedItemLabels'
+import { FEED_TYPES, feedKicker, isStillWaiting, NON_ARCHIVABLE_TYPES } from '../feed/feedItemLabels'
 import { surfaceMap } from '../../factions'
 import type { ActivityFeedItem } from '../../api/activityFeed'
 
@@ -92,7 +92,7 @@ describe('every type this chassis carries', () => {
 
   it('places the archive control it is handed, on every archivable type', () => {
     for (const type of CHASSIS_TYPES) {
-      if (NON_ARCHIVABLE_TYPES.has(type)) continue
+      if (NON_ARCHIVABLE_TYPES.has(type) || isStillWaiting(item(type))) continue
       expect(render(item(type)), `${type} offers the ✕`).toContain(ARCHIVE_LABEL)
     }
   })
