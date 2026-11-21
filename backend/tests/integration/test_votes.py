@@ -1225,12 +1225,15 @@ async def test_praxis_out_carries_viewer_vote(
 async def test_vote_on_draft_is_404_and_leaves_no_row(
     client: AsyncClient,
     db_session: AsyncSession,
+    character: Character,
     character2: Character,
     active_task: Task,
     auth_headers: dict,
     auth_headers2: dict,
+    era: Era,
 ):
     from models.vote import Vote
+    from services.vote_tally import tally_votes
 
     draft = await client.post(
         "/praxes",
@@ -1238,12 +1241,27 @@ async def test_vote_on_draft_is_404_and_leaves_no_row(
         headers=auth_headers2,
     )
     pid = draft.json()["id"]
+    voter_stats = (
+        await db_session.execute(
+            select(CharacterStats).where(
+                CharacterStats.character_id == character.id,
+                CharacterStats.era_id == era.id,
+            )
+        )
+    ).scalar_one()
+    budget_before = compute_votes_available(voter_stats)
     resp = await client.post(
         f"/praxes/{pid}/vote", json={"value": 5}, headers=auth_headers
     )
     assert resp.status_code == 404
     rows = await db_session.scalars(select(Vote).where(Vote.praxis_id == pid))
     assert rows.all() == []
+    await db_session.refresh(voter_stats)
+    assert compute_votes_available(voter_stats) == budget_before
+
+    await client.post(f"/praxes/{pid}/submit", headers=auth_headers2)
+    tally = (await tally_votes([pid], db_session))[pid]
+    assert (tally.points_from_votes, tally.voter_count) == (0, 0)
 
 
 @pytest.mark.asyncio

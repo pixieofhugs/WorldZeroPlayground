@@ -209,6 +209,7 @@ async def account_has_received_vote(account_id: int, session: AsyncSession) -> b
                     Character.account_id == account_id,
                     Praxis.id == Vote.praxis_id,
                     Praxis.moderation_status.not_in(UNSCORED_MODERATION_STATUSES),
+                    Praxis.status == PraxisStatus.submitted,
                 )
             )
         )

@@ -16,7 +16,7 @@ from typing import Awaitable, Callable, Optional
 
 import requests
 from pywebpush import WebPushException, webpush
-from sqlalchemy import delete, event, func, select
+from sqlalchemy import delete, distinct, event, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 
@@ -242,14 +242,14 @@ async def notify_comment(
     for recipient_id, kind in recipients.items():
         if kind == FEED_ITEM_TYPE_COMMENT_MENTION:
             recent = await session.scalar(
-                select(func.count())
+                select(func.count(distinct(Comment.created_by_id)))
                 .select_from(CommentMention)
                 .join(Comment, Comment.id == CommentMention.comment_id)
                 .where(CommentMention.mentioned_character_id == recipient_id, *live)
             )
         else:
             recent = await session.scalar(
-                select(func.count())
+                select(func.count(distinct(Comment.created_by_id)))
                 .select_from(Comment)
                 .where(Comment.created_by_id != recipient_id, *live)
             )
