@@ -98,10 +98,10 @@ export function submitAction(canSubmit: boolean, factionChanged: boolean): 'igno
 }
 
 const SAVE_FALLBACK = {
-  faction: 'Could not change faction.',
-  avatar: 'Could not upload avatar.',
-  fields: 'Could not save changes.',
-}
+  faction: 'forms:editCharacter.errors.saveFaction',
+  avatar: 'forms:editCharacter.errors.saveAvatar',
+  fields: 'forms:editCharacter.errors.saveFields',
+} as const
 
 /** A 422 on `location` (#2798), keyed off `loc`, never the English `msg`. */
 function isLocationRejected(error: unknown): boolean {
@@ -118,7 +118,7 @@ export function saveFailureMessage({ moved, failed }: SaveOutcome): string {
   if (!failed) return ''
   const reason = isLocationRejected(failed.error)
     ? i18n.t('forms:editCharacter.locationInvalid')
-    : extractError(failed.error, SAVE_FALLBACK[failed.stage])
+    : extractError(failed.error, i18n.t(SAVE_FALLBACK[failed.stage]))
   return moved ? i18n.t('forms:editCharacter.factionMovedRestFailed', { reason }) : reason
 }
 
@@ -217,7 +217,7 @@ export function useEditCharacter(): EditCharacterState {
         setTagline(c.tagline || '')
         setLocationRaw(c.location || '')
       })
-      .catch((err) => setError(extractError(err, 'Could not load character.')))
+      .catch((err) => setError(extractError(err, i18n.t('forms:editCharacter.errors.load'))))
       .finally(() => setLoading(false))
   }, [id])
 
@@ -313,7 +313,7 @@ export function useEditCharacter(): EditCharacterState {
       await refetch() // server re-resolves the active life (or none)
       navigate('/')
     } catch (err) {
-      setError(extractError(err, 'Could not delete character.'))
+      setError(extractError(err, i18n.t('forms:editCharacter.errors.delete')))
       setDeleting(false)
     }
   }

@@ -181,7 +181,7 @@ export default function CharacterProfile() {
   if (error)
     return (
       <div className="py-8">
-        <ErrorBanner message={<>{extractError(error, "Couldn't load this character.")}{" "}
+        <ErrorBanner message={<>{extractError(error, t("profile.loadError"))}{" "}
           <button
             onClick={() => window.location.reload()}
             className="underline"

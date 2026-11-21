@@ -22,6 +22,7 @@
     "na": "Not yet sworn to a faction."
   },
   "index": {
+    "loadError": "Could not load factions.",
     "loading": "Loading…",
     "loggedOutHint": "Everyone starts unaffiliated. Earn an invitation through task work to join a faction."
   },

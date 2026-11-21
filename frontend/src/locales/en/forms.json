@@ -26,6 +26,13 @@
     "help": "Upload a photo — it becomes your avatar everywhere. Until you answer a calling you play as Unaffiliated, and every path is open to you."
   },
   "editCharacter": {
+    "errors": {
+      "load": "Could not load character.",
+      "delete": "Could not delete character.",
+      "saveFaction": "Could not change faction.",
+      "saveAvatar": "Could not upload avatar.",
+      "saveFields": "Could not save changes."
+    },
     "notFound": "Character not found.",
     "notOwner": "You can only edit your own character.",
     "heading": "Edit character",

@@ -123,7 +123,7 @@ function failureOf(err: unknown): {
  */
 export function extractError(
   err: unknown,
-  fallback = 'Something went wrong. Please try again.'
+  fallback = i18n.t('errors:fallback')
 ): string {
   const { status, body } = failureOf(err)
 
@@ -131,14 +131,14 @@ export function extractError(
   if (message) return message
 
   if (status && status >= 500) {
-    return 'The server ran into an unexpected problem. Try again in a moment.'
+    return i18n.t('errors:server')
   }
 
   if (status !== undefined) return fallback
 
   // Keyed off the absence of a status, not `instanceof ApiNetworkError`: a
   // `catch` also receives ordinary bugs, and "did not get through" is nearer the truth.
-  return 'Unable to reach the server. Check your connection and try again.'
+  return i18n.t('errors:offline')
 }
 
 /** The one reader of `detail.code` (#1598: never substring-match prose). Null when uncoded. */

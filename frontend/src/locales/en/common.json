@@ -34,6 +34,7 @@
     "addFoe": "Foe"
   },
   "profile": {
+    "loadError": "Couldn't load this character.",
     "praxisHeading": "Praxis",
     "praxisEyebrow": "Submitted by {{name}}",
     "praxisEmptyTitle": "No praxis submitted yet.",

@@ -7,7 +7,6 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { getTask, type TaskOut } from "../../api/tasks";
 import {
   listPraxes,
-  createPraxis,
   deletePraxis,
   type PraxisCardOut,
 } from "../../api/praxis";
@@ -19,6 +18,7 @@ import { listComments, type CommentOut } from "../../api/comments";
 import { useAuth } from "../../auth/AuthContext";
 import i18n from "../../i18n";
 import { extractError } from "../../utils/errors";
+import { signupOutcome } from "../../hooks/useTaskSignup";
 import { useGameConfig } from "../../hooks/useGameConfig";
 import { isLevelJumpSignup } from "./levelJump";
 import { canSignUpForTask } from "./signupCta";
@@ -182,7 +182,7 @@ export function useTaskDetail(idParam: string | undefined): TaskDetailState {
         }
       })
       .catch((err) =>
-        setFetchError(extractError(err, "Couldn't load this task.")),
+        setFetchError(extractError(err, i18n.t("tasks:detail.loadError"))),
       )
       .finally(() => setLoading(false));
     // Key on the character id, not `user`: an auth-object identity change would
@@ -198,12 +198,9 @@ export function useTaskDetail(idParam: string | undefined): TaskDetailState {
   const handleSignup = useCallback(async () => {
     if (!task) return;
     setSignupError(null);
-    try {
-      const praxis = await createPraxis({ task_id: task.id, type: "solo" });
-      navigate(`/praxis/${praxis.id}/edit`);
-    } catch (err) {
-      setSignupError(extractError(err, "Could not sign up for this task."));
-    }
+    const outcome = await signupOutcome(task.id, i18n.t("home:signup.error"));
+    if ("to" in outcome) navigate(outcome.to);
+    else setSignupError(outcome.error);
   }, [task, navigate]);
 
   /**

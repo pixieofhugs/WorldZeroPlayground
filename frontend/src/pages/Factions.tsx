@@ -45,7 +45,7 @@ export function DesktopFactions({ state }: { state: FactionsDirectoryState }) {
   const navigate = useNavigate()
 
   const { factions, factionPage, loading } = state
-  const error = state.error ? extractError(state.error, 'Could not load factions.') : null
+  const error = state.error ? extractError(state.error, t('index.loadError')) : null
 
   const statusFor = (slug: string): string => {
     if (!factionPage) return STATUS_NOT_INVITED
