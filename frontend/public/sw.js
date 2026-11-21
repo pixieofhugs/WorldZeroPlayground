@@ -36,6 +36,15 @@ function pushMessage(p, S) {
   }
 }
 
+// Chrome on Android drops a push that shows nothing, so a throw while building the text still shows a line.
+function pushMessageSafe(p, S) {
+  try {
+    return pushMessage(p, S)
+  } catch {
+    return { title: 'World Zero', options: { tag: 'wz', data: { url: '/' }, icon: '/icon-192.png' } }
+  }
+}
+
 // The payload is a trust boundary: only a same-origin path may become a navigation target.
 function safeUrl(url, origin) {
   try {
@@ -60,7 +69,7 @@ async function focusOrOpen(clients, url) {
   await clients.openWindow(url)
 }
 
-if (typeof module !== 'undefined') module.exports = { route, isShell, shellUrls, pushMessage, safeUrl, focusOrOpen }
+if (typeof module !== 'undefined') module.exports = { route, isShell, shellUrls, pushMessage, pushMessageSafe, safeUrl, focusOrOpen }
 
 if (typeof self !== 'undefined' && self.addEventListener) {
   // Precache so a first visit works offline. No clients.claim: the next navigation is controlled by the
@@ -97,7 +106,7 @@ if (typeof self !== 'undefined' && self.addEventListener) {
     } catch {
       // A push must still show something: the default kind is the generic line.
     }
-    const m = pushMessage(p, { ...PUSH_STRINGS, origin: self.location.origin })
+    const m = pushMessageSafe(p, { ...PUSH_STRINGS, origin: self.location.origin })
     event.waitUntil(self.registration.showNotification(m.title, m.options))
   })
 
