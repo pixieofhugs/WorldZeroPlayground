@@ -45,8 +45,14 @@ async def lifespan(app: FastAPI):
         # Live era is a DB fact (ADR-0091); sound process-wide only because one
         # worker runs. Inside the try so a DB down at boot still releases the lock.
         async with AsyncSessionLocal() as session:
-            await deliver_invitations_to_all(session, await rebind_live_era(session))
-            await session.commit()
+            era = await rebind_live_era(session)
+            try:
+                await deliver_invitations_to_all(session, era)
+                await session.commit()
+            except Exception:
+                # Owed letters are retried next boot; one bad row must not stop the app.
+                await session.rollback()
+                logger.exception("Boot invitation delivery failed; starting anyway")
 
         # The room server's task group must outlive every socket it serves.
         async with PRAXIS_ROOM_SERVER:
