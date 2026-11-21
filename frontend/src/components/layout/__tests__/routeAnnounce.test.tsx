@@ -13,7 +13,6 @@ vi.mock('../../LevelUpWatcher', () => ({ default: () => null }))
 vi.mock('../../InvitationWatcher', () => ({ default: () => null }))
 vi.mock('../../TheArray', () => ({ default: () => null }))
 vi.mock('../../NavBar', () => ({ default: () => null }))
-vi.mock('../MobileHeader', () => ({ default: () => null }))
 vi.mock('../MobileTabBar', () => ({ default: () => null }))
 vi.mock('../SiteFooter', () => ({ default: () => null }))
 

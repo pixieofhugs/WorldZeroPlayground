@@ -1515,6 +1515,11 @@
   --badge-admin-text: #f7f4ee;
 }
 
+/* Phones mount no NavBar and have no top bar (#3761), so nothing offsets by it. Same query as useFormFactor. */
+@media (max-width: 767px) and (pointer: coarse) {
+  :root { --navbar-h: 0px; }
+}
+
 /* Near-miss tokens folded into their faction's core (light; dark half in
    02-base-tokens-dark.css). Theme-scoped (#1839). */
 :root, [data-theme] {
