@@ -10,6 +10,7 @@ from sqlalchemy import (
     Identity,
     Index,
     Integer,
+    text,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -57,6 +58,19 @@ class Duel(CreatedAtMixin, Base):
         ),
         Index("ix_duel_challenger_praxis_id", "challenger_praxis_id"),
         Index("ix_duel_opponent_praxis_id", "opponent_praxis_id"),
+        # get_duel_for_praxis reads one row over exactly these statuses.
+        Index(
+            "uq_duel_live_challenger_praxis",
+            "challenger_praxis_id",
+            unique=True,
+            postgresql_where=text("status IN ('pending', 'active', 'settled')"),
+        ),
+        Index(
+            "uq_duel_live_opponent_praxis",
+            "opponent_praxis_id",
+            unique=True,
+            postgresql_where=text("status IN ('pending', 'active', 'settled')"),
+        ),
         Index("ix_duel_opponent_character_id", "opponent_character_id"),
     )
 
