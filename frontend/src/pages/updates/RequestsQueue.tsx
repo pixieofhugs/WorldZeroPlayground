@@ -1,3 +1,4 @@
+import '../../components/ui/FilterBar/filterBar.css'
 import { useEffect, useState, type KeyboardEvent } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'

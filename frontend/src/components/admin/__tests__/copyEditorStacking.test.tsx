@@ -100,7 +100,7 @@ describe('the mod strip is the top layer (#3094)', () => {
     const files = [...LAYERS_BY_FILE.keys()]
     expect(files).toContain('components/confirm/ConfirmDialog.tsx') // Tailwind `z-50`
     expect(files).toContain('components/feed/FeedBankFullModal.tsx') // inline `zIndex`
-    expect(files).toContain('css/07-layout-filter-bar.css') // CSS `z-index`
+    expect(files).toContain('components/ui/FilterBar/filterBar.css') // CSS `z-index`
     expect(files).toContain(EDITOR)
   })
 

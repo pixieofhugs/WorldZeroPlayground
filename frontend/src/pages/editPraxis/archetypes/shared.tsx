@@ -717,6 +717,7 @@ export function TaskSlip({
   const { t } = useTranslation("forms");
   return (
     <div
+      className="composer-slip"
       style={{
         display: "flex",
         gap: "var(--space-lg)",
@@ -792,7 +793,11 @@ export function TaskSlip({
           </div>
         )}
       </div>
-      {mark ?? <ScoreStamp praxis={praxis} />}
+      {mark ?? (
+        <div className="composer-stamp">
+          <ScoreStamp praxis={praxis} />
+        </div>
+      )}
     </div>
   );
 }

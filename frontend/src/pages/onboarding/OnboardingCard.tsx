@@ -95,6 +95,7 @@ export default function OnboardingCard({
 
   return (
     <div
+      className="ob-sheet-outer"
       style={{
         display: 'flex',
         justifyContent: 'center',
@@ -102,6 +103,7 @@ export default function OnboardingCard({
       }}
     >
       <article
+        className="ob-sheet"
         style={{
           boxSizing: 'border-box',
           width: SHEET_WIDTH,

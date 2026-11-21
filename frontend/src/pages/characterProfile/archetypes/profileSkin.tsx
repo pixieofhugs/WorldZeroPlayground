@@ -517,6 +517,7 @@ export function ProfileSkin({
 
   return (
     <div
+      className="profile-frame"
       data-theme={kit.dataTheme}
       style={{
         ...kit.pageVars,
@@ -542,7 +543,7 @@ export function ProfileSkin({
       <div style={{ position: 'relative', zIndex: 1 }}>
         {/* ① Identity + progression */}
         {frameIdentity(
-        <header style={{ ...kit.headerStyle, position: 'relative', overflow: 'hidden' }}>
+        <header className="profile-header" style={{ ...kit.headerStyle, position: 'relative', overflow: 'hidden' }}>
           {kit.headerDecoration}
           <div
             style={{
@@ -578,7 +579,7 @@ export function ProfileSkin({
               </div>
 
               {progression && (
-                <div style={kit.progressionStyle}>
+                <div className="profile-level" style={kit.progressionStyle}>
                   {/* Level readout as text, DELIBERATELY not a ring (#2213): a
                       ring would plot the same percentage as the bar. Do not
                       restore it. */}
