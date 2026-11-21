@@ -2,6 +2,7 @@
 
 import logging
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import HTTPException
@@ -629,17 +630,29 @@ async def list_pending_tasks_with_proposer(
     return list(result.all())
 
 
+def _check_backdoor_window(opens: datetime, closes: Optional[datetime]) -> None:
+    if closes is not None and closes <= opens:
+        raise_coded(
+            422,
+            ErrorCode.backdoor_window_invalid,
+            "A backdoor must close after it opens.",
+        )
+
+
 async def update_task_status(
     task_id: int,
     new_status: TaskStatus,
     session: AsyncSession,
     *,
     actor_id: int,
+    backdoor_opens_at: Optional[datetime] = None,
+    backdoor_closes_at: Optional[datetime] = None,
 ) -> Task:
     """Admin task status change.
 
     Any transition is allowed; same-state 422s. Leaving ``deleted`` is the undo
-    for Delete (#3305); entering it runs Delete's eligibility check.
+    for Delete (#3305); entering it runs Delete's eligibility check. Entering
+    ``backdoor`` stamps its window (#3848); leaving it clears the window.
     """
     task = await session.get(Task, task_id)
     if task is None:
@@ -654,6 +667,11 @@ async def update_task_status(
     if new_status == TaskStatus.deleted:
         await _refuse_if_undeletable(task, session)
 
+    task.backdoor_opens_at = task.backdoor_closes_at = None
+    if new_status == TaskStatus.backdoor:
+        opens = backdoor_opens_at or datetime.now(timezone.utc)
+        _check_backdoor_window(opens, backdoor_closes_at)
+        task.backdoor_opens_at, task.backdoor_closes_at = opens, backdoor_closes_at
     task.status = new_status
     await session.flush()
     await log_mod_action(
@@ -698,6 +716,11 @@ async def admin_edit_task(
         task.point_value = data.point_value
     if data.level_required is not None:
         task.level_required = data.level_required
+    if task.status == TaskStatus.backdoor:
+        opens = data.backdoor_opens_at or task.backdoor_opens_at
+        closes = data.backdoor_closes_at or task.backdoor_closes_at
+        _check_backdoor_window(opens, closes)
+        task.backdoor_opens_at, task.backdoor_closes_at = opens, closes
     await session.flush()
     if before != (task.point_value, task.primary_faction_slug):
         # Scoring reads these live; stored stats would split from them.

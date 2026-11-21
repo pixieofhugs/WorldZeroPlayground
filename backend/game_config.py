@@ -226,6 +226,9 @@ class EraConfig:
     # Era files state it explicitly: the cadence is the era's (#1617).
     habit_window_days: int = 7
 
+    # Days after a backdoor opens when the console hint gets plainer (#3848).
+    backdoor_hint_stage_days: tuple[int, int] = (30, 60)
+
     # Hours an account waits between first-time praxis posts (#3474); 24 = one a
     # day, rolling from the last post. Admins are exempt.
     praxis_post_cooldown_hours: int = 24

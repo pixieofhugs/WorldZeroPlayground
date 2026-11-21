@@ -452,7 +452,12 @@ async def admin_update_task_status(
 ):
     new_status = TaskStatus(data.status)
     task = await update_task_status(
-        task_id, new_status, session, actor_id=admin.id
+        task_id,
+        new_status,
+        session,
+        actor_id=admin.id,
+        backdoor_opens_at=data.backdoor_opens_at,
+        backdoor_closes_at=data.backdoor_closes_at,
     )
     return await build_task_out(task, session)
 

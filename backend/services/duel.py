@@ -26,6 +26,7 @@ from models.praxis import (
 )
 from models.task import Task, TaskStatus
 from schemas.duel import DuelDetailOut, DuelSideOut
+from services.backdoor import settle_closed_backdoors
 from services.character import is_playable
 from services.scoring import compute_duel_multiplier
 from services.character_stats import recalculate_character_stats
@@ -364,8 +365,12 @@ async def respond_to_duel_challenge(
     ):
         raise_coded(400, ErrorCode.duel_self_challenge, SELF_DUEL_DETAIL)
 
+    await settle_closed_backdoors(session)
     task = await session.get(Task, duel.task_id)
     if task is None:
+        raise_coded(404, ErrorCode.task_not_found, "Task no longer exists.")
+    # Same 404 a deleted task gets: a refusal must not name the backdoor (#3848).
+    if task.status == TaskStatus.backdoor and task_status_closed(task, opponent, era):
         raise_coded(404, ErrorCode.task_not_found, "Task no longer exists.")
 
     # The challenge may outlive the task's status (era close, mod action). Level

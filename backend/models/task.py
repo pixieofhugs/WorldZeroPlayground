@@ -1,7 +1,8 @@
 import enum
+from datetime import datetime
 from typing import TYPE_CHECKING, List, Optional
 
-from sqlalchemy import BigInteger, CheckConstraint, ForeignKey, Identity, Integer, String, Text
+from sqlalchemy import BigInteger, CheckConstraint, DateTime, ForeignKey, Identity, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from models.base import Base, string_enum
@@ -17,6 +18,9 @@ class TaskStatus(enum.Enum):
     retired = "retired"
     # Admin "Delete" (#3305): the row stays, invisible to everyone but admins.
     deleted = "deleted"
+    # Hidden from every list; only a ``reads_the_array`` faction may sign up while
+    # its window is open (#3848). Settles to ``retired`` once it closes.
+    backdoor = "backdoor"
 
 
 class TaskType(enum.Enum):
@@ -70,6 +74,14 @@ class Task(TimestampMixin, Base):
     # ``ensure_onboarding_task`` upsert by key, not title.
     seed_key: Mapped[Optional[str]] = mapped_column(
         String, nullable=True, unique=True
+    )
+
+    # Backdoor window (#3848); both NULL unless status is ``backdoor``.
+    backdoor_opens_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    backdoor_closes_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
     )
 
     praxes: Mapped[List["Praxis"]] = relationship(

@@ -141,10 +141,16 @@ class AdminTaskPatch(WireModel):
     #: The task's own faction (#1714); validated in ``admin_edit_task`` against
     #: era config. Not ``metatask_faction_slug``, which is a different question.
     primary_faction_slug: str | None = Field(None, min_length=1, max_length=50)
+    # Backdoor window (#3848); only honoured on a backdoor task.
+    backdoor_opens_at: datetime | None = None
+    backdoor_closes_at: datetime | None = None
 
 
 class TaskStatusAction(WireModel):
-    status: Literal["pending", "active", "retired", "deleted"]
+    status: Literal["pending", "active", "retired", "deleted", "backdoor"]
+    # Only read for ``backdoor``; opens defaults to now.
+    backdoor_opens_at: datetime | None = None
+    backdoor_closes_at: datetime | None = None
 
 
 class TaskImportResult(WireModel):

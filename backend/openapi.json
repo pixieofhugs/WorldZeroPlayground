@@ -164,6 +164,30 @@
       },
       "AdminTaskPatch": {
         "properties": {
+          "backdoor_closes_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Backdoor Closes At"
+          },
+          "backdoor_opens_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Backdoor Opens At"
+          },
           "description": {
             "anyOf": [
               {
@@ -351,6 +375,41 @@
           "task_level_required"
         ],
         "title": "AwaitingSubmissionPayload",
+        "type": "object"
+      },
+      "BackdoorOut": {
+        "description": "One open door, as the Array's console hints at it (#3848): task fields only.",
+        "properties": {
+          "backdoor_opens_at": {
+            "format": "date-time",
+            "title": "Backdoor Opens At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "level_required": {
+            "title": "Level Required",
+            "type": "integer"
+          },
+          "point_value": {
+            "title": "Point Value",
+            "type": "integer"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "point_value",
+          "level_required",
+          "backdoor_opens_at"
+        ],
+        "title": "BackdoorOut",
         "type": "object"
       },
       "BadgeOut": {
@@ -3852,6 +3911,13 @@
       },
       "GameConfigOut": {
         "properties": {
+          "backdoor_hint_stage_days": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Backdoor Hint Stage Days",
+            "type": "array"
+          },
           "collab_auto_submit_days": {
             "title": "Collab Auto Submit Days",
             "type": "integer"
@@ -3914,6 +3980,7 @@
           "duel_level_required",
           "collab_auto_submit_days",
           "pending_task_admin_review_hours",
+          "backdoor_hint_stage_days",
           "level_to_see_pending_tasks",
           "max_task_signups",
           "factions",
@@ -5028,6 +5095,30 @@
             "title": "Allowed Modes",
             "type": "array"
           },
+          "backdoor_closes_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Backdoor Closes At"
+          },
+          "backdoor_opens_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Backdoor Opens At"
+          },
           "can_sign_up": {
             "default": false,
             "title": "Can Sign Up",
@@ -5185,6 +5276,8 @@
           "primary_faction_slug",
           "metatask_faction_slug",
           "created_at",
+          "backdoor_opens_at",
+          "backdoor_closes_at",
           "in_progress_count",
           "created_by_display_name",
           "created_by_avatar_url",
@@ -6825,6 +6918,30 @@
             "title": "Allowed Modes",
             "type": "array"
           },
+          "backdoor_closes_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Backdoor Closes At"
+          },
+          "backdoor_opens_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Backdoor Opens At"
+          },
           "can_sign_up": {
             "default": false,
             "title": "Can Sign Up",
@@ -6972,6 +7089,8 @@
           "primary_faction_slug",
           "metatask_faction_slug",
           "created_at",
+          "backdoor_opens_at",
+          "backdoor_closes_at",
           "in_progress_count",
           "created_by_display_name",
           "created_by_avatar_url",
@@ -7039,19 +7158,45 @@
           "pending",
           "active",
           "retired",
-          "deleted"
+          "deleted",
+          "backdoor"
         ],
         "title": "TaskStatus",
         "type": "string"
       },
       "TaskStatusAction": {
         "properties": {
+          "backdoor_closes_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Backdoor Closes At"
+          },
+          "backdoor_opens_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Backdoor Opens At"
+          },
           "status": {
             "enum": [
               "pending",
               "active",
               "retired",
-              "deleted"
+              "deleted",
+              "backdoor"
             ],
             "title": "Status",
             "type": "string"
@@ -15521,6 +15666,64 @@
           }
         ],
         "summary": "Propose Task Route",
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/tasks/backdoor": {
+      "get": {
+        "operationId": "list_backdoors_tasks_backdoor_get",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/BackdoorOut"
+                  },
+                  "title": "Response List Backdoors Tasks Backdoor Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Backdoors",
         "tags": [
           "tasks"
         ]

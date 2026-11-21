@@ -63,6 +63,7 @@
     "TASK_FACTION_HIDDEN": "Tasks can't be created for that faction.",
     "TASK_HAS_HISTORY": "This task has history — a praxis, a duel, a metatask or a comment points at it — so it can't be deleted. Retire it instead.",
     "TASK_SEED_OWNED": "This task is owned by the seeder and can't be deleted.",
+    "BACKDOOR_WINDOW_INVALID": "A backdoor must close after it opens.",
 
     "FACTION_NOT_FOUND": "Faction not found.",
     "FACTION_ALREADY_MEMBER": "Already a member of this faction.",
