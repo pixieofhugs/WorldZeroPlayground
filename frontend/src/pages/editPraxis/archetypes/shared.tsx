@@ -2,6 +2,7 @@
  * The composer's shared presentational layer: the layout contract (#1181,
  * ADR-0065) every skin assembles, plus {@link ComposerDress} (#1189).
  */
+import { useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -683,18 +684,17 @@ export function TaskSlip({
   pillStyle,
 }: TaskSlipProps) {
   const { t } = useTranslation("forms");
-  return (
-    <div
-      className="composer-slip"
-      style={{
-        display: "flex",
-        gap: "var(--space-lg)",
-        alignItems: "flex-start",
-        // See COPY_MEASURE (#1961).
-        flexWrap: "wrap",
-        ...style,
-      }}
-    >
+  const mobile = useFormFactor() === "mobile";
+  const [open, setOpen] = useState(false);
+  const rowStyle: CSSProperties = {
+    display: "flex",
+    gap: "var(--space-lg)",
+    alignItems: "flex-start",
+    // See COPY_MEASURE (#1961).
+    flexWrap: "wrap",
+  };
+  const slip = (
+    <>
       <div style={{ flex: `1 1 ${COPY_MEASURE}px`, minWidth: 0 }}>
         <div style={composerLabelStyle(labelStyle)}>
           {label ?? t("editPraxis.composer.taskLabel")}
@@ -765,6 +765,62 @@ export function TaskSlip({
         <div className="composer-stamp">
           <ScoreStamp praxis={praxis} />
         </div>
+      )}
+    </>
+  );
+  if (!mobile)
+    return (
+      <div className="composer-slip" style={{ ...rowStyle, ...style }}>
+        {slip}
+      </div>
+    );
+  return (
+    <div className="composer-slip" style={{ ...rowStyle, ...style }}>
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+        style={{
+          flex: "1 1 100%",
+          minWidth: 0,
+          minHeight: 44,
+          display: "flex",
+          alignItems: "center",
+          gap: "var(--space-md)",
+          padding: 0,
+          border: 0,
+          background: "none",
+          color: "inherit",
+          font: "inherit",
+          textAlign: "start",
+          cursor: "pointer",
+          fontSize: "var(--text-content)",
+          ...titleStyle,
+          marginTop: 0,
+        }}
+      >
+        <span
+          style={{
+            flex: "1 1 0",
+            minWidth: 0,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {praxis.task_title}
+        </span>
+        <span style={{ flexShrink: 0 }}>
+          {t("editPraxis.composer.recapPoints", {
+            points: praxis.task_point_value,
+          })}
+        </span>
+        <span aria-hidden style={{ flexShrink: 0 }}>
+          {open ? "▴" : "▾"}
+        </span>
+      </button>
+      {open && (
+        <div style={{ ...rowStyle, flex: "1 1 100%", minWidth: 0 }}>{slip}</div>
       )}
     </div>
   );

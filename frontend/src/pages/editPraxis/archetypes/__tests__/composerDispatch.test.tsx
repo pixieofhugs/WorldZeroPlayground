@@ -149,8 +149,12 @@ describe("editPraxis dispatch (ADR-0065: one component, both widths)", () => {
     // No `writeUpLabel` (#2085): it lives on a CodeMirror-built element
     // (bodySpellcheck.test.ts).
     for (const key of ["taskLabel", "titleLabel", "modeLabel", "proofLabel", "submit"] as const) {
+      // The mobile recap is one collapsed row until tapped (#3758), so no "The task" eyebrow yet.
+      if (key === "taskLabel" && width === "mobile") continue;
       expect(markup).toContain(i18n.t(`forms:editPraxis.composer.${key}`));
     }
+    if (width === "mobile") expect(markup).toContain('aria-expanded="false"');
+    else expect(markup).not.toContain("aria-expanded");
   });
 
   it.each(CASES)("%s draws exactly one breadcrumb on %s", (slug, width) => {
