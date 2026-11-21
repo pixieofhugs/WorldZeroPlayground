@@ -1,4 +1,5 @@
 import { useState, type CSSProperties, type ReactNode } from "react";
+import { CARD_CTA } from "../../../components/ctaTapFloor";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
@@ -353,6 +354,8 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
               background: "none",
               border: "none",
               marginTop: "var(--space-lg)",
+              ...CARD_CTA,
+              minWidth: 44,
               padding: 0,
               fontFamily: TYPE,
               fontSize: "var(--text-md)",

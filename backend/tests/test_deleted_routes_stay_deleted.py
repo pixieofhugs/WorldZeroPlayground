@@ -35,7 +35,6 @@ DELETED_OPERATIONS: frozenset[tuple[str, str]] = frozenset(
         ("post", "/admin/factions"),
         ("get", "/characters/{character_id}/praxes"),
         ("get", "/characters/{character_id}/stats/votes-received"),
-        ("put", "/tasks/{task_id}"),
         # Folded into /factions/status (#1384)
         ("get", "/factions/invitations"),
         # PraxisOut carries the tally (#1382)

@@ -2085,9 +2085,11 @@ export interface paths {
         };
         /** Get Task */
         get: operations["get_task_tasks__task_id__get"];
-        put?: never;
+        /** Edit Proposal Route */
+        put: operations["edit_proposal_route_tasks__task_id__put"];
         post?: never;
-        delete?: never;
+        /** Withdraw Proposal Route */
+        delete: operations["withdraw_proposal_route_tasks__task_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -2105,6 +2107,23 @@ export interface paths {
         put?: never;
         /** Create Task Comment */
         post: operations["create_task_comment_tasks__task_id__comments_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tasks/{task_id}/proposal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Own Proposal Route */
+        get: operations["get_own_proposal_route_tasks__task_id__proposal_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -4713,6 +4732,27 @@ export interface components {
         PraxisVoteIn: {
             /** Value */
             value: number;
+        };
+        /**
+         * ProposalOut
+         * @description A proposer's own form fields; ``notes`` is private, so it is not on TaskOut.
+         */
+        ProposalOut: {
+            /** Description */
+            description: string;
+            /** Level Required */
+            level_required: number;
+            /** Metatask Faction Slug */
+            metatask_faction_slug: string | null;
+            /** Notes */
+            notes: string;
+            /** Point Value */
+            point_value: number;
+            /** Primary Faction Slug */
+            primary_faction_slug: string;
+            task_type: components["schemas"]["TaskType"];
+            /** Title */
+            title: string;
         };
         /** PushKeysIn */
         PushKeysIn: {
@@ -9231,6 +9271,74 @@ export interface operations {
             };
         };
     };
+    edit_proposal_route_tasks__task_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                task_id: number;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TaskCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    withdraw_proposal_route_tasks__task_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                task_id: number;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_task_comments_tasks__task_id__comments_get: {
         parameters: {
             query?: never;
@@ -9288,6 +9396,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CommentOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_own_proposal_route_tasks__task_id__proposal_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                task_id: number;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProposalOut"];
                 };
             };
             /** @description Validation Error */

@@ -15,7 +15,7 @@ from models.character import Character
 from models.character_stats import CharacterStats
 from models.praxis import Praxis, PraxisMember, PraxisStatus
 from models.task import Task, TaskStatus, TaskType
-from schemas.task import TaskCreate, TaskOut, TaskSignupOut
+from schemas.task import ProposalOut, TaskCreate, TaskOut, TaskSignupOut
 from seed import ONBOARDING_TASK_SEED_KEY
 from services.albescent_reveal import is_albescent_revealed
 from services.era import (
@@ -32,6 +32,7 @@ from services.era_gates import (
 from services.faction_service import hidden_faction_slugs, refuse_hidden_faction
 from services.level_jump import available_level_reach
 from services.meta_task import character_sees_metatasks
+from services.mod_log import log_mod_action
 from services.scoring import compute_faction_multiplier
 from services.signup_eligibility import (
     SignupFacts,
@@ -47,15 +48,14 @@ from services.signup_eligibility import (
 )
 
 
-async def propose_task(
+async def _validate_proposal(
     character: Character,
     data: TaskCreate,
     session: AsyncSession,
-    skip_level_check: bool = False,
-    era: EraConfig = CURRENT_ERA,
-) -> Task:
-    """Propose a pending task; ``task_type`` picks the level gate. Metatasks need
-    ``metatask_faction_slug``."""
+    skip_level_check: bool,
+    era: EraConfig,
+) -> TaskType:
+    """Every propose gate, shared by propose and edit so they can't drift."""
     era_row = await get_current_era_row(session)
     stats = await get_or_create_stats(session, character.id, era_row.id)
 
@@ -100,6 +100,21 @@ async def propose_task(
     await refuse_hidden_faction(
         session, data.primary_faction_slug, data.metatask_faction_slug
     )
+    return task_type
+
+
+async def propose_task(
+    character: Character,
+    data: TaskCreate,
+    session: AsyncSession,
+    skip_level_check: bool = False,
+    era: EraConfig = CURRENT_ERA,
+) -> Task:
+    """Propose a pending task; ``task_type`` picks the level gate. Metatasks need
+    ``metatask_faction_slug``."""
+    task_type = await _validate_proposal(
+        character, data, session, skip_level_check, era
+    )
 
     task = Task(
         title=data.title,
@@ -119,6 +134,79 @@ async def propose_task(
     await session.flush()
     await session.refresh(task)
     return task
+
+
+async def _own_pending_task(
+    task_id: int, character: Character, session: AsyncSession
+) -> Task:
+    task = await session.get(Task, task_id)
+    if task is None:
+        raise_coded(404, ErrorCode.task_not_found, "Task not found.")
+    if task.created_by_id != character.id:
+        raise_coded(403, ErrorCode.task_not_yours, "That isn't your proposal.")
+    if task.status != TaskStatus.pending:
+        raise_coded(
+            409, ErrorCode.task_not_pending, "Only a pending proposal can change."
+        )
+    return task
+
+
+async def get_own_proposal(
+    task_id: int, character: Character, session: AsyncSession
+) -> ProposalOut:
+    """The proposer's own form fields, notes included, which TaskOut never carries."""
+    task = await _own_pending_task(task_id, character, session)
+    return ProposalOut(
+        title=task.title,
+        description=task.description,
+        notes=task.notes,
+        point_value=task.point_value,
+        level_required=task.level_required,
+        primary_faction_slug=task.primary_faction_slug,
+        task_type=task.task_type,
+        metatask_faction_slug=task.metatask_faction_slug,
+    )
+
+
+async def edit_proposal(
+    task_id: int,
+    character: Character,
+    data: TaskCreate,
+    session: AsyncSession,
+    skip_level_check: bool = False,
+    era: EraConfig = CURRENT_ERA,
+) -> Task:
+    """Rewrite a pending proposal. ``created_at`` is untouched, so the review
+    window doesn't restart."""
+    task = await _own_pending_task(task_id, character, session)
+    task_type = await _validate_proposal(
+        character, data, session, skip_level_check, era
+    )
+    task.title = data.title
+    task.description = data.description or ""
+    task.notes = data.notes or ""
+    task.point_value = data.point_value
+    task.level_required = data.level_required
+    task.primary_faction_slug = data.primary_faction_slug or CROSS_FACTION_SLUG
+    task.metatask_faction_slug = (
+        data.metatask_faction_slug if task_type == TaskType.metatask else None
+    )
+    task.task_type = task_type
+    await session.flush()
+    await session.refresh(task)
+    return task
+
+
+async def withdraw_proposal(
+    task_id: int, character: Character, session: AsyncSession
+) -> None:
+    """Soft-delete via the existing ``deleted`` status; a mod can restore it."""
+    task = await _own_pending_task(task_id, character, session)
+    task.status = TaskStatus.deleted
+    await session.flush()
+    await log_mod_action(
+        session, character.account_id, "task_withdraw", "task", task_id
+    )
 
 
 @dataclass(frozen=True)

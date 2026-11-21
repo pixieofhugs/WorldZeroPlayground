@@ -21,6 +21,8 @@ import {
   unblockCharacter,
   type RelationshipListItem,
 } from "../api/relationships";
+import { useOwnProposals } from "./characterProfile/useOwnProposals";
+import { ProposalActionsContext } from "../components/taskCard/proposalActions";
 import RelationshipBlockControl from "./characterProfile/RelationshipBlockControl";
 import AddRelationshipButtons from "./characterProfile/AddRelationshipButtons";
 import { useAuth } from "../auth/AuthContext";
@@ -33,6 +35,7 @@ import FactionProfileBody, {
   type ProfileBodyProps,
   type ProfileProgression,
 } from "./characterProfile/FactionProfileBody";
+import { ErrorBanner } from "../components/ui/ErrorBanner";
 
 /** Status pill minus `background`; shared by the edge and block rows (ADR-0077). */
 const statusPillStyle: React.CSSProperties = {
@@ -75,7 +78,12 @@ export default function CharacterProfile() {
   const character = data?.[0] ?? null;
   useDocumentTitle(character?.display_name ?? t("nav.players"));
   const submissions = data?.[1] ?? [];
-  const proposedTasks = data?.[2] ?? [];
+  const own = useOwnProposals(
+    data?.[2] ?? [],
+    !!character && user?.character?.id === character.id,
+    character?.faction_slug,
+  );
+  const proposedTasks = own.tasks;
   const [relationship, setRelationship] = useState<RelationshipListItem | null>(
     null,
   );
@@ -180,15 +188,13 @@ export default function CharacterProfile() {
   if (error)
     return (
       <div className="py-8">
-        <p className="font-body content-text danger-text border-2 danger-edge px-3 py-2">
-          {extractError(error, "Couldn't load this character.")}{" "}
+        <ErrorBanner message={<>{extractError(error, t("profile.loadError"))}{" "}
           <button
             onClick={() => window.location.reload()}
             className="underline"
           >
             {t("states.tryRefreshing")}
-          </button>
-        </p>
+          </button></>} />
       </div>
     );
   if (!character)
@@ -317,12 +323,18 @@ export default function CharacterProfile() {
     <>
       {/* Sign-up failure only (success navigates away); no skin owns a slot. */}
 
-      {signupMsg && (
+      {own.error && (
         <p className="font-body content-text border-2 danger-edge danger-text px-3 py-2">
-          {signupMsg}
+          {own.error}
         </p>
       )}
-      <FactionProfileBody {...bodyProps} />
+      {signupMsg && (
+        <ErrorBanner message={signupMsg} />
+      )}
+      <ProposalActionsContext.Provider value={own.actions}>
+        <FactionProfileBody {...bodyProps} />
+      </ProposalActionsContext.Provider>
+      {own.dialog}
     </>
   );
 }

@@ -1,4 +1,4 @@
-import { apiGet, apiPost } from './client'
+import { apiDelete, apiGet, apiPost, apiPut } from './client'
 import type { components } from './generated/schema'
 
 export type TaskType = components['schemas']['TaskType']
@@ -18,6 +18,8 @@ export type TaskStatus = components['schemas']['TaskStatus']
  *   unknown to the plain CTA.
  */
 export type TaskOut = components['schemas']['TaskOut']
+
+export type ProposalOut = components['schemas']['ProposalOut']
 
 export type TaskCreate = components['schemas']['TaskCreate']
 
@@ -59,6 +61,21 @@ export async function getTask(id: number): Promise<TaskOut> {
 export async function proposeTask(body: TaskCreate): Promise<TaskOut> {
   const { data } = await apiPost('/tasks', { body })
   return data
+}
+
+export async function getOwnProposal(id: number): Promise<ProposalOut> {
+  const { data } = await apiGet('/tasks/{task_id}/proposal', { params: { path: { task_id: id } } })
+  return data
+}
+
+/** Proposer-only, while pending; same body and gates as {@link proposeTask}. */
+export async function editProposal(id: number, body: TaskCreate): Promise<TaskOut> {
+  const { data } = await apiPut('/tasks/{task_id}', { params: { path: { task_id: id } }, body })
+  return data
+}
+
+export async function withdrawProposal(id: number): Promise<void> {
+  await apiDelete('/tasks/{task_id}', { params: { path: { task_id: id } } })
 }
 
 /** `level` is current-era (ADR-0042); `joined_at` is `PraxisMember.joined_at`. */

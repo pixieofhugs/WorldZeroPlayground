@@ -10,6 +10,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../../i18n'
+import { CARD_CTA } from '../../components/ctaTapFloor'
 import ConfirmDialog, {
   type ConfirmRequest,
 } from '../../components/confirm/ConfirmDialog'
@@ -82,6 +83,10 @@ export default function RelationshipBlockControl({
           border: 'none',
           cursor: 'pointer',
           textAlign: 'center',
+          ...CARD_CTA,
+          minWidth: 44,
+          width: '100%',
+          marginTop: 'var(--space-sm)',
         }}
       >
         {t('relationships.block')}

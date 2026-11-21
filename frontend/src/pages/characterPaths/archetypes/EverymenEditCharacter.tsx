@@ -37,11 +37,11 @@ import {
   ComposerRule,
   ComposerSection,
   ComposerSheet,
-  ErrorBanner,
   composerBandStyle,
   composerLabelStyle,
   useComposerSizes,
 } from '../../editPraxis/archetypes/shared'
+import { ErrorBanner } from '../../../components/ui/ErrorBanner'
 import { EverymenCog } from '../../../components/factionMarks/everymenCogs'
 import { factionRoleVars } from '../../../utils/factionRoles'
 import { factionBodyVars } from '../../../utils/factionBodyFace'

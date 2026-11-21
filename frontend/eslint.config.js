@@ -1214,6 +1214,22 @@ export default [
     ignores: ['src/**/*.test.tsx', 'src/**/__tests__/**'],
     rules: { 'local/no-static-inline-style': 'error' },
   },
+  {
+    // The hand-built ErrorBanner copy has no role="alert"; a `<p role=...>` (the hidden-praxis
+    // status notice) is exempt.
+    files: ['src/**/*.tsx'],
+    ignores: ['src/**/*.test.tsx', 'src/**/__tests__/**'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            "JSXOpeningElement[name.name='p']:not(:has(JSXAttribute[name.name='role'])):has(JSXAttribute[name.name='className'][value.value=/danger-edge/][value.value=/danger-text/])",
+          message: 'Use <ErrorBanner> (components/ui) so the error is announced (#3798).',
+        },
+      ],
+    },
+  },
   ...(LEGACY_STATIC_STYLE_FILES.length > 0
     ? [{ files: LEGACY_STATIC_STYLE_FILES, rules: { 'local/no-static-inline-style': 'off' } }]
     : []),

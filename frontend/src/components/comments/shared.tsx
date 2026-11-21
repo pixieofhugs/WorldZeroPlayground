@@ -213,7 +213,7 @@ export function ComposerControls({
           {onCancel && (
             <button
               onClick={onCancel}
-              className="font-body label-caption hover:underline"
+              className="font-body label-caption hit-box hover:underline"
               style={{
                 background: 'none',
                 border: 'none',
@@ -227,6 +227,7 @@ export function ComposerControls({
           )}
           <button
             onClick={onSubmit}
+            className="hit-box"
             disabled={disabled}
             style={{
               background: accent,

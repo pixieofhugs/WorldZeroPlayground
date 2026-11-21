@@ -7,6 +7,7 @@ import {
   type TaskImportRowError,
 } from "../../api/admin";
 import { extractError } from "../../utils/errors";
+import { ErrorBanner } from "../../components/ui/ErrorBanner";
 
 interface Props {
   onImported: () => void;
@@ -81,9 +82,7 @@ export default function TaskImportPanel({ onImported }: Props) {
       </div>
 
       {error && (
-        <p className="font-body content-text danger-text border-2 danger-edge px-3 py-2">
-          {error}
-        </p>
+        <ErrorBanner message={error} />
       )}
 
       {rowErrors.length > 0 && (

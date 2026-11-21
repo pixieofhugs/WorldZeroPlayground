@@ -27,7 +27,7 @@ export default function FeedBulkArchiveButton({
     <button
       type="button"
       onClick={onAct}
-      className="label-caption"
+      className="label-caption hit-box"
       data-feed-bulk={archivedView ? 'restore-all' : 'archive-all'}
       style={{
         cursor: pending ? 'progress' : 'pointer',

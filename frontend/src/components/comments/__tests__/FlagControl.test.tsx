@@ -91,6 +91,12 @@ describe('CommentFlagControl — affordance presence (#575)', () => {
     const html = renderToStaticMarkup(<CommentFlagControl comment={COMMENT} />)
     expect(html).toBe('')
   })
+  it('clears the phone tap floor (#3755)', () => {
+    authState.user = { character: { id: 99 } }
+    const html = renderToStaticMarkup(<CommentFlagControl comment={COMMENT} />)
+    expect(html).toMatch(/min-height:\s*44px/)
+    expect(html).toMatch(/min-width:\s*44px/)
+  })
 })
 
 /**

@@ -20,6 +20,7 @@ import {
   type ScoreMode,
   type ViewerRelationships,
 } from './players/playersData'
+import { ErrorBanner } from "../components/ui/ErrorBanner";
 
 /**
  * The Players page (#1855) — one data layer under `DesktopPlayers` /
@@ -62,12 +63,10 @@ export default function Leaderboard() {
   if (error) {
     return (
       <div className="py-8">
-        <p className="font-body content-text danger-text border-2 danger-edge px-3 py-2">
-          {extractError(error, t('leaderboard.loadError'))}{' '}
+        <ErrorBanner message={<>{extractError(error, t('leaderboard.loadError'))}{' '}
           <button onClick={() => window.location.reload()} className="underline">
             {t('states.tryRefreshing')}
-          </button>
-        </p>
+          </button></>} />
       </div>
     )
   }

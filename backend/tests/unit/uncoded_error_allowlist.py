@@ -100,7 +100,7 @@ UNCODED_RAISE_ALLOWLIST: dict[str, int] = {
 
     "services/task.py::list_signups_for_task": 1,
     "services/task.py::list_tasks": 2,
-    "services/task.py::propose_task": 2,
+    "services/task.py::_validate_proposal": 2,
 
     "services/vote.py::cast_or_update_vote": 3,
     "services/vote.py::cast_vote_on_praxis": 1,

@@ -8,6 +8,7 @@ import { factionName } from '../utils/factions'
 import AccountSection from './settings/sections/AccountSection'
 import AppearanceSection from './settings/sections/AppearanceSection'
 import CookiesSection from './settings/sections/CookiesSection'
+import BlockedSection from './settings/sections/BlockedSection'
 import DataSection from './settings/sections/DataSection'
 import LanguageSection from './settings/sections/LanguageSection'
 import NotificationsSection from './settings/sections/NotificationsSection'
@@ -45,6 +46,7 @@ export const SETTINGS_SECTIONS: readonly SettingsSection[] = [
   { key: 'cookies', labelKey: 'settings.cookies.eyebrow', Component: CookiesSection },
   { key: 'language', labelKey: 'settings.language.eyebrow', Component: LanguageSection },
   { key: 'data', labelKey: 'settings.data.eyebrow', Component: DataSection },
+  { key: 'blocked', labelKey: 'settings.blocked.eyebrow', Component: BlockedSection },
   { key: 'account', labelKey: 'settings.account.eyebrow', Component: AccountSection },
 ]
 

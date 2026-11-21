@@ -13,6 +13,7 @@ import ConfirmDialog from "../components/confirm/ConfirmDialog";
 import { resolveVariant } from "../utils/factionDispatch";
 import { surfaceMap } from "../factions";
 import { useTaskDetail } from "./taskDetail/useTaskDetail";
+import { ErrorBanner } from "../components/ui/ErrorBanner";
 
 
 export default function TaskDetail() {
@@ -27,8 +28,7 @@ export default function TaskDetail() {
   if (state.fetchError)
     return (
       <div className="py-8">
-        <p className="font-body content-text danger-text border-2 danger-edge px-3 py-2">
-          {state.fetchError}{" "}
+        <ErrorBanner message={<>{state.fetchError}{" "}
           <Trans
             t={t}
             i18nKey="detail.fetchError"
@@ -39,8 +39,7 @@ export default function TaskDetail() {
                 className="underline"
               />,
             ]}
-          />
-        </p>
+          /></>} />
       </div>
     );
 

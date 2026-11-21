@@ -8,7 +8,11 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../auth/AuthContext'
 import { flagComment, type CommentOut } from '../../api/comments'
 import { flagReasonOptions, type FlagReason } from '../../utils/flagReasons'
+import { CARD_CTA } from '../ctaTapFloor'
 import { extractError } from '../../utils/errors'
+
+// Destructive and tiny by design; the hit box still clears the phone floor.
+const FLOOR = { ...CARD_CTA, minWidth: 44 }
 
 /** Signed in, and not the author. */
 export function canFlagComment(
@@ -58,7 +62,7 @@ export function CommentFlagControl({ comment }: { comment: CommentOut }) {
       <button
         onClick={() => { setOpen(true); setError(null) }}
         className="btn-outline text-[8px] px-2 py-1"
-        style={{ borderColor: 'var(--color-danger-ring)', color: 'var(--color-danger)' }}
+        style={{ ...FLOOR, borderColor: 'var(--color-danger-ring)', color: 'var(--color-danger)' }}
       >
         {t('detail.flag.flag')}
       </button>
@@ -79,8 +83,8 @@ export function CommentFlagControl({ comment }: { comment: CommentOut }) {
             style={
               reason === value
                 // Not --color-bg-surface: translucent, 1.04:1 over red (#1169).
-                ? { background: 'var(--color-danger)', borderColor: 'var(--color-danger)', color: 'var(--color-on-danger)' }
-                : undefined
+                ? { ...FLOOR, background: 'var(--color-danger)', borderColor: 'var(--color-danger)', color: 'var(--color-on-danger)' }
+                : FLOOR
             }
           >
             {label}
@@ -99,11 +103,11 @@ export function CommentFlagControl({ comment }: { comment: CommentOut }) {
       )}
       <div className="flex items-center gap-2 mt-2">
         {reason !== null && (
-          <button onClick={() => void submit()} disabled={submitting} className="btn-primary text-[9px] px-3 py-1" style={{ background: 'var(--color-danger)', borderColor: 'var(--color-danger)', color: 'var(--color-on-danger)' }}>
+          <button onClick={() => void submit()} disabled={submitting} className="btn-primary text-[9px] px-3 py-1" style={{ ...FLOOR, background: 'var(--color-danger)', borderColor: 'var(--color-danger)', color: 'var(--color-on-danger)' }}>
             {submitting ? t('detail.flag.submitting') : t('detail.flag.submit')}
           </button>
         )}
-        <button onClick={() => { setOpen(false); setReason(null); setDetail(''); setError(null) }} disabled={submitting} className="btn-outline text-[9px] px-3 py-1">
+        <button onClick={() => { setOpen(false); setReason(null); setDetail(''); setError(null) }} disabled={submitting} className="btn-outline text-[9px] px-3 py-1" style={FLOOR}>
           {t('detail.flag.cancel')}
         </button>
       </div>

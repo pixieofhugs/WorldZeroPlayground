@@ -12,7 +12,7 @@ import MetataskSeal from "./MetataskSeal";
 import { drawAtRoot } from "../ui/drawAtRoot";
 import { useModal } from "../../hooks/useModal";
 import { factionCssVar, factionName } from "../../utils/factions";
-import { ErrorBanner } from "../../pages/editPraxis/archetypes/shared";
+import { ErrorBanner } from "../ui/ErrorBanner";
 import type { EditPraxisState } from "../../pages/editPraxis/useEditPraxis";
 
 const ALL_FILTER = "all" as const;

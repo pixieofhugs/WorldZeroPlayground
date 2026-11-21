@@ -6,6 +6,7 @@ import { useTasks } from './tasks/useTasks'
 import TaskFilterBar, { TaskListEmpty } from './tasks/TaskFilterBar'
 import ProposeTaskLink from './tasks/ProposeTaskLink'
 import MetataskSeal from '../components/metataskSeal/MetataskSeal'
+import { ErrorBanner } from "../components/ui/ErrorBanner";
 
 /** One responsive page; each <TaskCard> skins itself (ADR-0056). */
 export default function Tasks() {
@@ -43,18 +44,14 @@ export default function Tasks() {
       </div>
 
       {signupMsg && (
-        <p className="font-body content-text mb-4 border-2 danger-edge danger-text px-3 py-2">
-          {signupMsg}
-        </p>
+        <ErrorBanner className="mb-4" message={signupMsg} />
       )}
 
       {loading && tasks.length === 0 ? (
         <p className="font-body text-muted">{t('listPage.loading')}</p>
       ) : error ? (
-        <p className="font-body content-text danger-text border-2 danger-edge px-3 py-2">
-          {t('listPage.loadError')}{' '}
-          <button onClick={() => window.location.reload()} className="underline">{tc('states.tryRefreshing')}</button>
-        </p>
+        <ErrorBanner message={<>{t('listPage.loadError')}{' '}
+          <button onClick={() => window.location.reload()} className="underline">{tc('states.tryRefreshing')}</button></>} />
       ) : tasks.length === 0 ? (
         <TaskListEmpty state={state} />
       ) : (

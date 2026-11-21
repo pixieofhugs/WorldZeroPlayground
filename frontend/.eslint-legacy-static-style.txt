@@ -197,7 +197,6 @@ src/pages/characterPaths/archetypes/UaEditCharacter.tsx
 src/pages/characterPaths/archetypes/WowCreateCharacter.tsx
 src/pages/characterPaths/archetypes/WowEditCharacter.tsx
 src/pages/characterPaths/editCharacterSlots.tsx
-src/pages/characterProfile/RelationshipBlockControl.tsx
 src/pages/characterProfile/archetypes/CovenProfileBody.tsx
 src/pages/characterProfile/archetypes/DefaultProfileBody.tsx
 src/pages/characterProfile/archetypes/EphemeristsProfileBody.tsx
