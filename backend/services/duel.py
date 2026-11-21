@@ -111,7 +111,7 @@ async def forfeit_settled_duels_for_character(
 
 
 async def get_duel(duel_id: int, session: AsyncSession, lock: bool = False) -> Duel:
-    """``lock`` row-locks it so a concurrent transition waits and then sees the result."""
+    """``lock``: a concurrent transition waits, then sees this one's result."""
     query = select(Duel).where(Duel.id == duel_id)
     if lock:
         query = query.with_for_update().execution_options(populate_existing=True)
