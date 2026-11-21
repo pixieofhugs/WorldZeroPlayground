@@ -727,7 +727,10 @@ def _duel_forfeited_query(ctx: FeedContext) -> Select:
             Task.title.label("task_title"),
             Task.primary_faction_slug.label("task_faction_slug"),
             case(
-                (Duel.opponent_character_id == ctx.character_id, Duel.opponent_praxis_id),
+                (
+                    Duel.opponent_character_id == ctx.character_id,
+                    Duel.opponent_praxis_id,
+                ),
                 else_=Duel.challenger_praxis_id,
             ).label("praxis_id"),
             forfeiter.display_name.label("actor_display_name"),

@@ -12,11 +12,11 @@ from errors import ErrorCode, detail_code
 from game_config import CURRENT_ERA
 from models.account import Account
 from models.character import Character
-from models.duel import Duel, DuelStatus
+from models.character_stats import CharacterStats
+from models.duel import DuelStatus
 from models.era import Era
 from models.faction import Faction
 from models.praxis import Praxis, PraxisStatus
-from models.character_stats import CharacterStats
 from services.auth import create_jwt
 from services.character_stats import recalculate_character_stats
 from tests.integration.factories import make_admin, make_duel
@@ -41,7 +41,9 @@ async def _lock(client, admin_headers, character: Character, how: str, lock=True
 
 async def _live_duel(db_session, era, label, *, status, locked_side):
     """A ``status`` duel with both sides unsubmitted; returns (duel, locked, honest)."""
-    duel, challenger, opponent = await make_duel(db_session, era, label=label, status=status)
+    duel, challenger, opponent = await make_duel(
+        db_session, era, label=label, status=status
+    )
     if status == DuelStatus.pending:
         duel.opponent_praxis_id = None
     else:
@@ -107,7 +109,9 @@ async def test_lockout_forfeits_an_active_duel_and_honest_submit_settles_it(
     assert duel.status == DuelStatus.active
     assert duel.forfeited_by_character_id == locked.id
 
-    resp = await client.post(f"/praxes/{honest_praxis_id}/submit", headers=_headers(honest))
+    resp = await client.post(
+        f"/praxes/{honest_praxis_id}/submit", headers=_headers(honest)
+    )
     assert resp.status_code == 200, resp.text
 
     await db_session.refresh(duel)
@@ -120,8 +124,8 @@ async def test_lockout_forfeits_an_active_duel_and_honest_submit_settles_it(
     await db_session.refresh(duel)
     assert duel.forfeited_by_character_id == locked.id
 
-    feed = (await client.get("/activity-feed", headers=_headers(honest))).json()["items"]
-    lines = [i for i in feed if i["type"] == "duel_forfeited"]
+    feed = await client.get("/activity-feed", headers=_headers(honest))
+    lines = [i for i in feed.json()["items"] if i["type"] == "duel_forfeited"]
     assert [i["payload"]["praxis_id"] for i in lines] == [honest_praxis_id]
     assert lines[0]["actor_display_name"] == locked.display_name
 
@@ -135,7 +139,8 @@ async def test_active_duel_settles_at_lockout_if_honest_side_already_submitted(
     duel, locked, _ = await _live_duel(
         db_session, era, "alreadysub", status=DuelStatus.active, locked_side="opponent",
     )
-    (await db_session.get(Praxis, duel.challenger_praxis_id)).status = PraxisStatus.submitted
+    honest_praxis = await db_session.get(Praxis, duel.challenger_praxis_id)
+    honest_praxis.status = PraxisStatus.submitted
     await db_session.commit()
 
     await _lock(client, auth_headers, locked, "ban")
@@ -163,7 +168,7 @@ async def test_ban_rescores_the_forfeiting_winner(
     client: AsyncClient, db_session: AsyncSession, account: Account,
     auth_headers: dict, era: Era, some_faction: Faction,
 ):
-    """#3688: X beat Y on votes; banning X must put X's loss modifier into X's saved stats."""
+    """#3688: X beat Y; banning X puts the loss modifier into X's saved stats."""
     await make_admin(db_session, account)
     duel, x, y = await make_duel(
         db_session, era, label="rescore", challenger_votes=5, opponent_votes=1

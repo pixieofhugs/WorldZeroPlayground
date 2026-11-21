@@ -80,7 +80,9 @@ async def forfeit_duels_for_character(
     own_praxis_ids = select(Praxis.id).where(Praxis.created_by_id == character_id)
     duels = (await session.execute(
         select(Duel).where(
-            Duel.status.in_([DuelStatus.pending, DuelStatus.active, DuelStatus.settled]),
+            Duel.status.in_(
+                [DuelStatus.pending, DuelStatus.active, DuelStatus.settled]
+            ),
             Duel.forfeited_by_character_id.is_(None),
             or_(
                 Duel.opponent_character_id == character_id,
