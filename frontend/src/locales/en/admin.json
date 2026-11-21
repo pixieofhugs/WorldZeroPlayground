@@ -383,7 +383,8 @@
         "level": "Level",
         "note": "Their note to you",
         "viewOnSite": "View on site",
-        "hint": "Edits save with either choice. Delete is refused for a task with history: retire it instead."
+        "hint": "Edits save with either choice. Delete is refused for a task with history: retire it instead.",
+        "hintActive": "An active task can't be edited. Retire it to edit. Delete is refused for a task with history: retire it instead."
       }
     },
     "people": {
