@@ -18,7 +18,9 @@
     },
     "comment_mention": {
       "title": "{{actor}} mentioned you",
-      "body": "In a comment on {{task}}."
+      "body": "In a comment on {{task}}.",
+      "titleMany": "{{count}} new mentions",
+      "bodyMany": "{{actor}} and {{others}} more mentioned you on {{task}}."
     },
     "duel_challenge": {
       "title": "{{actor}} challenged you to a duel",
