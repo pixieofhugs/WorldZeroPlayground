@@ -40,9 +40,9 @@ def character_sees_metatasks(
     lifts SEE (owner ruling 2026-11-20, upholding #2365's 2026-08-21 ruling).
     Callers handle anonymous viewers themselves.
     """
-    return character_level >= era.level_to_see_metatasks or faction_bypasses_metatask_level(
-        faction_slug, era
-    )
+    if faction_bypasses_metatask_level(faction_slug, era):
+        return True
+    return character_level >= era.level_to_see_metatasks
 
 
 def metatask_cap_for_level(character_level: int, era: EraConfig) -> int:

@@ -3,7 +3,8 @@
 Seam: ``_global_tasks_query``, the source behind ``global_task`` rows. Owner
 ruling: the gate is LEVEL, lifted only by the Albescent see bypass (#3707).
 
-The gate is SEE (``level_to_see_metatasks``), lifted by the Albescent perk (#3707). Both call sites read
+The gate is SEE (``level_to_see_metatasks``), lifted by the Albescent perk (#3707).
+Both call sites read
 :func:`services.meta_task.character_sees_metatasks`.
 
 ADR-0036: ``_count_sources`` wraps the same Select, so badges drop with the row.
@@ -178,7 +179,9 @@ async def test_the_albescent_perk_opens_the_see_gate(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize(("faction", "listed"), [("albescent", True), ("wow", False)])
+@pytest.mark.parametrize(
+    ("faction", "listed"), [("albescent", True), ("wow", False)]
+)
 async def test_task_browse_follows_the_see_bypass(
     client: AsyncClient,
     db_session: AsyncSession,
