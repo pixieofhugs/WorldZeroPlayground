@@ -188,7 +188,9 @@ async def list_contact_messages(
 
 async def game_overview(session: AsyncSession) -> OverviewStats:
     account_count_result = await session.execute(select(func.count()).select_from(Account))
-    character_count_result = await session.execute(select(func.count()).select_from(Character))
+    character_count_result = await session.execute(
+        select(func.count()).select_from(Character).where(Character.departed_at.is_(None))
+    )
     active_task_count_result = await session.execute(
         select(func.count()).select_from(Task).where(Task.status == TaskStatus.active)
     )

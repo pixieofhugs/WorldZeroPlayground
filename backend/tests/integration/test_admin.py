@@ -1,4 +1,5 @@
 """Integration tests for /admin endpoints."""
+from datetime import datetime, timezone
 import pytest
 from httpx import AsyncClient
 from sqlalchemy import select
@@ -900,11 +901,13 @@ async def test_overview_active_accounts_counts_accounts_not_characters(
     suspended = await make_character(db_session, era, username="sus")
     suspended_account = await db_session.get(Account, suspended.account_id)
     suspended_account.status = AccountStatus.suspended
+    gone = await make_character(db_session, era, username="gone")
+    gone.departed_at = datetime.now(timezone.utc)
     await db_session.commit()
 
     stats = (await client.get("/admin/overview", headers=auth_headers)).json()
     assert stats["characters"] == 4
-    assert stats["active_accounts"] == 1
+    assert stats["active_accounts"] == 2
 
 
 @pytest.mark.asyncio
