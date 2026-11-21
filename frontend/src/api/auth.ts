@@ -51,7 +51,7 @@ export function loginWith(provider: AuthProvider): void {
   window.location.href = `${API_BASE_URL}/auth/${provider}`
 }
 
-/** Deletion date for the returning-player gate (#2162); a date, not a timestamp. */
+/** Deletion date for the returning-player gate (#2162); the server sends the hour and the reader formats the day in their zone (#3630). */
 export type ReturningPlayerOut = components['schemas']['ReturningPlayerOut']
 
 /**

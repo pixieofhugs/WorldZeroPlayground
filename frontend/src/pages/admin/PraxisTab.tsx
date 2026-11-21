@@ -82,6 +82,8 @@ export default function PraxisTab() {
   } | null>(null);
   // The row whose first action takes focus back once its confirm closes.
   const refocusId = useRef<number | null>(null);
+  // Latest confirm opened; a slower prefill fetch from an earlier row must not write its note.
+  const prefillFor = useRef(0);
 
   // Any criteria change resets to page one.
   const change = (patch: Partial<AdminPraxisCriteria>) => {
@@ -158,10 +160,13 @@ export default function PraxisTab() {
     if (isDestructive(action)) {
       setFailNote("");
       setConfirm({ id: praxisId, action });
-      // The list rows carry no note; hiding a Not-met praxis must not wipe its reason.
-      if (action === "hide" && status === "failed") {
+      const token = ++prefillFor.current;
+      // The list rows carry no note; failing a Hidden praxis or hiding a Not-met one must not wipe its reason.
+      if ((action === "hide" && status === "failed") || (action === "fail" && status === "hidden")) {
         getPraxis(praxisId)
-          .then((full) => setFailNote((typed) => typed || full.admin_note))
+          .then((full) => {
+            if (token === prefillFor.current) setFailNote((typed) => typed || full.admin_note);
+          })
           .catch((err) =>
             setRowError({ id: praxisId, message: extractError(err, t("praxis.actionError")) }),
           );
