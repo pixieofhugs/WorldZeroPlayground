@@ -98,7 +98,6 @@ src/components/layout/MobileTabBar.tsx
 src/components/layout/Sidebar.tsx
 src/components/layout/WatercolorBackground.tsx
 src/components/metataskSeal/MetataskPicker.tsx
-src/components/metataskSeal/MetataskRemoveConfirm.tsx
 src/components/metataskSeal/MetataskSeal.tsx
 src/components/metataskSeal/sealBands.tsx
 src/components/metataskSeal/skins/AlbescentSeal.tsx

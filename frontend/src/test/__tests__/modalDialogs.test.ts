@@ -14,7 +14,7 @@ const dialogFiles = () =>
 
 describe('role="dialog" components share useModal (#3568)', () => {
   it('still sees the known dialogs, so it cannot pass by matching nothing', () => {
-    expect(dialogFiles().length).toBeGreaterThanOrEqual(12)
+    expect(dialogFiles().length).toBeGreaterThanOrEqual(11)
   })
 
   for (const { rel, text } of dialogFiles()) {
