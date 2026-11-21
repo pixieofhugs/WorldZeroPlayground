@@ -15,6 +15,7 @@ from errors import ErrorCode, raise_coded
 from game_config import CURRENT_ERA, Dial, EraConfig
 from models.character import Character
 from models.population_dial import PopulationDial
+from services.character_stats import deliver_invitations_to_all
 from services.era import apply_dial_sides, get_current_era_row
 from services.mod_log import log_mod_action
 
@@ -134,4 +135,8 @@ async def set_dials(
     new_sides = {k: r.side for k, r in rows.items()} | {k: sides[k] for k in changed}
     await session.commit()
     apply_dial_sides(era, new_sides)
+    # Small is the loose side; tightening owes nothing, letters are kept.
+    if sides.get("invitation") == "small" and "invitation" in changed:
+        await deliver_invitations_to_all(session, era)
+        await session.commit()
     return changed
