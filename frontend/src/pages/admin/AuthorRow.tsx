@@ -31,7 +31,7 @@ export default function AuthorRow({
   const undo = (kind: AuthorAction) => void onModerate(praxis, kind, false).catch(() => {});
   return (
     <div className="rp-author">
-      <div className="rp-btns">
+      <div className="adm-btns">
         <span className="rp-muted">{t("console.reports.author.label", { name })}</span>
         <button type="button" className="rp-btn" onClick={() => onViewAccount(praxis.author_username)}>
           {t("console.reports.author.openPeople")}
@@ -90,7 +90,7 @@ function AuthorConfirm({
       onCancel={onCancel}
     >
       {needsNote && (
-        <label className="rp-field">
+        <label className="adm-field">
           {t("console.reports.decision.reasonLabel")}
           <input
             className="rp-input"

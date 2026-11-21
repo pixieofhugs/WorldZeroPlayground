@@ -1,6 +1,5 @@
 /* People (#3669): what adminList.css lacks — the faction dot and the vote-ring bars. Lazy, with the admin chunk. */
 .adm-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: var(--space-xs); vertical-align: middle; }
-.adm-h2 { margin: 0; font-size: var(--text-md); letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-text-tertiary); font-weight: 600; }
 .adm-ring { display: grid; grid-template-columns: minmax(0, 7rem) minmax(0, 1fr) 3rem; gap: var(--space-xs); align-items: center; font-size: var(--text-xl); }
 .adm-bar-track { position: relative; height: 8px; border-radius: 999px; background: var(--color-bg-surface-alt); overflow: hidden; }
 .adm-bar-fill { display: block; height: 100%; background: var(--color-text-tertiary); }
