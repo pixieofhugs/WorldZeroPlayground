@@ -51,8 +51,6 @@ async def compute_contributions(
     character: Character,
     era: EraConfig,
     session: AsyncSession,
-    *,
-    character_level: int = 0,
 ) -> dict[int, Contribution]:
     """Return a ``Contribution`` for each praxis id in ``praxes``.
 
@@ -62,7 +60,6 @@ async def compute_contributions(
     return await compute_owner_contributions(
         praxes,
         {p.id: character for p in praxes},
-        {character.id: character_level},
         era,
         session,
     )
@@ -71,7 +68,6 @@ async def compute_contributions(
 async def compute_owner_contributions(
     praxes: list[Praxis],
     owner_by_praxis: Mapping[int, Character],
-    level_by_character: Mapping[int, int],
     era: EraConfig,
     session: AsyncSession,
 ) -> dict[int, Contribution]:
@@ -137,16 +133,8 @@ async def compute_owner_contributions(
 
     # Every praxis type earns metatask points (ADR-0051), outside both
     # multipliers (ADR-0086). Same rows as praxis_out.applied_metatasks_for (the
-    # seal set):
-    # the level gate can zero the points while the seal stays, which is legitimate.
-    meta_points = await get_meta_task_points_bulk(
-        praxis_ids,
-        character_level={
-            pid: level_by_character.get(owner.id, 0)
-            for pid, owner in owner_by_praxis.items()
-        },
-        session=session,
-    )
+    # seal set).
+    meta_points = await get_meta_task_points_bulk(praxis_ids, session=session)
 
     # Habit bonus as stamped at seal (#1617), never derived: the two callers hold
     # different praxis sets and would disagree (see services.habit_bonus). This

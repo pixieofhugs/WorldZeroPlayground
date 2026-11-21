@@ -681,10 +681,10 @@ async def test_snide_duel_loss_keeps_the_metatask(
 
 
 @pytest.mark.asyncio
-async def test_under_level_author_earns_zero_but_keeps_the_seal(
+async def test_under_level_author_still_earns_the_metatask_bonus(
     db_session: AsyncSession, era: Era, some_faction: Faction
 ):
-    """Below the metatask's level bar: ``metatask_points`` 0, seal row kept."""
+    """No scoring-time level gate (#3765): a high-bar metatask still pays."""
     author = await _make_character(
         db_session, era, username="underlvl", email="ul@x.com", level=0
     )
@@ -701,8 +701,10 @@ async def test_under_level_author_earns_zero_but_keeps_the_seal(
 
     card = await _load_card(db_session, praxis.id)
 
-    assert card.metatask_points == 0
-    assert card.score == pytest.approx(10 * modifiers_of(author).own_task_modifier)
+    assert card.metatask_points == 5
+    assert card.score == pytest.approx(
+        10 * modifiers_of(author).own_task_modifier + 5
+    )
     assert len(card.applied_metatasks) == 1
     assert card.applied_metatasks[0].id == metatask.id
     assert_invariant(card)

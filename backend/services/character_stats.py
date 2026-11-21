@@ -159,9 +159,8 @@ async def deliver_invitations_to_all(
     within_era = _era_window_condition(era_row, None)
     for character in (await session.execute(select(Character))).scalars().all():
         praxes = await _scored_praxes(character.id, within_era, session)
-        stats = await get_or_create_stats(session, character.id, era_row.id)
         contributions = await compute_contributions(
-            praxes, character, era, session, character_level=stats.level
+            praxes, character, era, session
         )
         await deliver_earned_invitations(
             character, praxes, contributions, session, era, era_row
@@ -226,9 +225,7 @@ async def recalculate_character_stats(
     if next_era_row is not None and not rescore_closed:
         return
 
-    # Pre-recalc level gates metatask bonus; slight staleness is acceptable.
     stats = await get_or_create_stats(session, character_id, era_row.id)
-    author_level = stats.level
 
     within_era = _era_window_condition(era_row, next_era_row)
     all_praxes = await _scored_praxes(character_id, within_era, session)
@@ -248,7 +245,7 @@ async def recalculate_character_stats(
     )
 
     contributions = await compute_contributions(
-        all_praxes, author, era, session, character_level=author_level
+        all_praxes, author, era, session
     )
     # The one rounding site: round the sum, not each contribution. Decimal +
     # round_half_up, never int() or banker's round() (ADR-0053, #1578).
