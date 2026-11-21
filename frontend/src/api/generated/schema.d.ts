@@ -2085,9 +2085,11 @@ export interface paths {
         };
         /** Get Task */
         get: operations["get_task_tasks__task_id__get"];
-        put?: never;
+        /** Edit Proposal Route */
+        put: operations["edit_proposal_route_tasks__task_id__put"];
         post?: never;
-        delete?: never;
+        /** Withdraw Proposal Route */
+        delete: operations["withdraw_proposal_route_tasks__task_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -9219,6 +9221,74 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["TaskOut"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    edit_proposal_route_tasks__task_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                task_id: number;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TaskCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    withdraw_proposal_route_tasks__task_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                task_id: number;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
