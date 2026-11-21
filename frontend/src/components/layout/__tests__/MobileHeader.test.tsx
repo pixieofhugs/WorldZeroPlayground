@@ -44,6 +44,14 @@ beforeEach(() => {
   })
 })
 
+describe('MobileHeader top inset', () => {
+  // index.html sets viewport-fit=cover (#3831); without this the header slides under the status bar.
+  it('pads by env(safe-area-inset-top)', () => {
+    authMock.mockReturnValue(signedOut)
+    expect(render()).toContain('padding-top:env(safe-area-inset-top)')
+  })
+})
+
 describe('MobileHeader bell', () => {
   it('links the bell to the Requests queue when signed in (#2083)', () => {
     authMock.mockReturnValue(signedIn)
