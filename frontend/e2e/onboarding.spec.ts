@@ -30,6 +30,14 @@ async function checkStep(page: Page, step: WalkStep) {
 
   // The vote row sits below the fold until the beat scrolls it up; measure it where a player sees it.
   if (step === 5) await page.locator('.ob-stage button[aria-pressed]').first().scrollIntoViewIfNeeded()
+  // Entrances like ob-toss tilt a whole row of controls for a second; measuring mid-toss flaked main red.
+  await page.waitForFunction(() =>
+    document.getAnimations().every((a) => {
+      const target = (a.effect as KeyframeEffect | null)?.target
+      return a.playState !== 'running' || a.effect?.getTiming().iterations === Infinity || !target ||
+        !target.matches(':is(a[href],button,input,select,textarea,[tabindex]), :has(a[href],button,input,select,textarea,[tabindex])')
+    }),
+  )
   const found = await tabbables(page)
   for (const el of found) {
     expect(el.inHidden, `${step}: "${el.label}" is tabbable inside aria-hidden`).toBe(false)
