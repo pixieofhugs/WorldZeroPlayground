@@ -1,8 +1,9 @@
 from datetime import datetime
 from typing import List, Optional
+from pydantic import Field
 from schemas.base import WireModel
 from schemas.task import TaskOut
-from models.praxis import PraxisType, PraxisStatus, PraxisInviteStatus, MediaType, ModerationStatus
+from models.praxis import PRAXIS_BODY_MAX, PRAXIS_TITLE_MAX, PraxisType, PraxisStatus, PraxisInviteStatus, MediaType, ModerationStatus
 
 
 class MediaItemOut(WireModel):
@@ -195,8 +196,8 @@ class PraxisCardOut(WireModel):
 class PraxisCreate(WireModel):
     task_id: int
     type: PraxisType = PraxisType.solo
-    title: Optional[str] = None
-    body_text: Optional[str] = None
+    title: Optional[str] = Field(None, max_length=PRAXIS_TITLE_MAX)
+    body_text: Optional[str] = Field(None, max_length=PRAXIS_BODY_MAX)
 
 
 class PraxisTypeChange(WireModel):

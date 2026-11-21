@@ -18,7 +18,13 @@ from models.account import Account
 from models.character import Character
 from models.character_stats import CharacterStats
 from models.era import Era
-from models.praxis import ModerationStatus, Praxis, PraxisMember
+from models.praxis import (
+    PRAXIS_BODY_MAX,
+    PRAXIS_TITLE_MAX,
+    ModerationStatus,
+    Praxis,
+    PraxisMember,
+)
 from models.task import Task, TaskStatus, TaskType
 from tests.integration.factories import DEFAULT_FACTION_SLUG, make_character
 
@@ -2791,3 +2797,25 @@ async def test_card_out_viewer_vote_reflects_cast_value(
     )
     assert author_list.status_code == 200
     assert _find_card(author_list.json(), praxis_id)["viewer_vote"] is None
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "field,length,status",
+    [
+        ("title", PRAXIS_TITLE_MAX, 201),
+        ("title", PRAXIS_TITLE_MAX + 1, 422),
+        ("body_text", PRAXIS_BODY_MAX, 201),
+        ("body_text", PRAXIS_BODY_MAX + 1, 422),
+    ],
+)
+async def test_create_praxis_title_and_body_are_capped(
+    client: AsyncClient, character: Character, active_task: Task, auth_headers: dict,
+    field: str, length: int, status: int,
+):
+    resp = await client.post(
+        "/praxes",
+        json={"task_id": active_task.id, field: "x" * length},
+        headers=auth_headers,
+    )
+    assert resp.status_code == status
