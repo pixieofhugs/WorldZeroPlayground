@@ -519,8 +519,8 @@ class PraxisRoomServer(WebsocketServer):
             if room is not None:
                 doc = room.ydoc
             else:
-                # No room after a restart: the stored updates may still hold over-cap text
-                # the flusher skipped, which the delete below would silently drop.
+                # After a restart the store may hold over-cap text the flusher
+                # skipped; the delete below would silently drop it.
                 doc = Doc()
                 store = PostgresYStore(
                     name, log=self.log, session_factory=self._session_factory

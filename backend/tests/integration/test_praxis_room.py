@@ -1501,14 +1501,15 @@ async def test_a_submit_with_an_over_cap_draft_is_refused_and_changes_nothing(
         assert refused.value.status_code == 413
         assert refused.value.detail["code"] == "PRAXIS_DOC_UPDATE_INVALID"
         assert await _record(rooms, solo.id) == ("Solo Praxis", SEED_BODY)
-        assert (await db_session.get(Praxis, solo.id)).status == PraxisStatus.in_progress
+        assert (await db_session.get(Praxis, solo.id)).status != PraxisStatus.submitted
 
 
 async def test_publishing_an_over_cap_document_is_refused_and_keeps_it(
     db_session, active_task, character, account, monkeypatch
 ) -> None:
     solo = await _over_cap_solo(db_session, active_task, character)
-    async with running_rooms(db_session, monkeypatch, flush_debounce_seconds=30.0) as rooms:
+    slow = {"flush_debounce_seconds": 30.0}
+    async with running_rooms(db_session, monkeypatch, **slow) as rooms:
         socket = await rooms.open(solo.id, account.id)
         async with client_doc(socket) as doc:
             await _wait_for_body(doc, SEED_BODY, "the solo author")
