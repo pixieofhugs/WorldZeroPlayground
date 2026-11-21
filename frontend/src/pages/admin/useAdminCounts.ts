@@ -51,7 +51,7 @@ export function useAdminCounts(refreshKey = ''): AdminCounts & { reload: () => v
         proposals: ok(proposals)?.length ?? null,
         praxis: o?.praxis ?? null,
         tasks: o?.active_tasks ?? null,
-        people: o?.accounts ?? null,
+        people: o?.characters ?? null,
       })
     })
     return () => {

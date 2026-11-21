@@ -10,7 +10,7 @@ const api = vi.hoisted(() => ({
   getFlaggedComments: vi.fn(async () => []),
   getMessages: vi.fn(async () => []),
   getPendingTasks: vi.fn(async () => []),
-  getOverview: vi.fn(async () => ({ praxis: 1, active_tasks: 1, accounts: 1 })),
+  getOverview: vi.fn(async () => ({ praxis: 1, active_tasks: 1, accounts: 1, characters: 1 })),
   getModLog: vi.fn(async () => ({ items: [], total: 0, limit: 20, offset: 0 })),
   listAdminPraxes: vi.fn(async () => []),
   getAdminCharacters: vi.fn(async () => []),
