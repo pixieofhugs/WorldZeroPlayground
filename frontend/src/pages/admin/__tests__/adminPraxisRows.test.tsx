@@ -194,7 +194,13 @@ describe("the wire", () => {
       status: "failed",
       admin_note: "not the task",
     });
-    expect(await wire.sent[1].json()).toEqual({ status: "hidden", admin_note: null });
+    expect(await wire.sent[1].json()).toEqual({
+      status: "hidden",
+      admin_note: "not the task",
+    });
+
+    await requestPraxisModeration(1, "restore", "not the task", "fallback");
+    expect(await wire.sent[2].json()).toEqual({ status: "visible", admin_note: null });
   });
 
   it("answers a refusal with words for the row, not a throw", async () => {
