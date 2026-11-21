@@ -1,8 +1,10 @@
+import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { basename, dirname, join, relative } from 'node:path'
 import { describe, it, expect } from 'vitest'
 import i18n from '../../i18n'
+import admin from '../en/admin.json'
 import common from '../en/common.json'
 import factions from '../en/factions.json'
 import feed from '../en/feed.json'
@@ -994,5 +996,50 @@ describe('the invitation deferral is one key on both surfaces (#2620)', () => {
     // Don't also pin `forms:editPraxis.attach.cancel` here: a reword there would
     // fail with a message about the wrong issue.
     expect(i18n.t('factions:invitation.dismiss')).toBe('Not now')
+  })
+})
+
+// Every action `log_mod_action` writes needs a Mod log verb: a missing key throws in dev
+// and blanks the page (#3752). The backend has no action enum, so read the call sites.
+describe('Mod log verbs', () => {
+  const did = admin.console.modlog.did as Record<string, string>
+  const targets = new Set(['account', 'character', 'task', 'praxis', 'comment', 'era', 'message'])
+  const root = fileURLToPath(new URL('../../../../', import.meta.url))
+  const files = execFileSync('grep', ['-rlE', '--include=*.py', '--exclude-dir=tests', 'log_mod_action\\(', 'backend'], {
+    cwd: root,
+    encoding: 'utf8',
+  })
+    .split('\n')
+    .filter((f) => f && f !== 'backend/services/mod_log.py')
+  const literals = new Set<string>()
+  const prefixes = new Set<string>()
+  for (const f of files) {
+    const src = readFileSync(join(root, f), 'utf8')
+    for (const m of src.matchAll(/\blog_mod_action\(/g)) {
+      let depth = 1
+      let i = m.index! + m[0].length
+      const start = i
+      while (depth > 0 && i < src.length) {
+        if (src[i] === '(') depth++
+        else if (src[i] === ')') depth--
+        i++
+      }
+      const args = src.slice(start, i)
+      for (const p of args.matchAll(/\bf"([a-z_]+_)\{/g)) prefixes.add(p[1])
+      for (const l of args.matchAll(/(?<!f)(?<!== )"([a-z]+(?:_[a-z]+)*)"/g)) if (!targets.has(l[1])) literals.add(l[1])
+    }
+  }
+
+  it('finds the call sites it guards', () => {
+    expect(literals.size).toBeGreaterThan(8)
+  })
+
+  it.each([...literals])('has a verb for %s', (action) => {
+    expect(did[action], `add console.modlog.did.${action} to admin.json`).toBeTruthy()
+  })
+
+  // ponytail: f-string actions (praxis_{status}) can't be enumerated; this only proves each family has verbs.
+  it.each([...prefixes])('has verbs for the %s family', (prefix) => {
+    expect(Object.keys(did).some((k) => k.startsWith(prefix))).toBe(true)
   })
 })
