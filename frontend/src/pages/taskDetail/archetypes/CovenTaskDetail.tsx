@@ -1,4 +1,5 @@
 import { useState, type CSSProperties, type ReactNode } from "react";
+import { CARD_CTA } from "../../../components/ctaTapFloor";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
@@ -300,6 +301,8 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
               display: "block",
               width: "100%",
               marginTop: "var(--space-sm)",
+              ...CARD_CTA,
+              minWidth: 44,
               padding: 0,
               background: "none",
               border: "none",

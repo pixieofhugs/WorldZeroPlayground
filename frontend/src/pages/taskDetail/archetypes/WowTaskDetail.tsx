@@ -1,4 +1,5 @@
 import { useState, type CSSProperties, type ReactNode } from "react";
+import { CARD_CTA } from "../../../components/ctaTapFloor";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
@@ -348,6 +349,8 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
               background: "none",
               border: "none",
               cursor: "pointer",
+              ...CARD_CTA,
+              minWidth: 44,
               padding: 0,
             }}
           >

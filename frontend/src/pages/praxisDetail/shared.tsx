@@ -9,6 +9,7 @@
  * praxes belong to the composer's waiting surface (#1071). Score: mount
  * `ScoreStamp` (ADR-0053); do not re-derive points here.
  */
+import { CARD_CTA } from '../../components/ctaTapFloor'
 import type { CSSProperties, ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
@@ -177,6 +178,8 @@ export function MemberByline({
  * label tier.
  */
 const BTN_COMPACT: CSSProperties = { padding: 'var(--space-xs) var(--space-md)' }
+// Flag buttons only: the admin bar's compact buttons are out of #3755's scope.
+const FLAG_FLOOR: CSSProperties = { ...CARD_CTA, minWidth: 44 }
 const BTN_COMPACT_DANGER: CSSProperties = {
   ...BTN_COMPACT,
   borderColor: 'var(--color-danger-ring)',
@@ -555,7 +558,7 @@ export function PraxisFlagBlock({ state }: { state: PraxisDetailState }) {
           <p className="font-body" style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)' }}>{t('detail.flag.body')}</p>
         </div>
         {!showFlagForm && (
-          <button onClick={() => { setShowFlagForm(true); setFlagError(null) }} className="btn-outline" style={BTN_COMPACT_DANGER}>
+          <button onClick={() => { setShowFlagForm(true); setFlagError(null) }} className="btn-outline" style={{ ...BTN_COMPACT_DANGER, ...FLAG_FLOOR }}>
             {t('detail.flag.flag')}
           </button>
         )}
@@ -574,6 +577,7 @@ export function PraxisFlagBlock({ state }: { state: PraxisDetailState }) {
                 className="btn-outline"
                 style={{
                   ...BTN_COMPACT,
+                  ...FLAG_FLOOR,
                   ...(flagReason === value
                     ? { background: 'var(--color-danger)', borderColor: 'var(--color-danger)', color: 'var(--color-on-danger)' }
                     : {}),
@@ -598,11 +602,11 @@ export function PraxisFlagBlock({ state }: { state: PraxisDetailState }) {
           )}
           <div className="flex items-center gap-2" style={{ marginTop: 'var(--space-sm)' }}>
             {flagReason !== null && (
-              <button onClick={() => void handleFlag()} disabled={flagging} className="btn-primary" style={{ ...BTN_COMPACT, background: 'var(--color-danger)', borderColor: 'var(--color-danger)', color: 'var(--color-on-danger)' }}>
+              <button onClick={() => void handleFlag()} disabled={flagging} className="btn-primary" style={{ ...BTN_COMPACT, ...FLAG_FLOOR, background: 'var(--color-danger)', borderColor: 'var(--color-danger)', color: 'var(--color-on-danger)' }}>
                 {flagging ? t('detail.flag.submitting') : t('detail.flag.submit')}
               </button>
             )}
-            <button onClick={() => { setShowFlagForm(false); setFlagReason(null); setFlagDetail(''); setFlagError(null) }} disabled={flagging} className="btn-outline" style={BTN_COMPACT}>
+            <button onClick={() => { setShowFlagForm(false); setFlagReason(null); setFlagDetail(''); setFlagError(null) }} disabled={flagging} className="btn-outline" style={{ ...BTN_COMPACT, ...FLAG_FLOOR }}>
               {t('detail.flag.cancel')}
             </button>
           </div>

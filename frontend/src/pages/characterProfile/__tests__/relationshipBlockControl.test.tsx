@@ -82,3 +82,10 @@ describe('the confirm names the consequence, not "are you sure"', () => {
     expect(JSON.stringify(request)).not.toContain('relationships.block')
   })
 })
+
+describe('the block control clears the phone tap floor (#3755)', () => {
+  it('is at least 44px tall and wide', () => {
+    expect(markup()).toMatch(/min-height:\s*44px/)
+    expect(markup()).toMatch(/min-width:\s*44px/)
+  })
+})
