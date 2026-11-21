@@ -30,14 +30,18 @@ def faction_bypasses_metatask_level(
 
 def character_sees_metatasks(
     character_level: int,
+    faction_slug: Optional[str],
     era: EraConfig = CURRENT_ERA,
 ) -> bool:
-    """Does the metatask list open for a character at this level? (#453, #2280)
+    """Does the metatask list open for this character? (#453, #2280, #3707)
 
-    The SEE rule, used by ``list_tasks`` and the activity feed. **No faction
-    bypass**: Albescent's perk lifts only the APPLY gate. Callers handle
-    anonymous viewers themselves.
+    The SEE rule, used by ``list_tasks`` and the activity feed. A faction whose
+    perk is apply-at-any-level needs the list to apply from, so the same bypass
+    lifts SEE (owner ruling 2026-11-20, upholding #2365's 2026-08-21 ruling).
+    Callers handle anonymous viewers themselves.
     """
+    if faction_bypasses_metatask_level(faction_slug, era):
+        return True
     return character_level >= era.level_to_see_metatasks
 
 

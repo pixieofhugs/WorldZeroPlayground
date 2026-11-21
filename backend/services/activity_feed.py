@@ -1658,12 +1658,19 @@ async def _build_fetch_context(
     my_task_ids = tuple(await _get_my_task_ids(character_id, session))
     era_row = await get_current_era_row(session)
     # No stats row this era = level 0.
-    viewer_level = await session.scalar(
-        select(CharacterStats.level).where(
-            CharacterStats.character_id == character_id,
-            CharacterStats.era_id == era_row.id,
+    # One round trip: level (outer-joined, NULL = no stats row) + faction.
+    viewer_level, viewer_faction = (
+        await session.execute(
+            select(CharacterStats.level, Character.faction_slug)
+            .select_from(Character)
+            .outerjoin(
+                CharacterStats,
+                (CharacterStats.character_id == Character.id)
+                & (CharacterStats.era_id == era_row.id),
+            )
+            .where(Character.id == character_id)
         )
-    )
+    ).one()
 
     return (
         FeedContext(
@@ -1675,7 +1682,9 @@ async def _build_fetch_context(
             before=before_cursor,
             unanswered_requests_only=not archived,
             sees_metatasks=character_sees_metatasks(
-                viewer_level or 0, era_config_for_key(era_row.config_key)
+                viewer_level or 0,
+                viewer_faction,
+                era_config_for_key(era_row.config_key),
             ),
         ),
         archive_view,

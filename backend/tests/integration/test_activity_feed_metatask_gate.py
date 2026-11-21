@@ -1,11 +1,10 @@
 """#2280: do not announce a metatask to a character who cannot see metatasks.
 
 Seam: ``_global_tasks_query``, the source behind ``global_task`` rows. Owner
-ruling: the gate is LEVEL; faction is no factor (ADR-0029), so no faction
-predicate here, ever.
+ruling: the gate is LEVEL, lifted only by the Albescent see bypass (#3707).
 
-The gate is SEE (``level_to_see_metatasks``), not APPLY. Equal in Era 1, so only
-the Albescent case tells them apart. Both call sites read
+The gate is SEE (``level_to_see_metatasks``), lifted by the Albescent perk (#3707).
+Both call sites read
 :func:`services.meta_task.character_sees_metatasks`.
 
 ADR-0036: ``_count_sources`` wraps the same Select, so badges drop with the row.
@@ -153,7 +152,7 @@ async def test_a_metatask_is_announced_at_the_see_gate(
 
 
 @pytest.mark.asyncio
-async def test_the_albescent_perk_does_not_open_the_see_gate(
+async def test_the_albescent_perk_opens_the_see_gate(
     client: AsyncClient,
     db_session: AsyncSession,
     character: Character,
@@ -161,8 +160,8 @@ async def test_the_albescent_perk_does_not_open_the_see_gate(
     era,
     board: dict[str, Task],
 ):
-    """``can_apply_metatask_at_any_level`` lifts APPLY, never SEE: a call site using
-    the apply rule would announce this to an Albescent novice.
+    """Owner ruling 2026-11-20 (#3707, upholding #2365): the apply-at-any-level perk
+    lifts SEE too, so an Albescent novice is told. Other factions stay gated above.
     """
     assert CURRENT_ERA.factions["albescent"].can_apply_metatask_at_any_level, (
         "fixture premise: Albescent is the faction carrying the apply bypass"
@@ -176,6 +175,33 @@ async def test_the_albescent_perk_does_not_open_the_see_gate(
 
     ids = _task_ids(await _global_feed(client, auth_headers))
     assert board["standard"].id in ids
-    assert board["meta"].id not in ids, (
-        "the apply bypass was read as a see bypass"
+    assert board["meta"].id in ids
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("faction", "listed"), [("albescent", True), ("wow", False)]
+)
+async def test_task_browse_follows_the_see_bypass(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    auth_headers: dict,
+    era,
+    board: dict[str, Task],
+    faction: str,
+    listed: bool,
+):
+    """``list_tasks`` below the see level: metatask rows only for the perk faction."""
+    character.faction_slug = faction
+    db_session.add(character)
+    await db_session.commit()
+    await _set_level(
+        db_session, character.id, era.id, CURRENT_ERA.level_to_see_metatasks - 1
     )
+
+    response = await client.get(
+        "/tasks", params={"task_type": "metatask"}, headers=auth_headers
+    )
+    assert response.status_code == 200, response.text
+    assert (board["meta"].id in {row["id"] for row in response.json()}) is listed
