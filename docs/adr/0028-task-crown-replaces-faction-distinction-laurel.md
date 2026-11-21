@@ -21,6 +21,10 @@ the crown reuses the card's own scoring. Ties, sole entrants and the permissive 
 `FdlLaurel` on the player profile: it marks the character's highest-`score` praxis, which
 hides that card's Task Crown. Owner ruling: the laurel stays as shipped.
 
+**Amendment (2026-11-21, #3725)** — a praxis with an unscored moderation status (hidden or
+failed; `UNSCORED_MODERATION_STATUSES`) neither wears the crown nor blocks it: it is left out of
+the per-task comparison, so the next-highest scored praxis is crowned instead.
+
 ## Context
 
 A single cross-faction mark shipped as the **Faction Distinction Laurel** (`FdlLaurel`, a rainbow

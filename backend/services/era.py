@@ -437,7 +437,7 @@ async def apply_era_reset(
         if closing_era is None:
             raise RuntimeError(
                 f"Era {closing_era_row.id} names unregistered config_key "
-                f"{closing_era_row.config_key!r}; cannot re-score its duels"
+                f"{closing_era_row.config_key!r}; cannot seal its collabs or re-score its duels"
             )
 
         # Lapsed collabs belong to the closing era, not to whoever reads them first.
