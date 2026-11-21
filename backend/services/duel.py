@@ -9,6 +9,7 @@ from typing import Optional
 
 from fastapi import HTTPException
 from sqlalchemy import or_, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from errors import DETAIL_CONTEXT_PARAM, ErrorCode, raise_coded
@@ -111,6 +112,19 @@ async def forfeit_settled_duels_for_character(
 
 async def get_duel(duel_id: int, session: AsyncSession) -> Duel:
     duel = await session.get(Duel, duel_id)
+    if duel is None:
+        raise HTTPException(status_code=404, detail="Duel not found.")
+    return duel
+
+
+async def _lock_duel(duel_id: int, session: AsyncSession) -> Duel:
+    """Row-lock the duel so a concurrent transition waits and then sees its result."""
+    duel = await session.scalar(
+        select(Duel)
+        .where(Duel.id == duel_id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
     if duel is None:
         raise HTTPException(status_code=404, detail="Duel not found.")
     return duel
@@ -234,6 +248,10 @@ async def issue_duel_challenge(
     ):
         raise_coded(400, ErrorCode.duel_self_challenge, SELF_DUEL_DETAIL)
 
+    # Serialize bursts from one praxis; the lock is released on commit.
+    await session.execute(
+        select(Praxis.id).where(Praxis.id == challenger_praxis_id).with_for_update()
+    )
     # Plain read (#2874): only solo passes, and only collabs have a window.
     challenger_praxis = await get_praxis(challenger_praxis_id, session)
     if challenger_praxis.created_by_id != challenger_character_id:
@@ -291,7 +309,12 @@ async def issue_duel_challenge(
         status=DuelStatus.pending,
     )
     session.add(duel)
-    await session.flush()
+    try:
+        await session.flush()
+    except IntegrityError:
+        raise_coded(
+            409, ErrorCode.duel_already_exists, "This praxis is already part of a duel."
+        )
     await notify_duel_challenge(
         session, duel.id, challenger_praxis, opponent_character_id
     )
@@ -308,7 +331,7 @@ async def respond_to_duel_challenge(
 ) -> tuple[Optional[Praxis], Duel]:
     """Accept (create opponent praxis, → active) or decline (→ declined).
     Returns (opponent_praxis_or_None, duel)."""
-    duel = await get_duel(duel_id, session)
+    duel = await _lock_duel(duel_id, session)
 
     if duel.opponent_character_id != character_id:
         raise_coded(
@@ -427,7 +450,7 @@ async def cancel_duel_challenge(
 
     Both sides stay plain solo praxes, no penalty.
     """
-    duel = await get_duel(duel_id, session)
+    duel = await _lock_duel(duel_id, session)
 
     if duel.status not in (DuelStatus.pending, DuelStatus.active):
         raise HTTPException(status_code=400, detail="Duel has already been resolved.")

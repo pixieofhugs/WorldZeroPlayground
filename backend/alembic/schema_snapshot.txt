@@ -202,6 +202,8 @@ table duel
   index ix_duel_challenger_praxis_id CREATE INDEX ix_duel_challenger_praxis_id ON public.duel USING btree (challenger_praxis_id)
   index ix_duel_opponent_character_id CREATE INDEX ix_duel_opponent_character_id ON public.duel USING btree (opponent_character_id)
   index ix_duel_opponent_praxis_id CREATE INDEX ix_duel_opponent_praxis_id ON public.duel USING btree (opponent_praxis_id)
+  index uq_duel_live_challenger_praxis CREATE UNIQUE INDEX uq_duel_live_challenger_praxis ON public.duel USING btree (challenger_praxis_id) WHERE ((status)::text = ANY ((ARRAY['pending'::character varying, 'active'::character varying, 'settled'::character varying])::text[]))
+  index uq_duel_live_opponent_praxis CREATE UNIQUE INDEX uq_duel_live_opponent_praxis ON public.duel USING btree (opponent_praxis_id) WHERE ((status)::text = ANY ((ARRAY['pending'::character varying, 'active'::character varying, 'settled'::character varying])::text[]))
 
 table era
   column config_key character varying NOT NULL
