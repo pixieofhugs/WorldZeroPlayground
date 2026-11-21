@@ -7,6 +7,7 @@ import { isIphoneSafari, isStandalone } from '../../../utils/installPrompt'
 import { subscribePush } from '../../../utils/pushSubscribe'
 import { extractError } from '../../../utils/errors'
 import type { SettingsSectionProps } from '../../Settings'
+import '../pushBlocked.css'
 import SettingsCard from '../SettingsCard'
 import SettingsRow from '../SettingsRow'
 import SettingsSwitch from '../SettingsSwitch'
@@ -130,17 +131,12 @@ function PushBlocked({ state }: { readonly state: Exclude<PushState, 'ok'> }) {
       </span>
       <div style={BLOCKED_HEAD}>
         <div>
-          <div className="font-display" style={{ fontSize: 'var(--text-content)', fontWeight: 600 }}>
+          <div className="font-display push-blocked-title">
             {t('settings.notifications.push.title')}
           </div>
           <div
             id={PUSH_NOTE_ID}
-            style={{
-              marginTop: 'var(--space-xs)',
-              fontSize: 'var(--text-content)',
-              lineHeight: 1.6,
-              color: 'var(--color-text-secondary)',
-            }}
+            className="push-blocked-note"
           >
             {t(`settings.notifications.push.${state}.note`)}
           </div>
@@ -153,7 +149,7 @@ function PushBlocked({ state }: { readonly state: Exclude<PushState, 'ok'> }) {
             label={t(`settings.notifications.push.${state}.label`)}
             onToggle={() => {}}
           />
-          <span aria-hidden style={{ fontSize: 'var(--text-content)', color: PUSH_INK }}>
+          <span aria-hidden className="push-blocked-caption">
             {t('settings.notifications.columnPush')}
           </span>
         </div>
@@ -162,8 +158,7 @@ function PushBlocked({ state }: { readonly state: Exclude<PushState, 'ok'> }) {
         <>
           <button
             type="button"
-            className="btn-outline"
-            style={{ minHeight: 44, alignSelf: 'flex-start' }}
+            className="btn-outline push-blocked-action"
             aria-expanded={steps}
             onClick={() => setSteps((v) => !v)}
           >
