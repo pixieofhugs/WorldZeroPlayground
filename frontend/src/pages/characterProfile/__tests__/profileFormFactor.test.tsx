@@ -99,6 +99,8 @@ function makeTask(): TaskOut {
     primary_faction_slug: 'ephemerists',
     metatask_faction_slug: null,
     created_at: '2026-01-01T00:00:00Z',
+    backdoor_opens_at: null,
+    backdoor_closes_at: null,
     in_progress_count: 0,
     created_by_display_name: '',
     created_by_avatar_url: '',

@@ -47,6 +47,8 @@ export function makeTask(overrides: Partial<TaskOut> = {}): TaskOut {
     primary_faction_slug: 'ua',
     metatask_faction_slug: null,
     created_at: NOW,
+    backdoor_opens_at: null,
+    backdoor_closes_at: null,
     in_progress_count: 0,
     created_by_display_name: '',
     created_by_avatar_url: '',

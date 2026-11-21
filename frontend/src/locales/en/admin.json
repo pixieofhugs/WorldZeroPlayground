@@ -51,7 +51,8 @@
       "active": "active",
       "pending": "pending",
       "retired": "retired",
-      "deleted": "deleted"
+      "deleted": "deleted",
+      "backdoor": "backdoor"
     },
     "actions": {
       "restoreAs": "restore as {{status}}",
