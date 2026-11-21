@@ -579,7 +579,7 @@ class PraxisRoomServer(WebsocketServer):
             from services.praxis import _require_member
 
             if praxis.status == PraxisStatus.submitted:
-                logger.info("Praxis room handshake refused: praxis %d is live", praxis_id)
+                logger.info("Room handshake refused: praxis %d is live", praxis_id)
                 return None
             try:
                 _require_member(praxis, character.id, "edit")

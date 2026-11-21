@@ -1322,7 +1322,7 @@ async def submit_praxis(
     # The sealed text must hold every edit the browser had; sockets give no ack (#3611).
     merged = {}
     if doc_state is not None:
-        # A live praxis has no room (ADR-0073); its one road back is the reopen (ADR-0012).
+        # A live praxis has no room (ADR-0073); the reopen is its one road back.
         await collab_consensus.settle_if_window_lapsed(praxis, session, era)
         if praxis.status == PraxisStatus.submitted:
             raise_coded(
