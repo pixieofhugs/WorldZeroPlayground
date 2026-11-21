@@ -29,6 +29,7 @@ const DEFAULT_MAX_TASK_SLOTS = 20;
 const TITLE_STYLE = {
   fontSize: "var(--text-content)",
   fontWeight: 700,
+  overflowWrap: "anywhere",
   color: "var(--color-text-primary)",
 } as const;
 
