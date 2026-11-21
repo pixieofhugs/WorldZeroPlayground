@@ -1465,3 +1465,78 @@ async def test_an_over_cap_room_document_is_not_flushed(
             doc.get(ROOM_META_KEY, type=Map)[ROOM_TITLE_KEY] = long_title
             await asyncio.sleep(0.4)
             assert (await _record(rooms, collab.id))[0] == "Collab Praxis"
+
+
+async def _over_cap_solo(db_session, active_task, character) -> Praxis:
+    solo = Praxis(
+        task_id=active_task.id,
+        created_by_id=character.id,
+        type=PraxisType.solo,
+        status=PraxisStatus.in_progress,
+        title="Solo Praxis",
+        body_text=SEED_BODY,
+    )
+    db_session.add(solo)
+    await db_session.flush()
+    db_session.add(PraxisMember(praxis_id=solo.id, character_id=character.id))
+    await db_session.commit()
+    return solo
+
+
+def _over_cap_doc() -> Doc:
+    doc = Doc()
+    doc[ROOM_BODY_KEY] = Text("x" * (PRAXIS_BODY_MAX + 1))
+    return doc
+
+
+async def test_a_submit_with_an_over_cap_draft_is_refused_and_changes_nothing(
+    db_session, active_task, character, monkeypatch
+) -> None:
+    solo = await _over_cap_solo(db_session, active_task, character)
+    state = base64.b64encode(_over_cap_doc().get_update()).decode()
+    async with running_rooms(db_session, monkeypatch) as rooms:
+        await rooms.server.get_room(room_name_for(solo.id))
+        with pytest.raises(HTTPException) as refused:
+            await rooms.submit(solo.id, character.id, doc_state=state)
+        assert refused.value.status_code == 413
+        assert refused.value.detail["code"] == "PRAXIS_DOC_UPDATE_INVALID"
+        assert await _record(rooms, solo.id) == ("Solo Praxis", SEED_BODY)
+        assert (await db_session.get(Praxis, solo.id)).status == PraxisStatus.in_progress
+
+
+async def test_publishing_an_over_cap_document_is_refused_and_keeps_it(
+    db_session, active_task, character, account, monkeypatch
+) -> None:
+    solo = await _over_cap_solo(db_session, active_task, character)
+    async with running_rooms(db_session, monkeypatch, flush_debounce_seconds=30.0) as rooms:
+        socket = await rooms.open(solo.id, account.id)
+        async with client_doc(socket) as doc:
+            await _wait_for_body(doc, SEED_BODY, "the solo author")
+            doc.get(ROOM_BODY_KEY, type=Text).insert(0, "x" * PRAXIS_BODY_MAX)
+            await _wait_for(
+                lambda: len(str(rooms.room_doc(solo.id).get(ROOM_BODY_KEY, type=Text)))
+                > PRAXIS_BODY_MAX,
+                "the over-cap text in the room",
+            )
+            with pytest.raises(HTTPException) as refused:
+                await rooms.submit(solo.id, character.id)
+        assert refused.value.status_code == 413
+        assert await _record(rooms, solo.id) == ("Solo Praxis", SEED_BODY)
+        assert await _stored_updates(rooms, solo.id) != []
+
+
+async def test_publishing_after_a_restart_cannot_drop_an_over_cap_document(
+    db_session, active_task, character, monkeypatch
+) -> None:
+    """Stored updates outlive the room; the flush skip must not become lost text."""
+    solo = await _over_cap_solo(db_session, active_task, character)
+    db_session.add(
+        PraxisRoomUpdate(praxis_id=solo.id, update=_over_cap_doc().get_update())
+    )
+    await db_session.commit()
+    async with running_rooms(db_session, monkeypatch) as rooms:
+        # Not via rooms.submit: it holds the one session lock the cold read needs.
+        with pytest.raises(HTTPException) as refused:
+            await rooms.server.discard_document(solo, db_session)
+        assert refused.value.status_code == 413
+        assert len(await _stored_updates(rooms, solo.id)) == 1

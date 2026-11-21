@@ -66,7 +66,10 @@ _FLUSH_DEBOUNCE_SECONDS = 2.0
 
 _MAX_CLIENT_UPDATE_BYTES = 2 * 1024 * 1024
 _INVALID_DRAFT = "That draft is not a valid document."
-_OVERSIZED_DRAFT = "That draft is too large."
+_OVERSIZED_DRAFT = (
+    f"That post is too long: keep the title under {PRAXIS_TITLE_MAX} and the body "
+    f"under {PRAXIS_BODY_MAX} characters."
+)
 
 # Path below the ``main.py`` mount (``/rooms`` prefix belongs to the mount).
 _ROOM_PATH = re.compile(r"^/praxis/(?P<praxis_id>\d+)/?$")
@@ -513,7 +516,20 @@ class PraxisRoomServer(WebsocketServer):
         name = room_name_for(praxis.id)
         async with self._open_lock:
             room = self.rooms.get(name)
-            if room is not None and _over_cap(_document_values(room.ydoc)):
+            if room is not None:
+                doc = room.ydoc
+            else:
+                # No room after a restart: the stored updates may still hold over-cap text
+                # the flusher skipped, which the delete below would silently drop.
+                doc = Doc()
+                store = PostgresYStore(
+                    name, log=self.log, session_factory=self._session_factory
+                )
+                try:
+                    await store.apply_updates(doc)
+                except YDocNotFound:
+                    pass
+            if _over_cap(_document_values(doc)):
                 raise_coded(413, ErrorCode.praxis_doc_update_invalid, _OVERSIZED_DRAFT)
             flusher = self._flushers.pop(name, None)
             if flusher is not None:
