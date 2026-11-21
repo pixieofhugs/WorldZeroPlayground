@@ -16,6 +16,7 @@ from routers import comments, contact, copy, google_photos, me, push, terms
 from schemas.system import HealthOut
 from services.character_stats import deliver_invitations_to_all
 from services.era import rebind_live_era
+from services.push import push_available
 from services.praxis_room import (
     PRAXIS_ROOM_APP,
     PRAXIS_ROOM_SERVER,
@@ -36,6 +37,8 @@ async def lifespan(app: FastAPI):
         os.path.isdir(media_path),
         file_count,
     )
+
+    push_available()  # logs an ERROR at boot if the VAPID config is malformed
 
     # Praxis rooms hold CRDT docs in-process: exactly one instance (ADR-0073).
     # A second instance raises here and the deploy fails loudly.

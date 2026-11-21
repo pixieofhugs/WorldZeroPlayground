@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import push from '../locales/en/push.json'
 // @ts-expect-error classic-script worker with no types; vite-node supplies the `module` its guard exports to.
-import { route, isShell, shellUrls, pushMessage, safeUrl, focusOrOpen } from '../../public/sw.js'
+import { route, isShell, shellUrls, pushMessage, pushMessageSafe, safeUrl, focusOrOpen } from '../../public/sw.js'
 
 const O = 'https://worldzero.org'
 
@@ -57,6 +57,14 @@ describe('pushMessage', () => {
     const m = pushMessage({ kind: 'nope', url: '/', character: 'X', actor: null, task: null, count: null }, S)
     expect(m.options.body).toBe('Something happened\nOpen World Zero to see.')
     expect(pushMessage({ kind: 'comment_mention', character: 'X' }, S).options.body).toContain('Someone mentioned you')
+  })
+})
+
+describe('pushMessageSafe', () => {
+  it('still shows a line when the strings are missing', () => {
+    const m = pushMessageSafe({ kind: 'vote_on_mine', character: 'X' }, { origin: O })
+    expect(m.title).toBe('World Zero')
+    expect(m.options.data.url).toBe('/')
   })
 })
 
