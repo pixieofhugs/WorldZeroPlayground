@@ -1,4 +1,4 @@
-import { beforeAll } from 'vitest'
+import { afterEach, beforeAll } from 'vitest'
 
 /**
  * Resolve every code-split faction archetype before tests run (#1045); static
@@ -15,4 +15,10 @@ beforeAll(async () => {
   await preloadAllArchetypes()
   // /start copy is route-loaded in the app; tests render its cards directly.
   await (await import('../i18n')).loadOnboardingCopy()
+})
+
+// No `globals`, so RTL never auto-unmounts: a tree left mounted keeps its
+// timers, which can fire after jsdom teardown ("window is not defined", #3887).
+afterEach(async () => {
+  if (typeof document !== 'undefined') (await import('@testing-library/react')).cleanup()
 })

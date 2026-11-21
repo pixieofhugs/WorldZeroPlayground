@@ -42,6 +42,10 @@ async function openHide(status: string) {
   return (await screen.findByLabelText("Reason the author sees")) as HTMLTextAreaElement;
 }
 
+// The row's setState after moderate must land before the test ends, or it fires into a torn-down jsdom.
+const settled = () =>
+  waitFor(() => expect(screen.queryByLabelText("Reason the author sees")).toBeNull());
+
 beforeEach(() => {
   vi.clearAllMocks();
   window.matchMedia = ((query: string) => ({
@@ -61,6 +65,7 @@ describe("Praxis tab Hide note", () => {
       expect(api.moderate).toHaveBeenCalledWith(7, "hidden", "Not your photo."),
     );
     expect(api.get).not.toHaveBeenCalled();
+    await settled();
   });
 
   it("keeps a Not-met praxis's note unless edited", async () => {
@@ -71,5 +76,6 @@ describe("Praxis tab Hide note", () => {
     await waitFor(() =>
       expect(api.moderate).toHaveBeenCalledWith(7, "hidden", "No proof."),
     );
+    await settled();
   });
 });
