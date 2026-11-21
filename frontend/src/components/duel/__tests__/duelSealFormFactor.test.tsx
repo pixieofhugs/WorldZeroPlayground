@@ -129,15 +129,20 @@ describe('the shared chassis switches, and nothing else does', () => {
   it.each(EVERY_SLUG)('%s is a centred, bounded card on a laptop', (slug) => {
     const html = dispatch(slug)
     expect(html, 'the bounded card').toContain('max-w-[460px]')
-    expect(html, 'the centring shell').toContain('items-center justify-center')
+    // Scrolls with the top reachable on a short screen (#3837): auto margins, not align-items.
+    expect(html, 'the centring shell').toContain('justify-center overflow-y-auto')
+    expect(html, 'the centred card').toContain('my-auto')
   })
 
   it.each(EVERY_SLUG)('%s is full-bleed on a phone — no card, no scrim', (slug) => {
     mocks.formFactor = 'mobile'
     const html = dispatch(slug)
     expect(html, 'the bounded card').not.toContain('max-w-[460px]')
-    expect(html, 'the centring shell').not.toContain('items-center justify-center')
+    expect(html, 'the centring shell').not.toContain('my-auto')
+    expect(html, 'bottom-anchored without justify-end (#3837)').toContain('[&amp;&gt;:first-child]:mt-auto')
     expect(html, 'the desktop scrim').not.toContain('rgba(0,0,0,0.')
+    // A skin ground's `position: relative` must not unpin the sheet (#3837 follow-up).
+    expect(html.match(/data-testid="duel-seal-sheet"[^>]*style="([^"]*)"/)?.[1], 'pinned over the page').toMatch(/(^|;)position:fixed(;|$)/)
   })
 
   // Radius/shadow belong in `card`, not `ground`. Only the root is read; inner
