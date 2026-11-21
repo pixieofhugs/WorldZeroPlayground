@@ -11,11 +11,13 @@ import { MotionProvider } from './hooks/useMotion'
 import i18n, { loadCopyOverrides } from './i18n'
 import './index.css'
 import './registerSw'
+import ErrorBoundary, { onPreloadError } from './components/ErrorBoundary'
 import OfflineGate from './components/OfflineGate'
 import { captureInstallPrompt } from './utils/installPrompt'
 
 // Deliberately not awaited: first paint must not wait on copy overrides.
 captureInstallPrompt()
+window.addEventListener('vite:preloadError', onPreloadError)
 void loadCopyOverrides()
 warmMe()
 
@@ -26,6 +28,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <ThemeProvider>
         {/* Device-local animations setting (#2154), painted onto `<html>`. */}
         <MotionProvider>
+          <ErrorBoundary>
           <BrowserRouter>
             <AuthProvider>
               {/* Inside AuthProvider to see session changes, but its fetch must
@@ -39,6 +42,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
               </SidebarProvider>
             </AuthProvider>
           </BrowserRouter>
+          </ErrorBoundary>
         </MotionProvider>
       </ThemeProvider>
     </I18nextProvider>
