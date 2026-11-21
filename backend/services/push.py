@@ -7,14 +7,17 @@ event real.
 """
 
 import asyncio
+import base64
 import json
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
-from functools import partial
+from functools import cache, partial
 from typing import Awaitable, Callable, Optional
 
 import requests
+from cryptography.hazmat.primitives import serialization
+from py_vapid import Vapid
 from pywebpush import WebPushException, webpush
 from sqlalchemy import delete, distinct, event, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -56,12 +59,42 @@ _OUTBOX = "push_outbox"
 _in_flight: set[asyncio.Task] = set()
 
 
+@cache
+def _vapid_problem(public: str, private: str, contact: str) -> Optional[str]:
+    """What is wrong with the VAPID config, or None. Cached: logs once per config."""
+    if not (public and private and contact):
+        return "VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY and VAPID_CONTACT must all be set"
+    if not contact.startswith(("mailto:", "https:")):
+        return "VAPID_CONTACT must start with mailto: or https:"
+    try:
+        derived = Vapid.from_string(private).public_key.public_bytes(
+            serialization.Encoding.X962, serialization.PublicFormat.UncompressedPoint
+        )
+    except Exception as error:
+        return f"VAPID_PRIVATE_KEY does not parse ({type(error).__name__})"
+    if base64.urlsafe_b64encode(derived).rstrip(b"=").decode() != public.rstrip("="):
+        return "VAPID_PUBLIC_KEY is not the public half of VAPID_PRIVATE_KEY"
+    return None
+
+
 def push_available() -> bool:
-    return bool(
-        settings.VAPID_PUBLIC_KEY
-        and settings.VAPID_PRIVATE_KEY
-        and settings.VAPID_CONTACT
+    """On only when the keys are all set and consistent; a broken set logs an ERROR."""
+    cfg = (
+        settings.VAPID_PUBLIC_KEY,
+        settings.VAPID_PRIVATE_KEY,
+        settings.VAPID_CONTACT,
     )
+    if not (cfg[0] or cfg[1]):  # keys blank on purpose: push is simply off
+        return False
+    problem = _vapid_problem(*cfg)
+    if problem:
+        _log_vapid_once(problem)
+    return problem is None
+
+
+@cache
+def _log_vapid_once(problem: str) -> None:
+    logger.error("Web push is OFF: %s", problem)
 
 
 @dataclass(frozen=True)
@@ -106,8 +139,11 @@ async def deliver(
                 if status in GONE_STATUSES:
                     gone.append(target.id)
                 else:
-                    logger.warning(
-                        "push to subscription %s failed: %s", target.id, error
+                    logger.error(
+                        "push to subscription %s rejected: status=%s reason=%s",
+                        target.id,
+                        status,
+                        (getattr(error.response, "text", "") or str(error))[:200],
                     )
             except Exception:
                 logger.exception("push to subscription %s crashed", target.id)

@@ -4,10 +4,15 @@ Seam: ``services.push.notify`` queues on the session; ``deliver`` is the only th
 that talks to ``pywebpush`` (``_send_one`` is patched, no network).
 """
 
+import asyncio
+import base64
 import json
+import logging
 
 import pytest
+from cryptography.hazmat.primitives import serialization
 from httpx import AsyncClient
+from py_vapid import Vapid
 from pywebpush import WebPushException
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
@@ -28,10 +33,24 @@ SUBSCRIPTION = {
 }
 
 
+def _vapid_pair() -> tuple[str, str]:
+    vapid = Vapid()
+    vapid.generate_keys()
+    b64 = lambda raw: base64.urlsafe_b64encode(raw).rstrip(b"=").decode()  # noqa: E731
+    pub = vapid.public_key.public_bytes(
+        serialization.Encoding.X962, serialization.PublicFormat.UncompressedPoint
+    )
+    priv = vapid.private_key.private_numbers().private_value.to_bytes(32, "big")
+    return b64(pub), b64(priv)
+
+
+PUBLIC, PRIVATE = _vapid_pair()
+
+
 @pytest.fixture
 def keys_on(monkeypatch):
-    monkeypatch.setattr(settings, "VAPID_PUBLIC_KEY", "pub")
-    monkeypatch.setattr(settings, "VAPID_PRIVATE_KEY", "priv")
+    monkeypatch.setattr(settings, "VAPID_PUBLIC_KEY", PUBLIC)
+    monkeypatch.setattr(settings, "VAPID_PRIVATE_KEY", PRIVATE)
     monkeypatch.setattr(settings, "VAPID_CONTACT", "mailto:hi@worldzero.org")
 
 
@@ -49,7 +68,7 @@ async def test_prefs_hand_over_the_public_key_when_configured(
     client: AsyncClient, auth_headers: dict, keys_on
 ):
     body = (await client.get("/me/notification-prefs", headers=auth_headers)).json()
-    assert (body["push_available"], body["vapid_public_key"]) == (True, "pub")
+    assert (body["push_available"], body["vapid_public_key"]) == (True, PUBLIC)
 
 
 @pytest.mark.asyncio
@@ -330,3 +349,61 @@ async def test_withdrawn_and_removed_comments_are_not_counted(
     await db_session.flush()
     await _comment(db_session, character3, praxis=praxis)
     assert [p["count"] for p, _ in _queued(db_session)][-1] is None
+
+
+@pytest.mark.parametrize(
+    "field, value, words",
+    [
+        ("VAPID_CONTACT", "hello@worldzero.org", "mailto:"),
+        ("VAPID_PRIVATE_KEY", "not-a-key", "does not parse"),
+        ("VAPID_PUBLIC_KEY", _vapid_pair()[0], "public half"),
+    ],
+)
+def test_a_malformed_vapid_config_turns_push_off_and_says_why(
+    monkeypatch, caplog, keys_on, field, value, words
+):
+    monkeypatch.setattr(settings, field, value)
+    with caplog.at_level(logging.ERROR, logger="services.push"):
+        assert push.push_available() is False
+    assert words in caplog.text
+
+
+@pytest.mark.asyncio
+async def test_a_push_service_rejection_is_logged_with_status_and_reason(
+    monkeypatch, caplog
+):
+    class Response:
+        status_code = 403
+        text = "VapidPkHashMismatch"
+
+    def reject(target, body):
+        raise WebPushException("nope", response=Response())
+
+    monkeypatch.setattr(push, "_send_one", reject)
+    batch = [({"kind": "level_up"}, [push.Target(7, "https://x", "k", "a")])]
+    with caplog.at_level(logging.ERROR, logger="services.push"):
+        await push.deliver(batch)
+    assert "status=403 reason=VapidPkHashMismatch" in caplog.text
+
+
+@pytest.mark.asyncio
+async def test_the_commit_sends_what_notify_queued(
+    db_session: AsyncSession,
+    account: Account,
+    character: Character,
+    keys_on,
+    monkeypatch,
+):
+    sent = []
+
+    async def deliver(batch):
+        sent.append(batch)
+
+    monkeypatch.setattr(push, "deliver", deliver)
+    await _subscribe(db_session, account)
+    account.notification_prefs = {"level_up": {"by_push": True}}
+    await push.notify_level_up(db_session, character)
+    assert sent == []
+    await db_session.commit()
+    await asyncio.gather(*push._in_flight)
+    assert len(sent) == 1
