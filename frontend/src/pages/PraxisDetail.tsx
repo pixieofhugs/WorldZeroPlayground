@@ -11,6 +11,7 @@ import { Navigate, useParams } from 'react-router-dom'
 import { usePraxisDetail } from './praxisDetail/usePraxisDetail'
 import { resolveVariant } from '../utils/factionDispatch'
 import { surfaceMap } from '../factions'
+import { ErrorBanner } from "../components/ui/ErrorBanner";
 
 export default function PraxisDetail() {
   const { t } = useTranslation(['praxis', 'common'])
@@ -21,10 +22,8 @@ export default function PraxisDetail() {
   if (state.loading) return <div className="py-8 font-body text-muted">{t('common:loading')}</div>
   if (state.fetchError) return (
     <div className="py-8">
-      <p className="font-body content-text danger-text border-2 danger-edge px-3 py-2">
-        {state.fetchError}{' '}
-        <button onClick={() => window.location.reload()} className="underline">{t('detail.retry')}</button>
-      </p>
+      <ErrorBanner message={<>{state.fetchError}{' '}
+        <button onClick={() => window.location.reload()} className="underline">{t('detail.retry')}</button></>} />
     </div>
   )
   if (!state.praxis) return <div className="py-8 font-body text-muted">{t('detail.notFound')}</div>

@@ -9,7 +9,7 @@ import { MemoryRouter } from "react-router-dom";
 import { describe, it, expect, vi } from "vitest";
 import "../i18n";
 
-import { ErrorBanner } from "../pages/editPraxis/archetypes/shared";
+import { ErrorBanner } from "../components/ui/ErrorBanner";
 import { aPraxis, anEditPraxisState } from "../test/fixtures";
 
 vi.mock("../hooks/useFormFactor", () => ({ useFormFactor: () => "desktop" }));

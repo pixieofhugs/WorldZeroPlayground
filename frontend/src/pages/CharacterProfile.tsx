@@ -33,6 +33,7 @@ import FactionProfileBody, {
   type ProfileBodyProps,
   type ProfileProgression,
 } from "./characterProfile/FactionProfileBody";
+import { ErrorBanner } from "../components/ui/ErrorBanner";
 
 /** Status pill minus `background`; shared by the edge and block rows (ADR-0077). */
 const statusPillStyle: React.CSSProperties = {
@@ -180,15 +181,13 @@ export default function CharacterProfile() {
   if (error)
     return (
       <div className="py-8">
-        <p className="font-body content-text danger-text border-2 danger-edge px-3 py-2">
-          {extractError(error, "Couldn't load this character.")}{" "}
+        <ErrorBanner message={<>{extractError(error, "Couldn't load this character.")}{" "}
           <button
             onClick={() => window.location.reload()}
             className="underline"
           >
             {t("states.tryRefreshing")}
-          </button>
-        </p>
+          </button></>} />
       </div>
     );
   if (!character)
@@ -318,9 +317,7 @@ export default function CharacterProfile() {
       {/* Sign-up failure only (success navigates away); no skin owns a slot. */}
 
       {signupMsg && (
-        <p className="font-body content-text border-2 danger-edge danger-text px-3 py-2">
-          {signupMsg}
-        </p>
+        <ErrorBanner message={signupMsg} />
       )}
       <FactionProfileBody {...bodyProps} />
     </>

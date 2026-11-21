@@ -32,10 +32,10 @@ import {
   ComposerRule,
   ComposerSection,
   ComposerSheet,
-  ErrorBanner,
   composerLabelStyle,
   useComposerSizes,
 } from '../../editPraxis/archetypes/shared'
+import { ErrorBanner } from '../../../components/ui/ErrorBanner'
 import {
   ALARM,
   EDGE,

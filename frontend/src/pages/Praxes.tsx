@@ -5,6 +5,7 @@ import PageTitle from '../components/ui/PageTitle'
 import { usePraxes } from './praxes/usePraxes'
 import PraxisFilterBar from './praxes/PraxisFilterBar'
 import PraxisFeedEmpty from './praxes/PraxisFeedEmpty'
+import { ErrorBanner } from "../components/ui/ErrorBanner";
 
 /** Praxis feed: one `usePraxes()` fetch (#644), one responsive page (#499). */
 export default function Praxes() {
@@ -46,10 +47,8 @@ export default function Praxes() {
       {loading && items.length === 0 ? (
         <p className="font-body text-muted">{t('listPage.loading')}</p>
       ) : error ? (
-        <p className="font-body content-text danger-text border-2 danger-edge px-3 py-2">
-          {t('listPage.loadError')}{' '}
-          <button onClick={() => window.location.reload()} className="underline">{tc('states.tryRefreshing')}</button>
-        </p>
+        <ErrorBanner message={<>{t('listPage.loadError')}{' '}
+          <button onClick={() => window.location.reload()} className="underline">{tc('states.tryRefreshing')}</button></>} />
       ) : isEmpty ? (
         <PraxisFeedEmpty kind={emptyState} onClearAll={clearAllFilters} />
       ) : (

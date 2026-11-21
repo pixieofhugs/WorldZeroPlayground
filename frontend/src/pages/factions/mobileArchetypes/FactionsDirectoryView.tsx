@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import type { FactionOut, FactionPageOut } from '../../../api/factions'
 import { factionCssVar, sortFactionsByRainbowOrder } from '../../../utils/factions'
 import FactionSelectCard, { type SelectState } from '../../../components/selectCard/FactionSelectCard'
+import { ErrorBanner } from "../../../components/ui/ErrorBanner";
 
 const NA_SLUG = 'na'
 
@@ -122,7 +123,7 @@ export default function FactionsDirectoryView({
       {loading ? (
         <p className="font-body text-muted">{t('index.loading')}</p>
       ) : error ? (
-        <p className="font-body content-text danger-text border-2 danger-edge px-3 py-2">{error}</p>
+        <ErrorBanner message={error} />
       ) : (
         <div
           data-testid="faction-tile-column"

@@ -33,7 +33,6 @@ import {
   ComposerSection,
   ComposerSheet,
   ComposerStatusRow,
-  ErrorBanner,
   RingMark,
   TaskSlip,
   composerDropGround,
@@ -43,6 +42,7 @@ import {
   useComposerSizes,
   type ComposerDress,
 } from "./shared";
+import { ErrorBanner } from "../../../components/ui/ErrorBanner";
 import PraxisWaitingSurface from "../waiting/PraxisWaitingSurface";
 import {
   BodyPreview,

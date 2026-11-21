@@ -5,6 +5,7 @@ import { factionName } from "../utils/factions";
 import { resolveVariant } from "../utils/factionDispatch";
 import { surfaceMap } from "../factions";
 import { useFactionDetail } from "./factionDetail/useFactionDetail";
+import { ErrorBanner } from "../components/ui/ErrorBanner";
 
 /**
  * Faction detail page (`/factions/:slug`), surface #13 in
@@ -38,12 +39,10 @@ export default function FactionDetail({ slug: slugProp }: { slug?: string } = {}
   if (fetchError)
     return (
       <div className="py-8">
-        <p className="font-body content-text danger-text border-2 danger-edge px-3 py-2">
-          {fetchError}{" "}
+        <ErrorBanner message={<>{fetchError}{" "}
           <button onClick={() => window.location.reload()} className="underline">
             {t("detail.retry")}
-          </button>
-        </p>
+          </button></>} />
       </div>
     );
   if (!faction)
@@ -73,9 +72,7 @@ export default function FactionDetail({ slug: slugProp }: { slug?: string } = {}
 
       {/* Sign-up failure only (#2188); no body skin owns a message slot. */}
       {state.signupMsg && (
-        <p className="font-body content-text border-2 danger-edge danger-text px-3 py-2 mb-4">
-          {state.signupMsg}
-        </p>
+        <ErrorBanner className="mb-4" message={state.signupMsg} />
       )}
 
       <Body state={state} />

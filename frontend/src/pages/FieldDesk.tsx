@@ -21,6 +21,7 @@ import { useTaskSignup } from '../hooks/useTaskSignup'
 import { useSidebarPanels } from '../hooks/useSidebarPanels'
 import { rosterOffersAChoice } from '../hooks/useRosterChoice'
 import { useFieldDeskHome } from './fieldDesk/useFieldDeskHome'
+import { ErrorBanner } from "../components/ui/ErrorBanner";
 
 const InstallNudge = lazy(() => import('../components/install/InstallNudge'))
 
@@ -170,9 +171,7 @@ export default function FieldDesk() {
       {/* "What do I do now?" (#1557) */}
       <div className="flex flex-col" style={{ gap: 'var(--space-2xl)', marginTop: 'var(--space-4xl)' }}>
         {signupMsg && (
-          <p className="font-body content-text border-2 danger-edge danger-text px-3 py-2">
-            {signupMsg}
-          </p>
+          <ErrorBanner message={signupMsg} />
         )}
         <ContinueSection />
         <BrowseSection onSignup={handleSignup} />
