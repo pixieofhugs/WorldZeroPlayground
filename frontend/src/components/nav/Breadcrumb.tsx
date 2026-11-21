@@ -139,6 +139,7 @@ export default function Breadcrumb(props: BreadcrumbProps) {
               ) : (
                 <Link
                   to={crumb.to}
+                  className="hit-y hit-pad"
                   style={{ color: "inherit", textDecoration: "none", ...clip }}
                 >
                   {crumb.label}

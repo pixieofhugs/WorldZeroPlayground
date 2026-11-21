@@ -37,7 +37,7 @@ export default function MobileHeader() {
         borderBottom: '1px solid var(--color-border)',
       }}
     >
-      <Link to="/" className="font-display italic" style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-primary)', textDecoration: 'none' }}>
+      <Link to="/" className="font-display italic hit-pad" style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-primary)', textDecoration: 'none' }}>
         {t('brand')}
       </Link>
       {user && (
@@ -55,7 +55,7 @@ export default function MobileHeader() {
             // Badge is aria-hidden, so the count rides the accessible name (#1457).
             aria-label={bellLabel}
             title={bellLabel}
-            className="relative flex items-center"
+            className="relative flex items-center hit-pad"
             style={{ color: 'var(--color-text-secondary)', textDecoration: 'none', padding: 'var(--space-xs)' }}
           >
             <svg
@@ -77,7 +77,7 @@ export default function MobileHeader() {
           <Link
             to="/settings"
             aria-label={t('settings.title')}
-            className="label-caption"
+            className="label-caption hit-pad"
             style={{
               textDecoration: 'none',
               padding: 'var(--space-xs)',
