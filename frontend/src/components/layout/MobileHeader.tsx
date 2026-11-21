@@ -26,9 +26,11 @@ export default function MobileHeader() {
 
   return (
     <header
-      className="sticky flex items-center justify-between px-4 h-12"
+      className="sticky flex items-center justify-between px-4"
       style={{
         top: 'var(--modstrip-h)',
+        height: 'calc(3rem + env(safe-area-inset-top))',
+        paddingTop: 'env(safe-area-inset-top)',
         zIndex: 10,
         background: 'var(--color-nav-bg)',
         backdropFilter: 'blur(var(--nav-blur))',

@@ -24,6 +24,10 @@ describe('MobileTabBar', () => {
     }
   })
 
+  it('declares its height from --tab-bar-height plus the bottom inset', () => {
+    expect(render('/')).toContain('height:calc(var(--tab-bar-height) + env(safe-area-inset-bottom))')
+  })
+
   it('marks the active route with the primary-text underline', () => {
     // NavLink applies the active style only to the matching tab.
     const activeStyle = 'border-top:2px solid var(--color-text-primary)'
