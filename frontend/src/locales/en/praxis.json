@@ -250,5 +250,12 @@
     "authorized": "Google Photos is connected. Press the button again to choose your photos.",
     "popupBlocked": "Your browser blocked the Google Photos window. Allow pop-ups for this site and try again.",
     "failed": "Couldn't add photos from Google Photos."
+  },
+  "pushAsk": {
+    "title": "Want to know when someone rates this?",
+    "body": "We'll buzz your phone when people rate it, comment on it, or call you out. Ambient chatter stays off unless you go looking for it in Settings.",
+    "turnOn": "Turn on notifications",
+    "notNow": "Not now",
+    "note": "Your phone will ask too. That one is the one that counts."
   }
 }

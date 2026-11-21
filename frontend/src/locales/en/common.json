@@ -484,6 +484,7 @@
         "heldTerms": "A mark that you agreed to the terms before signing in, kept until your account exists so the agreement can be recorded against it.",
         "titleSeen": "A mark that this browser has seen the welcome title, so a later visit shows it at once instead of playing it again.",
         "installDismissed": "A mark that you closed the card offering to put World Zero on your home screen, so it is never shown again.",
+        "pushAskDismissed": "A mark that you closed the card offering notifications under your first praxis, so it is never shown again.",
         "chunkReload": "The time the page last reloaded itself after a new version went live, so it never reloads in a loop."
       },
       "deletion": {
