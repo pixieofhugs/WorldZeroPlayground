@@ -86,6 +86,7 @@ export default function RelationshipBlockControl({
           ...CARD_CTA,
           minWidth: 44,
           width: '100%',
+          marginTop: 'var(--space-sm)',
         }}
       >
         {t('relationships.block')}
