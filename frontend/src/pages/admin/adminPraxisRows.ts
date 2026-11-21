@@ -128,7 +128,7 @@ export async function requestPraxisModeration(
     const praxis = await moderatePraxis(
       praxisId,
       ACTION_STATUS[action],
-      action === "fail" ? note : undefined,
+      action === "restore" ? undefined : note,
     );
     return { status: praxis.moderation_status };
   } catch (err) {
