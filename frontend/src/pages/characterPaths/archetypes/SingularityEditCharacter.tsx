@@ -41,11 +41,11 @@ import {
   ComposerRule,
   ComposerSection,
   ComposerSheet,
-  ErrorBanner,
   composerBandStyle,
   composerLabelStyle,
   useComposerSizes,
 } from '../../editPraxis/archetypes/shared'
+import { ErrorBanner } from '../../../components/ui/ErrorBanner'
 
 const SLUG = 'singularity'
 

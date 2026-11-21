@@ -41,13 +41,13 @@ import {
   ComposerSection,
   ComposerSheet,
   ComposerStatusRow,
-  ErrorBanner,
   TaskSlip,
   composerLabelStyle,
   composerStageWord,
   useComposerSizes,
   type ComposerDress,
 } from "../archetypes/shared";
+import { ErrorBanner } from "../../../components/ui/ErrorBanner";
 import type { EditPraxisState } from "../useEditPraxis";
 import { collabPublishWindow } from "./waitingClock";
 import Breadcrumb from "../../../components/nav/Breadcrumb";

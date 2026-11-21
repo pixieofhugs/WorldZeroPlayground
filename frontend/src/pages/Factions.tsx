@@ -9,6 +9,7 @@ import { useAuth } from '../auth/AuthContext'
 import { useFormFactor } from '../hooks/useFormFactor'
 import DefaultFactionsDirectory from './factions/mobileArchetypes/DefaultFactionsDirectory'
 import { useFactionsDirectory, type FactionsDirectoryState } from './factions/useFactionsDirectory'
+import { ErrorBanner } from "../components/ui/ErrorBanner";
 
 const NA_SLUG = 'na'
 
@@ -44,7 +45,7 @@ export function DesktopFactions({ state }: { state: FactionsDirectoryState }) {
   const navigate = useNavigate()
 
   const { factions, factionPage, loading } = state
-  const error = state.error ? extractError(state.error, 'Could not load factions.') : null
+  const error = state.error ? extractError(state.error, t('index.loadError')) : null
 
   const statusFor = (slug: string): string => {
     if (!factionPage) return STATUS_NOT_INVITED
@@ -83,7 +84,7 @@ export function DesktopFactions({ state }: { state: FactionsDirectoryState }) {
       <PageTitle title="Factions" />
 
       {error && (
-        <p className="font-body content-text danger-text border-2 danger-edge px-3 py-2 mb-4">{error}</p>
+        <ErrorBanner className="mb-4" message={error} />
       )}
 
       {!character && (

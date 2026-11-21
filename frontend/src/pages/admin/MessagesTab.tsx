@@ -6,6 +6,7 @@ import { formatTimestamp } from '../../utils/dates'
 import { extractError } from '../../utils/errors'
 import PageTitle from '../../components/ui/PageTitle'
 import { useReloadCounts } from './useAdminCounts'
+import { ErrorBanner } from "../../components/ui/ErrorBanner";
 
 /** Contact-form messages, with an archive toggle. */
 export default function MessagesTab() {
@@ -45,7 +46,7 @@ export default function MessagesTab() {
     <div className="flex flex-col gap-8">
       <PageTitle title={t('console.rail.items.messages')} />
       {actionError && (
-        <p className="font-body content-text danger-text border-2 danger-edge px-3 py-2">{actionError}</p>
+        <ErrorBanner message={actionError} />
       )}
       <section>
         <div className="flex items-center gap-4 mb-3 border-b-2 border-border pb-1">

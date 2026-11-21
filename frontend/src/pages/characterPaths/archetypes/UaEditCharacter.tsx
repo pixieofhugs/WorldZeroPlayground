@@ -34,11 +34,11 @@ import {
   ComposerRule,
   ComposerSection,
   ComposerSheet,
-  ErrorBanner,
   composerBandStyle,
   composerLabelStyle,
   useComposerSizes,
 } from '../../editPraxis/archetypes/shared'
+import { ErrorBanner } from '../../../components/ui/ErrorBanner'
 import { Lotus } from '../../../components/factionMarks'
 import { UaSigil } from '../../../components/sigil/UaSigil'
 import { UA_DISPLAY, UA_TEXT } from '../../../components/factionMarks/uaAtoms'

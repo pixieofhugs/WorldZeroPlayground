@@ -1,4 +1,7 @@
 {
+  "fallback": "Something went wrong. Please try again.",
+  "server": "The server ran into an unexpected problem. Try again in a moment.",
+  "offline": "Unable to reach the server. Check your connection and try again.",
   "codes": {
     "VOTE_BUDGET_EXHAUSTED": "No votes remaining in your budget.",
     "VOTE_LEVEL_TOO_LOW": "Must reach level {{level}} to vote.",
