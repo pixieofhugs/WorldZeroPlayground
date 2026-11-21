@@ -106,7 +106,9 @@ async def test_a_live_tombstone_stops_the_sign_in_before_anything_is_minted(
     assert excinfo.value.provider == _GOOGLE
     assert excinfo.value.provider_user_id == _SUB
     assert excinfo.value.email == _RETURNING_EMAIL
-    assert excinfo.value.deleted_on == datetime.now(timezone.utc).date()
+    deleted_at = excinfo.value.deleted_at
+    assert deleted_at.tzinfo is not None
+    assert abs(datetime.now(timezone.utc) - deleted_at) < timedelta(minutes=1)
 
     assert await _account_count(db_session) == accounts_before
     # Not consumed: the confirm step still needs it.
@@ -222,7 +224,7 @@ async def test_the_callback_sends_a_returning_player_to_the_gate_with_no_session
 
 
 @pytest.mark.asyncio
-async def test_the_gate_reads_its_date_and_the_confirm_lands_in_a_fresh_account(
+async def test_the_gate_reads_its_timestamp_and_the_confirm_lands_in_a_fresh_account(
     client: AsyncClient, db_session: AsyncSession, monkeypatch: pytest.MonkeyPatch, era
 ) -> None:
     departed = await _departed_account(db_session, era)
@@ -234,7 +236,9 @@ async def test_the_gate_reads_its_date_and_the_confirm_lands_in_a_fresh_account(
 
     gate = await client.get("/auth/returning-player")
     assert gate.status_code == 200
-    assert gate.json()["deleted_on"] == datetime.now(timezone.utc).date().isoformat()
+    sent = datetime.fromisoformat(gate.json()["deleted_at"])
+    assert sent.tzinfo is not None
+    assert abs(datetime.now(timezone.utc) - sent) < timedelta(minutes=1)
 
     confirm = await client.post("/auth/returning-player")
     assert confirm.status_code == 200

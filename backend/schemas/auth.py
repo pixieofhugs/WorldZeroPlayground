@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import datetime
 from typing import Optional
 
 from game_config import VoteLockReason
@@ -73,11 +73,11 @@ class LogoutOut(WireModel):
 class ReturningPlayerOut(WireModel):
     """What the consent gate may know (``GET /auth/returning-player``).
 
-    The caller is authenticated as nobody, so keep this to one field. A date, not
-    a timestamp: truncated in ``ReturningPlayerConsentRequired``.
+    The caller is authenticated as nobody, so keep this to one field. The hour is
+    sent (owner ruling on #3630): the reader formats the day in their own zone.
     """
 
-    deleted_on: date
+    deleted_at: datetime
 
 
 class StartFreshOut(WireModel):

@@ -1,5 +1,5 @@
 import logging
-from datetime import date
+from datetime import datetime
 from typing import Literal, Optional
 
 # Not re-exported by `starlette_client`.
@@ -156,7 +156,7 @@ def _returning_player_redirect(
         "provider": str(pending.provider),
         "provider_user_id": pending.provider_user_id,
         "email": pending.email,
-        "deleted_on": pending.deleted_on.isoformat(),
+        "deleted_at": pending.deleted_at.isoformat(),
     }
     return Response(
         status_code=302,
@@ -283,14 +283,14 @@ async def auth_discord_callback(
 
 @router.get("/returning-player", response_model=ReturningPlayerOut)
 async def returning_player_gate(request: Request) -> ReturningPlayerOut:
-    """What the consent gate says (#2162): a date, and nothing else.
+    """What the consent gate says (#2162): the deletion time, and nothing else.
 
     Read from the parked sign-in rather than the tombstone, so this route makes
     no lookup keyed on anything the caller supplied — there is nothing to
     supply. The identity is in the signed session or the gate does not exist.
     """
     return ReturningPlayerOut(
-        deleted_on=date.fromisoformat(_pending_signup(request)["deleted_on"])
+        deleted_at=datetime.fromisoformat(_pending_signup(request)["deleted_at"])
     )
 
 

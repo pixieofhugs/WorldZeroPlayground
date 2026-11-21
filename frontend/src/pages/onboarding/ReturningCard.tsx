@@ -32,14 +32,9 @@ const failure: CSSProperties = {
   color: 'var(--color-danger)',
 }
 
-/**
- * `2026-03-03` as *3 March*, in the reader's locale. Split by hand: `new Date()`
- * parses date-only ISO as UTC, so west of Greenwich it shows the day before.
- * No year: the window is ninety days.
- */
-export function formatDeletedOn(deletedOn: string, locale?: string): string {
-  const [year, month, day] = deletedOn.split('-').map(Number)
-  return new Date(year, month - 1, day).toLocaleDateString(locale, {
+/** The instant as *3 March* in the reader's zone and locale. No year: the window is ninety days. */
+export function formatDeletedAt(deletedAt: string, locale?: string): string {
+  return new Date(deletedAt).toLocaleDateString(locale, {
     day: 'numeric',
     month: 'long',
   })
@@ -70,14 +65,14 @@ export default function ReturningCard() {
   const { t: tCommon } = useTranslation('common')
   const { refetch } = useAuth()
   const navigate = useNavigate()
-  const [deletedOn, setDeletedOn] = useState<string | null>(null)
+  const [deletedAt, setDeletedAt] = useState<string | null>(null)
   const [failed, setFailed] = useState<string | null>(null)
 
   useEffect(() => {
     // No gate behind this visit: send them to the arc's start, not a 404.
     // `replace` so Back does not loop.
     getReturningPlayer()
-      .then((gate) => setDeletedOn(gate.deleted_on))
+      .then((gate) => setDeletedAt(gate.deleted_at))
       .catch(() => navigate('/start', { replace: true }))
   }, [navigate])
 
@@ -89,7 +84,7 @@ export default function ReturningCard() {
     setFailed,
   )
 
-  if (deletedOn === null) {
+  if (deletedAt === null) {
     return <div className="page font-body text-muted">{tCommon('loading')}</div>
   }
 
@@ -109,7 +104,7 @@ export default function ReturningCard() {
       }
     >
       <p style={prose} data-testid="returning-body">
-        {t('returning.body', { date: formatDeletedOn(deletedOn, i18n.language) })}
+        {t('returning.body', { date: formatDeletedAt(deletedAt, i18n.language) })}
       </p>
 
       {failed && <p style={failure}>{failed}</p>}
