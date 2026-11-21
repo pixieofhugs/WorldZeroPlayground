@@ -53,12 +53,13 @@ export default function DuelSealSheet({
         role="dialog"
         aria-modal="true"
         aria-label={label}
-        className={`fixed inset-0 z-50 flex flex-col justify-end overflow-y-auto ${
+        className={`fixed inset-0 z-50 flex flex-col overflow-y-auto ${
           phoneClassName ?? ''
         }`}
         style={{ background: 'var(--color-bg-page)', ...ground }}
       >
-        {children}
+        {/* mt-auto, not justify-end: overflow off the top of a flex-end column is unreachable. */}
+        <div className="mt-auto flex flex-1 flex-col">{children}</div>
       </div>,
     )
   }
@@ -71,10 +72,10 @@ export default function DuelSealSheet({
       role="dialog"
       aria-modal="true"
       aria-label={label}
-      className="fixed inset-0 z-50 flex items-center justify-center"
+      className="fixed inset-0 z-50 flex overflow-y-auto"
       style={{ padding: 'var(--space-lg)', background: scrim }}
     >
-      <div className="w-full max-w-[460px] flex flex-col" style={{ ...ground, ...card }}>
+      <div className="m-auto w-full max-w-[460px] flex flex-col" style={{ ...ground, ...card }}>
         {children}
       </div>
     </div>,

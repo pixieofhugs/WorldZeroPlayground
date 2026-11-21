@@ -129,14 +129,14 @@ describe('the shared chassis switches, and nothing else does', () => {
   it.each(EVERY_SLUG)('%s is a centred, bounded card on a laptop', (slug) => {
     const html = dispatch(slug)
     expect(html, 'the bounded card').toContain('max-w-[460px]')
-    expect(html, 'the centring shell').toContain('items-center justify-center')
+    expect(html, 'the auto-margin card').toContain('m-auto')
   })
 
   it.each(EVERY_SLUG)('%s is full-bleed on a phone — no card, no scrim', (slug) => {
     mocks.formFactor = 'mobile'
     const html = dispatch(slug)
     expect(html, 'the bounded card').not.toContain('max-w-[460px]')
-    expect(html, 'the centring shell').not.toContain('items-center justify-center')
+    expect(html, 'the auto-margin card').not.toContain('m-auto')
     expect(html, 'the desktop scrim').not.toContain('rgba(0,0,0,0.')
   })
 
