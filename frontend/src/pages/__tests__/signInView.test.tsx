@@ -21,7 +21,7 @@ afterEach(() => {
 
 describe('the sign-in view', () => {
   it('signs in plainly: no onboarding resume is marked', () => {
-    render(<SignInView onRestart={() => {}} />)
+    render(<SignInView onRestart={() => {}} />, { wrapper: MemoryRouter })
     fireEvent.click(screen.getByTestId('sign-in-discord'))
 
     expect(loginWith).toHaveBeenCalledWith('discord')
@@ -30,7 +30,7 @@ describe('the sign-in view', () => {
 
   it('offers both providers and a way back to the start', () => {
     const onRestart = vi.fn()
-    render(<SignInView onRestart={onRestart} />)
+    render(<SignInView onRestart={onRestart} />, { wrapper: MemoryRouter })
     expect(screen.getByTestId('sign-in-google')).toBeTruthy()
     fireEvent.click(screen.getByTestId('onboarding-restart'))
 

@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import LoginNotice from '../../components/LoginNotice'
 import SignInOptions from '../../components/SignInOptions'
 import { primaryControl } from './OnboardingCard'
 import { useTitleTyping } from './useTitleTyping'
@@ -26,6 +27,7 @@ export default function SignInView({ onRestart }: { onRestart: () => void }) {
           <span className="ob-caret" />
         </span>
       </h1>
+      <LoginNotice />
       <div className="ob-sheet boing ob-welcome-box">
         <SignInOptions className="" style={primaryControl} />
       </div>

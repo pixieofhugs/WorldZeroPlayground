@@ -31,6 +31,8 @@ describe('flowSteps', () => {
 
   it('an OAuth resume starts at the contract', () => {
     expect(initialFlow(true).step).toBe('contract')
+    expect(initialFlow(false, true).step).toBe('returning')
+    expect(initialFlow(true, true).step).toBe('contract')
   })
 
   it('the contract comes before sign-in, and Back from sign-in returns to it', () => {

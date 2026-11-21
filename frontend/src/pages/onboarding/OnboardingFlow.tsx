@@ -88,11 +88,11 @@ function Title({ cameBack, returning, onStart }: { cameBack: boolean; returning:
   )
 }
 
-export default function OnboardingFlow({ resumed, onAccepted }: { resumed: boolean; onAccepted: () => void }) {
+export default function OnboardingFlow({ resumed, signIn = false, onAccepted }: { resumed: boolean; signIn?: boolean; onAccepted: () => void }) {
   const { user, loading, refetch } = useAuth()
   const { t } = useTranslation('onboarding')
   const { t: tc } = useTranslation('common')
-  const [flow, setFlow] = useState<Flow>(() => initialFlow(resumed))
+  const [flow, setFlow] = useState<Flow>(() => initialFlow(resumed, signIn && !user))
   const [returning] = useState(titleSeen)
   const [reveal, setReveal] = useState(0)
   const [leaving, setLeaving] = useState(false)

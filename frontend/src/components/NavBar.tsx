@@ -1,6 +1,6 @@
 import { withAppCopy } from '../i18n'
-import { lazy, Suspense, useEffect, useRef, useState } from 'react'
-import { NavLink } from 'react-router-dom'
+import { lazy, Suspense, useEffect, useRef } from 'react'
+import { Link, NavLink } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import { useSidebarPanels } from '../hooks/useSidebarPanels'
@@ -22,7 +22,6 @@ interface NavLinkSpec {
 // Off the initial payload: it only draws once opened.
 // Admins only: the chunk and its counts never reach a player.
 const ModControl = lazy(() => withAppCopy(import('./admin/ModControl')))
-const SignInSheet = lazy(() => import('./SignInOptions').then((m) => ({ default: m.SignInSheet })))
 
 export default function NavBar() {
   const { t } = useTranslation('common')
@@ -49,7 +48,6 @@ export default function NavBar() {
    * Two read-only pointers at one number is not ADR-0070's forbidden duplication.
    */
   const { pending_requests_count: pendingCount } = useSidebarPanels()
-  const [signInOpen, setSignInOpen] = useState(false)
 
   const links: readonly NavLinkSpec[] = [
     { to: '/', label: t('nav.home'), end: true },
@@ -173,23 +171,10 @@ export default function NavBar() {
               {/* Sign out lives in Settings' Account card (#2155). */}
             </>
           ) : (
-            /* One button opens the provider choice (#1773). */
-            <>
-              <button
-                type="button"
-                onClick={() => setSignInOpen(true)}
-                className="btn-primary"
-                aria-haspopup="dialog"
-                aria-expanded={signInOpen}
-              >
-                {t('nav.login')}
-              </button>
-              {signInOpen && (
-                <Suspense fallback={null}>
-                  <SignInSheet open onClose={() => setSignInOpen(false)} />
-                </Suspense>
-              )}
-            </>
+            /* The onboarding's sign-in view, the one sign-in screen (#1773). */
+            <Link to="/?login" className="btn-primary">
+              {t('nav.login')}
+            </Link>
           )}
         </div>
       </div>
