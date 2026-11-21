@@ -50,3 +50,34 @@
     align-self: start;
   }
 }
+
+/* Phone press: one squash-and-spring for every tappable. The tab selectors cover
+   the current bar and #3876's `.tabbar__tab`. Vote components keep their own. */
+@media (pointer: coarse) {
+  .btn-primary,
+  .btn-outline,
+  .tabbar__tab,
+  nav.fixed.bottom-0 > a,
+  [data-form-factor] > article:has(a[data-card-link]) {
+    transition:
+      transform 140ms cubic-bezier(0.34, 1.8, 0.64, 1),
+      opacity 150ms;
+  }
+  .btn-primary:active:not(:disabled),
+  .btn-outline:active:not(:disabled),
+  .tabbar__tab:active,
+  nav.fixed.bottom-0 > a:active,
+  [data-form-factor] > article:has(a[data-card-link]:active) {
+    transform: scale(0.96);
+  }
+}
+@media (pointer: coarse) and (prefers-reduced-motion: reduce) {
+  .btn-primary:active:not(:disabled),
+  .btn-outline:active:not(:disabled),
+  .tabbar__tab:active,
+  nav.fixed.bottom-0 > a:active,
+  [data-form-factor] > article:has(a[data-card-link]:active) {
+    transform: none;
+    opacity: 0.6;
+  }
+}

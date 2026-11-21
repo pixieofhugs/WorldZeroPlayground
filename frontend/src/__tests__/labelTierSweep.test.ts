@@ -177,3 +177,14 @@ describe('the label tier left its two smallest steps, objects included (#1608)',
     expect(unexplained).toEqual([])
   })
 })
+
+describe('phone label tier (#3760)', () => {
+  it('lifts --text-base and --text-md to 12px on coarse phones, and nothing else', () => {
+    const css = readFileSync(fileURLToPath(new URL('../css/03-faction-chrome-1.css', import.meta.url)), 'utf8')
+    const block = /@media \(max-width: 767px\) and \(pointer: coarse\) \{\s*:root \{([^}]*)\}/.exec(css)?.[1] ?? ''
+    expect([...block.matchAll(/(--text-[a-z]+):\s*([^;]+);/g)].map((m) => [m[1], m[2]])).toEqual([
+      ['--text-base', '12px'],
+      ['--text-md', '12px'],
+    ])
+  })
+})

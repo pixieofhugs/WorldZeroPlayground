@@ -256,6 +256,15 @@
   --fdl-ring: conic-gradient(#e2433f 0%, #e07a3a 14%, #e6b94f 28%, #4ade80 43%, #3aa0a4 57%, #60a5fa 72%, #f472b6 86%, #e2433f 100%);
 }
 
+/* Phone chrome labels: 10/11px is unreadable at arm's length. --text-xs/-sm are
+   stamp ornament, not reading text, so they stay. */
+@media (max-width: 767px) and (pointer: coarse) {
+  :root {
+    --text-base: 12px;
+    --text-md: 12px;
+  }
+}
+
 /* Task Crown dark. No --fdl-ring entry: it is theme-invariant (#2134). */
 [data-theme="dark"] {
   --fdl-disc: #1a1712;
