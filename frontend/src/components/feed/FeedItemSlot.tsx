@@ -8,7 +8,7 @@ import i18n from '../../i18n'
 import { extractError } from '../../utils/errors'
 import FeedArchiveButton from './FeedArchiveButton'
 import FeedUndoStrip, { UNDO_WINDOW_MS, type FeedUndoPhase } from './FeedUndoStrip'
-import { feedDismissedMessage, feedItemTitle, isArchivable } from './feedItemLabels'
+import { feedDismissedMessage, feedItemTitle, isArchivable, isStillWaiting } from './feedItemLabels'
 
 /**
  * One feed slot, owning the whole archive interaction (#1194, §2a) outside the
@@ -56,7 +56,8 @@ export default function FeedItemSlot({
 
   // `awaiting_submission` is state, not an event: the backend refuses to archive
   // it, so no control. It can't be in the archive, so restore is always offered.
-  const offersControl = archivedView || isArchivable(item)
+  // A pending invite or challenge is an obligation (ADR-0070): live, it gets no ×.
+  const offersControl = archivedView || (isArchivable(item) && !isStillWaiting(item))
 
   // On lapse the strip stays and offers the plain reverse verb.
   useEffect(() => {
