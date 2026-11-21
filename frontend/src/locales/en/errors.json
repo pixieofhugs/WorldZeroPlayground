@@ -18,6 +18,7 @@
     "FLAG_LEVEL_TOO_LOW": "Must be level {{level}} or above to flag.",
     "FLAG_LEVEL_TOO_LOW_comment": "Must be level {{level}} or above to flag a comment.",
     "FLAG_LEVEL_TOO_LOW_praxis": "Must be level {{level}} or above to flag a praxis.",
+    "PRAXIS_ALREADY_RULED": "A moderator has already ruled on this praxis.",
 
     "TASK_BANK_FULL": "Task bank is full ({{limit}} in-progress praxis).",
     "TASK_BANK_FULL_signup": "Task bank is full ({{limit}} in-progress praxis). Complete or withdraw one first.",

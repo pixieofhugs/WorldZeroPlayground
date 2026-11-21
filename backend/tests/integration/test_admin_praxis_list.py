@@ -12,8 +12,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from models.account import Account
 from models.character import Character
 from models.character_stats import CharacterStats
+from models.flag import Flag
 from models.praxis import ModerationStatus, PraxisStatus
 from models.task import Task
+from services.character_stats import recalculate_character_stats
 from tests.integration.factories import make_admin, make_solo_praxis
 
 ADMIN_LIST = "/admin/praxes"
@@ -354,6 +356,48 @@ async def test_admin_cannot_flag_a_hidden_praxis(
     assert resp.status_code == 404
     await db_session.refresh(hidden)
     assert hidden.moderation_status == ModerationStatus.hidden
+
+
+@pytest.mark.asyncio
+async def test_flag_on_a_failed_praxis_is_refused_and_the_ruling_stands(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    db_session: AsyncSession,
+):
+    stats = (
+        await db_session.execute(
+            select(CharacterStats).where(CharacterStats.character_id == character.id)
+        )
+    ).scalar_one()
+    stats.level = 10  # past flag_level_required: only `failed` can refuse
+    failed = await make_solo_praxis(
+        db_session, active_task, character2, moderation_status=ModerationStatus.failed
+    )
+    await db_session.commit()
+
+    seen = await client.get(f"/praxes/{failed.id}", headers=auth_headers)
+    assert seen.json()["can_flag"] is False
+    resp = await client.post(
+        f"/praxes/{failed.id}/flag", json={"reason": "spam"}, headers=auth_headers
+    )
+    assert resp.status_code == 409
+    assert resp.json()["detail"]["code"] == "PRAXIS_ALREADY_RULED"
+
+    await db_session.refresh(failed)
+    assert failed.moderation_status == ModerationStatus.failed
+    assert failed.flagged_at is None
+    flags = await db_session.execute(select(Flag).where(Flag.praxis_id == failed.id))
+    assert flags.first() is None
+
+    async def score() -> int:
+        await recalculate_character_stats(character2.id, db_session)
+        q = select(CharacterStats.score).filter_by(character_id=character2.id)
+        return (await db_session.execute(q)).scalar_one()
+
+    assert await score() == 0
 
 
 @pytest.mark.asyncio
