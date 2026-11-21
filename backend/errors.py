@@ -37,6 +37,7 @@ class ErrorCode(str, enum.Enum):
     collaboration_level_too_low = "COLLABORATION_LEVEL_TOO_LOW"
     duel_level_too_low = "DUEL_LEVEL_TOO_LOW"
     flag_level_too_low = "FLAG_LEVEL_TOO_LOW"
+    praxis_already_ruled = "PRAXIS_ALREADY_RULED"
     comment_level_too_low = "COMMENT_LEVEL_TOO_LOW"
     task_proposal_level_too_low = "TASK_PROPOSAL_LEVEL_TOO_LOW"
     metatask_proposal_level_too_low = "METATASK_PROPOSAL_LEVEL_TOO_LOW"
