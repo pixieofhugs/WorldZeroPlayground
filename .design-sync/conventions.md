@@ -80,7 +80,7 @@ internally and stacks single-column on a phone):
 the phone skins. Character profile went the same way in #1319 (`*ProfileBody`).
 
 **Mobile-only screens**: `DefaultFieldDesk` / `WowFieldDesk` / `UaFieldDesk` / `SnideFieldDesk` …
-(`fielddesk`), plus the singletons `DefaultTasks`, `DefaultEditCharacter`,
+(`fielddesk`), plus the singletons `DefaultEditCharacter`,
 `DefaultFactionsDirectory`.
 Players is the one surface still split by form factor: `MobilePlayers` and
 `DesktopPlayers`, each taking the same `playersProps` shape.

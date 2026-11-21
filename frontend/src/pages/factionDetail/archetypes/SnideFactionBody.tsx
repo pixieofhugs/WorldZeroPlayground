@@ -424,6 +424,8 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                       lineHeight: 0.9,
                       padding: "var(--space-xs) var(--space-sm)",
                       textTransform: "uppercase",
+                      maxWidth: "100%",
+                      overflowWrap: "anywhere",
                     }}
                   >
                     {spot.display_name}

@@ -8,7 +8,6 @@
 // the character + content (characterFor/taskFor/makePraxis are slug-aware).
 
 import type { FieldDeskHomeState } from '../../frontend/src/pages/fieldDesk/useFieldDeskHome'
-import type { TasksState } from '../../frontend/src/pages/tasks/useTasks'
 import type { TaskDetailState } from '../../frontend/src/pages/taskDetail/useTaskDetail'
 import type { PraxisDetailState } from '../../frontend/src/pages/praxisDetail/usePraxisDetail'
 import type { EditPraxisState } from '../../frontend/src/pages/editPraxis/useEditPraxis'
@@ -66,54 +65,6 @@ export function fieldDeskState(slug: string): FieldDeskHomeState {
     // pill at all is the thing #2111's gate must not be mistaken for.
     offersACharacterChoice: true,
     canVote: true,
-  }
-}
-
-// ── tasks (browse) ───────────────────────────────────────────────────────────
-/**
- * The signup line is only ever a FAILURE (#2188): the success path navigates
- * to the new praxis composer, so there is no page left to congratulate anyone
- * on. This used to preview an `ok: true` message the app could not produce.
- */
-const SIGNUP_FAILED = 'Could not sign up — make sure you are logged in.'
-/** A scannable task list, a spread of factions so the chips have range. */
-export function tasksState(slug: string): TasksState {
-  return {
-    user: mockUser,
-    tasks: [
-      taskFor(slug, { id: 101, level_required: 2, point_value: 30 }),
-      taskFor('everymen', { id: 108, level_required: 3, point_value: 45 }),
-      taskFor('ephemerists', { id: 112, level_required: 4, point_value: 25 }),
-      taskFor('wow', { id: 115, level_required: 1, point_value: 20 }),
-    ],
-    loading: false,
-    error: null,
-    factions: factionOuts,
-    statusFilters: ['active', 'completed'],
-    taskType: 'standard',
-    setTaskType: noop,
-    // Ordering (#1364), defaulting to `TASK_SORT_DEFAULT`.
-    sort: 'level',
-    setSort: noop,
-    status: 'active',
-    setStatus: noop,
-    // The faction axis is a multi-select union now, not a single slug — empty
-    // means "every faction", so the preview seeds it with its own.
-    selectedFactions: [slug],
-    setSelectedFactions: noop,
-    // "Tasks I can sign up for" (#1130) defaults OFF: the page is a catalogue.
-    canSignUp: false,
-    setCanSignUp: noop,
-    query: '',
-    setQuery: noop,
-    clearFilters: noop,
-    hasMore: false,
-    loadMore: noop,
-    signupMsg: SIGNUP_FAILED,
-    handleSignup: anoop,
-    displayPointsFor: (task) => task.point_value,
-    // era_1 neutralises the faction modifier to 1.0 — no ×badge on any card.
-    displayMultiplierFor: () => 1,
   }
 }
 

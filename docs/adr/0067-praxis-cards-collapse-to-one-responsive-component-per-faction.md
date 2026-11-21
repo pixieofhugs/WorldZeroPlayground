@@ -98,3 +98,11 @@ never had.
   own record, the same way ADR-0056, ADR-0058, ADR-0065 and this one each did.
 - The evaluation window is closed. A second praxis-card implementation
   reappearing is drift, not an experiment.
+
+## Amendment (2026-11-21, #3800)
+
+**`MobilePraxisFeed.tsx` no longer survives.** #3842 gave the Praxes feed (and
+Tasks) one responsive page each: both widths mount the shared `PageTitle` and the
+same filter bar. The phone-only page chrome above was not a design position, so the
+record's last carve-out is gone, and with it `DefaultTasks`, which ADR-0056
+had kept.

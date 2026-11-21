@@ -124,8 +124,8 @@ surfaces; this sync added them all. What changed here:
   on a fresh clone: `ln -sfn ../.ds-sync/node_modules .design-sync/node_modules` (it imports bare `ts-morph`).
 - **Provider now mocks `GET /factions`** — `DefaultFactionsDirectory` self-fetches (no props);
   without the mock its preview shows the offline-error state. The `/auth/me` mock was already there.
-- **`_state.tsx`** (NEW, committed) — 10 surface STATE builders the mobile previews consume:
-  `fieldDeskState / tasksState / taskDetailState / praxisDetailState / editPraxisState /
+- **`_state.tsx`** (NEW, committed) — 9 surface STATE builders the mobile previews consume:
+  `fieldDeskState / taskDetailState / praxisDetailState / editPraxisState /
   factionDetailState / createCharacterState / editCharacterState` (all take a slug) + `profileProps(slug)`
   + `playersProps`. 8 surfaces take a single `{state}` prop → previews are slug-swaps (content
   flavors automatically via the slug-aware `_fixtures`); 3 singletons take custom props.
