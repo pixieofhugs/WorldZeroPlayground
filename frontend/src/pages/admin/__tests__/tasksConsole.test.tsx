@@ -110,7 +110,7 @@ describe('the task panel', () => {
     const panel = await screen.findByRole('complementary', { name: 'Task' })
     fireEvent.change(within(panel).getByLabelText('Title'), { target: { value: 'Learn a Bird Name' } })
     fireEvent.click(within(panel).getByRole('button', { name: 'activate' }))
-    await waitFor(() => expect(api.updateTaskStatus).toHaveBeenCalledWith(3, 'active'))
+    await waitFor(() => expect(api.updateTaskStatus).toHaveBeenCalledWith(3, 'active', undefined))
     expect(api.adminPatchTask).toHaveBeenCalledWith(3, expect.objectContaining({ title: 'Learn a Bird Name' }))
     expect(api.adminPatchTask.mock.invocationCallOrder[0]).toBeLessThan(api.updateTaskStatus.mock.invocationCallOrder[0])
   })
@@ -125,7 +125,7 @@ describe('the task panel', () => {
     expect(within(panel).getByText(/Retire it to edit/)).toBeTruthy()
     fireEvent.click(within(panel).getByRole('button', { name: 'retire' }))
     fireEvent.click(within(panel).getByRole('button', { name: 'retire it' }))
-    await waitFor(() => expect(api.updateTaskStatus).toHaveBeenCalledWith(1, 'retired'))
+    await waitFor(() => expect(api.updateTaskStatus).toHaveBeenCalledWith(1, 'retired', undefined))
     expect(api.adminPatchTask).not.toHaveBeenCalled()
   })
 
@@ -135,7 +135,7 @@ describe('the task panel', () => {
     fireEvent.click(within(panel).getByRole('button', { name: 'retire' }))
     expect(api.updateTaskStatus).not.toHaveBeenCalled()
     fireEvent.click(within(panel).getByRole('button', { name: 'retire it' }))
-    await waitFor(() => expect(api.updateTaskStatus).toHaveBeenCalledWith(1, 'retired'))
+    await waitFor(() => expect(api.updateTaskStatus).toHaveBeenCalledWith(1, 'retired', undefined))
   })
 })
 

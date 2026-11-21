@@ -51,6 +51,42 @@ describe('TaskCard in mod mode', () => {
     expect(screen.getByRole('link', { name: /Open in admin/ }).getAttribute('href')).toBe('/admin/tasks?task=7')
     fireEvent.click(screen.getByRole('button', { name: 'retire' }))
     fireEvent.click(screen.getByRole('button', { name: 'retire it' }))
-    await waitFor(() => expect(updateTaskStatus).toHaveBeenCalledWith(7, 'retired'))
+    await waitFor(() => expect(updateTaskStatus).toHaveBeenCalledWith(7, 'retired', undefined))
+  })
+})
+
+describe('TaskStatusControl backdoor', () => {
+  const open = () => fireEvent.click(screen.getByRole('button', { name: 'backdoor' }))
+
+  it.each(['pending', 'active', 'retired'])('offers Backdoor on %s and sends the window', async (status) => {
+    const onChange = vi.fn(async () => {})
+    render(<TaskStatusControl status={status} variant="panel" onChange={onChange} />)
+    open()
+    fireEvent.change(screen.getByLabelText('Closes (optional)'), { target: { value: '2030-01-02T03:04' } })
+    fireEvent.click(screen.getByRole('button', { name: 'schedule backdoor' }))
+    await waitFor(() => expect(onChange).toHaveBeenCalled())
+    const [next, window] = onChange.mock.calls[0] as unknown as [string, { opens?: string; closes?: string }]
+    expect(next).toBe('backdoor')
+    expect(window.closes).toBe(new Date('2030-01-02T03:04').toISOString())
+    expect(window.opens).toBeTruthy()
+  })
+
+  it('shows a coded refusal readably', async () => {
+    const { ApiError } = await import('../../../api/apiError')
+    const onChange = vi.fn(async () => {
+      throw new ApiError(new Response(null, { status: 422 }), { detail: { code: 'BACKDOOR_WINDOW_INVALID' } })
+    })
+    render(<TaskStatusControl status="active" variant="panel" onChange={onChange} />)
+    open()
+    fireEvent.click(screen.getByRole('button', { name: 'schedule backdoor' }))
+    expect((await screen.findByRole('alert')).textContent).toBe('A backdoor must close after it opens.')
+  })
+
+  it('from a backdoor offers activate and retire, not another backdoor', () => {
+    render(<TaskStatusControl status="backdoor" variant="panel" opensAt="2999-01-01T00:00:00Z" onChange={vi.fn()} />)
+    expect(screen.queryByRole('button', { name: 'backdoor' })).toBeNull()
+    expect(screen.getByRole('button', { name: 'activate' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'retire' })).toBeTruthy()
+    expect(screen.getByText(/Door opens/)).toBeTruthy()
   })
 })

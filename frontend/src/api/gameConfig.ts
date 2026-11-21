@@ -41,6 +41,8 @@ export interface GameConfigOut {
   pending_task_admin_review_hours: number
   level_to_see_pending_tasks: number
   max_task_signups: number
+  /** Days after a door opens that the console hint gets plainer (#3848). */
+  backdoor_hint_stage_days: number[]
   factions: FactionConfigOut[]
   level_profiles: LevelProfile[]
 }

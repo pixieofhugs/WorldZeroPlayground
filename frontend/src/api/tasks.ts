@@ -75,3 +75,11 @@ export async function getTaskSignups(taskId: number): Promise<TaskSignupOut[]> {
   })
   return data
 }
+
+/** One open door (#3848). `[]` for anyone whose faction does not read the array. */
+export type BackdoorOut = components['schemas']['BackdoorOut']
+
+export async function getBackdoors(): Promise<BackdoorOut[]> {
+  const { data } = await apiGet('/tasks/backdoor')
+  return data
+}
