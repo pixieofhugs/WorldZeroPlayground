@@ -209,7 +209,7 @@
   },
   "tauntSheet": {
     "title": "Taunt copy sheet",
-    "intro": "Every taunt a player can be sent, as it reads in their feed: one section per faction, a row per trigger, every variant. Press “edit copy” and click any wording to change it. Keep the names ({{from_name}} and {{to_name}}) in.",
+    "intro": "Every taunt a player can be sent, as it reads in their feed: one section per faction, a row per trigger, every variant. Press “edit copy” and click any wording to change it. The editor will not save a taunt that drops a name.",
     "default": "Default (any faction without its own)",
     "from": "Ada",
     "to": "Bo",
