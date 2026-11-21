@@ -3,10 +3,16 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from models.account import Account
 from models.character import Character
+from models.character_stats import CharacterStats
+from models.era import Era
 from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.relationship import Relationship, RelationshipType
 from models.task import Task
+from services.auth import create_jwt
+from tests.integration.conftest import CURRENT_ERA_VOTE_LEVEL
+from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 
 async def _items(
@@ -96,3 +102,106 @@ async def test_friend_who_only_joined_a_collab_gives_one_completion_card_as_acto
     assert [card["item_key"] for card in cards] == [f"friend_completion:{collab.id}"]
     assert cards[0]["payload"]["character_id"] == character2.id
     assert cards[0]["actor_display_name"] == character2.display_name
+
+
+async def _befriend(db_session: AsyncSession, viewer: Character, others, kind):
+    db_session.add_all(
+        Relationship(from_character_id=viewer.id, to_character_id=o.id, type=kind)
+        for o in others
+    )
+    await db_session.commit()
+
+
+@pytest.mark.asyncio
+async def test_foe_who_only_joined_a_collab_gives_one_foe_completion_card(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    character2: Character,
+    character3: Character,
+    active_task: Task,
+    auth_headers: dict,
+):
+    await _befriend(db_session, character, [character2], RelationshipType.foe)
+    collab = await _collab(
+        db_session, active_task, character3, [character3, character2]
+    )
+
+    cards = await _items(client, auth_headers, "foe_completion", "foes")
+    assert [card["item_key"] for card in cards] == [f"foe_completion:{collab.id}"]
+    assert cards[0]["payload"]["character_id"] == character2.id
+
+
+@pytest.mark.asyncio
+async def test_two_friends_on_one_collab_give_one_completion_card(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    character2: Character,
+    character3: Character,
+    active_task: Task,
+    auth_headers: dict,
+):
+    await _befriend(
+        db_session, character, [character2, character3], RelationshipType.friend
+    )
+    collab = await _collab(
+        db_session, active_task, character2, [character2, character3]
+    )
+
+    cards = await _items(client, auth_headers, "friend_completion", "friends")
+    assert [card["item_key"] for card in cards] == [f"friend_completion:{collab.id}"]
+
+
+@pytest.mark.asyncio
+async def test_creator_and_two_members_each_get_one_vote_card_and_badge_matches_list(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    character2: Character,
+    character3: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+    auth_headers3: dict,
+    era: Era,
+):
+    voter_account = Account(email="voter@example.com")
+    db_session.add(voter_account)
+    await db_session.flush()
+    voter = Character(
+        account_id=voter_account.id,
+        username="outsidevoter",
+        peak_level=CURRENT_ERA_VOTE_LEVEL,
+        display_name="Outside Voter",
+        faction_slug=DEFAULT_FACTION_SLUG,
+    )
+    db_session.add(voter)
+    await db_session.flush()
+    db_session.add(
+        CharacterStats(
+            character_id=voter.id, era_id=era.id, score=0, level=0,
+            votes_spent_this_era=0,
+        )
+    )
+    await db_session.commit()
+    collab = await _collab(
+        db_session, active_task, character, [character2, character3]
+    )
+    vote = await client.post(
+        f"/praxes/{collab.id}/vote",
+        json={"value": 4},
+        headers={"Authorization": f"Bearer {create_jwt(voter_account.id)}"},
+    )
+    assert vote.status_code == 200, vote.text
+
+    for headers in (auth_headers, auth_headers2, auth_headers3):
+        resp = await client.get(
+            "/activity-feed", params={"filter": "your_stuff", "limit": 100},
+            headers=headers,
+        )
+        body = resp.json()
+        cards = [i for i in body["items"] if i["type"] == "vote_on_mine"]
+        assert len(cards) == 1
+        assert body["counts"]["by_type"]["vote_on_mine"] == len(cards)
+        assert body["counts"]["your_stuff"] == len(body["items"])
