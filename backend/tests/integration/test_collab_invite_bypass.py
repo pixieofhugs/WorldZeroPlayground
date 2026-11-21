@@ -6,6 +6,7 @@ bypasses and the gates that still close (``collab_invite_bypasses_*``).
 Duel bypass: ADR-0051.
 """
 from dataclasses import replace
+from datetime import datetime, timedelta, timezone
 
 import pytest
 from fastapi import HTTPException
@@ -20,7 +21,7 @@ from models.character import Character
 from models.character_stats import CharacterStats
 from models.era import Era
 from models.faction import Faction
-from models.praxis import PraxisType
+from models.praxis import Praxis, PraxisType
 from models.task import Task, TaskStatus
 from services.auth import create_jwt
 from services.praxis import create_praxis, invite_to_praxis, respond_to_invite
@@ -344,3 +345,54 @@ async def test_faction_bypass_flag_off_routes_through_faction_permits(
         era=strict,
     )
     assert invite.invitee_id == invitee.id
+
+
+@pytest.mark.asyncio
+async def test_accepting_after_the_window_lapsed_is_refused_not_sealed_in(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    inviter: Character,
+    second_inviter: Character,
+    invitee: Character,
+    high_level_task: Task,
+    inviter_headers: dict,
+):
+    praxis_id = await _create_collab(client, high_level_task, inviter_headers)
+    partner_invite = await invite_to_praxis(
+        praxis_id=praxis_id,
+        invitee_id=second_inviter.id,
+        inviter_id=inviter.id,
+        session=db_session,
+    )
+    await respond_to_invite(
+        invite_id=partner_invite.id,
+        character_id=second_inviter.id,
+        accept=True,
+        session=db_session,
+    )
+    invite = await invite_to_praxis(
+        praxis_id=praxis_id,
+        invitee_id=invitee.id,
+        inviter_id=inviter.id,
+        session=db_session,
+    )
+    await client.post(
+        f"/praxes/{praxis_id}/done", json={"is_done": True}, headers=inviter_headers
+    )
+    submit = await client.post(f"/praxes/{praxis_id}/submit", headers=inviter_headers)
+    assert submit.status_code == 200, submit.text
+    assert submit.json()["status"] == "pending"
+    praxis = await db_session.get(Praxis, praxis_id)
+    praxis.submit_proposed_at = datetime.now(timezone.utc) - timedelta(
+        days=CURRENT_ERA.collab_auto_submit_days, seconds=1
+    )
+    await db_session.commit()
+
+    with pytest.raises(HTTPException) as excinfo:
+        await respond_to_invite(
+            invite_id=invite.id,
+            character_id=invitee.id,
+            accept=True,
+            session=db_session,
+        )
+    assert excinfo.value.detail["code"] == ErrorCode.invite_praxis_submitted.value

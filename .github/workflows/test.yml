@@ -58,6 +58,7 @@ jobs:
           for try in 1 2 3; do
             sudo timeout 150 sh -c 'apt-get update && apt-get install -y --no-install-recommends ffmpeg' && exit 0
             echo "::warning::ffmpeg install try $try stalled or failed; retrying"
+            sudo dpkg --configure -a || true
           done
           exit 1
 

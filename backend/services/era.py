@@ -458,7 +458,7 @@ async def apply_era_reset(
             participants |= {d.opponent_character_id for d in duels} | set(
                 challenger_ids
             )
-        for character_id in participants:
+        for character_id in sorted(participants):
             await recalculate_character_stats(
                 character_id,
                 session,

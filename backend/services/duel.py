@@ -467,7 +467,8 @@ async def cancel_duel_challenge(
 
     # A side may already be scored with the duel multiplier; revert both.
     era_row = await get_current_era_row(session)
-    for participant_id in {challenger_character_id, duel.opponent_character_id}:
+    participant_ids = {challenger_character_id, duel.opponent_character_id} - {None}
+    for participant_id in sorted(participant_ids):
         if participant_id is not None:
             await recalculate_character_stats(
                 participant_id, session, era, era_row=era_row

@@ -45,7 +45,8 @@ from services.scoring import compute_level, exact, round_half_up
 from services.taunt_service import emit_recalc_taunts
 from services.push import notify_invitation_letter, notify_level_up
 
-#: Advisory-lock namespace (signup 0x5A19, vote 0x5A1A, praxis 0x5A1B);
+#: Advisory-lock namespace (signup 0x5A19, vote 0x5A1A, praxis 0x5A1B, in
+#: ``collab_consensus``);
 #: the last lock a transaction takes.
 _STATS_LOCK_NAMESPACE = 0x5A1C
 
@@ -308,7 +309,7 @@ async def recalculate_members_stats(
     *,
     era_row: Era | None = None,
 ) -> None:
-    """Recalculate stats for every member of ``praxis``, then flush (#492).
+    """Recalculate stats for every member of ``praxis`` and its duel opponents, then flush (#492).
 
     The member set is the unit of recalculation for anything that changes a
     praxis's worth: recalculating only ``created_by_id`` strands collab members
