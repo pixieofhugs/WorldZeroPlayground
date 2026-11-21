@@ -1,8 +1,5 @@
-/**
- * #3757: iOS Safari zooms the page when a focused input's font is under 16px.
- * The filter-bar search stays on the content tier (--text-content, 18px), never
- * a label-tier token. (The console's AdminList search is `.adm-input`, not this.)
- */
+// #3757: iOS Safari zooms a focused input under 16px, so the filter-bar
+// search stays on --text-content (18px), never a label-tier token.
 import { describe, expect, it } from 'vitest'
 import { ruleBodies, stripComments } from '../../../../utils/__tests__/cssVars'
 import { readIndexCss } from '../../../../test/indexCss'
