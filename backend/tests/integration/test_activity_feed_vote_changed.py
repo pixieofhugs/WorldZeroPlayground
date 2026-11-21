@@ -28,6 +28,7 @@ async def _praxis_and_vote(
     )
     assert create_resp.status_code == 201, create_resp.text
     praxis_id = create_resp.json()["id"]
+    await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers)
 
     vote_resp = await client.post(
         f"/praxes/{praxis_id}/vote", json={"value": value}, headers=auth_headers2

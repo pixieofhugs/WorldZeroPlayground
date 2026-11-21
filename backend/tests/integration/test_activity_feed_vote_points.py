@@ -41,6 +41,7 @@ async def _file_praxis(
         headers=auth_headers,
     )
     assert resp.status_code == 201, resp.text
+    await client.post(f"/praxes/{resp.json()['id']}/submit", headers=auth_headers)
     return resp.json()["id"]
 
 
