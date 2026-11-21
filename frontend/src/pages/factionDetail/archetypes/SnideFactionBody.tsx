@@ -124,7 +124,7 @@ const SECTION_HEADING_TEXT: CSSProperties = {
   ...ACID_PLATE,
   fontFamily: IMPACT,
   // eslint-disable-next-line local/no-raw-style-values -- ornament: skewed Impact stencil — the ransom-dispatch masthead cut, not a heading you read.
-  fontSize: "clamp(22px, 8vw, 30px)",
+  fontSize: "clamp(22px, 8.4vw, 30px)",
   lineHeight: 1.1,
   letterSpacing: "0.02em",
   padding: "var(--space-xs) var(--space-md)",
