@@ -88,6 +88,7 @@ export default function TaskPanel({ task, factions, proposal, onChanged, onDelet
   }
 
   const pending = task.status === 'pending'
+  const locked = task.status === 'active'
   const tone = pending ? 'wait' : task.status === 'active' ? 'ok' : 'bad'
 
   return (
@@ -115,25 +116,25 @@ export default function TaskPanel({ task, factions, proposal, onChanged, onDelet
       )}
       <label className="adm-field">
         {t('console.tasks.panel.title')}
-        <input className="adm-input" value={form.title} onChange={set('title')} />
+        <input className="adm-input" value={form.title} disabled={locked} onChange={set('title')} />
       </label>
       <label className="adm-field">
         {t('console.tasks.panel.description')}
-        <textarea className="adm-input adm-textarea" value={form.description} onChange={set('description')} />
+        <textarea className="adm-input adm-textarea" value={form.description} disabled={locked} onChange={set('description')} />
       </label>
       <div className="adm-fields3">
         <label className="adm-field">
           {t('tasks.pointsLabel')}
-          <input className="adm-input" type="number" min={1} value={form.points} onChange={set('points')} />
+          <input className="adm-input" type="number" min={1} value={form.points} disabled={locked} onChange={set('points')} />
         </label>
         <label className="adm-field">
           {t('console.tasks.panel.level')}
-          <input className="adm-input" type="number" min={0} max={config ? config.level_thresholds.length - 1 : undefined} value={form.level} onChange={set('level')} />
+          <input className="adm-input" type="number" min={0} max={config ? config.level_thresholds.length - 1 : undefined} value={form.level} disabled={locked} onChange={set('level')} />
         </label>
         {factions.length > 0 && (
           <label className="adm-field">
             {t('tasks.factionLabel')}
-            <select className="adm-input" value={form.faction} onChange={set('faction')}>
+            <select className="adm-input" value={form.faction} disabled={locked} onChange={set('faction')}>
               {factions.map((f) => (
                 <option key={f.slug} value={f.slug}>
                   {f.label}
@@ -170,13 +171,13 @@ export default function TaskPanel({ task, factions, proposal, onChanged, onDelet
             ) : (
               <TaskStatusControl status={task.status} variant="panel" onChange={(next) => void save(next)} />
             )}
-            {dirty && task.status !== 'deleted' && (
+            {dirty && !locked && task.status !== 'deleted' && (
               <button type="button" className="adm-btn" disabled={busy} onClick={() => void save()}>
                 {busy ? t('tasks.actions.saving') : t('tasks.actions.save')}
               </button>
             )}
           </div>
-          <p className="adm-muted">{t('console.tasks.panel.hint')}</p>
+          <p className="adm-muted">{t(locked ? 'console.tasks.panel.hintActive' : 'console.tasks.panel.hint')}</p>
           {task.status !== 'deleted' && !task.has_history && (
             <button type="button" className="adm-btn adm-btn-dng" onClick={() => setConfirmDelete(true)}>
               {t('tasks.actions.delete')}

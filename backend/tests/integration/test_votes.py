@@ -1,5 +1,7 @@
 """Integration tests for praxis votes and duels."""
 
+from datetime import datetime, timezone
+
 import pytest
 from httpx import AsyncClient
 from sqlalchemy import select
@@ -32,6 +34,7 @@ async def test_cast_vote_on_solo_praxis(
     )
     assert create_resp.status_code == 201
     praxis_id = create_resp.json()["id"]
+    await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers2)
 
     vote_resp = await client.post(
         f"/praxes/{praxis_id}/vote",
@@ -59,6 +62,7 @@ async def test_cast_vote_self_blocked(
     )
     assert create_resp.status_code == 201
     praxis_id = create_resp.json()["id"]
+    await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers)
 
     vote_resp = await client.post(
         f"/praxes/{praxis_id}/vote",
@@ -102,6 +106,10 @@ async def test_collab_co_owner_cannot_vote(
         headers=auth_headers,
     )
     assert respond_resp.status_code == 200
+    sub = await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers2)
+    assert sub.status_code == 200, sub.text
+    sub = await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers)
+    assert sub.status_code == 200, sub.text
 
     coowner_vote = await client.post(
         f"/praxes/{praxis_id}/vote",
@@ -137,6 +145,7 @@ async def test_update_vote_is_free(
     )
     assert create_resp.status_code == 201
     praxis_id = create_resp.json()["id"]
+    await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers2)
 
     result = await db_session.execute(
         select(CharacterStats).where(
@@ -224,6 +233,7 @@ async def test_alt_life_re_rates_the_accounts_vote_instead_of_adding_one(
     )
     assert create_resp.status_code == 201
     praxis_id = create_resp.json()["id"]
+    await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers2)
 
     first = await client.post(
         f"/praxes/{praxis_id}/vote", json={"value": 5}, headers=auth_headers
@@ -277,6 +287,7 @@ async def test_alt_re_rating_is_free_and_leaves_both_budgets_alone(
     )
     assert create_resp.status_code == 201
     praxis_id = create_resp.json()["id"]
+    await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers2)
 
     assert (
         await client.post(
@@ -377,6 +388,7 @@ async def test_invalid_stars_returns_422(
     )
     assert create_resp.status_code == 201
     praxis_id = create_resp.json()["id"]
+    await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers2)
 
     resp = await client.post(
         f"/praxes/{praxis_id}/vote", json={"value": 6}, headers=auth_headers
@@ -1207,3 +1219,89 @@ async def test_praxis_out_carries_viewer_vote(
     # author and anonymous reader
     assert (await client.get(f"/praxes/{praxis_id}", headers=auth_headers2)).json()["viewer_vote"] is None
     assert (await client.get(f"/praxes/{praxis_id}")).json()["viewer_vote"] is None
+
+
+@pytest.mark.asyncio
+async def test_vote_on_draft_is_404_and_leaves_no_row(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+):
+    from models.vote import Vote
+
+    draft = await client.post(
+        "/praxes",
+        json={"task_id": active_task.id, "type": "solo", "title": "Draft"},
+        headers=auth_headers2,
+    )
+    pid = draft.json()["id"]
+    resp = await client.post(
+        f"/praxes/{pid}/vote", json={"value": 5}, headers=auth_headers
+    )
+    assert resp.status_code == 404
+    rows = await db_session.scalars(select(Vote).where(Vote.praxis_id == pid))
+    assert rows.all() == []
+
+
+@pytest.mark.asyncio
+async def test_vote_on_unsealed_duel_side_is_404_until_it_closes(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+):
+    from models.duel import Duel, DuelStatus
+
+    pid = await _create_and_submit_solo(client, active_task, auth_headers2)
+    duel = Duel(
+        task_id=active_task.id,
+        challenger_praxis_id=pid,
+        opponent_character_id=character2.id,
+        status=DuelStatus.pending,
+    )
+    db_session.add(duel)
+    await db_session.commit()
+
+    resp = await client.post(
+        f"/praxes/{pid}/vote", json={"value": 5}, headers=auth_headers
+    )
+    assert resp.status_code == 404
+
+    duel.status = DuelStatus.declined
+    duel.declined_at = datetime.now(timezone.utc)
+    await db_session.commit()
+    resp = await client.post(
+        f"/praxes/{pid}/vote", json={"value": 5}, headers=auth_headers
+    )
+    assert resp.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_admin_vote_on_hidden_praxis_is_404(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character2: Character,
+    character: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+):
+    from models.praxis import ModerationStatus, Praxis
+    from tests.integration.factories import make_admin
+
+    pid = await _create_and_submit_solo(client, active_task, auth_headers2)
+    praxis = await db_session.get(Praxis, pid)
+    praxis.moderation_status = ModerationStatus.hidden
+    admin = await db_session.get(Account, character.account_id)
+    await make_admin(db_session, admin)
+    await db_session.commit()
+
+    resp = await client.post(
+        f"/praxes/{pid}/vote", json={"value": 5}, headers=auth_headers
+    )
+    assert resp.status_code == 404

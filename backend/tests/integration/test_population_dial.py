@@ -1,6 +1,7 @@
 """The population dial: overlay, admin API, mod log, feed and cache stamp (#3656)."""
 
 import asyncio
+from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 
 import pytest
@@ -8,9 +9,15 @@ from fastapi import HTTPException
 from sqlalchemy import select
 
 from errors import ErrorCode
+from faction_slugs import real_faction_slugs
 from game_config import CURRENT_ERA, ERA_1, era_config_for_key
+from models.character import Character
+from models.character_stats import CharacterStats
+from models.invitation_letter import InvitationLetter
 from models.mod_action import ModAction
 from models.population_dial import PopulationDial
+from services.character import can_start_as_albescent
+from services.character_stats import deliver_invitations_to_all
 from services.collab_consensus import _check_post_cooldown
 from services.era import (
     apply_dial_sides,
@@ -18,7 +25,14 @@ from services.era import (
     read_dial_sides,
 )
 from services.era_gates import may_comment, may_create_duel, vote_lock_reason
-from tests.integration.factories import make_admin
+from services.population_dial import set_dials
+from tests.integration.factories import (
+    cast_vote,
+    make_admin,
+    make_character,
+    make_solo_praxis,
+    make_task,
+)
 
 SMALL = {n: v for d in ERA_1.dials.values() for n, v in d.small.items()}
 FULL = {name: getattr(ERA_1, name) for name in SMALL}
@@ -184,3 +198,107 @@ async def test_a_rollover_never_exposes_full_rules_to_other_requests(db_session)
     task.cancel()
     assert len(seen) > 1
     assert all(snapshot == SMALL for snapshot in seen)
+
+
+async def _owed_player(db_session, era, account):
+    """Meets 1 task / 10 pts in a rival faction, not 2 tasks / 50 pts."""
+    own, rival = real_faction_slugs(CURRENT_ERA)[:2]
+    author = await make_character(
+        db_session, era, username="earner", account=account, faction_slug=own
+    )
+    voter = await make_character(
+        db_session, era, username="judge", level=1, faction_slug=own
+    )
+    task = await make_task(db_session, voter, point_value=20, faction_slug=rival)
+    praxis = await make_solo_praxis(db_session, task, author)
+    await cast_vote(db_session, praxis, voter, 5)
+    await db_session.commit()
+    return rival
+
+
+async def _letters(db_session):
+    return (await db_session.execute(select(InvitationLetter))).scalars().all()
+
+
+@pytest.mark.asyncio
+async def test_loosening_invitation_delivers_to_players_who_now_qualify(
+    db_session, account, era, some_faction
+):
+    await make_admin(db_session, account)
+    await overlay(db_session)
+    await set_dials({"invitation": "full"}, account.id, db_session)
+    rival = await _owed_player(db_session, era, account)
+    assert await _letters(db_session) == []
+
+    await set_dials({"invitation": "small"}, account.id, db_session)
+    letters = await _letters(db_session)
+    assert [letter.faction_slug for letter in letters] == [rival]
+
+    await set_dials({"invitation": "full"}, account.id, db_session)
+    await set_dials({"invitation": "small"}, account.id, db_session)
+    assert len(await _letters(db_session)) == 1
+
+
+@pytest.mark.asyncio
+async def test_tightening_invitation_delivers_nothing(
+    db_session, account, era, some_faction
+):
+    await make_admin(db_session, account)
+    await overlay(db_session)
+    await _owed_player(db_session, era, account)
+    await set_dials({"invitation": "full"}, account.id, db_session)
+    assert await _letters(db_session) == []
+
+
+@pytest.mark.asyncio
+async def test_delivery_that_completes_coverage_unlocks_albescent(
+    db_session, account, era, some_faction
+):
+    rival = await _owed_player(db_session, era, account)
+    lenient = replace(
+        CURRENT_ERA,
+        secret_faction_join_level=1,
+        invitation_task_threshold=1,
+        invitation_point_threshold=10,
+    )
+    author = await db_session.scalar(
+        select(Character).where(Character.username == "earner")
+    )
+    for slug in real_faction_slugs(lenient):
+        if slug not in (author.faction_slug, rival):
+            db_session.add(
+                InvitationLetter(
+                    character_id=author.id, faction_slug=slug, era_id=era.id
+                )
+            )
+    stats = await db_session.scalar(
+        select(CharacterStats).where(
+            CharacterStats.character_id == author.id, CharacterStats.era_id == era.id
+        )
+    )
+    stats.level = 1
+    await db_session.commit()
+    assert await can_start_as_albescent(account.id, db_session) is False
+
+    await deliver_invitations_to_all(db_session, lenient)
+    await db_session.commit()
+
+    assert await can_start_as_albescent(account.id, db_session) is True
+
+
+@pytest.mark.asyncio
+async def test_a_raising_delivery_leaves_the_flip_standing(
+    db_session, account, era, some_faction, monkeypatch
+):
+    await make_admin(db_session, account)
+    await overlay(db_session)
+    await set_dials({"invitation": "full"}, account.id, db_session)
+
+    async def boom(*_):
+        raise RuntimeError("unique backstop")
+
+    monkeypatch.setattr("services.population_dial.deliver_invitations_to_all", boom)
+    assert await set_dials({"invitation": "small"}, account.id, db_session) == [
+        "invitation"
+    ]
+    assert (await read_dial_sides(db_session))["invitation"] == "small"

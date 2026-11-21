@@ -142,6 +142,10 @@ def build_item_key(item_type: str, source_id: int) -> str:
 # would silence a standing obligation (#1192).
 NON_ARCHIVABLE_ITEM_TYPES: frozenset[str] = frozenset({FEED_ITEM_TYPE_AWAITING_SUBMISSION})
 
+ARCHIVE_PROOF_WHEN_UNANSWERED: frozenset[str] = frozenset(
+    {FEED_ITEM_TYPE_COLLAB_INVITE, FEED_ITEM_TYPE_DUEL_CHALLENGE}
+)
+
 FILTER_ALL = "all"
 FILTER_FRIENDS = "friends"
 FILTER_FOES = "foes"
@@ -1397,6 +1401,11 @@ def _scoped_query(
         if not dismissed_ids:
             return None
         return query.where(source.source_id_column.in_(dismissed_ids))
+    # ADR-0070: archiving is a view state, never a decision, and there is exactly one
+    # count of what is outstanding. An unanswered invite/challenge ignores the archive.
+    unanswered = ctx.unanswered_requests_only
+    if unanswered and source.item_type in ARCHIVE_PROOF_WHEN_UNANSWERED:
+        return query
     if not dismissed_ids:
         return query
     return query.where(source.source_id_column.notin_(dismissed_ids))

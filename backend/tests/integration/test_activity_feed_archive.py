@@ -565,10 +565,13 @@ async def test_dismiss_all_skips_awaiting_submission(
     assert response.json() == {"count": 3, "archived": True}
 
     after = await _feed(client, auth_headers, REQUESTS_FILTER)
-    assert [item["type"] for item in after["items"]] == [
-        FEED_ITEM_TYPE_AWAITING_SUBMISSION
-    ]
-    assert after["counts"]["requests"] == 1
+    # Invite and duel are archived but still unanswered (ADR-0070): they stay queued.
+    assert {item["type"] for item in after["items"]} == {
+        FEED_ITEM_TYPE_AWAITING_SUBMISSION,
+        FEED_ITEM_TYPE_COLLAB_INVITE,
+        FEED_ITEM_TYPE_DUEL_CHALLENGE,
+    }
+    assert after["counts"]["requests"] == 3
 
 
 @pytest.mark.asyncio
@@ -916,6 +919,30 @@ async def test_an_archived_request_stays_archived_after_it_is_answered(
     archived_keys = [item["item_key"] for item in archived["items"]]
     assert invite_key in archived_keys
     assert duel_key in archived_keys
+
+
+@pytest.mark.asyncio
+async def test_archiving_a_pending_invite_or_duel_never_empties_the_queue(
+    client: AsyncClient, full_feed: dict, auth_headers: dict
+):
+    """ADR-0070: archiving is a view state, and the queue is the one count."""
+    before = await _feed(client, auth_headers, REQUESTS_FILTER)
+    keys = [
+        _key_of(before, FEED_ITEM_TYPE_COLLAB_INVITE),
+        _key_of(before, FEED_ITEM_TYPE_DUEL_CHALLENGE),
+    ]
+    for key in keys:
+        response = await client.post(
+            "/activity-feed/dismiss", json={"item_key": key}, headers=auth_headers
+        )
+        assert response.status_code == 200, response.text
+
+    after = await _feed(client, auth_headers, REQUESTS_FILTER)
+    keys_of = lambda feed: {i["item_key"] for i in feed["items"]}  # noqa: E731
+    assert keys_of(after) == keys_of(before)
+    assert after["counts"]["requests"] == before["counts"]["requests"]
+    archived = await _feed(client, auth_headers, ALL_FILTER, archived=True)
+    assert set(keys) <= {i["item_key"] for i in archived["items"]}
 
 
 # --- 7. Unanswered obligations live in the queue, not the stream (ADR-0070) ---

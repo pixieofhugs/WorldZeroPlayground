@@ -15,7 +15,7 @@ import type { components } from '../../api/generated/schema'
 
 type NotificationPrefOut = components['schemas']['NotificationPrefOut']
 
-export type PrefAxis = 'on_updates' | 'by_email'
+export type PrefAxis = 'on_updates' | 'by_email' | 'by_push'
 
 /** The server's answer: every row, resolved, keyed by event. */
 export type NotificationPrefs = Readonly<Record<string, NotificationPrefOut>>
@@ -146,11 +146,12 @@ export function setAll(prefs: NotificationPrefs, axis: PrefAxis): NotificationPr
 
 /** Every known row, no diff: the server drops unknown keys and pins locks. */
 export function saveBody(prefs: NotificationPrefs): {
-  events: Record<string, { on_updates: boolean; by_email: boolean }>
+  events: Record<string, { on_updates: boolean; by_email: boolean; by_push: boolean }>
 } {
-  const events: Record<string, { on_updates: boolean; by_email: boolean }> = {}
+  const events: Record<string, { on_updates: boolean; by_email: boolean; by_push: boolean }> = {}
   for (const row of rowsFor(prefs)) {
-    events[row.key] = { on_updates: prefs[row.key].on_updates, by_email: prefs[row.key].by_email }
+    const { on_updates, by_email, by_push } = prefs[row.key]
+    events[row.key] = { on_updates, by_email, by_push }
   }
   return { events }
 }

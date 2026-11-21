@@ -31,7 +31,12 @@ import {
 } from "./roomPresence";
 import { closeEndsRoom, shouldReconnectRoom } from "./roomReconnect";
 import type { RoomEndReason } from "./roomSeal";
-import { roomStoreName, trackRoomState, trackRoomStore } from "./roomStore";
+import {
+  dropStaleRoomStores,
+  roomStoreName,
+  trackRoomState,
+  trackRoomStore,
+} from "./roomStore";
 import { API_BASE_URL } from "../../api/baseUrl";
 
 function bytesToBase64(bytes: Uint8Array): string {
@@ -103,11 +108,14 @@ export function usePraxisRoom(): PraxisRoom | null {
 /** Open a room while mounted; `praxisId` `null` opens nothing (keeps hooks unconditional). */
 export function PraxisRoomProvider({
   praxisId,
+  roomGeneration,
   onUpdate,
   onEnded,
   children,
 }: {
   praxisId: number | null;
+  /** The praxis's `room_generation`; keys the offline store (#3644). */
+  roomGeneration: number;
   /**
    * The room took an update (any author) — the composer's "Saved …" signal
    * (#1743). A prop, not context, because `useEditPraxis` runs outside this
@@ -159,7 +167,11 @@ export function PraxisRoomProvider({
     const meta = doc.getMap<string>(ROOM_META_KEY);
     // Offline authoring (#1743): the same document replayed from the browser,
     // merged on reconnect. Dropped on publish — see `discardRoomStore`.
-    const offline = new IndexeddbPersistence(roomStoreName(praxisId), doc);
+    dropStaleRoomStores(praxisId, roomGeneration);
+    const offline = new IndexeddbPersistence(
+      roomStoreName(praxisId, roomGeneration),
+      doc,
+    );
     // An open store blocks deletes, so a discard must go through this handle (#2381).
     const untrackStore = trackRoomStore(praxisId, offline);
     // Per-effect, not a ref: a new `praxisId`'s socket has opened nothing. Latches.
@@ -253,7 +265,7 @@ export function PraxisRoomProvider({
       setEndReason(null);
       setPresent([]);
     };
-  }, [praxisId]);
+  }, [praxisId, roomGeneration]);
 
   // Separate effect keyed on the viewer: switching character re-publishes
   // without rebuilding the socket. No character, nothing to publish.

@@ -1,6 +1,14 @@
 import pytest
 
-from game_config import ERA_1, LevelUnlockKind
+from game_config import ERA_1, LevelUnlockKind, _new_live_era
+from services.era import apply_dial_sides
+
+
+def _era_on(side: str):
+    """A copy of ERA_1 with every dial on ``side``; CURRENT_ERA is not touched."""
+    era = _new_live_era(ERA_1)
+    apply_dial_sides(era, {key: side for key in era.dials})
+    return era
 
 GATE_ATTRS = [
     "collaboration_level_required",
@@ -21,10 +29,10 @@ GATE_ATTRS = [
 ]
 
 
-def _ability_keys(level: int) -> set[str]:
+def _ability_keys(level: int, era=ERA_1) -> set[str]:
     return {
         unlock.key
-        for unlock in ERA_1.level_profiles[level].unlocks
+        for unlock in era.level_profiles[level].unlocks
         if unlock.kind == LevelUnlockKind.ability
     }
 
@@ -48,6 +56,30 @@ def test_every_real_level_has_a_rank_and_an_unlock(level):
 def test_grounded_ability_sits_at_its_gate_constants_level(gate_attr):
     gate_level = getattr(ERA_1, gate_attr)
     assert _ability_keys(gate_level), f"no ability unlock at level {gate_level} for {gate_attr}"
+
+
+@pytest.mark.parametrize("side", ["small", "full"])
+@pytest.mark.parametrize(
+    ("gate_attr", "ability_key"),
+    [
+        ("comment_level_required", "comment"),
+        ("duel_level_required", "duels"),
+        ("flag_level_required", "flag_praxis"),
+    ],
+)
+def test_dial_moved_gate_and_ladder_agree_on_the_live_era(side, gate_attr, ability_key):
+    era = _era_on(side)
+    rungs = [
+        level
+        for level in range(len(era.level_profiles))
+        if ability_key in _ability_keys(level, era)
+    ]
+    assert rungs == [getattr(era, gate_attr)]
+
+
+def test_overlay_leaves_era_1_ladder_alone():
+    _era_on("small")
+    assert "comment" in _ability_keys(2)
 
 
 def test_level_5_unlocks_the_metatask_abilities():

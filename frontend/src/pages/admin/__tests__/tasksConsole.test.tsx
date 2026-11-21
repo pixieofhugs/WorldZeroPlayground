@@ -115,6 +115,20 @@ describe('the task panel', () => {
     expect(api.adminPatchTask.mock.invocationCallOrder[0]).toBeLessThan(api.updateTaskStatus.mock.invocationCallOrder[0])
   })
 
+  it('shows an active task read-only with no save, and retire sends only the status', async () => {
+    at('/admin/tasks?task=1')
+    const panel = await screen.findByRole('complementary', { name: 'Task' })
+    for (const label of ['Title', 'Description', 'Level']) {
+      expect((within(panel).getByLabelText(label) as HTMLInputElement).disabled).toBe(true)
+    }
+    expect(within(panel).queryByRole('button', { name: /^save$/i })).toBeNull()
+    expect(within(panel).getByText(/Retire it to edit/)).toBeTruthy()
+    fireEvent.click(within(panel).getByRole('button', { name: 'retire' }))
+    fireEvent.click(within(panel).getByRole('button', { name: 'retire it' }))
+    await waitFor(() => expect(api.updateTaskStatus).toHaveBeenCalledWith(1, 'retired'))
+    expect(api.adminPatchTask).not.toHaveBeenCalled()
+  })
+
   it('retire asks first', async () => {
     at('/admin/tasks?task=1')
     const panel = await screen.findByRole('complementary', { name: 'Task' })

@@ -24,7 +24,8 @@ from config import settings
 from db import AsyncSessionLocal
 from models.account import Account
 from models.character import Character
-from models.praxis import Praxis, PraxisInvite, PraxisMember
+from models.comment import Comment, CommentMention
+from models.praxis import ModerationStatus, Praxis, PraxisInvite, PraxisMember
 from models.push_subscription import PushSubscription
 from models.task import Task
 from models.vote import Vote
@@ -223,12 +224,35 @@ async def notify_comment(
     praxis = await session.get(Praxis, praxis_id) if praxis_id else None
     title = await _task_title(session, praxis.task_id if praxis else task_id)
     url = f"/praxis/{praxis_id}" if praxis_id else f"/tasks/{task_id}"
-    target = praxis_id or task_id
+    target = f"praxis:{praxis_id}" if praxis_id else f"task:{task_id}"
+    since = datetime.now(timezone.utc) - RATING_COLLAPSE_WINDOW
+    on_target = (
+        Comment.praxis_id == praxis_id if praxis_id else Comment.task_id == task_id
+    )
+    live = (
+        on_target,
+        Comment.created_at >= since,
+        Comment.is_withdrawn.is_(False),
+        Comment.moderation_status == ModerationStatus.visible,
+    )
     recipients = {c.id: FEED_ITEM_TYPE_COMMENT_MENTION for c in mentioned}
     if praxis is not None:
         for owner_id in await _praxis_owner_ids(session, praxis) - {author.id}:
             recipients.setdefault(owner_id, FEED_ITEM_TYPE_COMMENT_ON_MINE)
     for recipient_id, kind in recipients.items():
+        if kind == FEED_ITEM_TYPE_COMMENT_MENTION:
+            recent = await session.scalar(
+                select(func.count())
+                .select_from(CommentMention)
+                .join(Comment, Comment.id == CommentMention.comment_id)
+                .where(CommentMention.mentioned_character_id == recipient_id, *live)
+            )
+        else:
+            recent = await session.scalar(
+                select(func.count())
+                .select_from(Comment)
+                .where(Comment.created_by_id != recipient_id, *live)
+            )
         await notify(
             session,
             kind=kind,
@@ -237,6 +261,7 @@ async def notify_comment(
             url=url,
             actor=author,
             task_title=title,
+            count=recent if recent and recent > 1 else None,
         )
 
 

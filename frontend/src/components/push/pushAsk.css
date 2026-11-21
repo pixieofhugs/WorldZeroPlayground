@@ -1,0 +1,55 @@
+.push-ask {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  padding: var(--space-xl);
+  margin: var(--space-lg) 0;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+}
+.push-ask-head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-md);
+}
+.push-ask-bell {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--color-accent-primary);
+}
+.push-ask-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-title);
+  font-weight: 600;
+  line-height: 1.25;
+}
+.push-ask-body,
+.push-ask-note {
+  margin: 0;
+  font-family: var(--font-body);
+}
+.push-ask-body {
+  font-size: var(--text-content);
+  line-height: 1.55;
+  color: var(--color-text-secondary);
+}
+.push-ask-note {
+  font-size: var(--text-lg);
+  line-height: 1.5;
+  color: var(--color-text-tertiary);
+}
+.push-ask-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.push-ask-actions > button {
+  min-height: 44px;
+}
+.push-ask-actions > .btn-primary {
+  border: 0;
+  flex-grow: 1;
+}

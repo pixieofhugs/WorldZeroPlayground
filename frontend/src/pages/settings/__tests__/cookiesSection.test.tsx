@@ -66,6 +66,7 @@ describe('the section reaches the page', () => {
 const KNOWN_WRITERS = [
   'auth/AdminModeContext.tsx',
   'auth/AuthContext.tsx',
+  'components/ErrorBoundary.tsx',
   'components/InvitationWatcher.tsx',
   'components/LevelUpWatcher.tsx',
   'hooks/useMotion.tsx',
@@ -74,6 +75,7 @@ const KNOWN_WRITERS = [
   'hooks/useTheme.tsx',
   'pages/factionDetail/sectionDisclosure.tsx',
   'utils/installPrompt.ts',
+  'utils/pushAskDismissed.ts',
   'utils/onboardingResume.ts',
 ]
 
@@ -167,8 +169,8 @@ describe('no writer holds a key the card does not disclose', () => {
 })
 
 describe('the inventory is pinned to the keys the app really writes', () => {
-  it('discloses all fourteen storage entries and the one cookie', () => {
-    expect(names).toHaveLength(15)
+  it('discloses all sixteen storage entries and the one cookie', () => {
+    expect(names).toHaveLength(17)
   })
 
   it.each([

@@ -352,10 +352,11 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     try {
       const praxisId = parseInt(idParam, 10);
       // The request carries the whole doc: sockets give no ack, and the seal destroys the server's copy (#3611).
+      const generation = praxis?.room_generation ?? 0;
       await submitPraxis(praxisId, roomState(praxisId));
       // Publishing destroyed the server doc (ADR-0073 rule 7). Discard here, not
       // only in the effect below: a solo publish navigates away before it runs (#2381).
-      discardRoomStore(praxisId);
+      discardRoomStore(praxisId, generation);
       let refreshed: PraxisOut | null = null;
       let refreshedDuel: DuelDetailOut | null = duel;
       try {
@@ -643,9 +644,11 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   // Published = server doc destroyed (#1745); drop the local copy or `pullBack`
   // duplicates the body. For non-publishing clients; `publish()` covers its own (#2381).
   const publishedPraxisId = isPublished ? (praxis?.id ?? null) : null;
+  const publishedGeneration = praxis?.room_generation ?? 0;
   useEffect(() => {
-    if (publishedPraxisId !== null) discardRoomStore(publishedPraxisId);
-  }, [publishedPraxisId]);
+    if (publishedPraxisId !== null)
+      discardRoomStore(publishedPraxisId, publishedGeneration);
+  }, [publishedPraxisId, publishedGeneration]);
   const isModerated =
     praxis?.moderation_status === "hidden" ||
     praxis?.moderation_status === "failed";

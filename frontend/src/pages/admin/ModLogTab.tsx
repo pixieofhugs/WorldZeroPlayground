@@ -129,6 +129,7 @@ export default function ModLogTab() {
         </div>
         {selected && (
           <SidePanel
+            key={selected.id}
             label={t('console.modlog.panel')}
             badge={<span className={`adm-tag ${tone(selected.action)}`}>{did(selected)}</span>}
             onClose={() => setSelectedId(null)}

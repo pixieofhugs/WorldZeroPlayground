@@ -18,6 +18,7 @@ import {
   feedKicker,
   isArchivable,
   NON_ARCHIVABLE_TYPES,
+  isStillWaiting,
 } from "../feed/feedItemLabels";
 import { normalizeFeedItem } from "../feed/normalizeFeedItem";
 import feedCatalog from "../../locales/en/feed.json";
@@ -80,10 +81,22 @@ const FAT_PAYLOAD = {
 };
 
 describe("the archive control: which cards offer one", () => {
+  it("draws none on a pending collab invite or duel live, but does once answered or archived", () => {
+    for (const type of ["collab_invite", "duel_challenge"]) {
+      const key = type === "duel_challenge" ? "duel_status" : "invite_status";
+      const pending = item(type, { ...FAT_PAYLOAD, [key]: "pending" });
+      expect(render(pending), `${type} pending`).not.toContain(ARCHIVE_LABEL);
+      expect(render(pending, true), `${type} in the archive`).toContain(RESTORE_LABEL);
+      const answered = item(type, { ...FAT_PAYLOAD, [key]: "accepted" });
+      expect(render(answered), `${type} answered`).toContain(ARCHIVE_LABEL);
+    }
+  });
+
   it("draws an archive control on every archivable type", () => {
     for (const type of FEED_TYPES) {
       // rules_change is lazy (own chunk): static markup stops at its Suspense; tested below.
       if (NON_ARCHIVABLE_TYPES.has(type) || type === "rules_change") continue;
+      if (isStillWaiting(item(type, FAT_PAYLOAD))) continue; // pending: no ✕ (#3767)
       expect(render(item(type, FAT_PAYLOAD)), `${type} offers the ✕`).toContain(
         ARCHIVE_LABEL,
       );

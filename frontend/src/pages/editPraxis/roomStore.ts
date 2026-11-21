@@ -19,8 +19,24 @@ export interface RoomStoreHandle {
   clearData: () => Promise<void>;
 }
 
-export function roomStoreName(praxisId: number): string {
-  return `praxis-room-${praxisId}`;
+/** Named by generation: a copy from before a publish must never merge into the reseed (#3644). */
+export function roomStoreName(praxisId: number, generation: number): string {
+  return `praxis-room-${praxisId}-${generation}`;
+}
+
+/** Delete every older generation's store and the pre-generation name; call before opening the current one. */
+export function dropStaleRoomStores(praxisId: number, generation: number): void {
+  // No IndexedDB in the `node` harness.
+  if (typeof indexedDB === "undefined") return;
+  const names = [`praxis-room-${praxisId}`];
+  for (let older = 0; older < generation; older += 1) {
+    names.push(roomStoreName(praxisId, older));
+  }
+  try {
+    for (const name of names) indexedDB.deleteDatabase(name);
+  } catch {
+    // Storage-refusing browsers (private mode): swallowed, as `discardRoomStore` does.
+  }
 }
 
 /** Rooms open in this tab (one in practice; a map since that's not enforced here). */
@@ -41,7 +57,7 @@ export function trackRoomStore(
 }
 
 /** Drop the local copy. Safe for a never-opened praxis (deleting a missing DB is a no-op). */
-export function discardRoomStore(praxisId: number): void {
+export function discardRoomStore(praxisId: number, generation: number): void {
   const open = openStores.get(praxisId);
   if (open) {
     openStores.delete(praxisId);
@@ -52,7 +68,7 @@ export function discardRoomStore(praxisId: number): void {
   }
   // No IndexedDB in the `node` harness.
   if (typeof indexedDB === "undefined") return;
-  indexedDB.deleteDatabase(roomStoreName(praxisId));
+  indexedDB.deleteDatabase(roomStoreName(praxisId, generation));
 }
 
 /** Per open room: the whole Yjs state, base64, which a submit carries to the server (#3611). */

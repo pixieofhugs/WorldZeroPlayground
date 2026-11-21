@@ -121,6 +121,7 @@ async def test_switching_a_row_off_empties_the_list_and_the_badge_together(
         headers=auth_headers,
     )
     assert created.status_code == 201
+    await client.post(f"/praxes/{created.json()['id']}/submit", headers=auth_headers)
     vote = await client.post(
         f"/praxes/{created.json()['id']}/vote",
         json={"value": 4},
@@ -168,6 +169,7 @@ async def test_a_muted_row_is_still_in_the_archive(
         headers=auth_headers,
     )
     praxis_id = created.json()["id"]
+    await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers)
     await client.post(
         f"/praxes/{praxis_id}/vote", json={"value": 4}, headers=auth_headers2
     )

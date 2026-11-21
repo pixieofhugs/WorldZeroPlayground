@@ -181,13 +181,13 @@ export default function FeedRowContent({
               <Link
                 to={row.headlineHref}
                 className="font-body"
-                style={{ fontSize: 'var(--text-content)', fontWeight: 700, color: 'var(--color-text-primary)', textDecoration: 'none', display: 'block', lineHeight: 1.3, ...liftUnless('headline') }}
+                style={{ fontSize: 'var(--text-content)', fontWeight: 700, color: 'var(--color-text-primary)', textDecoration: 'none', display: 'block', overflowWrap: 'anywhere', lineHeight: 1.3, ...liftUnless('headline') }}
               >
                 {row.headline}
                 {stretch === 'headline' && <FeedBodyOverlay />}
               </Link>
             ) : (
-              <span className="font-body" style={{ fontSize: 'var(--text-content)', fontWeight: 700, color: 'var(--color-text-primary)', display: 'block', lineHeight: 1.3 }}>
+              <span className="font-body" style={{ fontSize: 'var(--text-content)', fontWeight: 700, color: 'var(--color-text-primary)', display: 'block', overflowWrap: 'anywhere', lineHeight: 1.3 }}>
                 {row.headline}
               </span>
             )}
@@ -240,6 +240,7 @@ function QuotedHeadline({
     fontStyle: 'italic',
     color: 'var(--color-text-primary)',
     lineHeight: 1.4,
+    overflowWrap: 'anywhere',
   }
   if (!href) {
     return (

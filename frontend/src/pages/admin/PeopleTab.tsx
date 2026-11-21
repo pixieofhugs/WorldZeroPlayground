@@ -8,7 +8,7 @@ import { extractError } from '../../utils/errors'
 import { formatDate } from '../../utils/dates'
 import { factionFill } from '../../utils/factions'
 import AdminRosterSection from './AdminRosterSection'
-import { ListTable, ListToolbar, type Column } from './AdminList'
+import { ListTable, ListToolbar, useSelection, type Column } from './AdminList'
 import PersonPanel from './PersonPanel'
 import './adminPeople.css'
 
@@ -25,7 +25,7 @@ const statusOf = (p: AdminCharacterSummary) => (p.status === 'banned' ? 'banned'
 export default function PeopleTab() {
   const { t } = useTranslation(['admin', 'common'])
   const { user } = useAuth()
-  const [params, setParams] = useSearchParams()
+  const [params] = useSearchParams()
   const [people, setPeople] = useState<AdminCharacterSummary[]>([])
   const [search, setSearch] = useState(params.get('search') ?? '')
   const [segment, setSegment] = useState<Segment>('all')
@@ -49,9 +49,8 @@ export default function PeopleTab() {
     if (isOwner) void getAdmins().then((a) => setAdminCount(a.length), () => undefined)
   }, [isOwner, roster])
 
-  const selectedId = Number(params.get('person')) || null
+  const [selectedId, open] = useSelection('person')
   const selected = people.find((p) => p.id === selectedId) ?? null
-  const open = (id: number | null) => setParams(id ? { person: String(id) } : {}, { replace: true })
 
   // A link that names one person lands on their panel.
   const [landed, setLanded] = useState(false)

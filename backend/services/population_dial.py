@@ -4,6 +4,7 @@ Values live in the era file (``EraConfig.dials``); the DB holds only a side per
 key. A missing row means the dial's declared default, so launch needs no seed.
 """
 
+import logging
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Mapping, Optional
@@ -15,8 +16,11 @@ from errors import ErrorCode, raise_coded
 from game_config import CURRENT_ERA, Dial, EraConfig
 from models.character import Character
 from models.population_dial import PopulationDial
+from services.character_stats import deliver_invitations_to_all
 from services.era import apply_dial_sides, get_current_era_row
 from services.mod_log import log_mod_action
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -134,4 +138,13 @@ async def set_dials(
     new_sides = {k: r.side for k, r in rows.items()} | {k: sides[k] for k in changed}
     await session.commit()
     apply_dial_sides(era, new_sides)
+    # Small is the loose side; tightening owes nothing, letters are kept.
+    if sides.get("invitation") == "small" and "invitation" in changed:
+        try:
+            await deliver_invitations_to_all(session, era)
+            await session.commit()
+        except Exception:
+            # The flip is committed and stands; a reboot retries delivery.
+            await session.rollback()
+            logger.exception("Invitation delivery after dial flip failed")
     return changed
