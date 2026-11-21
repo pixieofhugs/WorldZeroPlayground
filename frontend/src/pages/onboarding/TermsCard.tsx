@@ -115,7 +115,7 @@ export default function TermsCard({
         <p style={prose}>{t('terms.body')}</p>
 
         {/* Same keys `pages/Disclaimer.tsx` reads. */}
-        <div style={documentBlock} data-testid="onboarding-terms-document">
+        <div className="ob-terms-doc" style={documentBlock} data-testid="onboarding-terms-document">
           <p style={prose}>{tCommon('disclaimer.p1')}</p>
           <p style={prose}>{tCommon('disclaimer.p2')}</p>
           <p style={prose}>{tCommon('disclaimer.p3')}</p>
