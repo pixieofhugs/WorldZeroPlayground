@@ -148,6 +148,7 @@ export default function SingularityTaskDetail({
   };
   const primaryButton: CSSProperties = {
     display: "block",
+    boxSizing: "border-box",
     width: "100%",
     cursor: "pointer",
     textAlign: "center",
@@ -488,6 +489,7 @@ export default function SingularityTaskDetail({
                 ...primaryButton,
                 flex: 1,
                 width: "auto",
+                minWidth: 0,
                 // Outlined, not lit: not the page's one bright action.
                 color: BRIGHT,
                 background: "transparent",

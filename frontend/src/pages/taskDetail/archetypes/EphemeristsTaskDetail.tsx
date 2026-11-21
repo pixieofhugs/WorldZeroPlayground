@@ -516,7 +516,7 @@ export default function EphemeristsTaskDetail({
             <span style={{ ...quietItalic, color: BRASS_LIGHT }}>{t("detail.inProgress.text")}</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", flexWrap: "wrap" }}>
-            <Link className="eph-cta" to={`/praxis/${inProgressPraxisId}/edit`} style={{ ...primaryButton, flex: 1, width: "auto" }}>
+            <Link className="eph-cta" to={`/praxis/${inProgressPraxisId}/edit`} style={{ ...primaryButton, flex: 1, width: "auto", minWidth: 0 }}>
               {t("detail.inProgress.continue")}
             </Link>
             <button

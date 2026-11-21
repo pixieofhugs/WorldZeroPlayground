@@ -310,6 +310,17 @@
     font-size: var(--text-title);
   }
 
+  /* Corner stickers (START HERE, META) hang past the card on desktop; a
+     full-width phone card has no gutter for them. */
+  :root {
+    --sticker-inset: -6px;
+  }
+  @media (max-width: 767px) {
+    :root {
+      --sticker-inset: 0px;
+    }
+  }
+
   /* List-card titles stop at 3 lines, like .card-description. Never on a detail page. */
   .card-title {
     overflow: hidden;

@@ -269,7 +269,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
           >
             <Link
               to={`/praxis/${inProgressPraxisId}/edit`}
-              style={{ ...primaryAction, flex: 1, width: "auto" }}
+              style={{ ...primaryAction, flex: 1, width: "auto", minWidth: 0 }}
             >
               {t("detail.inProgress.continue")}
             </Link>

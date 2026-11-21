@@ -93,7 +93,7 @@ export default function TaskCard({
           style={{
             position: 'absolute',
             top: -6,
-            right: -6,
+            right: "var(--sticker-inset)",
             zIndex: 5,
             pointerEvents: 'none',
           }}
@@ -106,7 +106,7 @@ export default function TaskCard({
           style={{
             position: 'absolute',
             top: -6,
-            left: -6,
+            left: "var(--sticker-inset)",
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'flex-start',

@@ -163,6 +163,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
   };
   const pinkButton: CSSProperties = {
     display: "block",
+    boxSizing: "border-box",
     width: "100%",
     cursor: "pointer",
     textAlign: "center",

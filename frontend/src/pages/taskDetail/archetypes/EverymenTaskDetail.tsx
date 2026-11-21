@@ -117,6 +117,7 @@ export default function EverymenTaskDetail({
   );
   const primaryBar: CSSProperties = {
     display: "block",
+    boxSizing: "border-box",
     width: "100%",
     cursor: "pointer",
     textAlign: "center",

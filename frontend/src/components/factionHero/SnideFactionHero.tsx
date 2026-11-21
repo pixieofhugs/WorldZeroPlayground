@@ -198,13 +198,12 @@ export default function SnideFactionHero({
         </div>
 
         <div
+          className="snide-hero-aside"
           style={{
             display: "flex",
             flexDirection: "column",
-            alignItems: "flex-end",
             gap: "var(--space-md)",
             flexShrink: 0,
-            width: 196,
           }}
         >
           <HeroMark>

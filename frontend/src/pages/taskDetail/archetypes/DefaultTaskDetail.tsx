@@ -122,6 +122,7 @@ export default function DefaultTaskDetail({
   };
   const primaryButton: CSSProperties = {
     display: "block",
+    boxSizing: "border-box",
     width: "100%",
     cursor: "pointer",
     textAlign: "center",
@@ -254,7 +255,7 @@ export default function DefaultTaskDetail({
           >
             <Link
               to={`/praxis/${inProgressPraxisId}/edit`}
-              style={{ ...primaryButton, flex: 1, width: "auto" }}
+              style={{ ...primaryButton, flex: 1, width: "auto", minWidth: 0 }}
             >
               {t("detail.inProgress.continue")}
             </Link>

@@ -1600,3 +1600,16 @@
   }
 }
 
+
+/* S.N.I.D.E. hero aside: a 196px right-hung column on desktop; on a phone it
+   takes the full row and centres, so no dead strip is left beside it. */
+.snide-hero-aside {
+  width: 196px;
+  align-items: flex-end;
+}
+@media (max-width: 767px) {
+  .snide-hero-aside {
+    width: 100%;
+    align-items: center;
+  }
+}
