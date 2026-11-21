@@ -930,7 +930,7 @@ export interface paths {
         };
         /**
          * Returning Player Gate
-         * @description What the consent gate says (#2162): a date, and nothing else.
+         * @description What the consent gate says (#2162): the deletion time, and nothing else.
          *
          *     Read from the parked sign-in rather than the tombstone, so this route makes
          *     no lookup keyed on anything the caller supplied — there is nothing to
@@ -4784,15 +4784,15 @@ export interface components {
          * ReturningPlayerOut
          * @description What the consent gate may know (``GET /auth/returning-player``).
          *
-         *     The caller is authenticated as nobody, so keep this to one field. A date, not
-         *     a timestamp: truncated in ``ReturningPlayerConsentRequired``.
+         *     The caller is authenticated as nobody, so keep this to one field. The hour is
+         *     sent (owner ruling on #3630): the reader formats the day in their own zone.
          */
         ReturningPlayerOut: {
             /**
-             * Deleted On
-             * Format: date
+             * Deleted At
+             * Format: date-time
              */
-            deleted_on: string;
+            deleted_at: string;
         };
         /**
          * RingRecipient

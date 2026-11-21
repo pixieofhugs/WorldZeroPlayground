@@ -1,8 +1,7 @@
 /**
  * The returning-player consent gate (#2162, ADR-0081). Its logic is exported
- * and tested directly (SSR runs no effects). Guards: an ISO date-only string
- * parses as UTC midnight (off by one west of Greenwich), and a failed confirm
- * must not walk into the arc with no session.
+ * and tested directly (SSR runs no effects). Guards: the date is the reader's zone,
+ * and a failed confirm must not walk into the arc with no session.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -16,18 +15,21 @@ vi.mock('../../api/auth', () => ({
   startFresh: () => Promise.resolve(),
 }))
 
-import ReturningCard, { formatDeletedOn, runStartFresh } from '../onboarding/ReturningCard'
+import ReturningCard, { formatDeletedAt, runStartFresh } from '../onboarding/ReturningCard'
 
 describe('the deletion date the gate states', () => {
-  /** Timezone-independent: a test that only held in UTC tests the runner. */
-  it.each(['2026-03-03', '2026-01-01', '2025-12-31'])('%s keeps its day', (iso) => {
-    const [dayRendered] = formatDeletedOn(iso, 'en-GB').split(' ')
-    expect(Number(dayRendered)).toBe(Number(iso.split('-')[2]))
-  })
+  const mod = (zone: string) => {
+    process.env.TZ = zone
+    return formatDeletedAt('2026-03-03T02:30:00+00:00', 'en-GB')
+  }
 
   it('names the month and drops the year', () => {
-    // The window is ninety days, so a year is noise.
-    expect(formatDeletedOn('2026-03-03', 'en-GB')).toBe('3 March')
+    expect(mod('UTC')).toBe('3 March')
+  })
+
+  // 18:30 PST on 2 March is 02:30 UTC on 3 March: the reader's day, not UTC's.
+  it('an evening deletion west of UTC keeps the reader\'s calendar day', () => {
+    expect(mod('America/Los_Angeles')).toBe('2 March')
   })
 })
 

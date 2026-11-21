@@ -6350,16 +6350,16 @@
         "type": "object"
       },
       "ReturningPlayerOut": {
-        "description": "What the consent gate may know (``GET /auth/returning-player``).\n\nThe caller is authenticated as nobody, so keep this to one field. A date, not\na timestamp: truncated in ``ReturningPlayerConsentRequired``.",
+        "description": "What the consent gate may know (``GET /auth/returning-player``).\n\nThe caller is authenticated as nobody, so keep this to one field. The hour is\nsent (owner ruling on #3630): the reader formats the day in their own zone.",
         "properties": {
-          "deleted_on": {
-            "format": "date",
-            "title": "Deleted On",
+          "deleted_at": {
+            "format": "date-time",
+            "title": "Deleted At",
             "type": "string"
           }
         },
         "required": [
-          "deleted_on"
+          "deleted_at"
         ],
         "title": "ReturningPlayerOut",
         "type": "object"
@@ -10758,7 +10758,7 @@
     },
     "/auth/returning-player": {
       "get": {
-        "description": "What the consent gate says (#2162): a date, and nothing else.\n\nRead from the parked sign-in rather than the tombstone, so this route makes\nno lookup keyed on anything the caller supplied — there is nothing to\nsupply. The identity is in the signed session or the gate does not exist.",
+        "description": "What the consent gate says (#2162): the deletion time, and nothing else.\n\nRead from the parked sign-in rather than the tombstone, so this route makes\nno lookup keyed on anything the caller supplied — there is nothing to\nsupply. The identity is in the signed session or the gate does not exist.",
         "operationId": "returning_player_gate_auth_returning_player_get",
         "responses": {
           "200": {

@@ -1,4 +1,4 @@
-from datetime import date, datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
 
 from authlib.jose import JoseError, JsonWebToken
@@ -30,18 +30,18 @@ class ReturningPlayerConsentRequired(Exception):
     not a refusal, and the ``except (HTTPException, OAuthError)`` arm in each
     callback must not swallow it. Carries what the confirm step needs.
 
-    ``deleted_on`` is a date, not a timestamp: the hour would leak more about a
-    deleted account to an unauthenticated viewer than the copy needs.
+    ``deleted_at`` carries the hour (owner ruling on #3630): only the account
+    holder who did the deleting sees it, and a UTC-truncated day was wrong.
     """
 
     def __init__(
-        self, provider: str, provider_user_id: str, email: str, deleted_on: date
+        self, provider: str, provider_user_id: str, email: str, deleted_at: datetime
     ) -> None:
-        super().__init__(provider, deleted_on)
+        super().__init__(provider, deleted_at)
         self.provider = provider
         self.provider_user_id = provider_user_id
         self.email = email
-        self.deleted_on = deleted_on
+        self.deleted_at = deleted_at
 
 
 def create_jwt(account_id: int) -> str:
@@ -174,7 +174,7 @@ async def create_or_get_account(
             provider=provider,
             provider_user_id=provider_user_id,
             email=email,
-            deleted_on=tombstone.created_at.date(),
+            deleted_at=tombstone.created_at,
         )
 
     result = await session.execute(
