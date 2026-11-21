@@ -50,6 +50,7 @@ import {
 } from "../archetypes/shared";
 import type { EditPraxisState } from "../useEditPraxis";
 import { collabPublishWindow } from "./waitingClock";
+import { formatClockTime } from "../../../utils/dates";
 import Breadcrumb from "../../../components/nav/Breadcrumb";
 
 // Ornament geometry: raw px per WORLD_ZERO_STYLE §4a.
@@ -269,7 +270,10 @@ function DuelSidePanel({
           aria-label={collabCopy(
             factionSlug,
             nudged ? "nudgeSentAria" : "duelNudgeAria",
-            { name: side.display_name },
+            {
+              name: side.display_name,
+              time: side.nudge_again_at ? formatClockTime(side.nudge_again_at) : "",
+            },
           )}
           className="self-start px-2 py-1"
           style={composerLabelStyle({

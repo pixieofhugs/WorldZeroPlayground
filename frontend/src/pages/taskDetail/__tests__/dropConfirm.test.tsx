@@ -31,6 +31,7 @@ const aMember = (
   joined_at: "2026-01-01T00:00:00Z",
   approved_at: null,
   nudged_at: null,
+  nudge_again_at: null,
 });
 
 describe("task-detail drop confirm", () => {

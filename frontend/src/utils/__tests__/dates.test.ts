@@ -1,5 +1,24 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { relativeTime } from '../dates'
+import { formatClockTime, relativeTime } from '../dates'
+
+describe('formatClockTime', () => {
+  const tz = 'America/Los_Angeles'
+  const again = '2026-11-17T23:00:00-08:00' // nudged Mon 23:00 + 24h
+
+  it('names the zone and leads with the weekday when not today', () => {
+    const now = new Date('2026-11-16T23:30:00-08:00')
+    const out = formatClockTime(again, { timeZone: tz, now })
+    expect(out).toMatch(/Tue/)
+    expect(out).toMatch(/11:00\s?PM PST/)
+  })
+
+  it('drops the weekday when the instant is today in the reader zone', () => {
+    const now = new Date('2026-11-17T09:00:00-08:00')
+    const out = formatClockTime(again, { timeZone: tz, now })
+    expect(out).not.toMatch(/Tue/)
+    expect(out).toMatch(/11:00\s?PM PST/)
+  })
+})
 
 const NOW = Date.parse('2026-06-15T12:00:00Z')
 const ago = (ms: number) => new Date(NOW - ms).toISOString()

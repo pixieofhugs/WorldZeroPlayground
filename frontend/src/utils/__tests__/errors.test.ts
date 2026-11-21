@@ -91,6 +91,18 @@ describe('extractError — the errors.json catalog', () => {
     )
   })
 
+  it('names the post-cooldown instant, never an hour count', () => {
+    const next = new Date(Date.now() + 3_600_000).toISOString()
+    const detail = {
+      code: 'PRAXIS_POST_COOLDOWN',
+      message: 'BACKEND PROSE',
+      params: { hours: 1, next_post_at: next },
+    }
+    const out = extractError(apiError(429, detail), FALLBACK)
+    expect(out).toMatch(/^You can post again at .*\d/)
+    expect(out).not.toMatch(/hours/)
+  })
+
   it('prefers the catalog over the backend prose', () => {
     const detail = {
       code: 'VOTE_BUDGET_EXHAUSTED',

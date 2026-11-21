@@ -43,6 +43,7 @@ function side(praxisId: number | null, characterId: number): DuelSideOut {
     points_from_votes: 4,
     is_submitted: true,
     nudged_at: null,
+    nudge_again_at: null,
     win_multiplier: 1,
     loss_multiplier: 1,
     tie_multiplier: 1,

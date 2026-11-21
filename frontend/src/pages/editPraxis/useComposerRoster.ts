@@ -30,8 +30,10 @@ import i18n from "../../i18n";
  */
 export interface CrewNudgeResult {
   sent: number;
-  /** Refused: inside their 24h window. */
+  /** Refused: inside their window. */
   skipped: number;
+  /** Who was refused, to look their `nudge_again_at` up on the refreshed roster. */
+  skippedIds: number[];
 }
 
 /** Each entry has exactly one of `nudge`/`error` (`api/nudge.ts`). Pure for the SSR suite. */
@@ -41,6 +43,9 @@ export function summariseCrewNudge(
   return {
     sent: results.filter((result) => result.nudge != null).length,
     skipped: results.filter((result) => result.nudge == null).length,
+    skippedIds: results
+      .filter((result) => result.nudge == null)
+      .map((result) => result.to_character_id),
   };
 }
 

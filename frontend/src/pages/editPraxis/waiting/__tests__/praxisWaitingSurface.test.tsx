@@ -2,6 +2,7 @@
  * The waiting surface (#1080, ADR-0059). Window length and clock are props
  * because `useGameConfig` never resolves in the harness.
  */
+import { formatClockTime } from "../../../../utils/dates";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect } from "vitest";
 import { MemoryRouter } from "react-router-dom";
@@ -42,6 +43,7 @@ function member(
     joined_at: OPENED,
     nudged_at: nudgedAt,
     approved_at: hasSubmitted ? OPENED : null,
+    nudge_again_at: nudgedAt,
   };
 }
 
@@ -101,6 +103,7 @@ function duelDetail(status: DuelStatus): DuelDetailOut {
       points_from_votes: 0,
       is_submitted: true,
       nudged_at: null,
+      nudge_again_at: null,
       win_multiplier: 1,
       loss_multiplier: 1,
       tie_multiplier: 1,
@@ -114,6 +117,7 @@ function duelDetail(status: DuelStatus): DuelDetailOut {
       points_from_votes: 0,
       is_submitted: false,
       nudged_at: null,
+      nudge_again_at: null,
       win_multiplier: 1,
       loss_multiplier: 1,
       tie_multiplier: 1,
@@ -293,7 +297,10 @@ describe("nudge — the honest version (#1083)", () => {
     });
     expect(html).toContain(collabCopy(SLUG, "nudgeSentAction"));
     expect(html).toContain(
-      collabCopy(SLUG, "nudgeSentAria", { name: "Rax" }),
+      collabCopy(SLUG, "nudgeSentAria", {
+        name: "Rax",
+        time: formatClockTime("2026-01-02T00:00:00Z"),
+      }),
     );
     expect(html).toContain("disabled");
   });
@@ -422,23 +429,19 @@ describe("nudge the crew — the bulk press (#1418)", () => {
     expect(html).not.toContain("Nudged 2 of");
   });
 
-  it("names both halves of a partly refused press", () => {
+  it("falls back to the plain count when no skipped window is known", () => {
     const html = render({
-      state: state({ crewNudge: { sent: 2, skipped: 1 } }),
+      state: state({ crewNudge: { sent: 2, skipped: 1, skippedIds: [] } }),
       autoSubmitDays: WINDOW_DAYS,
     });
     expect(html).toContain(
-      collabCopy(SLUG, "nudgeCrewResultPartial", {
-        sent: 2,
-        total: 3,
-        skipped: 1,
-      }),
+      collabCopy(SLUG, "nudgeCrewResult", { sent: 2, total: 3 }),
     );
   });
 
   it("reports a clean sweep without inventing a refusal", () => {
     const html = render({
-      state: state({ crewNudge: { sent: 3, skipped: 0 } }),
+      state: state({ crewNudge: { sent: 3, skipped: 0, skippedIds: [] } }),
       autoSubmitDays: WINDOW_DAYS,
     });
     expect(html).toContain(
@@ -450,7 +453,7 @@ describe("nudge the crew — the bulk press (#1418)", () => {
     // Silence would read as "all of them".
     const html = render({
       state: state({
-        crewNudge: { sent: 2, skipped: 0 },
+        crewNudge: { sent: 2, skipped: 0, skippedIds: [] },
         praxis: praxis({
           members: [
             member(ME, "Wren", true),
