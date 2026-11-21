@@ -4,8 +4,8 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import { getMyCharacters, setActiveCharacter } from '../api/me'
 import type { CharacterOut } from '../api/auth'
-import { factionCssVar, factionName } from '../utils/factions'
-import { mediaUrl } from '../utils/media'
+import { factionName } from '../utils/factions'
+import FactionAvatar from './avatar/FactionAvatar'
 import { useModal } from '../hooks/useModal'
 import { drawAtRoot } from './ui/drawAtRoot'
 
@@ -114,26 +114,7 @@ export function CharacterSwitcherRows({
             style={switchRow}
           >
             <span style={{ ...miniRing, background: 'var(--faction-default-rainbow-conic)' }}>
-              {life.avatar_url ? (
-                <img src={mediaUrl(life.avatar_url)} alt={life.display_name} style={miniAvatarImg} />
-              ) : (
-                <span
-                  style={{
-                    ...miniAvatarImg,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    background: `linear-gradient(135deg, ${factionCssVar(life.faction_slug, 'light')}, ${factionCssVar(life.faction_slug)})`,
-                    fontFamily: 'var(--faction-default-card-font)',
-                    fontStyle: 'italic',
-                    // eslint-disable-next-line local/no-raw-style-values -- ornament: monogram glyph sized to the mini avatar disc
-                    fontSize: 17,
-                    color: 'var(--color-text-on-accent)',
-                  }}
-                >
-                  {life.display_name[0]?.toUpperCase() ?? '?'}
-                </span>
-              )}
+              <FactionAvatar character={life} size={40} badge={false} />
             </span>
             <span style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
               <span style={rowName}>{life.display_name}</span>
@@ -193,9 +174,6 @@ const miniRing: CSSProperties = {
   width: 44, height: 44, borderRadius: '50%', flex: 'none',
   // eslint-disable-next-line local/no-raw-style-values -- ornament: this inset *is* the drawn ring stroke around the mini avatar, not spacing
   padding: 2,
-}
-const miniAvatarImg: CSSProperties = {
-  width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover',
 }
 const rowName: CSSProperties = {
   display: 'block', fontFamily: 'var(--font-display)', fontStyle: 'italic',

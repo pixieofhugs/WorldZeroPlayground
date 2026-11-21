@@ -34,6 +34,7 @@ vi.mock('../../../auth/AuthContext', () => ({
       character: {
         id: 42,
         display_name: 'Mollusk',
+        username: 'mollusk',
         avatar_url: '',
         faction_slug: viewer.slug,
         level: 3,
