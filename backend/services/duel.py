@@ -23,7 +23,7 @@ from models.praxis import (
     PraxisStatus,
     PraxisType,
 )
-from models.task import Task
+from models.task import Task, TaskStatus
 from schemas.duel import DuelDetailOut, DuelSideOut
 from services.character import is_playable
 from services.scoring import compute_duel_multiplier
@@ -38,6 +38,7 @@ from services.push import notify_duel_challenge
 from services.signup_eligibility import (
     count_in_progress_praxes,
     is_active_member_of_task,
+    task_status_closed,
 )
 
 
@@ -344,6 +345,19 @@ async def respond_to_duel_challenge(
     task = await session.get(Task, duel.task_id)
     if task is None:
         raise_coded(404, ErrorCode.task_not_found, "Task no longer exists.")
+
+    # The challenge may outlive the task's status (era close, mod action). Level
+    # stays exempt below (#292).
+    if task_status_closed(task, opponent, era):
+        status = task.status.value
+        deleted = task.status == TaskStatus.deleted
+        context = {} if deleted else {DETAIL_CONTEXT_PARAM: status}
+        raise_coded(
+            403,
+            ErrorCode.task_not_open_for_signup,
+            f"This task is {status} and is not open for new praxis.",
+            context,
+        )
 
     # May have signed up since the challenge; `era` as above (#1511).
     if await is_active_member_of_task(opponent, task, session, era):
