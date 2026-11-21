@@ -199,6 +199,7 @@ async def build_praxis_out(
         flagged_at=praxis.flagged_at,
         submitted_at=praxis.submitted_at,
         submit_proposed_at=praxis.submit_proposed_at,
+        room_generation=praxis.room_generation,
         created_by_id=praxis.created_by_id,
         created_by_display_name=created_by_display_name,
         created_by_avatar_url=created_by_avatar_url,

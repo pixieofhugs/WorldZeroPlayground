@@ -517,6 +517,8 @@ class PraxisRoomServer(WebsocketServer):
                     PraxisRoomUpdate.praxis_id == praxis.id
                 )
             )
+            # The only place a document dies; clients key their offline copy on this.
+            praxis.room_generation += 1
 
     async def apply_client_update(
         self, praxis_id: int, update: bytes

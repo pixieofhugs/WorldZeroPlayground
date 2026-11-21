@@ -3512,6 +3512,8 @@ export interface components {
              * @default 0
              */
             points_from_votes: number;
+            /** Room Generation */
+            room_generation: number;
             /** Score */
             score: number;
             status: components["schemas"]["PraxisStatus"];
@@ -4650,6 +4652,8 @@ export interface components {
              * @default 0
              */
             points_from_votes: number;
+            /** Room Generation */
+            room_generation: number;
             /** Score */
             score: number;
             status: components["schemas"]["PraxisStatus"];
