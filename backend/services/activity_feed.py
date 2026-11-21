@@ -271,7 +271,10 @@ def _owns_praxis(character_id: int):
     return or_(
         Praxis.created_by_id == character_id,
         exists().where(
-            and_(PraxisMember.praxis_id == Praxis.id, PraxisMember.character_id == character_id)
+            and_(
+                PraxisMember.praxis_id == Praxis.id,
+                PraxisMember.character_id == character_id,
+            )
         ),
     )
 
@@ -352,7 +355,10 @@ def _completions_query_factory(character_ids_attr: str) -> Callable[[FeedContext
         actor_id = case(
             (Praxis.created_by_id.in_(character_ids), Praxis.created_by_id),
             else_=select(func.min(PraxisMember.character_id))
-            .where(PraxisMember.praxis_id == Praxis.id, PraxisMember.character_id.in_(character_ids))
+            .where(
+                PraxisMember.praxis_id == Praxis.id,
+                PraxisMember.character_id.in_(character_ids),
+            )
             .scalar_subquery(),
         )
         query = (
@@ -374,7 +380,10 @@ def _completions_query_factory(character_ids_attr: str) -> Callable[[FeedContext
                 or_(
                     Praxis.created_by_id.in_(character_ids),
                     exists().where(
-                        and_(PraxisMember.praxis_id == Praxis.id, PraxisMember.character_id.in_(character_ids))
+                        and_(
+                            PraxisMember.praxis_id == Praxis.id,
+                            PraxisMember.character_id.in_(character_ids),
+                        )
                     ),
                 ),
                 Praxis.status == PraxisStatus.submitted,
