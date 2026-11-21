@@ -25,9 +25,6 @@ class TaskOut(WireModel):
     primary_faction_slug: str
     metatask_faction_slug: Optional[str] = None
     created_at: datetime
-    # The proposer's own note to the reviewer, only on their pending proposal
-    # (#3771), so the edit form can prefill it. Never public.
-    notes: Optional[str] = None
     # Active signups (in_progress + pending), as GET /tasks/{id}/signups (#1021).
     # Defaults (here and below) because metatask rows in the praxis seal stack
     # are TaskOut.model_validate()'d on a bare Task (praxis_out.applied_metatasks_for).
@@ -83,6 +80,19 @@ class TaskCreate(WireModel):
     # For the reviewing admin; also used by metatask proposals (same body).
     notes: Optional[str] = Field(None, max_length=MAX_TASK_NOTES)
     task_type: Optional[str] = None
+    metatask_faction_slug: Optional[str] = None
+
+
+class ProposalOut(WireModel):
+    """A proposer's own form fields; ``notes`` is private, so it is not on TaskOut."""
+
+    title: str
+    description: str
+    notes: str
+    point_value: int
+    level_required: int
+    primary_faction_slug: str
+    task_type: TaskType
     metatask_faction_slug: Optional[str] = None
 
 

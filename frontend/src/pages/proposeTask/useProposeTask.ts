@@ -5,7 +5,7 @@
  */
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { editProposal, getTask, proposeTask, type TaskCreate } from "../../api/tasks";
+import { editProposal, getOwnProposal, proposeTask, type TaskCreate } from "../../api/tasks";
 import { proposeMetatask, type MetataskProposal } from "../../api/metatasks";
 import type { FactionOut } from "../../api/factions";
 import { useFactions } from "../../hooks/useFactions";
@@ -123,14 +123,15 @@ export function useProposeTask(editId?: number): ProposeTaskState {
 
   useEffect(() => {
     if (editId === undefined) return;
-    getTask(editId)
+    getOwnProposal(editId)
       .then((task) => {
         const meta = task.task_type === "metatask";
+        const level = task.level_required;
         setIsMetatask(meta);
         setTitle(task.title);
         setDescription(task.description);
-        setNotes(task.notes ?? "");
-        setLevelRequired(task.level_required);
+        setNotes(task.notes);
+        setLevelRequired(level);
         if (meta) {
           setMetaBonusValue(String(task.point_value));
           setFactionSlug(task.metatask_faction_slug ?? UNAFFILIATED_FACTION_SLUG);

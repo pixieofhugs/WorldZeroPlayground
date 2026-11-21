@@ -13,7 +13,7 @@ from dependencies import (
 )
 from models.account import Account
 from models.character import Character
-from schemas.task import TaskCreate, TaskOut, TaskSignupOut
+from schemas.task import ProposalOut, TaskCreate, TaskOut, TaskSignupOut
 from services.auth import get_current_account
 from services.signup_eligibility import gather_signup_facts
 from services.task import (
@@ -23,6 +23,7 @@ from services.task import (
     build_task_out_for_viewer,
     build_task_signup_out,
     edit_proposal,
+    get_own_proposal,
     get_task_for_viewer,
     in_progress_counts_for_tasks,
     list_signups_for_task,
@@ -146,6 +147,15 @@ async def propose_task_route(
     is_admin = await account_has_admin_role(account.id, session)
     task = await propose_task(character, data, session, skip_level_check=is_admin)
     return await build_task_out(task, session)
+
+
+@router.get("/{task_id}/proposal", response_model=ProposalOut)
+async def get_own_proposal_route(
+    task_id: int,
+    character: Character = Depends(get_current_character),
+    session: AsyncSession = Depends(get_db, scope="function"),
+):
+    return await get_own_proposal(task_id, character, session)
 
 
 @router.put("/{task_id}", response_model=TaskOut)

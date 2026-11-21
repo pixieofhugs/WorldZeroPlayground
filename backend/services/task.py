@@ -15,7 +15,7 @@ from models.character import Character
 from models.character_stats import CharacterStats
 from models.praxis import Praxis, PraxisMember, PraxisStatus
 from models.task import Task, TaskStatus, TaskType
-from schemas.task import TaskCreate, TaskOut, TaskSignupOut
+from schemas.task import ProposalOut, TaskCreate, TaskOut, TaskSignupOut
 from seed import ONBOARDING_TASK_SEED_KEY
 from services.albescent_reveal import is_albescent_revealed
 from services.era import (
@@ -149,6 +149,23 @@ async def _own_pending_task(
             409, ErrorCode.task_not_pending, "Only a pending proposal can change."
         )
     return task
+
+
+async def get_own_proposal(
+    task_id: int, character: Character, session: AsyncSession
+) -> ProposalOut:
+    """The proposer's own form fields, notes included, which TaskOut never carries."""
+    task = await _own_pending_task(task_id, character, session)
+    return ProposalOut(
+        title=task.title,
+        description=task.description,
+        notes=task.notes,
+        point_value=task.point_value,
+        level_required=task.level_required,
+        primary_faction_slug=task.primary_faction_slug,
+        task_type=task.task_type,
+        metatask_faction_slug=task.metatask_faction_slug,
+    )
 
 
 async def edit_proposal(
@@ -344,9 +361,6 @@ async def build_task_out_for_viewer(
 
     if viewer is None:
         return base
-
-    if task.created_by_id == viewer.id and task.status == TaskStatus.pending:
-        base.notes = task.notes
 
     if signup_facts is None:
         signup_facts = await gather_signup_facts(viewer, [task.id], session, era)

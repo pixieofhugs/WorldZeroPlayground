@@ -121,7 +121,7 @@ async def test_withdraw_deletes_and_logs_with_the_proposer_as_actor(
 
 
 @pytest.mark.asyncio
-async def test_notes_are_shown_to_the_proposer_alone(
+async def test_proposer_reads_their_proposal_with_notes_and_nobody_else_does(
     client: AsyncClient,
     db_session: AsyncSession,
     proposer,
@@ -133,8 +133,8 @@ async def test_notes_are_shown_to_the_proposer_alone(
     task.notes = "for the mods"
     await db_session.commit()
 
-    mine = await client.get(f"/tasks/{task.id}", headers=auth_headers)
-    theirs = await client.get(f"/tasks/{task.id}", headers=auth_headers2)
+    mine = await client.get(f"/tasks/{task.id}/proposal", headers=auth_headers)
+    theirs = await client.get(f"/tasks/{task.id}/proposal", headers=auth_headers2)
 
     assert mine.json()["notes"] == "for the mods"
-    assert theirs.status_code == 404 or theirs.json()["notes"] is None
+    assert theirs.status_code == 403

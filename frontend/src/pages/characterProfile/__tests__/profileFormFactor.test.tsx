@@ -111,7 +111,6 @@ function makeTask(): TaskOut {
     allowed_modes: ['solo'],
     eligible_for_current_user: true,
     start_here: false,
-    notes: null,
     viewer_faction_multiplier: 1,
   }
 }

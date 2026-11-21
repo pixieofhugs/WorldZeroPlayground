@@ -2113,6 +2113,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tasks/{task_id}/proposal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Own Proposal Route */
+        get: operations["get_own_proposal_route_tasks__task_id__proposal_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tasks/{task_id}/signups": {
         parameters: {
             query?: never;
@@ -4716,6 +4733,27 @@ export interface components {
             /** Value */
             value: number;
         };
+        /**
+         * ProposalOut
+         * @description A proposer's own form fields; ``notes`` is private, so it is not on TaskOut.
+         */
+        ProposalOut: {
+            /** Description */
+            description: string;
+            /** Level Required */
+            level_required: number;
+            /** Metatask Faction Slug */
+            metatask_faction_slug: string | null;
+            /** Notes */
+            notes: string;
+            /** Point Value */
+            point_value: number;
+            /** Primary Faction Slug */
+            primary_faction_slug: string;
+            task_type: components["schemas"]["TaskType"];
+            /** Title */
+            title: string;
+        };
         /** PushKeysIn */
         PushKeysIn: {
             /** Auth */
@@ -5015,8 +5053,6 @@ export interface components {
             level_required: number;
             /** Metatask Faction Slug */
             metatask_faction_slug: string | null;
-            /** Notes */
-            notes: string | null;
             /** Point Value */
             point_value: number;
             /** Primary Faction Slug */
@@ -9360,6 +9396,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CommentOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_own_proposal_route_tasks__task_id__proposal_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                task_id: number;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProposalOut"];
                 };
             };
             /** @description Validation Error */

@@ -60,7 +60,6 @@ export function makeTask(overrides: Partial<TaskOut> = {}): TaskOut {
     eligible_for_current_user: true,
     // #1861: only the onboarding task carries it; override to draw the mark.
     start_here: false,
-    notes: null,
     viewer_faction_multiplier: 1,
     ...overrides,
   }

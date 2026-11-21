@@ -19,6 +19,8 @@ export type TaskStatus = components['schemas']['TaskStatus']
  */
 export type TaskOut = components['schemas']['TaskOut']
 
+export type ProposalOut = components['schemas']['ProposalOut']
+
 export type TaskCreate = components['schemas']['TaskCreate']
 
 /** Absent = `level` (`level_required ASC, point_value DESC`), ascending only (#1364). */
@@ -58,6 +60,11 @@ export async function getTask(id: number): Promise<TaskOut> {
 
 export async function proposeTask(body: TaskCreate): Promise<TaskOut> {
   const { data } = await apiPost('/tasks', { body })
+  return data
+}
+
+export async function getOwnProposal(id: number): Promise<ProposalOut> {
+  const { data } = await apiGet('/tasks/{task_id}/proposal', { params: { path: { task_id: id } } })
   return data
 }
 
