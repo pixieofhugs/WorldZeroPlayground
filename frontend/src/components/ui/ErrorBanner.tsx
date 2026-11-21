@@ -2,11 +2,7 @@ import type { CSSProperties, ReactNode } from "react";
 
 interface ErrorBannerProps {
   message: ReactNode;
-  /**
-   * The skin's alarm INK for its sheet (#1231). Danger hues stay neutral
-   * (ADR-0061); only the ink varies, because `--color-danger` misses AA on every
-   * composer sheet in light.
-   */
+  /** A skin's alarm INK: `--color-danger` misses AA on every composer sheet in light (ADR-0061). */
   style?: CSSProperties;
   className?: string;
 }
