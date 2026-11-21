@@ -119,7 +119,8 @@ async def forfeit_duels_for_character(
 
     if rescore:
         era_row = await get_current_era_row(session)
-        for rescored_id in winner_ids | {character_id}:
+        # Ascending: votes lock stats in id order; another order can deadlock.
+        for rescored_id in sorted(winner_ids | {character_id}):
             await recalculate_character_stats(
                 rescored_id, session, era, era_row=era_row
             )
