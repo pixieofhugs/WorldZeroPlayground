@@ -1,6 +1,7 @@
 """The population dial: overlay, admin API, mod log, feed and cache stamp (#3656)."""
 
 import asyncio
+from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 
 import pytest
@@ -10,9 +11,13 @@ from sqlalchemy import select
 from errors import ErrorCode
 from faction_slugs import real_faction_slugs
 from game_config import CURRENT_ERA, ERA_1, era_config_for_key
+from models.character import Character
+from models.character_stats import CharacterStats
 from models.invitation_letter import InvitationLetter
 from models.mod_action import ModAction
 from models.population_dial import PopulationDial
+from services.character import can_start_as_albescent
+from services.character_stats import deliver_invitations_to_all
 from services.collab_consensus import _check_post_cooldown
 from services.era import (
     apply_dial_sides,
@@ -243,3 +248,39 @@ async def test_tightening_invitation_delivers_nothing(
     await _owed_player(db_session, era, account)
     await set_dials({"invitation": "full"}, account.id, db_session)
     assert await _letters(db_session) == []
+
+
+@pytest.mark.asyncio
+async def test_delivery_that_completes_coverage_unlocks_albescent(
+    db_session, account, era, some_faction
+):
+    rival = await _owed_player(db_session, era, account)
+    lenient = replace(
+        CURRENT_ERA,
+        secret_faction_join_level=1,
+        invitation_task_threshold=1,
+        invitation_point_threshold=10,
+    )
+    author = await db_session.scalar(
+        select(Character).where(Character.username == "earner")
+    )
+    for slug in real_faction_slugs(lenient):
+        if slug not in (author.faction_slug, rival):
+            db_session.add(
+                InvitationLetter(
+                    character_id=author.id, faction_slug=slug, era_id=era.id
+                )
+            )
+    stats = await db_session.scalar(
+        select(CharacterStats).where(
+            CharacterStats.character_id == author.id, CharacterStats.era_id == era.id
+        )
+    )
+    stats.level = 1
+    await db_session.commit()
+    assert await can_start_as_albescent(account.id, db_session) is False
+
+    await deliver_invitations_to_all(db_session, lenient)
+    await db_session.commit()
+
+    assert await can_start_as_albescent(account.id, db_session) is True

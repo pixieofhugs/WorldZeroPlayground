@@ -166,6 +166,7 @@ async def deliver_invitations_to_all(
         await deliver_earned_invitations(
             character, praxes, contributions, session, era, era_row
         )
+        await stamp_albescent_unlock(character, era_row.id, session, era)
 
 
 async def _scored_praxes(
