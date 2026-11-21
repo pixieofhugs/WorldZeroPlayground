@@ -317,11 +317,18 @@ async def moderate_comment(
     """Admin moderation: hidden (reversible hold) / deleted (tombstone) / visible."""
     comment = await get_comment(comment_id, session)
     try:
-        comment.moderation_status = ModerationStatus(new_status)
+        status = ModerationStatus(new_status)
     except ValueError:
         raise HTTPException(
             status_code=422, detail=f"Invalid moderation status: {new_status}"
         )
+    if comment.moderation_status == ModerationStatus.deleted:
+        raise_coded(
+            409,
+            ErrorCode.comment_already_deleted,
+            "That comment was already deleted. Nothing was changed.",
+        )
+    comment.moderation_status = status
     removed = comment.moderation_status in (
         ModerationStatus.hidden,
         ModerationStatus.deleted,
