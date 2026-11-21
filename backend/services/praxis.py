@@ -70,7 +70,11 @@ from services.praxis_duel import (
     get_duel_for_praxis,
     maybe_settle_duel,
 )
-from services.praxis_room import close_member_sockets, merge_client_state
+from services.praxis_room import (
+    close_member_sockets,
+    loaded_room_values,
+    merge_client_state,
+)
 from services.praxis_visibility import (
     duel_side_hidden_condition,
     praxis_membership_condition,
@@ -1320,7 +1324,8 @@ async def submit_praxis(
     praxis = await get_praxis_for_member(praxis_id, character_id, "submit", session)
 
     # The sealed text must hold every edit the browser had; sockets give no ack (#3611).
-    merged = {}
+    # No doc_state: the loaded room may still hold edits inside the flush window.
+    merged = loaded_room_values(praxis_id)
     if doc_state is not None:
         # A live praxis has no room (ADR-0073); the reopen is its one road back.
         await collab_consensus.settle_if_window_lapsed(praxis, session, era)

@@ -1054,6 +1054,29 @@ async def test_a_submit_after_unflushed_socket_edits_cancels_the_proposal(
         assert approved[character.id] and not approved[character2.id]
 
 
+async def test_an_approve_without_doc_state_cancels_on_unflushed_socket_edits(
+    db_session, collab, account, character, character2, monkeypatch
+) -> None:
+    """#3746: an API client sends no doc_state; the loaded room is compared anyway."""
+    async with running_rooms(
+        db_session, monkeypatch, flush_debounce_seconds=30
+    ) as rooms:
+        socket = await rooms.open(collab.id, account.id)
+        async with client_doc(socket) as doc:
+            await _wait_for_body(doc, SEED_BODY, "the editor")
+            await rooms.submit(collab.id, character2.id)  # B proposes
+            doc.get(ROOM_BODY_KEY, type=Text).insert(0, "unseen ")
+            await _wait_for_body(
+                rooms.room_doc(collab.id), f"unseen {SEED_BODY}", "the room"
+            )
+
+            result = await rooms.submit(collab.id, character.id)
+
+        assert result.status == PraxisStatus.pending
+        approved = await _approved(rooms, collab.id)
+        assert approved[character.id] and not approved[character2.id]
+
+
 async def test_a_submit_that_changes_nothing_still_approves(
     db_session, collab, account2, character, character2, monkeypatch
 ) -> None:
