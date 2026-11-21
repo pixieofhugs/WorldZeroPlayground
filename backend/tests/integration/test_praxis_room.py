@@ -9,6 +9,7 @@ import base64
 import io
 import linecache
 from contextlib import asynccontextmanager, suppress
+from datetime import datetime, timezone
 from typing import Any, AsyncIterator, Callable
 
 import pytest
@@ -31,10 +32,13 @@ import services.praxis_room as praxis_room
 from config import settings
 from main import app as fastapi_app
 from models.character import Character
+from models.character_stats import CharacterStats
+from models.duel import Duel, DuelStatus
 from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.praxis_room import PraxisRoomUpdate
 from models.task import Task
 from services.auth import create_jwt
+from services.character_stats import recalculate_character_stats
 from services.praxis import (
     kick_member,
     leave_praxis,
@@ -51,6 +55,7 @@ from services.praxis_room import (
     acquire_single_instance_lock,
     room_name_for,
 )
+from tests.integration.factories import cast_vote, make_solo_praxis
 
 SEED_BODY = "The seeded body of one praxis."
 ALLOWED_ORIGIN = settings.cors_origins[0]
@@ -1423,6 +1428,48 @@ async def test_a_doc_state_on_a_live_praxis_is_refused_and_opens_no_room(
     await db_session.refresh(live)
     assert (live.title, live.body_text) == ("Honest proof", SEED_BODY)
     assert live.status == PraxisStatus.submitted
+
+
+async def test_a_refused_doc_state_leaves_a_voted_duel_score_unchanged(
+    db_session, active_task, character, character2, character3, monkeypatch
+) -> None:
+    live = await make_solo_praxis(
+        db_session, active_task, character, body_text=SEED_BODY
+    )
+    opponent = await make_solo_praxis(db_session, active_task, character2)
+    await cast_vote(db_session, live, character3, 4)
+    db_session.add(
+        Duel(
+            task_id=active_task.id,
+            challenger_praxis_id=live.id,
+            opponent_character_id=character2.id,
+            opponent_praxis_id=opponent.id,
+            status=DuelStatus.settled,
+            accepted_at=datetime.now(timezone.utc),
+        )
+    )
+    await recalculate_character_stats(character.id, db_session)
+    await db_session.commit()
+
+    async def score() -> int:
+        stats = await db_session.scalar(
+            select(CharacterStats).where(CharacterStats.character_id == character.id)
+        )
+        await db_session.refresh(stats)
+        return stats.score
+
+    before = await score()
+    assert before > 0
+    rewrite = Doc()
+    rewrite.get(ROOM_BODY_KEY, type=Text).insert(0, "EDITED AFTER VOTING")
+    state = base64.b64encode(rewrite.get_update()).decode()
+    async with running_rooms(db_session, monkeypatch) as rooms:
+        with pytest.raises(HTTPException) as refused:
+            await rooms.submit(live.id, character.id, doc_state=state)
+        assert refused.value.status_code == 409
+    assert await score() == before
+    await recalculate_character_stats(character.id, db_session)
+    assert await score() == before
 
 
 async def test_a_live_praxis_refuses_the_room_handshake(

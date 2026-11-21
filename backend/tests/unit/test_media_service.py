@@ -660,3 +660,14 @@ def test_display_copy_keeps_the_icc_profile():
     )
     with Image.open(io.BytesIO(media.make_display_bytes(tagged.getvalue()))) as out:
         assert out.info.get("icc_profile") == srgb
+
+
+def test_cmyk_display_copy_drops_the_cmyk_profile():
+    buffer = io.BytesIO()
+    Image.new("CMYK", (400, 400), (0, 200, 200, 0)).save(
+        buffer, format="JPEG", icc_profile=b"cmyk-profile"
+    )
+    out = media.make_display_bytes(buffer.getvalue())
+    assert out is not None
+    with Image.open(io.BytesIO(out)) as copy:
+        assert copy.mode == "RGB" and "icc_profile" not in copy.info

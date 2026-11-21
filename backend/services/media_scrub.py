@@ -38,6 +38,15 @@ class ScrubReport:
     skipped: list[str] = field(default_factory=list)
 
 
+def merge_held_report(report: ScrubReport, held: ScrubReport) -> None:
+    """Fold a quarantine scrub into the live one, every path tagged ``[quarantine]``."""
+    report.scanned += held.scanned
+    report.already_clean += held.already_clean
+    report.cleaned += [f"[quarantine] {path}" for path in held.cleaned]
+    report.skipped += [f"[quarantine] {path}" for path in held.skipped]
+    report.failed += [(f"[quarantine] {path}", why) for path, why in held.failed]
+
+
 #: Image extensions _strip_image cannot keep (it outputs JPEG): upload renames
 #: these to ``.jpg``, so the scrub does too instead of writing JPEG under them.
 RENAME_EXTENSIONS = tuple(
@@ -228,5 +237,5 @@ async def _sweep_unclaimed_heic(
             report.cleaned.append(f"{scanned.relative_path} (leftover, removed)")
         else:
             report.failed.append(
-                (scanned.relative_path, "unreferenced; run sweep_orphan_media.py")
+                (scanned.relative_path, "unreferenced; delete the file by hand")
             )

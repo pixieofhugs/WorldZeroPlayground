@@ -3,16 +3,14 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from models.account import Account
 from models.character import Character
-from models.character_stats import CharacterStats
 from models.era import Era
 from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.relationship import Relationship, RelationshipType
 from models.task import Task
 from services.auth import create_jwt
 from tests.integration.conftest import CURRENT_ERA_VOTE_LEVEL
-from tests.integration.factories import DEFAULT_FACTION_SLUG
+from tests.integration.factories import make_character
 
 
 async def _items(
@@ -141,13 +139,13 @@ async def test_two_friends_on_one_collab_give_one_completion_card(
     character3: Character,
     active_task: Task,
     auth_headers: dict,
+    era: Era,
 ):
+    creator = await make_character(db_session, era, username="strangercreator")
     await _befriend(
         db_session, character, [character2, character3], RelationshipType.friend
     )
-    collab = await _collab(
-        db_session, active_task, character2, [character2, character3]
-    )
+    collab = await _collab(db_session, active_task, creator, [character2, character3])
 
     cards = await _items(client, auth_headers, "friend_completion", "friends")
     assert [card["item_key"] for card in cards] == [f"friend_completion:{collab.id}"]
@@ -166,23 +164,8 @@ async def test_creator_and_two_members_each_get_one_vote_card_and_badge_matches_
     auth_headers3: dict,
     era: Era,
 ):
-    voter_account = Account(email="voter@example.com")
-    db_session.add(voter_account)
-    await db_session.flush()
-    voter = Character(
-        account_id=voter_account.id,
-        username="outsidevoter",
-        peak_level=CURRENT_ERA_VOTE_LEVEL,
-        display_name="Outside Voter",
-        faction_slug=DEFAULT_FACTION_SLUG,
-    )
-    db_session.add(voter)
-    await db_session.flush()
-    db_session.add(
-        CharacterStats(
-            character_id=voter.id, era_id=era.id, score=0, level=0,
-            votes_spent_this_era=0,
-        )
+    voter = await make_character(
+        db_session, era, username="outsidevoter", level=CURRENT_ERA_VOTE_LEVEL
     )
     await db_session.commit()
     collab = await _collab(
@@ -191,7 +174,7 @@ async def test_creator_and_two_members_each_get_one_vote_card_and_badge_matches_
     vote = await client.post(
         f"/praxes/{collab.id}/vote",
         json={"value": 4},
-        headers={"Authorization": f"Bearer {create_jwt(voter_account.id)}"},
+        headers={"Authorization": f"Bearer {create_jwt(voter.account_id)}"},
     )
     assert vote.status_code == 200, vote.text
 

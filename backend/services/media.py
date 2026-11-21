@@ -112,6 +112,7 @@ def make_display_bytes(contents: bytes) -> bytes | None:
     image.thumbnail((DISPLAY_MAX_SIDE, DISPLAY_MAX_SIDE), Image.LANCZOS)
     if image.mode not in ("RGB", "RGBA", "L"):
         image = image.convert("RGBA" if "transparency" in image.info else "RGB")
+        icc = None  # the source profile (e.g. CMYK) no longer describes these pixels
     image.info = {}
     buffer = io.BytesIO()
     image.save(buffer, format="WEBP", quality=DISPLAY_QUALITY, icc_profile=icc)
