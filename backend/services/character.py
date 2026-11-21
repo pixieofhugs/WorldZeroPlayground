@@ -618,9 +618,9 @@ async def soft_delete_character(
     character.avatar_url = ""
 
     # Deferred: services.duel -> character_stats -> this module.
-    from services.duel import forfeit_settled_duels_for_character
+    from services.duel import forfeit_duels_for_character
 
-    await forfeit_settled_duels_for_character(character_id, session, era)
+    await forfeit_duels_for_character(character_id, session, era)
 
     # No-op for remote URLs or another character's file (player-written column).
     delete_stored_avatar(erased_avatar_url, character.id)

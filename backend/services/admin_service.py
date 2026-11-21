@@ -51,7 +51,7 @@ from services.character_stats import (
     recalculate_for_account_votes,
 )
 from services.era_tasks import sync_era_tasks, tasks_to_reactivate
-from services.duel import forfeit_settled_duels_for_character
+from services.duel import forfeit_duels_for_character
 from services.mod_log import log_mod_action
 from services.praxis import moderate_praxis
 from services.era import (
@@ -377,8 +377,8 @@ async def apply_ban(
 ) -> None:
     """Ban or un-ban a character on behalf of a moderator (#1577).
 
-    Banning forfeits settled duels (ADR-0011 §Forfeit), via the same function
-    as self-delete. Un-banning does not un-forfeit: the forfeit is sticky.
+    Banning forfeits the character's duels (ADR-0011 §Forfeit), via the same
+    function as self-delete and suspension. Un-banning does not un-forfeit.
 
     Un-banning refuses a departed life: ``departed_at`` is written only by the
     player's own ``soft_delete_character``; ``status`` alone can't tell them apart.
@@ -395,7 +395,7 @@ async def apply_ban(
 
     if banned:
         character.status = CharacterStatus.banned
-        await forfeit_settled_duels_for_character(character.id, session, era)
+        await forfeit_duels_for_character(character.id, session, era)
     else:
         character.status = CharacterStatus.active
 
@@ -584,6 +584,12 @@ async def suspend_account(
         raise_coded(409, ErrorCode.account_deleted, "Account was deleted.")
     account.status = AccountStatus.suspended if suspended else AccountStatus.active
     await session.flush()
+    if suspended:
+        # Same as a ban; lifting the suspension does not undo it (#3766).
+        for character_id in (await session.scalars(
+            select(Character.id).where(Character.account_id == account_id)
+        )).all():
+            await forfeit_duels_for_character(character_id, session, era)
     await log_mod_action(
         session,
         actor_id,

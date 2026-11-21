@@ -242,8 +242,8 @@ describe('the type facet', () => {
     expect(typeFacet({}, [], () => {}).label).toBe('Type')
   })
 
-  it('covers all eighteen feed types', () => {
-    expect(Object.keys(FEED_TYPE_LABEL_KEY)).toHaveLength(18)
+  it('covers all nineteen feed types', () => {
+    expect(Object.keys(FEED_TYPE_LABEL_KEY)).toHaveLength(19)
   })
 
   it('gives the two comment types DISTINCT labels', () => {

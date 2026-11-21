@@ -55,6 +55,7 @@ from schemas.activity_feed import (
     CommentPayload,
     CompletionPayload,
     DuelChallengePayload,
+    DuelForfeitedPayload,
     EraAnnouncementPayload,
     RulesChangeEntry,
     RulesChangePayload,
@@ -118,6 +119,7 @@ FEED_ITEM_TYPE_ERA_ANNOUNCEMENT = "era_announcement"
 FEED_ITEM_TYPE_RULES_CHANGE = "rules_change"
 FEED_ITEM_TYPE_COLLAB_INVITE = "collab_invite"
 FEED_ITEM_TYPE_DUEL_CHALLENGE = "duel_challenge"
+FEED_ITEM_TYPE_DUEL_FORFEITED = "duel_forfeited"
 FEED_ITEM_TYPE_FRIEND_SIGNUP = "friend_signup"
 FEED_ITEM_TYPE_INVITATION_LETTER = "invitation_letter"
 FEED_ITEM_TYPE_FRIEND_DEFECTION = "friend_defection"
@@ -714,6 +716,61 @@ def _duel_challenge_item(row: Any) -> ActivityFeedItemDC:
     )
 
 
+def _duel_forfeited_query(ctx: FeedContext) -> Select:
+    """Duels a ban/suspension ended on the viewer's behalf (#3766)."""
+    forfeiter = aliased(Character)
+    challenger_praxis = aliased(Praxis)
+    query = (
+        select(
+            Duel.id,
+            Duel.forfeited_at,
+            Task.title.label("task_title"),
+            Task.primary_faction_slug.label("task_faction_slug"),
+            case(
+                (
+                    Duel.opponent_character_id == ctx.character_id,
+                    Duel.opponent_praxis_id,
+                ),
+                else_=Duel.challenger_praxis_id,
+            ).label("praxis_id"),
+            forfeiter.display_name.label("actor_display_name"),
+            forfeiter.faction_slug.label("actor_faction_slug"),
+            forfeiter.avatar_url.label("actor_avatar_url"),
+        )
+        .join(Task, Duel.task_id == Task.id)
+        .join(forfeiter, Duel.forfeited_by_character_id == forfeiter.id)
+        .join(challenger_praxis, Duel.challenger_praxis_id == challenger_praxis.id)
+        .where(
+            Duel.forfeited_at.is_not(None),
+            Duel.forfeited_by_character_id != ctx.character_id,
+            or_(
+                Duel.opponent_character_id == ctx.character_id,
+                challenger_praxis.created_by_id == ctx.character_id,
+            ),
+        )
+    )
+    if ctx.before is not None:
+        query = query.where(Duel.forfeited_at < ctx.before)
+    return query.order_by(Duel.forfeited_at.desc()).limit(SUB_QUERY_LIMIT)
+
+
+def _duel_forfeited_item(row: Any) -> ActivityFeedItemDC:
+    return ActivityFeedItemDC(
+        type=FEED_ITEM_TYPE_DUEL_FORFEITED,
+        item_key=build_item_key(FEED_ITEM_TYPE_DUEL_FORFEITED, row.id),
+        timestamp=row.forfeited_at,
+        actor_display_name=row.actor_display_name,
+        actor_faction_slug=row.actor_faction_slug,
+        actor_avatar_url=row.actor_avatar_url,
+        payload=DuelForfeitedPayload(
+            duel_id=row.id,
+            praxis_id=row.praxis_id,
+            task_title=row.task_title,
+            task_faction_slug=row.task_faction_slug,
+        ),
+    )
+
+
 def _friend_signups_query(ctx: FeedContext) -> Select:
     """Friends who joined praxes on tasks the current character is also doing."""
     query = (
@@ -1219,6 +1276,14 @@ FEED_SOURCES: tuple[FeedSource, ...] = (
         needs=frozenset(),
         query=_duel_challenges_query,
         to_item=_duel_challenge_item,
+        source_id_column=Duel.id,
+    ),
+    FeedSource(
+        item_type=FEED_ITEM_TYPE_DUEL_FORFEITED,
+        filters=frozenset({FILTER_ALL, FILTER_YOUR_STUFF}),
+        needs=frozenset(),
+        query=_duel_forfeited_query,
+        to_item=_duel_forfeited_item,
         source_id_column=Duel.id,
     ),
     FeedSource(

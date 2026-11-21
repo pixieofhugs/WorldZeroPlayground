@@ -27,6 +27,7 @@ const KICKER_KEY = {
   rules_change: 'feed:kicker.rules_change',
   invitation_letter: 'feed:kicker.invitation_letter',
   duel_challenge: 'feed:kicker.duel_challenge',
+  duel_forfeited: 'feed:kicker.duel_forfeited',
   collab_invite: 'feed:kicker.collab_invite',
   comment_mention: 'feed:kicker.comment_mention',
   comment_on_mine: 'feed:kicker.comment_on_mine',

@@ -106,6 +106,15 @@ class DuelChallengePayload(FeedPayloadBase):
     duel_status: str
 
 
+class DuelForfeitedPayload(FeedPayloadBase):
+    """The viewer's duel ended because the other player was locked out (#3766)."""
+
+    duel_id: int
+    praxis_id: Optional[int]
+    task_title: str
+    task_faction_slug: str
+
+
 class FriendSignupPayload(FeedPayloadBase):
     """A friend joined a task the viewer is also doing."""
 
@@ -197,6 +206,7 @@ FeedPayload = Union[
     RulesChangePayload,
     CollabInvitePayload,
     DuelChallengePayload,
+    DuelForfeitedPayload,
     FriendSignupPayload,
     InvitationLetterPayload,
     FriendDefectionPayload,
@@ -292,6 +302,11 @@ class DuelChallengeItem(FeedItemBase):
     payload: DuelChallengePayload
 
 
+class DuelForfeitedItem(FeedItemBase):
+    type: Literal["duel_forfeited"]
+    payload: DuelForfeitedPayload
+
+
 class FriendSignupItem(FeedItemBase):
     type: Literal["friend_signup"]
     payload: FriendSignupPayload
@@ -352,6 +367,7 @@ ActivityFeedItem = Annotated[
         RulesChangeItem,
         CollabInviteItem,
         DuelChallengeItem,
+        DuelForfeitedItem,
         FriendSignupItem,
         InvitationLetterItem,
         FriendDefectionItem,

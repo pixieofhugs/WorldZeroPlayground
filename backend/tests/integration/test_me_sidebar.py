@@ -91,7 +91,8 @@ async def test_sidebar_returns_all_three_panels(
 #: SELECTs for one rail read on a character with no activity (measured). One
 #: more fan-out, or a badge count the rail never draws, breaks the exact pin.
 #: +3 (#3456): collab, duel and letter now also fetch their answered rows.
-SIDEBAR_SELECT_BUDGET = 25
+#: +1 (#3766): duel_forfeited.
+SIDEBAR_SELECT_BUDGET = 26
 
 
 @pytest.mark.asyncio

@@ -30,6 +30,7 @@
                   "comment_mention": "#/components/schemas/CommentMentionItem",
                   "comment_on_mine": "#/components/schemas/CommentOnMineItem",
                   "duel_challenge": "#/components/schemas/DuelChallengeItem",
+                  "duel_forfeited": "#/components/schemas/DuelForfeitedItem",
                   "era_announcement": "#/components/schemas/EraAnnouncementItem",
                   "foe_completion": "#/components/schemas/FoeCompletionItem",
                   "foe_taunt": "#/components/schemas/FoeTauntItem",
@@ -75,6 +76,9 @@
                 },
                 {
                   "$ref": "#/components/schemas/DuelChallengeItem"
+                },
+                {
+                  "$ref": "#/components/schemas/DuelForfeitedItem"
                 },
                 {
                   "$ref": "#/components/schemas/FriendSignupItem"
@@ -2189,6 +2193,122 @@
           "opponent_final_points"
         ],
         "title": "DuelDetailOut",
+        "type": "object"
+      },
+      "DuelForfeitedItem": {
+        "properties": {
+          "actor_avatar_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Avatar Url"
+          },
+          "actor_display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Display Name"
+          },
+          "actor_faction_slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Faction Slug"
+          },
+          "context_faction_slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Card frame faction: actor's, else task's, else None (faction UI spec §2).\n\n``getattr`` because only some payloads carry a task.",
+            "readOnly": true,
+            "title": "Context Faction Slug"
+          },
+          "item_key": {
+            "title": "Item Key",
+            "type": "string"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/DuelForfeitedPayload"
+          },
+          "timestamp": {
+            "format": "date-time",
+            "title": "Timestamp",
+            "type": "string"
+          },
+          "type": {
+            "const": "duel_forfeited",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "item_key",
+          "timestamp",
+          "actor_display_name",
+          "actor_faction_slug",
+          "actor_avatar_url",
+          "payload",
+          "context_faction_slug"
+        ],
+        "title": "DuelForfeitedItem",
+        "type": "object"
+      },
+      "DuelForfeitedPayload": {
+        "additionalProperties": false,
+        "description": "The viewer's duel ended because the other player was locked out (#3766).",
+        "properties": {
+          "duel_id": {
+            "title": "Duel Id",
+            "type": "integer"
+          },
+          "praxis_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Praxis Id"
+          },
+          "task_faction_slug": {
+            "title": "Task Faction Slug",
+            "type": "string"
+          },
+          "task_title": {
+            "title": "Task Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "duel_id",
+          "praxis_id",
+          "task_title",
+          "task_faction_slug"
+        ],
+        "title": "DuelForfeitedPayload",
         "type": "object"
       },
       "DuelOut": {
@@ -6603,6 +6723,7 @@
                   "comment_mention": "#/components/schemas/CommentMentionItem",
                   "comment_on_mine": "#/components/schemas/CommentOnMineItem",
                   "duel_challenge": "#/components/schemas/DuelChallengeItem",
+                  "duel_forfeited": "#/components/schemas/DuelForfeitedItem",
                   "era_announcement": "#/components/schemas/EraAnnouncementItem",
                   "foe_completion": "#/components/schemas/FoeCompletionItem",
                   "foe_taunt": "#/components/schemas/FoeTauntItem",
@@ -6648,6 +6769,9 @@
                 },
                 {
                   "$ref": "#/components/schemas/DuelChallengeItem"
+                },
+                {
+                  "$ref": "#/components/schemas/DuelForfeitedItem"
                 },
                 {
                   "$ref": "#/components/schemas/FriendSignupItem"
