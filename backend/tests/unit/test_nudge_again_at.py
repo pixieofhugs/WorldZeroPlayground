@@ -1,4 +1,4 @@
-"""``nudge_again_at`` is the one place the cooldown length leaves the backend (#3631)."""
+"""``nudge_again_at`` is where the cooldown length leaves the backend."""
 
 from datetime import datetime, timezone
 
