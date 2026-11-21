@@ -49,6 +49,18 @@ def meets_task_level(
     return character_level + level_reach >= task.level_required
 
 
+def task_status_closed(task: Task, character: Character, era: EraConfig = CURRENT_ERA) -> bool:
+    """Whether ``task``'s status bars new praxis from ``character``."""
+    # No faction allowance can reopen a deleted task (#3305).
+    if task.status == TaskStatus.deleted:
+        return True
+    if task.status == TaskStatus.retired:
+        return character.faction_slug not in era.allow_praxis_on_retired_task_factions
+    if task.status == TaskStatus.pending:
+        return character.faction_slug not in era.allow_praxis_on_pending_task_factions
+    return False
+
+
 #: Sign-up is open although the viewer is already on the task (Double Dipper).
 #: Derived in :func:`signup_reason`, never from a slug (#1497).
 SIGNUP_REASON_MULTI_MEMBERSHIP = "multi_membership"
@@ -168,12 +180,7 @@ async def evaluate_signup(
     if not meets_task_level(stats.level, task, level_reach):
         return SignupEligibility(False, SignupDenialReason.below_level)
 
-    # No faction allowance can reopen a deleted task (#3305).
-    if task.status == TaskStatus.deleted:
-        return SignupEligibility(False, SignupDenialReason.task_status_closed)
-    if task.status == TaskStatus.retired and character.faction_slug not in era.allow_praxis_on_retired_task_factions:
-        return SignupEligibility(False, SignupDenialReason.task_status_closed)
-    if task.status == TaskStatus.pending and character.faction_slug not in era.allow_praxis_on_pending_task_factions:
+    if task_status_closed(task, character, era):
         return SignupEligibility(False, SignupDenialReason.task_status_closed)
 
     if task.id in facts.active_member_task_ids:
