@@ -47,7 +47,7 @@ export default function MobileTabBar() {
     <>
       <span className="tabbar__you">
         {character ? <FactionAvatar character={character} size={24} badge={false} /> : <span className="tabbar__guest" />}
-        <PendingBadge count={pending} className="tabbar__badge absolute" />
+        <PendingBadge count={pending} className="tabbar__badge" />
       </span>
       {youLabel}
     </>
