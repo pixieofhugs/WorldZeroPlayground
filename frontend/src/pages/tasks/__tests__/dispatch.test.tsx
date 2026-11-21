@@ -112,21 +112,19 @@ const SIGNUP = i18n.t('feed:taskCard.signup')
 const COUNT = i18n.t('tasks:listPage.count', { count: 0 })
 
 describe('Tasks form-factor dispatch', () => {
-  it('renders the Default mobile browse skin on mobile', () => {
-    dispatch.formFactor = 'mobile'
+  it.each(['mobile', 'desktop'] as const)('renders one page, with the shared title, on %s', (formFactor) => {
+    dispatch.formFactor = formFactor
     state.current = CANNED
-    expect(html()).toContain('mobile-tasks-browse')
-  })
-
-  it('renders the existing desktop list on desktop', () => {
-    dispatch.formFactor = 'desktop'
-    state.current = CANNED
-    const out = html()
-    expect(out, 'no mobile skin').not.toContain('mobile-tasks-browse')
     // `PageTitle`'s underline, not the word "Tasks": the title is per-letter
     // spans (Style Guide §7), and a bare "Tasks" matches other chrome.
-    expect(out, 'desktop page title').toContain(
-      'border-bottom:4px solid var(--faction-default-stop-1)',
+    expect(html()).toContain('border-bottom:4px solid var(--faction-default-stop-1)')
+  })
+
+  it.each(['mobile', 'desktop'] as const)('load error says try refreshing on %s', (formFactor) => {
+    dispatch.formFactor = formFactor
+    state.current = { ...CANNED, error: new Error('boom') }
+    expect(text().replace('&#x27;', "'")).toContain(
+      `${i18n.t('tasks:listPage.loadError')} ${i18n.t('common:states.tryRefreshing')}`,
     )
   })
 
@@ -317,34 +315,5 @@ describe('the task rails', () => {
     expect(out, 'a default rail is not an applied filter').not.toContain(
       'filter-bar__applied',
     )
-  })
-})
-
-/**
- * #2763: below 768px a card fills its column (`width: 100%`), so `items-center`
- * would shrink it to its content. Both arms must stretch.
- */
-describe('the mobile results column stretches its cards (#2763)', () => {
-  function resultsColumnClass(): string {
-    const m = /class="([^"]*)"[^>]*data-testid="mobile-tasks-results"/.exec(html())
-    if (m === null) throw new Error('mobile results column was not rendered')
-    return m[1]
-  }
-
-  it('lets a task card fill the column instead of centring it', () => {
-    dispatch.formFactor = 'mobile'
-    state.current = { ...CANNED, user: VIEWER, tasks: [TASK] }
-    expect(resultsColumnClass()).not.toContain('items-center')
-  })
-
-  it('leaves the metatask seal stack full-bleed', () => {
-    dispatch.formFactor = 'mobile'
-    state.current = {
-      ...CANNED,
-      user: VIEWER,
-      taskType: 'metatask',
-      tasks: [aTask({ id: 91, task_type: 'metatask', metatask_faction_slug: 'coven' })],
-    }
-    expect(resultsColumnClass()).not.toContain('items-center')
   })
 })

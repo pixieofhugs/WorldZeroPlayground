@@ -2,27 +2,15 @@ import { useTranslation } from 'react-i18next'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import PraxisCard from '../components/praxisCard/PraxisCard'
 import PageTitle from '../components/ui/PageTitle'
-import { extractError } from '../utils/errors'
-import { useFormFactor } from '../hooks/useFormFactor'
-import { usePraxes, type PraxesFeedState } from './praxes/usePraxes'
+import { usePraxes } from './praxes/usePraxes'
 import PraxisFilterBar from './praxes/PraxisFilterBar'
 import PraxisFeedEmpty from './praxes/PraxisFeedEmpty'
-import MobilePraxisFeed from './praxes/MobilePraxisFeed'
 
-/** Praxis feed: one `usePraxes()` fetch (#644), desktop grid or mobile stream (#499). */
+/** Praxis feed: one `usePraxes()` fetch (#644), one responsive page (#499). */
 export default function Praxes() {
   const { t } = useTranslation('praxis')
   useDocumentTitle(t('listPage.title'))
-  const formFactor = useFormFactor()
   const state = usePraxes()
-
-  if (formFactor === 'mobile') return <MobilePraxisFeed state={state} />
-
-  return <DesktopPraxes state={state} />
-}
-
-function DesktopPraxes({ state }: { state: PraxesFeedState }) {
-  const { t } = useTranslation('praxis')
   const { t: tc } = useTranslation('common')
   const {
     items,
@@ -59,7 +47,7 @@ function DesktopPraxes({ state }: { state: PraxesFeedState }) {
         <p className="font-body text-muted">{t('listPage.loading')}</p>
       ) : error ? (
         <p className="font-body content-text danger-text border-2 danger-edge px-3 py-2">
-          {extractError(error, "Couldn't load praxes.")}{' '}
+          {t('listPage.loadError')}{' '}
           <button onClick={() => window.location.reload()} className="underline">{tc('states.tryRefreshing')}</button>
         </p>
       ) : isEmpty ? (
@@ -80,7 +68,7 @@ function DesktopPraxes({ state }: { state: PraxesFeedState }) {
               <button
                 type="button"
                 onClick={loadMore}
-                className="font-body uppercase"
+                className="font-body uppercase w-full md:w-auto"
                 style={{
                   fontSize: 'var(--text-md)',
                   letterSpacing: '0.1em',

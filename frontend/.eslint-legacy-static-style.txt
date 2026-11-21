@@ -243,7 +243,6 @@ src/pages/players/DesktopPlayers.tsx
 src/pages/players/MobilePlayers.tsx
 src/pages/players/ScoreToggle.tsx
 src/pages/players/SectionHeading.tsx
-src/pages/praxes/MobilePraxisFeed.tsx
 src/pages/praxisDetail/DuelCard.tsx
 src/pages/praxisDetail/archetypes/CovenPraxisDetail.tsx
 src/pages/praxisDetail/archetypes/DefaultPraxisDetail.tsx
@@ -281,5 +280,4 @@ src/pages/taskDetail/archetypes/UaTaskDetail.tsx
 src/pages/taskDetail/archetypes/WowTaskDetail.tsx
 src/pages/taskDetail/archetypes/shared.tsx
 src/pages/tasks/ProposeTaskLink.tsx
-src/pages/tasks/mobileArchetypes/DefaultTasks.tsx
 src/pages/updates/RequestsQueue.tsx
