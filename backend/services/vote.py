@@ -18,6 +18,7 @@ from models.praxis import (
     PraxisInvite,
     PraxisInviteStatus,
     PraxisMember,
+    PraxisStatus,
 )
 from models.vote import Vote
 from services.character_stats import recalculate_members_stats
@@ -49,10 +50,19 @@ async def cast_vote_on_praxis(
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
 ) -> VoteCast:
-    """Cast or update a vote on any praxis (duel sides are solo praxes); 404 if missing
-    or hidden."""
+    """Cast or update a vote on any praxis (duel sides are solo praxes); one 404 for
+    missing, hidden, unsubmitted or not-yours-to-see, so nothing leaks."""
+    # Local import: services.praxis imports this module at load.
+    from services.praxis import can_view_praxis
+
     praxis = await session.get(Praxis, praxis_id)
-    if praxis is None or praxis.moderation_status == ModerationStatus.hidden:
+    # Hidden stays its own test: can_view_praxis admits admins and members to it.
+    if (
+        praxis is None
+        or praxis.moderation_status == ModerationStatus.hidden
+        or praxis.status != PraxisStatus.submitted
+        or not await can_view_praxis(voter, praxis, session)
+    ):
         raise HTTPException(status_code=404, detail="Praxis not found.")
     return await cast_or_update_vote(voter, praxis, value, session, era)
 

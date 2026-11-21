@@ -9,7 +9,7 @@ from schemas.vote import VoterDetail
 from services.praxis import can_view_praxis
 from services.vote_tally import counted_voters
 
-# Read-only. Vote writes live in routers/praxes.py (404 guard); don't add one here
+# Read-only. Vote writes live in routers/praxes.py; the 404 guard is cast_vote_on_praxis; don't add one here
 # (#637). The tally rides ``PraxisOut``; no ``GET .../votes`` (#1382).
 router = APIRouter()
 
