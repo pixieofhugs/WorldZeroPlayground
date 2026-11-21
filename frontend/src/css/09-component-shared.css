@@ -286,6 +286,7 @@
     row-gap: calc(44px - 1lh);
   }
   .hit-box,
+  .feed-action,
   .filter-bar__link,
   button[aria-expanded],
   [role='tab'],

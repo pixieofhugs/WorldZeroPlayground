@@ -25,7 +25,7 @@ export default function ScoreToggle({ mode, onChange, fontSize }: ScoreTogglePro
             type="button"
             onClick={() => onChange(value)}
             aria-pressed={active}
-            className="font-body uppercase"
+            className="font-body uppercase hit-box"
             style={{
               fontSize,
               letterSpacing: '0.16em',
