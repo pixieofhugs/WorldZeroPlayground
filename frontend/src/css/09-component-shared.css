@@ -258,6 +258,48 @@
   min-width: 3.5rem;
 }
 
+/* ══ PHONE TAP FLOOR: 44px hit areas, paint untouched ══
+   .hit-pad  small painted box keeps its look; a centred ::before grows the target.
+   .hit-y    line-height links (footer, breadcrumb): padding with a matching negative
+             margin, since overflow:hidden would clip a ::before.
+   .hit-box  text buttons grow for real; toggles, tabs and toolbar glyphs join by role. ══ */
+@media (max-width: 767px) and (pointer: coarse) {
+  .hit-pad,
+  [role='switch'] {
+    position: relative;
+  }
+  .hit-pad::before,
+  [role='switch']::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    translate: -50% -50%;
+  }
+  .hit-y {
+    padding-block: calc((44px - 1lh) / 2);
+    margin-block: calc((1lh - 44px) / 2);
+  }
+  .site-footer {
+    row-gap: calc(44px - 1lh);
+  }
+  .hit-box,
+  .filter-bar__link,
+  button[aria-expanded],
+  [role='tab'],
+  [role='toolbar'] > button {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+  [role='toolbar'] > button {
+    width: 44px;
+    justify-content: center;
+  }
+}
+
 /* Snide's amp (~270px) outgrows the panel; components/vote is frozen, so the slot fits it. */
 @media (max-width: 479px) {
   .duel-vote-slot {

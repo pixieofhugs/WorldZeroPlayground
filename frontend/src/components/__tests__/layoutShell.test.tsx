@@ -89,7 +89,7 @@ describe('Layout shell', () => {
     expect(hrefs.filter((h) => h !== '/tasks')).toEqual(
       expect.arrayContaining(['/about', '/contact', '/disclaimer', '/attributions', '/donate']),
     )
-    expect(html).toContain('padding-bottom:calc(var(--space-md) + var(--tab-bar-clearance))')
+    expect(html).toContain('padding-bottom:calc(var(--space-md) + var(--tab-bar-clearance) + (44px - 1lh) / 2)')
     expect(html.indexOf('<footer')).toBeGreaterThan(html.indexOf(PAGE_MARKER))
   })
 
