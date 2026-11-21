@@ -117,7 +117,7 @@
   background: var(--switch-well);
   color: var(--color-text-primary);
   font-family: var(--font-body);
-  font-size: var(--text-xl);
+  font-size: var(--text-content);
 }
 
 /* Segment height, read by segment and the option trigger (#3095). Also on the
