@@ -212,7 +212,7 @@
     "bellWithPending_one": "Requests — {{count}} waiting on you",
     "bellWithPending_other": "Requests — {{count}} waiting on you",
     "createCharacter": "create character",
-    "login": "Login"
+    "login": "Sign in"
   },
   "footer": {
     "about": "About",

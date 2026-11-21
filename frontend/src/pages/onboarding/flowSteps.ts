@@ -9,7 +9,7 @@ export interface Flow {
   history: Step[]
 }
 
-export const initialFlow = (resumed: boolean): Flow => ({ step: resumed ? 'contract' : 'title', history: [] })
+export const initialFlow = (resumed: boolean, signIn = false): Flow => ({ step: resumed ? 'contract' : signIn ? 'returning' : 'title', history: [] })
 
 export const isBeat = (s: Step): s is 1 | 2 | 3 | 4 | 5 | 6 | 7 => typeof s === 'number'
 

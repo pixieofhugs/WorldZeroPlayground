@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
+import LoginNotice from '../../components/LoginNotice'
 import SignInOptions from '../../components/SignInOptions'
 import { markOnboardingHandoff } from '../../utils/onboardingResume'
 import { primaryControl } from './OnboardingCard'
@@ -31,6 +32,7 @@ export default function AuthCard({ onBack }: { onBack?: () => void }) {
           {t('auth.title')}
         </h1>
         <p>{t('auth.body')}</p>
+        <LoginNotice />
         <div className="ob-auth-actions">
           {/* `className=''` drops `.btn-primary`: the sheet wears na's card ink. */}
           <SignInOptions className="" style={primaryControl} onChoose={markOnboardingHandoff} />

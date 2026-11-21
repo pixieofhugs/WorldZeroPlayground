@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { clearOnboardingHandoff, clearTermsAcceptance, onboardingHandoffPending } from '../utils/onboardingResume'
 import { resolveHandoffDestination } from '../utils/onboardingHandoff'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
@@ -14,6 +14,8 @@ export default function Onboarding() {
 
   // Read once (not in render, which StrictMode double-invokes); cleared in the effect.
   const [resumed] = useState(onboardingHandoffPending)
+  // `?login` (the NavBar, or the backend's `?login=<code>` bounce) opens on the sign-in view.
+  const signIn = useSearchParams()[0].has('login')
 
   useEffect(() => {
     clearOnboardingHandoff()
@@ -24,6 +26,7 @@ export default function Onboarding() {
   return (
     <OnboardingFlow
       resumed={resumed}
+      signIn={signIn}
       onAccepted={() => {
         // A player with a character; one without creates it inside the flow.
         // Reads `task.start_here`, the mark's own predicate; none marked → `/`.
