@@ -77,6 +77,18 @@ def test_dial_moved_gate_and_ladder_agree_on_the_live_era(side, gate_attr, abili
     assert rungs == [getattr(era, gate_attr)]
 
 
+def test_moving_an_already_moved_ladder_leaves_one_rung_per_ability():
+    era = _era_on("small")
+    apply_dial_sides(era, {key: "full" for key in era.dials})
+    rungs = {
+        key: [
+            lv for lv in range(len(era.level_profiles)) if key in _ability_keys(lv, era)
+        ]
+        for key in ("comment", "duels", "flag_praxis")
+    }
+    assert rungs == {"comment": [2], "duels": [2], "flag_praxis": [4]}
+
+
 def test_overlay_leaves_era_1_ladder_alone():
     _era_on("small")
     assert "comment" in _ability_keys(2)

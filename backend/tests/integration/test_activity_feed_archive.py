@@ -553,8 +553,11 @@ async def test_bad_item_keys_are_told_apart_by_code(
 
 
 @pytest.mark.asyncio
-async def test_dismiss_all_skips_awaiting_submission(
-    client: AsyncClient, full_feed: dict, auth_headers: dict
+async def test_dismiss_all_skips_awaiting_submission_and_pending_requests(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    full_feed: dict,
+    auth_headers: dict,
 ):
     response = await client.post(
         "/activity-feed/dismiss-all",
@@ -562,16 +565,60 @@ async def test_dismiss_all_skips_awaiting_submission(
         headers=auth_headers,
     )
     assert response.status_code == 200, response.text
-    assert response.json() == {"count": 3, "archived": True}
+    # Pending invite and duel ignore the archive (ADR-0070): only the one other
+    # request left, and the count says so.
+    assert response.json() == {"count": 1, "archived": True}
+    assert (
+        await db_session.scalar(select(func.count()).select_from(FeedDismissal)) == 1
+    )
 
     after = await _feed(client, auth_headers, REQUESTS_FILTER)
-    # Invite and duel are archived but still unanswered (ADR-0070): they stay queued.
     assert {item["type"] for item in after["items"]} == {
         FEED_ITEM_TYPE_AWAITING_SUBMISSION,
         FEED_ITEM_TYPE_COLLAB_INVITE,
         FEED_ITEM_TYPE_DUEL_CHALLENGE,
     }
     assert after["counts"]["requests"] == 3
+
+
+@pytest.mark.asyncio
+async def test_dismiss_all_on_stream_archives_answered_invite_and_duel(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    full_feed: dict,
+    auth_headers: dict,
+):
+    """Requests holds the pending ones (kept); All shows answered ones (archived)."""
+    pending = await client.post(
+        "/activity-feed/dismiss-all",
+        json={"filter": REQUESTS_FILTER},
+        headers=auth_headers,
+    )
+    assert pending.json()["count"] == 1  # invite + duel stayed
+
+    await db_session.execute(
+        update(PraxisInvite)
+        .where(PraxisInvite.id == full_feed["collab_invite_id"])
+        .values(status=PraxisInviteStatus.declined)
+    )
+    await db_session.execute(
+        update(Duel).values(
+            status=DuelStatus.declined, declined_at=datetime.now(timezone.utc)
+        )
+    )
+    await db_session.flush()
+    before = await _feed(client, auth_headers, ALL_FILTER)
+    types = {item["type"] for item in before["items"]}
+    assert {FEED_ITEM_TYPE_COLLAB_INVITE, FEED_ITEM_TYPE_DUEL_CHALLENGE} <= types
+
+    await client.post(
+        "/activity-feed/dismiss-all", json={"filter": ALL_FILTER}, headers=auth_headers
+    )
+    after = await _feed(client, auth_headers, ALL_FILTER)
+    assert not {
+        FEED_ITEM_TYPE_COLLAB_INVITE,
+        FEED_ITEM_TYPE_DUEL_CHALLENGE,
+    } & {item["type"] for item in after["items"]}
 
 
 @pytest.mark.asyncio

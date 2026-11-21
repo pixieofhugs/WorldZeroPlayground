@@ -118,7 +118,7 @@ describe('the task panel', () => {
   it('shows an active task read-only with no save, and retire sends only the status', async () => {
     at('/admin/tasks?task=1')
     const panel = await screen.findByRole('complementary', { name: 'Task' })
-    for (const label of ['Title', 'Description', 'Level']) {
+    for (const label of ['Title', 'Description', 'Points', 'Level', 'Faction']) {
       expect((within(panel).getByLabelText(label) as HTMLInputElement).disabled).toBe(true)
     }
     expect(within(panel).queryByRole('button', { name: /^save$/i })).toBeNull()

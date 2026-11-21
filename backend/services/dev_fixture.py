@@ -4,6 +4,8 @@ Writes the rows the real paths write; the stamps re-check the earn rules. The
 route owns the production guard.
 """
 
+from datetime import datetime, timezone
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -23,6 +25,7 @@ from services.character import (
     stamp_albescent_glimpse,
     stamp_albescent_unlock,
 )
+from services.era import get_current_era_row
 from services.vote import account_has_received_vote
 
 
@@ -57,11 +60,15 @@ async def seed_received_vote(character: Character, session: AsyncSession) -> Non
             session,
         )
     ).character
+    era_row = await get_current_era_row(session)
     praxis = Praxis(
         task_id=task.id,
         created_by_id=character.id,
         type=PraxisType.solo,
         title="Seeded proof",
+        status=PraxisStatus.submitted,
+        submitted_at=datetime.now(timezone.utc),
+        era_id=era_row.id,
         body_text="seeded by dev-login",
     )
     session.add(praxis)

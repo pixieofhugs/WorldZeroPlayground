@@ -1905,7 +1905,8 @@ async def dismiss_feed_items_for_filter(
     """Archive everything the given filter would currently return. One call.
 
     Re-runs the visible feed so scope matches the tab. Non-archivable rows are
-    skipped, not refused.
+    skipped, not refused; so are pending requests, which ignore the archive.
+    Only the queue tabs hold pending ones: the stream tabs show answered ones.
     """
     feed = await get_activity_feed(
         character_id=character_id,
@@ -1913,8 +1914,12 @@ async def dismiss_feed_items_for_filter(
         feed_filter=feed_filter,
         limit=ARCHIVE_ALL_LIMIT,
     )
+    in_stream = _normalise_filter(feed_filter) in STREAM_FILTERS
     item_keys = [
-        item.item_key for item in feed.items if item.type in ARCHIVABLE_ITEM_TYPES
+        item.item_key
+        for item in feed.items
+        if item.type in ARCHIVABLE_ITEM_TYPES
+        and (in_stream or item.type not in ARCHIVE_PROOF_WHEN_UNANSWERED)
     ]
     return await _insert_dismissals(character_id, item_keys, session)
 
