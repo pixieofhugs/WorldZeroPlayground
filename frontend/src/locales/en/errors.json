@@ -100,6 +100,7 @@
     "PRAXIS_NEEDS_PROOF": "Add a photo, video or audio file before you submit.",
     "PRAXIS_DOC_UPDATE_INVALID": "Your draft couldn't be sent with the submit. Copy your text somewhere safe, reload and try again.",
     "PRAXIS_NEEDS_PROOF_delete": "A published praxis keeps at least one photo, video or audio file.",
+    "PRAXIS_ALREADY_LIVE": "This praxis is already live. Reopen it to edit it.",
     "PRAXIS_POST_COOLDOWN": "You can post again in {{hours}} hours.",
     "GOOGLE_PHOTOS_UNAVAILABLE": "Google Photos is only available when you sign in with Google.",
     "GOOGLE_PHOTOS_SESSION_INVALID": "That Google Photos pick has expired. Start a new one.",

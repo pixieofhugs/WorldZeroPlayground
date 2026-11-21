@@ -1369,3 +1369,45 @@ async def test_text_a_member_deleted_does_not_outlive_the_draft(
         for update in await _every_stored_update(rooms):
             assert secret.encode() not in update
         assert await _record(rooms, collab.id) == ("Collab Praxis", SEED_BODY)
+
+
+@pytest.mark.parametrize("kind", [PraxisType.solo, PraxisType.duel, PraxisType.collab])
+async def test_a_doc_state_on_a_live_praxis_is_refused_and_opens_no_room(
+    db_session, active_task, character, monkeypatch, kind
+) -> None:
+    live = Praxis(
+        task_id=active_task.id,
+        created_by_id=character.id,
+        type=kind,
+        status=PraxisStatus.submitted,
+        title="Honest proof",
+        body_text=SEED_BODY,
+    )
+    db_session.add(live)
+    await db_session.flush()
+    db_session.add(PraxisMember(praxis_id=live.id, character_id=character.id))
+    await db_session.commit()
+
+    rewrite = Doc()
+    rewrite.get(ROOM_BODY_KEY, type=Text).insert(0, "EDITED AFTER VOTING")
+    state = base64.b64encode(rewrite.get_update()).decode()
+    async with running_rooms(db_session, monkeypatch) as rooms:
+        with pytest.raises(HTTPException) as refused:
+            await rooms.submit(live.id, character.id, doc_state=state)
+        assert refused.value.status_code == 409
+        assert refused.value.detail["code"] == "PRAXIS_ALREADY_LIVE"
+        assert rooms.room_doc(live.id) is None
+    await db_session.refresh(live)
+    assert (live.title, live.body_text) == ("Honest proof", SEED_BODY)
+    assert live.status == PraxisStatus.submitted
+
+
+async def test_a_live_praxis_refuses_the_room_handshake(
+    db_session, collab, account, monkeypatch
+) -> None:
+    async with running_rooms(db_session, monkeypatch) as rooms:
+        collab.status = PraxisStatus.submitted
+        await db_session.commit()
+        socket = await rooms.open(collab.id, account.id)
+        assert socket.closed.is_set()
+        assert not socket.accepted.is_set()
